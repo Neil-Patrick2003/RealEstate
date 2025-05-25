@@ -17,6 +17,13 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('role');
+            $table->string('contact_number')->nullable();
+            // $table->unsignedBigInteger('business_id');
+            $table->string('address')->nullable();
+            $table->text('bio')->nullable();
+            $table->string('photo_url')->nullable();
+            // $table->foreign('business_id')->references(columns: 'id')->on('businesses')->onDelete('cascade')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
