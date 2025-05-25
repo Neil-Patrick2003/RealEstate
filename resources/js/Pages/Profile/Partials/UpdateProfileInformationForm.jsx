@@ -128,6 +128,8 @@ export default function UpdateProfileInformation({
                     <InputError className="mt-2" message={errors.address} />
                 </div>
 
+
+
                 <div>
                     <InputLabel htmlFor="bio" value="Bio" />
 
