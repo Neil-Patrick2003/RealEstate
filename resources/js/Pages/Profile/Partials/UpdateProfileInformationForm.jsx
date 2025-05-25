@@ -16,6 +16,10 @@ export default function UpdateProfileInformation({
         useForm({
             name: user.name,
             email: user.email,
+            contact_number: user.contact_number || '',
+            address: user.address || '',
+            bio: user.bio || '',
+            photo_url: user.photo_url || '',
         });
 
     const submit = (e) => {
@@ -23,6 +27,7 @@ export default function UpdateProfileInformation({
 
         patch(route('profile.update'));
     };
+
 
     return (
         <section className={className}>
@@ -91,6 +96,53 @@ export default function UpdateProfileInformation({
                         )}
                     </div>
                 )}
+
+                <div>
+                    <InputLabel htmlFor="contact_number" value="Contact Number" />
+
+                    <TextInput
+                        id="contact_number"
+                        type="tel"
+                        className="mt-1 block w-full"
+                        value={data.contact_number}
+                        onChange={(e) => setData('contact_number', e.target.value)}
+                        autoComplete="contact_number"
+
+                    />
+
+                    <InputError className="mt-2" message={errors.contact_number} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="address" value="Address" />
+
+                    <TextInput
+                        id="address"
+                        type="text"
+                        className="mt-1 block w-full"
+                        value={data.address}
+                        onChange={(e) => setData('address', e.target.value)}
+                        autoComplete="address"
+                    />
+
+                    <InputError className="mt-2" message={errors.address} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="bio" value="Bio" />
+
+                    <TextInput
+                        id="bio"
+                        type="text"
+                        className="mt-1 block w-full"
+                        value={data.bio}
+                        onChange={(e) => setData('bio', e.target.value)}
+                        autoComplete="bio"
+                        
+                    />
+
+                    <InputError className="mt-2" message={errors.bio} />
+                </div>
 
                 <div className="flex items-center gap-4">
                     <PrimaryButton disabled={processing}>Save</PrimaryButton>
