@@ -5,7 +5,11 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
+import i18n from '../../../i18n'
+
 export default function Register() {
+    const { t } = useTranslation();
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
@@ -111,7 +115,7 @@ export default function Register() {
                     </Link>
 
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
+                        {t('Register')}
                     </PrimaryButton>
                 </div>
             </form>
