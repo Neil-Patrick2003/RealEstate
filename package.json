@@ -22,7 +22,9 @@
         "vite": "^6.2.4"
     },
     "dependencies": {
+        "framer-motion": "^12.12.2",
         "i18next": "^25.2.1",
+        "lucide-react": "^0.511.0",
         "react-i18next": "^15.5.2"
     }
 }
