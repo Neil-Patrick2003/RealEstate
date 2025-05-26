@@ -5,6 +5,7 @@ import DesktopMenu from '@/Components/DestopMenu';
 import MobMenu from '@/Components/MobMenu';
 import { Languages } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from '@inertiajs/react';
 
 const Hero = () => {
     const [ isHover, setIsHover] = useState(false);
@@ -35,7 +36,7 @@ const Hero = () => {
  
   return (
     
-    <div>
+    <div className='h-screen'>
         <header className='h-16 text-[15px] fixed inset-0 flex-center bg-green-800'>
             <nav className='px-3.5 flex-center-between w-full mx-w-7xl mx-auto'>
                 <div className='flex-center gap-x-3'>
@@ -71,13 +72,19 @@ const Hero = () => {
                             animate={isHover ? "enter" : "exit"}
                             variants={languageAnimate}
                             >
-                            <div className="cursor-pointer hover:bg-white/5 px-2 py-1">Filipino</div>
-                            <div className="cursor-pointer hover:bg-white/5 px-2 py-1">English</div>
+                            <div className="cursor-pointer hover:bg-white/5 px-2 py-1">
+                                <img src="https://flagcdn.com/ph.svg" alt="Filipino Flag" className="inline-block mr-2 w-6 h-6" />
+                                <span>Filipino</span>
+                            </div>
+                            <div className="cursor-pointer hover:bg-white/5 px-2 py-1">
+                                <img src="https://flagcdn.com/us.svg" alt="English Flag" className="inline-block mr-2 w-6 h-6" />
+                                <span>English</span>
+                            </div>
                             </motion.div>
                         </motion.div>
                     
 
-                    <button className='bg-white/5 z-[999] relative px-3 py-1.5 shadow rounded-xl flex-center'>Sign In</button>
+                    <Link href={route('login')} className='bg-white/5 z-[999] relative px-3 py-1.5 shadow rounded-xl flex-center'>Sign In</Link>
                     <div className='lg:hidden'>
                         <MobMenu Menus={Menus}/>
                     </div>
@@ -86,6 +93,9 @@ const Hero = () => {
                 
             </nav>
         </header>
+        <main className='flex-center flex-col h-[calc(100vh-4rem)] pt-16'>
+            <p>hi</p>
+        </main>
     </div>
   )
 }
