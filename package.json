@@ -25,6 +25,7 @@
         "framer-motion": "^12.12.2",
         "i18next": "^25.2.1",
         "lucide-react": "^0.511.0",
-        "react-i18next": "^15.5.2"
+        "react-i18next": "^15.5.2",
+        "sweetalert2": "^11.22.0"
     }
 }

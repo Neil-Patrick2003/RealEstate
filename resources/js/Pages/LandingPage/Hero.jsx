@@ -6,8 +6,13 @@ import MobMenu from '@/Components/MobMenu';
 import { Languages } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
+import Swal from 'sweetalert2';
+
+import i18n from '../../../i18n';
 
 const Hero = () => {
+    const { t } = useTranslation();
     const [ isHover, setIsHover] = useState(false);
 
     const toggleHoverLanguage = () => {
@@ -33,6 +38,28 @@ const Hero = () => {
             display: "none",
         }
     }
+
+    const handleChangeLanguage = (lang, langLabel) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Do you want to switch to ${langLabel}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, switch',
+            cancelButtonText: 'No, cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+            i18n.changeLanguage(lang);
+            Swal.fire({
+                icon: 'success',
+                title: 'Switched!',
+                text: `Language changed to ${langLabel}.`,
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            }
+        });
+    };
  
   return (
     
@@ -55,7 +82,6 @@ const Hero = () => {
                     ) ) }
                 </ul>
                 <div className='flex-center gap-x-5'>
-                    
                         <motion.div
                             className=""
                             onHoverStart={() => setIsHover(true)}
@@ -73,17 +99,19 @@ const Hero = () => {
                             variants={languageAnimate}
                             >
                             <div className="cursor-pointer hover:bg-white/5 px-2 py-1">
-                                <img src="https://flagcdn.com/ph.svg" alt="Filipino Flag" className="inline-block mr-2 w-6 h-6" />
-                                <span>Filipino</span>
-                            </div>
-                            <div className="cursor-pointer hover:bg-white/5 px-2 py-1">
-                                <img src="https://flagcdn.com/us.svg" alt="English Flag" className="inline-block mr-2 w-6 h-6" />
-                                <span>English</span>
+                                <button onClick={() => handleChangeLanguage('fil', 'Filipino')}>
+                                    <img src="https://flagcdn.com/ph.svg" alt="Filipino Flag" className="inline-block mr-2 w-6 h-6" />
+                                    <span>Filipino</span>
+                                </button>
+                                </div>
+                                <div className="cursor-pointer hover:bg-white/5 px-2 py-1">
+                                <button onClick={() => handleChangeLanguage('en', 'English')}>
+                                    <img src="https://flagcdn.com/us.svg" alt="English Flag" className="inline-block mr-2 w-6 h-6" />
+                                    <span>English</span>
+                                </button>
                             </div>
                             </motion.div>
                         </motion.div>
-                    
-
                     <Link href={route('login')} className='bg-white/5 z-[999] relative px-3 py-1.5 shadow rounded-xl flex-center'>Sign In</Link>
                     <div className='lg:hidden'>
                         <MobMenu Menus={Menus}/>
