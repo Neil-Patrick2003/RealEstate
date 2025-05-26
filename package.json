@@ -26,6 +26,7 @@
         "i18next": "^25.2.1",
         "lucide-react": "^0.511.0",
         "react-i18next": "^15.5.2",
+        "react-loader-spinner": "^6.1.6",
         "sweetalert2": "^11.22.0"
     }
 }

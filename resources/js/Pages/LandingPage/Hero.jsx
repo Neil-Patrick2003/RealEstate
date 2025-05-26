@@ -82,15 +82,15 @@ const Hero = () => {
                         <DesktopMenu menu={menu} key={menu.name}/>
                     ) ) }
                 </ul>
-                <div className='flex-center gap-x-5'>
+                <div className=' flex-center gap-x-5'>
                         <motion.div
-                            className=""
+                            className="hidden lg:block relative"
                             onHoverStart={() => setIsHover(true)}
                             onHoverEnd={() => setIsHover(false)}
                         >
                             <button className="border z-[999] text-white relative px-3 py-1.5 shadow rounded-xl flex-center">
-                            <Languages size={12} className="mr-2" />
-                            <span>Language</span>
+                                <Languages size={12} className="mr-2" />
+                                <span>Language</span>
                             </button>
 
                             <motion.div

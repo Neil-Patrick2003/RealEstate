@@ -5,6 +5,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { ProgressBar } from 'react-loader-spinner';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -24,6 +25,21 @@ export default function Login({ status, canResetPassword }) {
     return (
         <GuestLayout>
             <Head title="Log in" />
+
+            {processing && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex flex-col items-center justify-center text-white">
+                    <ProgressBar
+                        visible={true}
+                        height="80"
+                        width="80"
+                        color="green"
+                        ariaLabel="progress-bar-loading"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                    />
+                    <p className="text-lg font-semibold">Logging in...</p>
+                </div>
+            )}
 
             {status && (
                 <div className="mb-4 text-sm font-medium text-green-600">
