@@ -30,7 +30,7 @@ export default function MobMenu({ Menus }) {
     <div>
         <button 
         onClick={toggleDrawer}
-        className='z-[9999] relative'
+        className='z-50 relative'
         >
             {isOpen ? <X /> : <Menu/>}
         </button>

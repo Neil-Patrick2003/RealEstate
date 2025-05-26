@@ -1,7 +1,11 @@
 {
     "welcome": "Welcome to Dashboard",
     "Login": "Login",
-    "Register": "Register"
+    "Register": "Register",
+    "Search": "Search",
+    "Property Type": "Property Type",
+    "Language": "Language"
+    
 
     
 }
