@@ -16,9 +16,9 @@ export default {
                 inter: ["Inter", ...defaultTheme.fontFamily.sans],
             },
         },
-        screens: {
-            lg: { min: "925px"}
-        }
+        // screens: {
+        //     lg: { min: "925px"}
+        // }
     },
 
     plugins: [forms],
