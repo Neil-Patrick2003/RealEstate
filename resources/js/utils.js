@@ -143,7 +143,7 @@ export const Menus = [
     gridCols: 2,
   },
   {
-    name: "Pricing",
+    name: "Find Agent",
   },
   {
     name: "Contact",

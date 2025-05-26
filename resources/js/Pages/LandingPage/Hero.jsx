@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import framer_logo from '../../../assets/framer_logo.png'
+import backgroundImage from '../../../assets/background.jpg';
 import  { Menus } from '../../utils';
 import DesktopMenu from '@/Components/DestopMenu';
 import MobMenu from '@/Components/MobMenu';
@@ -63,12 +64,12 @@ const Hero = () => {
  
   return (
     
-    <div className='h-screen'>
-        <header className='h-16 text-[15px] fixed inset-0 flex-center bg-green-800'>
+    <div className='h-screen bg-no-repeat ' style={{ backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center', brigtness: '0.5' }}>
+        <header className='h-16 text-[15px] fixed inset-0 flex-center bg-[#5c7934]'>
             <nav className='px-3.5 flex-center-between w-full mx-w-7xl mx-auto'>
                 <div className='flex-center gap-x-3'>
                     <img src={framer_logo} alt='logo' className='size-8'/>
-                    <h3 className='text-whitetext-lg font-semibold'>MJVI Realty</h3>
+                    <h3 className='text-white text-lg font-semibold'>MJVI Realty</h3>
                 </div>
 
                 {/* menus */}
@@ -87,24 +88,24 @@ const Hero = () => {
                             onHoverStart={() => setIsHover(true)}
                             onHoverEnd={() => setIsHover(false)}
                         >
-                            <button className="bg-white/5 z-[999] relative px-3 py-1.5 shadow rounded-xl flex-center">
+                            <button className="border z-[999] text-white relative px-3 py-1.5 shadow rounded-xl flex-center">
                             <Languages size={12} className="mr-2" />
                             <span>Language</span>
                             </button>
 
                             <motion.div
-                            className="absolute top-[4.2rem] p-[15px] rounded-[6px] origin-[50%_-170px] backdrop-blur bg-white/[0.04]"
+                            className="absolute top-[4.2rem] p-[15px] rounded-[6px] origin-[50%_-170px] bg-white"
                             initial="exit"
                             animate={isHover ? "enter" : "exit"}
                             variants={languageAnimate}
                             >
-                            <div className="cursor-pointer hover:bg-white/5 px-2 py-1">
+                            <div className="cursor-pointer hover:bg-green-400 hover:text-white px-2 py-1">
                                 <button onClick={() => handleChangeLanguage('fil', 'Filipino')}>
                                     <img src="https://flagcdn.com/ph.svg" alt="Filipino Flag" className="inline-block mr-2 w-6 h-6" />
                                     <span>Filipino</span>
                                 </button>
                                 </div>
-                                <div className="cursor-pointer hover:bg-white/5 px-2 py-1">
+                                <div className="cursor-pointer hover:bg-green-400 hover:text-white px-2 py-1">
                                 <button onClick={() => handleChangeLanguage('en', 'English')}>
                                     <img src="https://flagcdn.com/us.svg" alt="English Flag" className="inline-block mr-2 w-6 h-6" />
                                     <span>English</span>
@@ -112,7 +113,7 @@ const Hero = () => {
                             </div>
                             </motion.div>
                         </motion.div>
-                    <Link href={route('login')} className='bg-white/5 z-[999] relative px-3 py-1.5 shadow rounded-xl flex-center'>Sign In</Link>
+                    <Link href={route('login')} className='bg-[#e0b52b] z-[999] relative px-3 py-1.5 text-white shadow rounded-xl flex-center'>Sign In</Link>
                     <div className='lg:hidden'>
                         <MobMenu Menus={Menus}/>
                     </div>
@@ -121,8 +122,8 @@ const Hero = () => {
                 
             </nav>
         </header>
-        <main className='flex-center flex-col h-[calc(100vh-4rem)] pt-16'>
-            <p>hi</p>
+        <main className='flex-center justify-center h-full '>
+            <p className='text-white text-4xl'>hi</p>
         </main>
     </div>
   )
