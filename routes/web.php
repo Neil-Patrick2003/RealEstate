@@ -14,9 +14,15 @@ Route::get('/', function () {
     ]);
 });
 
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+
+Route::get('/post-property', function(){
+    return Inertia::render('Seller/ListProperty');
+})->middleware('auth')->name('post-property');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

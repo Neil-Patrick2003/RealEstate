@@ -25,7 +25,7 @@ export default function Dashboard() {
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             Please choose a language: 
                             <button className='border py-1 px-6 rounded mr-4' onClick={() => i18n.changeLanguage('en')}>EN</button>
-                            <button className='border py-1 px-6 rounded' onClick={() => i18n.changeLanguage('fil')}>FIL</button>
+                            <button className='border py-1 px-6 rounded ' onClick={() => i18n.changeLanguage('fil')}>FIL</button>
                         </div>
                     </div>
                 </div>
