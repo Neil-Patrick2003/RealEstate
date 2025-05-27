@@ -1,11 +1,12 @@
 import React from 'react'
 import Hero from './LandingPage/Hero'
 
-const Welcome = () => {
+const Welcome = (auth) => {
+
   return (
    
     <div>
-        <Hero/>
+        <Hero auth={auth} />
         Welcome
     </div>
   )

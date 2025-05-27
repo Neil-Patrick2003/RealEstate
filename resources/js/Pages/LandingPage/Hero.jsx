@@ -12,7 +12,7 @@ import Dropdown from '@/Components/Dropdown';
 import NavBar from '@/Components/NavBar';
 
 
-const Hero = () => {
+const Hero = ({auth}) => {
     const { t } = useTranslation();
     
  

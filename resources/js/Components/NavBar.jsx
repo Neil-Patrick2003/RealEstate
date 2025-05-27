@@ -4,15 +4,18 @@ import  { Menus } from '../utils';
 import DesktopMenu from '@/Components/DestopMenu';
 import MobMenu from '@/Components/MobMenu';
 import { motion } from 'framer-motion';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import Swal from 'sweetalert2';
 import i18n from '../../i18n';
 import { useState } from 'react';
-import { Languages } from 'lucide-react';
+import { CircleUser, Languages } from 'lucide-react';
 
 
 const NavBar = () => {
+    const auth = usePage().props.auth;
+                             
+
 
     const { t } = useTranslation();
     const [ isHover, setIsHover] = useState(false);
@@ -83,37 +86,50 @@ const NavBar = () => {
                     ) ) }
                 </ul>
                 <div className=' flex-center gap-x-5'>
-                        <motion.div
-                            className="hidden lg:block relative"
-                            onHoverStart={() => setIsHover(true)}
-                            onHoverEnd={() => setIsHover(false)}
-                        >
-                            <button className="border z-[999] text-white relative px-3 py-1.5 shadow rounded-xl flex-center">
-                                <Languages size={12} className="mr-2" />
-                                <span>{t('Language')}</span>
-                            </button>
+                    <motion.div
+                        className="hidden lg:block relative"
+                        onHoverStart={() => setIsHover(true)}
+                        onHoverEnd={() => setIsHover(false)}
+                    >
+                        <button className="border z-[999] text-white relative px-3 py-1.5 shadow rounded-xl flex-center">
+                            <Languages size={12} className="mr-2" />
+                            <span>{t('Language')}</span>
+                        </button>
 
-                            <motion.div
+                        <motion.div
                             className="absolute top-[4.2rem] p-[15px] rounded-[6px] origin-[50%_-170px] bg-white"
                             initial="exit"
                             animate={isHover ? "enter" : "exit"}
                             variants={languageAnimate}
-                            >
+                        >
                             <div className="cursor-pointer hover:bg-green-400 hover:text-white px-2 py-1">
                                 <button onClick={() => handleChangeLanguage('fil', 'Filipino')}>
                                     <img src="https://flagcdn.com/ph.svg" alt="Filipino Flag" className="inline-block mr-2 w-6 h-6" />
                                     <span>Filipino</span>
                                 </button>
-                                </div>
-                                <div className="cursor-pointer hover:bg-green-400 hover:text-white px-2 py-1">
+                            </div>
+                            <div className="cursor-pointer hover:bg-green-400 hover:text-white px-2 py-1">
                                 <button onClick={() => handleChangeLanguage('en', 'English')}>
                                     <img src="https://flagcdn.com/us.svg" alt="English Flag" className="inline-block mr-2 w-6 h-6" />
                                     <span>English</span>
                                 </button>
                             </div>
-                            </motion.div>
                         </motion.div>
-                    <Link href={route('login')} className='bg-[#e0b52b] z-[999] relative px-3 py-1.5 text-white shadow rounded-xl flex-center'>{t('Login')}</Link>
+                    </motion.div>
+
+                    {auth?.user ? (
+                        <div className='flex gap-1 bg-[#e0b52b] px-3 py-2 shadow rounded-xl items-center text-white'>
+                            <CircleUser size={22} className='text-white '/>
+                            <span className='text-white'>{auth.user.name}</span>
+                        </div>
+                            
+                       
+                        
+                    ): (
+                        <Link href={route('login')} className='bg-[#e0b52b] z-[999] relative px-3 py-1.5 text-white shadow rounded-xl flex-center'>{t('Login')}</Link>
+                    )}
+
+                    
                     <div className='lg:hidden'>
                         <MobMenu Menus={Menus}/>
                     </div>
