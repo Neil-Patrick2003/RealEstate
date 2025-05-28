@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlignLeft, ChevronDown, Home, User, Settings } from 'lucide-react';
+import { AlignLeft, ChevronDown, Home, User, Settings, UserRound, Landmark, Calendar, LandPlot, ChartNoAxesCombined } from 'lucide-react';
 import logo from '../../../assets/framer_logo.png';
 import { Link } from '@inertiajs/react';
 
@@ -30,14 +30,62 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       path: "/dashboard"
     },
     {
-      name: "Settings",
-      Icon: Settings,
-      path: "/settings",
+      name: "Users",
+      Icon: UserRound,
+      path: "/admin/users",
       subMenu: [
-        { name: "Profile Settings", Icon: User, path: "/settings/profile" },
-        { name: "Account Settings", Icon: Settings, path: "/settings/account" }
+        { name: "Sellers", Icon: User, path: "/admin/users/seller" },
+        { name: "Buyer", Icon: Settings, path: "/admin/users/buyer" },
+        { name: "Agent", Icon: Settings, path: "/admin/users/agent" }
+      ]
+    },
+    {
+      name: "Properties",
+      Icon: Landmark,
+      path: "/admin/properties",
+      subMenu: [
+        { name: "Property Listing", Icon: User, path: "/admin/properties" },
+        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
+      ]
+    },
+    {
+      name: "Schedule",
+      Icon: Calendar,
+      path: "/admin/schedules",
+      subMenu: [
+        { name: "Property Listing", Icon: User, path: "/admin/properties" },
+        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
+      ]
+    },
+    {
+      name: "Maps",
+      Icon: LandPlot,
+      path: "/admin/maps",
+      subMenu: [
+        { name: "Property Listing", Icon: User, path: "/admin/properties" },
+        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
+      ]
+    },
+    {
+      name: "Analytics",
+      Icon: ChartNoAxesCombined,
+      path: "/admin/analytics",
+      subMenu: [
+        { name: "Property Listing", Icon: User, path: "/admin/properties" },
+        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
+      ]
+    },
+    {
+      name: "System",
+      Icon: Settings,
+      path: "/admin/systems",
+      subMenu: [
+        { name: "Property Listing", Icon: User, path: "/admin/properties" },
+        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
       ]
     }
+
+
     
     
   ];
