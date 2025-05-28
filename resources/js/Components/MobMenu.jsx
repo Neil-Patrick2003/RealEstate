@@ -53,7 +53,6 @@ export default function MobMenu({ Menus }) {
                              onClick={() => setClicked(isclicked ? null : i)}
                              >
                                 {name}
-                                {hasSubMenu && <ChevronDown className={`ml-auto ${isclicked && "rotate-180"}`}/>}
                             </span>
                             { hasSubMenu && (
                                 <motion.ul 

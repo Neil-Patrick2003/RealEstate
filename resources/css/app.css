@@ -26,3 +26,11 @@ body{
         @apply flex items-center justify-between;
     }
 }
+
+.link{
+    @apply p-2.5 flex rounded-md gap-6 items-center md:cursor-pointer cursor-default duration-300 font-medium
+}
+
+.active {
+    @apply bg-green-100 text-green-600
+}

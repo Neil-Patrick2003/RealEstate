@@ -45,27 +45,39 @@ const NavBar = () => {
         }
     }
 
-    const handleChangeLanguage = (lang, langLabel) => {
+   const handleChangeLanguage = (lang, langLabel) => 
+    {
         Swal.fire({
             title: 'Are you sure?',
             text: `Do you want to switch to ${langLabel}?`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Yes, switch',
-            cancelButtonText: 'No, cancel'
+            cancelButtonText: 'No, cancel',
+            customClass: {
+                confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 mr-3 rounded',
+                cancelButton: 'bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded'
+            },
+            buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
-            i18n.changeLanguage(lang);
-            Swal.fire({
-                icon: 'success',
-                title: 'Switched!',
-                text: `Language changed to ${langLabel}.`,
-                timer: 1500,
-                showConfirmButton: false,
-            });
+                i18n.changeLanguage(lang);
+
+                // Apply custom styles to the success alert too
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Switched!',
+                    text: `Language changed to ${langLabel}.`,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    customClass: {
+                        popup: 'bg-white rounded-lg shadow-lg' // optional styling
+                    }
+                });
             }
         });
     };
+
   return (
     <>
         <header className='h-16 text-[15px] fixed inset-0 flex-center bg-[#5c7934]'>
