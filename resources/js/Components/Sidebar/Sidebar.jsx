@@ -96,7 +96,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {/* Logo */}
         <div className="px-6">
           <div className="flex items-center gap-2 font-medium border-b border-slate-300 py-3 mx-auto max-w-xs">
-            <img src={logo} width={45} alt="Logo" />
+            <Link href={'/'}>
+              <img src={logo} width={45} alt="Logo" />
+            </Link>
+            
             {isOpen && <span className="text-xl">MJVI Realty</span>}
           </div>
         </div>
