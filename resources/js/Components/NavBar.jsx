@@ -97,61 +97,73 @@ const NavBar = () => {
                         <DesktopMenu menu={menu} key={menu.name}/>
                     ) ) }
                 </ul>
-                <div className=' flex-center gap-x-2'>
-                    
-
+                <div className="flex items-center gap-x-2">
+                    {/* Authenticated User Dropdown */}
                     {auth?.user ? (
                         <motion.div
-                            className="hidden lg:block relative"
-                            onHoverStart={() => setIsHover(true)}
-                            onHoverEnd={() => setIsHover(false)}
+                        className="relative hidden lg:block"
+                        onHoverStart={() => setIsHover(true)}
+                        onHoverEnd={() => setIsHover(false)}
                         >
-                            <button className="border z-[999] text-white relative px-3 py-1.5 shadow rounded-xl flex-center">
-                                {/* <Languages size={12} className="mr-2" />
-                                <span>{t('Language')}</span> */}
-                                <CircleUser size={22} className='text-white '/>
-                                <span className='text-white'>{auth.user.name}</span>
+                        <button className="relative flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-xl shadow hover:bg-green-700 transition z-[999]">
+                            <CircleUser size={20} />
+                            <span className="font-medium">{auth.user.name}</span>
+                        </button>
+
+                        <motion.div
+                            className="absolute top-[3.2rem] right-0 w-52 bg-white dark:bg-gray-800 border rounded-md shadow-md py-2 z-[998]"
+                            initial="exit"
+                            animate={isHover ? "enter" : "exit"}
+                            variants={languageAnimate}
+                        >
+                            <Link
+                            href="/dashboard"
+                            className="block px-4 py-2 text-gray-700 hover:bg-green-500 hover:text-white rounded-md transition"
+                            >
+                            Dashboard
+                            </Link>
+
+                            <div className="px-4 py-2 font-semibold text-sm text-gray-600">Language</div>
+
+                            <button
+                            onClick={() => handleChangeLanguage('fil', 'Filipino')}
+                            className="flex items-center w-full px-4 py-2 hover:bg-green-500 hover:text-white transition"
+                            >
+                            <img src="https://flagcdn.com/ph.svg" alt="Filipino Flag" className="w-5 h-5 mr-2" />
+                            Filipino
                             </button>
 
-                            <motion.div
-                                className="absolute top-[4.2rem] p-[15px] rounded-[6px] origin-[50%_-170px] bg-green-100    "
-                                initial="exit"
-                                animate={isHover ? "enter" : "exit"}
-                                variants={languageAnimate}
+                            <button
+                            onClick={() => handleChangeLanguage('en', 'English')}
+                            className="flex items-center w-full px-4 py-2 hover:bg-green-500 hover:text-white transition"
                             >
-                                <div className='w-full hover:bg-green-400 hover:text-white text-md'>
-                                    <Link href={"/dashboard"} className='cursor-pointer   '>Dashboard</Link>
-                                </div>
-                                <h1>Langauge</h1>
-                                <div className="cursor-pointer hover:bg-green-400 hover:text-white px-2 py-1">
-                                    <button onClick={() => handleChangeLanguage('fil', 'Filipino')}>
-                                        <img src="https://flagcdn.com/ph.svg" alt="Filipino Flag" className="inline-block mr-2 w-6 h-6" />
-                                        <span>Filipino</span>
-                                    </button>
-                                </div>
-                                <div className="cursor-pointer hover:bg-green-400 hover:text-white px-2 py-1">
-                                    <button onClick={() => handleChangeLanguage('en', 'English')}>
-                                        <img src="https://flagcdn.com/us.svg" alt="English Flag" className="inline-block mr-2 w-6 h-6" />
-                                        <span>English</span>
-                                    </button>
-                                </div>
-                            </motion.div>
+                            <img src="https://flagcdn.com/us.svg" alt="English Flag" className="w-5 h-5 mr-2" />
+                            English
+                            </button>
                         </motion.div>
-                    ): (
-                        <Link href={route('login')} className='bg-[#e0b52b] z-[999] relative px-3 py-1.5 text-white shadow rounded-xl flex-center'>{t('Login')}</Link>
+                        </motion.div>
+                    ) : (
+                        <Link
+                        href={route('login')}
+                        className="bg-[#e0b52b] px-4 py-2 text-white rounded-xl shadow hover:bg-yellow-500 transition z-[999]"
+                        >
+                        {t('Login')}
+                        </Link>
                     )}
-                    <Link href={"/post-property"}>
-                        <div className='flex gap-1 bg-[#e0b52b] px-3 py-2 shadow rounded-xl items-center text-white'>
-                            <Plus  size={22} className='text-white '/>
-                            <span className='text-white'>{t('List your property')}</span>
+
+                    {/* List Your Property Button */}
+                    <Link href="/post-property">
+                        <div className="flex items-center gap-2 px-4 py-2 text-white bg-[#e0b52b] rounded-xl shadow hover:bg-yellow-500 transition">
+                        <Plus size={20} />
+                        <span>{t('List your property')}</span>
                         </div>
                     </Link>
-                    
-                    <div className='lg:hidden'>
-                        <MobMenu Menus={Menus}/>
+
+                    {/* Mobile Menu Toggle */}
+                    <div className="lg:hidden">
+                        <MobMenu Menus={Menus} />
                     </div>
                 </div>
-                
                 
             </nav>
         </header>

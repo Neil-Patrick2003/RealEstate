@@ -114,7 +114,7 @@ export default function AdminLayout({ children }) {
                   <span className="inline-flex items-center gap-2">
                     <img
                       src="https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-10 h-10  rounded-full object-cover"
                     />
                     <span className="hidden sm:inline text-sm text-gray-700 font-medium">
                       {auth?.name}
