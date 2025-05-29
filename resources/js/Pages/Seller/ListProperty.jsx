@@ -17,7 +17,7 @@ const ListProperty = () => {
     
     <div className='pt-20'>
         <NavBar/>
-        <Modal show={isOpen} onClose={closeModal} maxWidth="2xl">
+        <Modal show={isOpen} onClose={closeModal} maxWidth="2xl" closeable={false}>
           
             
             <div className="mx-auto max-w-xl">
