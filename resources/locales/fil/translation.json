@@ -4,6 +4,27 @@
     "Property Type": "Uri ng Ari-arian",
     "Login": "Mag-login",
     "Language": "Wika",
-    "List your property": "Ilista ang iyong ari-arian"
+    "List your property": "Ilista ang iyong ari-arian",
+    "steps": {
+        "welcome": {
+        "label": "Maligayang Pagdating sa MJVI Realty",
+        "description": "Salamat sa pagpili ng MJVI Realty. Bago mo i-lista ang iyong ari-arian, siguraduhing kumpleto ang lahat ng kinakailangang dokumento. Makakatulong ito upang mabilis at maayos naming ma-verify ang iyong listing."
+        },
+        "required": {
+        "label": "Mga Kailangang Dokumento",
+        "description": "📄 Siguraduhing mayroon ka ng mga sumusunod na dokumento:\n\n✅ Land Title o Deed of Sale\n✅ Balidong Government-Issued ID\n✅ Pinakabagong Tax Declaration o Official Tax Receipt\n✅ Barangay Clearance\n✅ Iba pang karampatang permit na may kaugnayan sa iyong ari-arian"
+        },
+        "reminder": {
+        "label": "Paalala",
+        "description": "Lahat ng isusumiteng dokumento ay daraan sa masusing beripikasyon ng aming mga ahente. Ang hindi kumpletong dokumento ay maaaring magdulot ng pagkaantala o hindi pagkakaapruba ng iyong listing. Mangyaring tiyakin na buo ang iyong mga requirements."
+        },
+        "ready": {
+        "label": "Handa Ka Nang Mag-List!",
+        "description": "Kapag nakumpleto mo na ang lahat ng dokumento, maaari mo nang isumite ang detalye ng iyong ari-arian. Makikipag-ugnayan agad ang isa sa aming mga ahente para sa final na beripikasyon. Excited na kaming makatrabaho ka!"
+        }
+    },
+    "Exit": "Umalis",
+    "Next": "Susunod",
+    "Continue": "Magpatuloy"
 
 }

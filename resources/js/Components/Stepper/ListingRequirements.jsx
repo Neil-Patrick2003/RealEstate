@@ -7,25 +7,28 @@ import Button from '@mui/material/Button';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import { Link } from '@inertiajs/react';
+import { t } from 'i18next'; // or from wherever you globally expose it
+
 
 const steps = [
   {
-    label: 'Welcome to MJVI Realty',
-    description: `Thank you for choosing MJVI Realty. Before listing your property, ensure all required documents are available. This helps us verify your listing efficiently and maintain service quality.`,
+    label: 'steps.welcome.label',
+    description: 'steps.welcome.description',
   },
   {
-    label: 'Required Documentation',
-    description: `📄 Please ensure you have the following documents ready:\n\n✅ Land Title or Deed of Sale\n✅ A Valid Government-Issued ID\n✅ Latest Tax Declaration or Official Tax Receipt\n✅ Barangay Clearance\n✅ Any additional permits relevant to your property`,
+    label: 'steps.required.label',
+    description: 'steps.required.description',
   },
   {
-    label: 'Important Reminder',
-    description: `All submissions undergo verification by our agents. Incomplete documentation may delay or prevent your property from being listed. Kindly review your materials before proceeding.`,
+    label: 'steps.reminder.label',
+    description: 'steps.reminder.description',
   },
   {
-    label: 'You’re Ready to List!',
-    description: `Once you’ve gathered all the required documents, proceed to submit your property details. One of our agents will contact you shortly for final verification. We’re excited to work with you!`,
+    label: 'steps.ready.label',
+    description: 'steps.ready.description',
   },
 ];
+
 
 export default function ListingRequirements({ closeModal }) {
   const theme = useTheme();
@@ -83,7 +86,7 @@ export default function ListingRequirements({ closeModal }) {
           textAlign: 'center',
         }}
       >
-        {steps[activeStep].label}
+         {t(steps[activeStep].label)}
       </Typography>
 
       {/* Divider */}
@@ -116,7 +119,7 @@ export default function ListingRequirements({ closeModal }) {
           variant="body1"
           sx={{ whiteSpace: 'pre-line', fontSize: '1rem' }}
         >
-          {steps[activeStep].description}
+          {t(steps[activeStep].description)}
         </Typography>
       </Box>
 
@@ -140,7 +143,7 @@ export default function ListingRequirements({ closeModal }) {
               onClick={closeModal}
               sx={{ fontWeight: 600, textTransform: 'none' }}
             >
-              Continue
+              {t('Continue')}
             </Button>
           ) : (
             <Button
@@ -152,7 +155,8 @@ export default function ListingRequirements({ closeModal }) {
               }
               sx={{ fontWeight: 600, textTransform: 'none' }}
             >
-              {countdown > 0 ? `Next (${countdown})` : 'Next'}
+              {countdown > 0 ? `${t("Next")} (${countdown})` : t("Next")}
+
             </Button>
           )
         }
@@ -162,7 +166,7 @@ export default function ListingRequirements({ closeModal }) {
               href={'/'}
               className='text-red-600 text-sm font-semibold'
             >
-              Exit
+              {t('Exit')}
             </Link>
           ) : (
             <Button
