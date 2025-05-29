@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,8 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/admin/systems', [SystemController::class, 'index']);
 
 
 Route::get('/post-property', function(){

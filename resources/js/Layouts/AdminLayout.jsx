@@ -8,7 +8,17 @@ import Dropdown from '@/Components/Dropdown';
 
 export default function AdminLayout({ children }) {
   const auth = usePage().props.auth.user;
-  const [isOpen, setIsOpen] = useState(true); // for desktop
+  const [isOpen, setIsOpen] = useState(() => {
+    // Initialize from localStorage if available, else default false
+    const saved = localStorage.getItem('sidebar-isOpen');
+    return saved === null ? false : JSON.parse(saved);
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sidebar-isOpen', JSON.stringify(isOpen));
+  }, [isOpen]);
+
+  
   const [isMobileOpen, setIsMobileOpen] = useState(false); // for mobile
 
   const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
@@ -101,7 +111,7 @@ export default function AdminLayout({ children }) {
                             className="inline-flex items-center rounded-md border gap-1 border-transparent pr-2 bg-white  text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                         >
                            <img src='https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png' className='w-12 h-12'/>
-                            {auth.name}
+                            {auth && auth.name}
 
                             <svg
                                 className="-me-0.5 ms-2 h-4 w-4"
@@ -143,7 +153,7 @@ export default function AdminLayout({ children }) {
             </div>
           </div>
         </header>
-        <div className=''>
+        <div className='p-2 md:p-3 lg:p-4 xl:p-6 sl:p-8'>
           {children}
         </div>
         

@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlignLeft, ChevronDown, Home, User, Settings, UserRound, Landmark, Calendar, LandPlot, ChartNoAxesCombined } from 'lucide-react';
+import {
+  ChevronDown, Home, User, Settings, UserRound,
+  Landmark, Calendar, LandPlot, ChartNoAxesCombined
+} from 'lucide-react';
 import logo from '../../../assets/framer_logo.png';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const [clicked, setClicked] = useState(null);
+  const { url } = usePage();
 
   const Sidebar_animation = {
     open: {
@@ -32,7 +40,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     {
       name: "Users",
       Icon: UserRound,
-      path: "/admin/users",
       subMenu: [
         { name: "Sellers", Icon: User, path: "/admin/users/seller" },
         { name: "Buyer", Icon: Settings, path: "/admin/users/buyer" },
@@ -42,7 +49,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     {
       name: "Properties",
       Icon: Landmark,
-      path: "/admin/properties",
       subMenu: [
         { name: "Property Listing", Icon: User, path: "/admin/properties" },
         { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
@@ -51,101 +57,119 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     {
       name: "Schedule",
       Icon: Calendar,
-      path: "/admin/schedules",
       subMenu: [
-        { name: "Property Listing", Icon: User, path: "/admin/properties" },
-        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
+        { name: "Schedule View", Icon: User, path: "/admin/schedule/view" },
+        { name: "Pending Schedule", Icon: Settings, path: "/admin/schedule/pending" },
       ]
     },
     {
       name: "Maps",
       Icon: LandPlot,
-      path: "/admin/maps",
       subMenu: [
-        { name: "Property Listing", Icon: User, path: "/admin/properties" },
-        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
+        { name: "Map View", Icon: User, path: "/admin/maps/view" },
+        { name: "Location Settings", Icon: Settings, path: "/admin/maps/settings" },
       ]
     },
     {
       name: "Analytics",
       Icon: ChartNoAxesCombined,
-      path: "/admin/analytics",
       subMenu: [
-        { name: "Property Listing", Icon: User, path: "/admin/properties" },
-        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
+        { name: "Traffic", Icon: User, path: "/admin/analytics/traffic" },
+        { name: "Performance", Icon: Settings, path: "/admin/analytics/performance" },
       ]
     },
     {
       name: "System",
       Icon: Settings,
       path: "/admin/systems",
-      subMenu: [
-        { name: "Property Listing", Icon: User, path: "/admin/properties" },
-        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
-      ]
     }
-
-
-    
-    
   ];
 
   return (
     <div className="flex">
-      {/* Sidebar */}
-      <motion.div 
-        className="bg-white text-gray  z-[999] h-screen overflow-hidden md:relative fixed"
+      <motion.div
+        className="bg-white text-gray z-[999] h-screen overflow-hidden md:relative fixed"
         variants={Sidebar_animation}
         animate={isOpen ? "open" : "closed"}
+        initial={false}
       >
         {/* Logo */}
         <div className="px-6">
-            <div className="flex items-center gap-2 font-medium border-b border-slate-300 py-3 mx-auto max-w-xs">
-                <img src={logo} width={45} alt="Logo" />
-                {isOpen && <span className="text-xl">MJVI Realty</span>}
-            </div>
+          <div className="flex items-center gap-2 font-medium border-b border-slate-300 py-3 mx-auto max-w-xs">
+            <img src={logo} width={45} alt="Logo" />
+            {isOpen && <span className="text-xl">MJVI Realty</span>}
+          </div>
         </div>
 
-
         {/* Menu */}
-        <ul className='px-4 py-5 border-r flex flex-col gap-1 font-medium overflow-x-hidden scrollbar-thin scrollbar-track-white scrollbar-thumb-slate-100   md:h-[88%] h-[90%]'>
+        <ul className='px-4 py-5 border-r flex flex-col gap-3 font-medium overflow-x-hidden scrollbar-thin scrollbar-track-white scrollbar-thumb-slate-100 md:h-[88%] h-[90%]'>
           {menus.map(({ name, Icon, path, subMenu }, i) => {
             const isClicked = clicked === i;
             const hasSubMenu = subMenu?.length > 0;
 
             return (
-              <li key={name} className='px-4  py-4 rounded hover:bg-gray-100'>
-                <div
-                  className='flex  justify-center items-center gap-3 cursor-pointer'
-                  onClick={() => setClicked(isClicked ? null : i)}
-                >
-                  <Icon size={23} className=''/>
-                  {isOpen && (
-                    <span className='flex justify-between w-full'>
-                      <span>{name}</span>
-                      {hasSubMenu && (
-                        <ChevronDown
-                          size={18}
-                          className={`transition-transform ${isClicked ? "rotate-180" : ""}`}
-                        />
+              <li key={name}>
+                {path ? (
+                  <Link
+                    href={path}
+                    className={classNames(
+                      url?.startsWith(path)
+                        ? 'bg-green-100 text-green-700'
+                        : 'text-gray-700 hover:bg-green-50 hover:text-green-700',
+                      'flex items-center gap-x-3 px-5 py-2 rounded-xl font-medium transition-all'
+                    )}
+                    onClick={() => setClicked(null)} // close submenu when navigating
+                  >
+                    <div className='flex justify-center items-center gap-3 cursor-pointer'>
+                      <Icon size={23} />
+                      {isOpen && (
+                        <span className='flex justify-between w-full'>
+                          <span>{name}</span>
+                          {hasSubMenu && (
+                            <ChevronDown
+                              size={18}
+                              className={`transition-transform ${isClicked ? "rotate-180" : ""}`}
+                            />
+                          )}
+                        </span>
                       )}
-                    </span>
-                  )}
-                </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <button
+                    className={classNames(
+                      'text-gray-700 hover:bg-green-50 hover:text-green-700',
+                      'flex items-center gap-x-3 px-5 py-2 rounded-xl font-medium w-full text-left transition-all'
+                    )}
+                    onClick={() => setClicked(isClicked ? null : i)}
+                  >
+                    <Icon size={23} />
+                    {isOpen && (
+                      <span className='flex justify-between w-full'>
+                        <span>{name}</span>
+                        {hasSubMenu && (
+                          <ChevronDown
+                            size={18}
+                            className={`transition-transform ${isClicked ? "rotate-180" : ""}`}
+                          />
+                        )}
+                      </span>
+                    )}
+                  </button>
+                )}
 
-                {/* Submenu */}
                 {hasSubMenu && (
                   <motion.ul
-                    className='ml-7  text-sm'
+                    className='ml-7 text-sm'
                     initial="exit"
                     animate={isClicked ? "enter" : "exit"}
                     variants={subMenuDrawer}
                   >
                     {subMenu.map(({ name, Icon, path }) => (
-                      <li key={name} className='p-4'>
+                      <li key={name} className='p-2'>
                         <Link
                           href={path}
-                          className='flex items-center gap-2  hover:bg-gray-200 rounded'
+                          className='flex items-center gap-2 hover:bg-gray-200 rounded px-2 py-1'
                         >
                           <Icon size={17} />
                           {isOpen && <span>{name}</span>}
@@ -154,14 +178,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     ))}
                   </motion.ul>
                 )}
-
-                
               </li>
             );
           })}
         </ul>
       </motion.div>
-
     </div>
   );
 };
