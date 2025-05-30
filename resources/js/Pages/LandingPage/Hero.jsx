@@ -40,7 +40,7 @@ const Hero = ({auth}) => {
                             >
                             <SlidersHorizontal size={16} className="text-gray-900" />
                             <span className="hidden md:inline ml-2 ">
-                                {t('Property Type')}
+                                {t('Any')}
                             </span>
                             </button>
                         </span>

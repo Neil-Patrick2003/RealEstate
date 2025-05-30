@@ -20,33 +20,33 @@ import { PanelTop } from "lucide-react";
 
 
 export const Menus = [
-  {
-    name: "Rent",
-    subMenuHeading: ["Design", "Scale"],
-    subMenu: [
-      {
-        name: "Design",
-        desc: "Responsive design",
-        icon: PanelsTopLeft,
-      },
-      {
-        name: "Management",
-        desc: "Site control",
-        icon: Bolt,
-      },
-      {
-        name: "Navigation",
-        desc: "Link pages",
-        icon: PanelTop,
-      },
-      {
-        name: "CMS",
-        desc: "Management content",
-        icon: Database,
-      },
-    ],
-    gridCols: 2,
-  },
+  // {
+  //   name: "Rent",
+  //   subMenuHeading: ["Design", "Scale"],
+  //   subMenu: [
+  //     {
+  //       name: "Design",
+  //       desc: "Responsive design",
+  //       icon: PanelsTopLeft,
+  //     },
+  //     {
+  //       name: "Management",
+  //       desc: "Site control",
+  //       icon: Bolt,
+  //     },
+  //     {
+  //       name: "Navigation",
+  //       desc: "Link pages",
+  //       icon: PanelTop,
+  //     },
+  //     {
+  //       name: "CMS",
+  //       desc: "Management content",
+  //       icon: Database,
+  //     },
+  //   ],
+  //   gridCols: 2,
+  // },
   {
     name: "Buy",
     subMenuHeading: ["Get started", "Programs", "Recent"],
