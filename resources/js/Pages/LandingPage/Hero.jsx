@@ -29,24 +29,17 @@ const Hero = ({auth}) => {
                     </h1>
                 </div>
 
-                <div className="flex border flex-wrap justify-center items-center gap-2 sm:gap-4 bg-white/20 backdrop-blur-none p-4 sm:p-6 lg:p-10 rounded-xl">
+                <div className="flex border flex-wrap justify-center items-center bg-white/20 backdrop-blur-none p-4 sm:p-6 lg:p-10 rounded-xl">
                     {/* Search Input */}
-                    <input
-                        type="text"
-                        placeholder={t('search')}
-                        className="flex-1 min-w-[180px] sm:min-w-[300px] md:min-w-[500px] lg:min-w-[600px] xl:min-w-[700px] px-3 py-2 rounded-lg text-black border-0 placeholder-gray-600"
-                    />
-
-                    {/* Property Type Dropdown */}
                     <Dropdown>
                         <Dropdown.Trigger>
                         <span className="inline-flex rounded-md">
                             <button
                             type="button"
-                            className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 hover:text-black focus:outline-none"
+                            className="inline-flex items-center rounded-l-lg  bg-white px-3 py-2 md:p-[12px] border-r text-sm font-medium leading-4 text-gray-700 hover:text-black focus:outline-none"
                             >
                             <SlidersHorizontal size={16} className="text-gray-900" />
-                            <span className="hidden md:inline ml-2">
+                            <span className="hidden md:inline ml-2 ">
                                 {t('Property Type')}
                             </span>
                             </button>
@@ -58,9 +51,17 @@ const Hero = ({auth}) => {
                         <Dropdown.Link href="#">Industrial</Dropdown.Link>
                         </Dropdown.Content>
                     </Dropdown>
+                    <input
+                        type="text"
+                        placeholder={t('search')}
+                        className="flex-1 min-w-[180px] sm:min-w-[300px] md:min-w-[500px] lg:min-w-[600px] xl:min-w-[700px] px-3 py-1 md:py-2 text-black border-0 placeholder-gray-600"
+                    />
+
+                    {/* Property Type Dropdown */}
+                    
 
                     {/* Search Button */}
-                    <button className="flex items-center bg-[#e0b52b] hover:bg-[#d1a32c] text-white px-4 py-2 rounded-lg transition-colors duration-300">
+                    <button className="flex items-center bg-[#e0b52b] hover:bg-[#d1a32c] rounded-r-lg text-white px-4 py-2 transition-colors duration-300">
                         <Search size={16} className="mr-1" />
                         <span className="hidden md:inline">{t('Search')}</span>
                     </button>

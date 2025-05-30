@@ -85,7 +85,7 @@ const NavBar = () => {
                 <Link href={'/'}>
                     <div className='flex-center gap-x-3'>
                         <img src={framer_logo} alt='logo' className='size-8'/>
-                        <h3 className='text-white text-lg font-semibold'>MJVI Realty</h3>
+                        <h3 className='hidden md:block text-white text-lg font-semibold'>MJVI Realty</h3>
                     </div>
                 </Link>
                 
@@ -155,7 +155,7 @@ const NavBar = () => {
                     <Link href="/post-property">
                         <div className="flex items-center gap-2 px-4 py-2 text-white bg-[#e0b52b] rounded-xl shadow hover:bg-yellow-500 transition">
                         <Plus size={20} />
-                        <span>{t('List your property')}</span>
+                        <span className='hidden md:block'>{t('List your property')}</span>
                         </div>
                     </Link>
 
