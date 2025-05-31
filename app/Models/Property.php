@@ -8,7 +8,15 @@ class Property extends Model
 {
     protected  $guarded = [];
 
-    public function image(){
+    public function images(){
         return $this->hasMany(PropertyImage::class);
+    }
+
+    public function features(){
+        return $this->hasMany(PropertyFeature::class);
+    }
+
+    public function coordinate(){
+        return $this->hasOne(PropertyCoordinate::class);
     }
 }
