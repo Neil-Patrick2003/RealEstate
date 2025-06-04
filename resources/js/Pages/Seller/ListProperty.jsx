@@ -20,7 +20,7 @@ import Toggle from '@/Components/toggle';
 
 
 const ListProperty = () => {
-  const { data, setData, processing, post, errors } = useForm({
+  const { data, setData, processing, post, reset, errors } = useForm({
     title: '',
     description: '',
     property_type: '',
@@ -47,10 +47,20 @@ const ListProperty = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    post('/post-property', data, {
-      forceFormData: true,  // <-- important for file uploads
+    post('/post-property', {
+      onSuccess: () => {
+        console.log("Form submitted, resetting...");
+        reset();
+        setImagePreviews([]);
+        setFeatureInput('');
+        setData('boundary', null);
+        setData('pin', null);
+      },
+      forceFormData: true, // important for file uploads
     });
   };
+    
+
 
   const handleDescriptionChange = (e) => {
     setData('description', e.target.value);

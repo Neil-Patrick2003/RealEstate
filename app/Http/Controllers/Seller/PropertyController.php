@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\Auth;
 class PropertyController extends Controller
 {   
     public function store(Request $request){
-
-
-        dd($request->toArray());
         
         try {
             $validated = $request->validate([
@@ -38,7 +35,7 @@ class PropertyController extends Controller
 
             'pin' => 'nullable|array',
 
-            'isPresell' => 'required|boolean',
+            'isPresell' => 'nullable|boolean',
 
             'image_url' => 'required|array',
         ]);
