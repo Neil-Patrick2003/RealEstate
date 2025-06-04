@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import {
   CirclePlus,
   CheckCircle,
@@ -13,6 +13,11 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Editor from 'react-simple-wysiwyg';
+import MapWithDraw from '@/Components/MapWithDraw';
+import { Accordion, AccordionDetails, AccordionSummary, Typography } from '@mui/material';
+import Collapsable from '@/Components/collapsable/collapsable';
+import Toggle from '@/Components/toggle';
+
 
 const ListProperty = () => {
   const { data, setData, processing, post, errors } = useForm({
@@ -29,16 +34,16 @@ const ListProperty = () => {
     total_bathrooms: '',
     car_slots: '',
     feature_name: [],
-    image_url: [], // This will hold File objects
+    image_url: [],
+    boundary: null,
+    pin: null,
   });
 
-  const [isOpen, setIsOpen] = useState(false);
+  
+
   const [imagePreviews, setImagePreviews] = useState([]);
 
-  const closeModal = () => setIsOpen(false);
-
   const [featureInput, setFeatureInput] = useState('');
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -70,69 +75,101 @@ const ListProperty = () => {
     setData('image_url', data.image_url.filter((_, i) => i !== index));
   };
 
-  // Step validation
-  const isFilled = {
-    keyInfo: !!data.title && !!data.description,
-    location: !!data.address,
-    sizeLayout:
-      !!data.lot_area &&
-      !!data.floor_area &&
-      !!data.car_slots &&
-      !!data.total_rooms &&
-      !!data.total_bedrooms &&
-      !!data.total_bathrooms,
-    price: !!data.price,
-    features: data.feature_name.length > 0 || data.image_url.length > 0,
+ 
+  const auth = usePage().props.auth;
+
+  // Called by PropertyMapDraw component on map changes
+  const handleMapChange = ({ boundary, pin }) => {
+    setData('boundary', boundary);
+    setData('pin', pin);
   };
 
-  const steps = [
-    { label: 'Key Information', filled: isFilled.keyInfo },
-    { label: 'Location', filled: isFilled.location },
-    { label: 'Size & Layout', filled: isFilled.sizeLayout },
-    { label: 'Price', filled: isFilled.price },
-    { label: 'Features & Images', filled: isFilled.features },
-  ];
+  //type
+  const property_type = 
+    [
+        {
+            name: "Apartment",
+            subTypes: [
+                "Penthouse",
+                "Loft",
+                "Bedspace",
+                "Room"
+            ]
+        },
+        {
+            name: "Commercial",
+            subTypes: [
+                "Retail",
+                "Offices",
+                "Building",
+                "Warehouse",
+                "Serviced Office",
+                "Coworking Space"
+            ]
+        },
+        {
+            name: "Condominium",
+            subTypes: [
+                "Loft",
+                "Studio",
+                "Penthouse",
+                "Other",
+                "Condotel"
+            ]
+        },
+        {
+            name: "House",
+            subTypes: [
+                "Townhouse",
+                "Beach House",
+                "Single Family House",
+                "Villas"
+            ]
+        },
+        {
+            name: "Land",
+            subTypes: [
+                "Beach Lot",
+                "Memorial Lot",
+                "Agricultural Lot",
+                "Commercial Lot",
+                "Residential Lot",
+                "Parking Lot"
+            ]
+        }
+    ];
+
+
+    const [selectedType, setSelectedType] = useState(null);
+
+    const handleTypeClick = (typeName) => {
+      const selected = property_type.find(type => type.name === typeName);
+      setSelectedType(selected);
+      setData('property_type', typeName);
+    };
+
+    const [enabled, setEnabled] = useState(false)
+
+  
 
   return (
-    <div className="pt-20 bg-gray-50 px-4 min-h-screen">
+    <div className=" pt-20 bg-gray-50 min-h-screen">
       <NavBar />
-
-      <Modal show={isOpen} onClose={closeModal} maxWidth="2xl" closeable={false}>
-        <div className="mx-auto max-w-xl">
-          <ListingRequirements closeModal={closeModal} />
-        </div>
-      </Modal>
-
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Sidebar Progress */}
-            <div className="hidden lg:block">
-              <div className="bg-white border rounded-xl p-6 space-y-4 sticky top-24">
-                <h2 className="text-lg font-semibold mb-2">Form Progress</h2>
-                {steps.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between text-sm text-gray-700"
-                  >
-                    <span>{item.label}</span>
-                    {item.filled ? (
-                      <CheckCircle className="text-green-500" size={18} />
-                    ) : (
-                      <CirclePlus className="text-gray-300" size={18} />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
+          <div className="">
             {/* Main Form */}
-            <section className="col-span-2 space-y-6 bg-white p-4 md:p-6 rounded-2xl border">
+            <section className="space-y-6 bg-white p-4 md:p-6 rounded-2xl">
               {/* Title */}
+              <div>
+                is pre sell
+                <Toggle data={data} setData={setData}/>
+              </div>
               <div>
                 <InputLabel htmlFor="title" value="Title" />
                 <TextInput
                   id="title"
+                  name="title"
                   value={data.title}
                   onChange={(e) => setData('title', e.target.value)}
                   className="mt-2 block w-full"
@@ -144,17 +181,70 @@ const ListProperty = () => {
 
               {/* Description */}
               <div>
-                <InputLabel htmlFor="description" value="Description" />
+                {/* <InputLabel htmlFor="description" value="Description" /> */}
+                
                 <Editor
+                  id='select'
                   value={data.description}
-                  onChange={handleDescriptionChange}
+                  onChange={(e) => setData('description', e.target.value)}
                   className="h-60"
                 />
                 <InputError message={errors.description} className="mt-2" />
               </div>
 
               {/* Property Type/Subtype */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div className="">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {property_type.length > 0 ? (
+                        property_type.map((type) => (
+                        <div
+                            key={type.name}
+                            className={`p-4 border rounded-lg text-center cursor-pointer transition ${
+                            selectedType?.name === type.name ? 'border-green-500 bg-green-500 text-white' : ''
+                            }`}
+                            onClick={() => handleTypeClick(type.name)}
+                        >
+                            <p className="font-medium">{type.name}</p>
+                        </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 col-span-full">There’s no available property type.</p>
+                    )}
+                    </div>
+                </div>
+
+                {/* Subcategory Section */}
+                <div className="p-4 lg:p-6 border rounded-xl bg-white shadow-sm">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Subcategories</h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {selectedType ? (
+                        selectedType.subTypes.length > 0 ? (
+                        selectedType.subTypes.map((subType, index) => (
+                            <div
+                            key={index}
+                            className="p-3 border rounded-lg text-center bg-gray-50 text-gray-700"
+                            onClick={() => {
+                              setData('property_sub_type', subType);
+                              console.log(subType);
+                            }}
+                            >
+                            {subType}
+                            </div>
+                        ))
+                        ) : (
+                        <p className="text-gray-500 col-span-full text-center">No subcategories available for this type.</p>
+                        )
+                    ) : (
+                        <p className="text-gray-500 col-span-full text-center">
+                        Please select a property type to see subcategories.
+                        </p>
+                    )}
+                    </div>
+                </div>
+            </div>
+              {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <InputLabel htmlFor="property_type" value="Property Type" />
                   <select
@@ -182,7 +272,7 @@ const ListProperty = () => {
                     <option value="commercial">Commercial</option>
                   </select>
                 </div>
-              </div>
+              </div> */}
 
               {/* Price & Address */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -201,13 +291,20 @@ const ListProperty = () => {
                   <InputLabel htmlFor="address" value="Address" />
                   <TextInput
                     id="address"
+                    type="text"
                     value={data.address}
                     onChange={(e) => setData('address', e.target.value)}
                     className="mt-2 w-full"
                     placeholder="Magahis tres, Tuy Batangas"
+                    autoComplete="address"
                   />
                 </div>
               </div>
+
+            <Collapsable title="About Us">
+              <p>This is the collapsible content. You can add paragraphs, lists, images, etc.</p>
+            </Collapsable>
+
 
               {/* Size & Layout */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -217,8 +314,9 @@ const ListProperty = () => {
                   { label: 'Car Slots', key: 'car_slots' },
                 ].map(({ label, key }) => (
                   <div key={key}>
-                    <InputLabel value={label} />
+                    <InputLabel htmlFor={key} value={label} />
                     <input
+                      id={key}
                       type="number"
                       value={data[key]}
                       onChange={(e) => setData(key, e.target.value)}
@@ -236,8 +334,9 @@ const ListProperty = () => {
                   { label: 'Bathrooms', key: 'total_bathrooms' },
                 ].map(({ label, key }) => (
                   <div key={key}>
-                    <InputLabel value={label} />
+                    <InputLabel htmlFor={key} value={label} />
                     <input
+                      id={key}
                       type="number"
                       value={data[key]}
                       onChange={(e) => setData(key, e.target.value)}
@@ -249,10 +348,8 @@ const ListProperty = () => {
 
               {/* Upload Images */}
               <div>
-                <InputLabel htmlFor="image_upload" value="Upload Property Images" />
-
                 <div className="flex items-center justify-center w-full mt-2">
-                  <label
+                  <InputLabel
                     htmlFor="image_upload"
                     className="flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-300 rounded-xl bg-white cursor-pointer hover:bg-gray-100 transition"
                   >
@@ -291,7 +388,7 @@ const ListProperty = () => {
                       onChange={handleImageChange}
                       className="hidden"
                     />
-                  </label>
+                  </InputLabel>
                 </div>
 
                 {/* Image Previews */}
@@ -321,6 +418,7 @@ const ListProperty = () => {
                 <InputLabel htmlFor="feature_input" value="Features" />
                 <div className="flex gap-2 mt-2">
                   <input
+                    id='feature_input'
                     type="text"
                     placeholder="Add feature"
                     className="border rounded px-3 py-1 w-full"
@@ -359,6 +457,11 @@ const ListProperty = () => {
                 <InputError message={errors.feature_name} className="mt-2" />
               </div>
 
+               <div className="p-6">
+                  <h1 className="text-2xl font-bold mb-4">Draw Property Location</h1>
+                  <MapWithDraw userId={auth.user.id}  onChange={handleMapChange} />
+                </div>
+
               {/* Submit Button */}
               <div className="pt-4">
                 <button
@@ -370,6 +473,8 @@ const ListProperty = () => {
                 </button>
               </div>
             </section>
+
+             
           </div>
         </form>
       </div>

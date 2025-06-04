@@ -6,9 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class PropertyCoordinate extends Model
 {
-    protected $guarded = [];
+     protected $fillable = ['property_id', 'coordinates', 'type'];
 
-    public function property(){
+    protected $casts = [
+        'coordinates' => 'array', // auto casts JSON to array and vice versa
+    ];
+
+    public function property()
+    {
         return $this->belongsTo(Property::class);
     }
 

@@ -17,6 +17,18 @@ class Property extends Model
     }
 
     public function coordinate(){
-        return $this->hasOne(PropertyCoordinate::class);
+        return $this->hasMany(PropertyCoordinate::class);
+    }
+
+    // Helper for getting boundary polygon (single)
+    public function boundary()
+    {
+        return $this->hasOne(PropertyCoordinate::class)->where('type', 'polygon');
+    }
+
+    // Helper for getting marker pin (single)
+    public function marker()
+    {
+        return $this->hasOne(PropertyCoordinate::class)->where('type', 'marker');
     }
 }

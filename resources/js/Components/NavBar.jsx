@@ -80,7 +80,7 @@ const NavBar = () => {
 
   return (
     <>
-        <header className='h-16 text-[15px] fixed inset-0 flex-center bg-[#5c7934]'>
+        <header className='h-16 text-[15px] z-50 fixed inset-0 flex-center bg-[#5c7934]'>
             <nav className='px-3.5 flex-center-between w-full mx-w-7xl mx-auto'>
                 <Link href={'/'}>
                     <div className='flex-center gap-x-3'>
