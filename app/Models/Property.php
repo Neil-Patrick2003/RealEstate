@@ -6,7 +6,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Property extends Model
 {
-    protected  $guarded = [];
+    protected $fillable = [
+        'seller_id',
+        'title',
+        'description',
+        'property_type',
+        'sub_type',
+        'price',
+        'address',
+        'status',
+        'lot_area',
+        'floor_area',
+        'total_rooms',
+        'bedrooms',
+        'bathrooms',
+        'car_slots',
+        'isPresell',
+    ];
 
     public function images(){
         return $this->hasMany(PropertyImage::class);
