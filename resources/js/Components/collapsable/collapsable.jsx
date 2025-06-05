@@ -14,7 +14,7 @@ export default function Collapsable({ title = "Click to toggle", children, descr
   }, [open]);
 
   return (
-    <div className="rounded-2xl border border-gray-200 shadow-sm transition-all duration-300 bg-white overflow-hidden">
+    <div className="rounded-2xl shadow-sm transition-all duration-300 bg-white overflow-hidden">
       {/* Header */}
       <div
         onClick={() => setOpen(!open)}
@@ -34,10 +34,10 @@ export default function Collapsable({ title = "Click to toggle", children, descr
       {/* Content */}
       <div
         ref={contentRef}
-        className="overflow-hidden transition-all duration-300 ease-in-out"
+        className="overflow-auto transition-all duration-300 ease-in-out"
         style={{ maxHeight: '0px' }}
       >
-        <div className="px-6 py-3 md:py-4 lg:py-5 sm:px-7 lg:px-8 bg-white border-t border-gray-200 text-gray-700">
+        <div className=" px-6 py-3 md:py-4 lg:py-5 sm:px-7 lg:px-8 bg-white border-t border-gray-200 text-gray-700">
           {children}
         </div>
       </div>

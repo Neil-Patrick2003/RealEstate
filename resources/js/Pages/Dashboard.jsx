@@ -2,14 +2,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
-import AdminLayout from '@/Layouts/AdminLayout';
 
 
 export default function Dashboard() {
       const { t } = useTranslation();
 
     return (
-        <AdminLayout
+        <AuthenticatedLayout
         
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
@@ -31,6 +30,6 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
-        </AdminLayout>
+        </AuthenticatedLayout>
     );
 }

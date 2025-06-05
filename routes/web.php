@@ -30,6 +30,11 @@ Route::get('/post-property', function(){
 })->middleware('auth')->name('post-property');
 
 Route::post('/post-property', [PropertyController::class, 'store'])->middleware('auth')->name('post-property');
+Route::get('/properties', [PropertyController::class, 'index']);
+
+
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

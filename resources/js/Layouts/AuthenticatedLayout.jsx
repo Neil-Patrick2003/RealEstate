@@ -1,176 +1,178 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
+import React, { useState, useEffect } from 'react';
+import Sidebar from '@/Components/SIdebar/sidebar';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AlignLeft, Bell, Languages, LogOut, Moon, X } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
+import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 
-export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+export default function AuthenticatedLayout({ children }) {
+  const auth = usePage().props.auth.user;
+  const [isOpen, setIsOpen] = useState(() => {
+    // Initialize from localStorage if available, else default false
+    const saved = localStorage.getItem('sidebar-isOpen');
+    return saved === null ? false : JSON.parse(saved);
+  });
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+  useEffect(() => {
+    localStorage.setItem('sidebar-isOpen', JSON.stringify(isOpen));
+  }, [isOpen]);
 
-    return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <nav className="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
-                                </Link>
-                            </div>
+  
+  const [isMobileOpen, setIsMobileOpen] = useState(false); // for mobile
 
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
-                        </div>
+  const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
-                                            >
-                                                {user.name}
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setIsMobileOpen(!isMobileOpen);
+    } else {
+      setIsOpen(!isOpen);
+    }
+  };
 
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
+  // Optional: Close mobile drawer on route change or screen resize
+  useEffect(() => {
+    if (!isMobile) {
+      setIsMobileOpen(false);
+    }
+  }, [isMobile]);
 
-                                    <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
-                                            Profile
-                                        </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-900 dark:hover:text-gray-400 dark:focus:bg-gray-900 dark:focus:text-gray-400"
-                            >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
-                    }
-                >
-                    <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <div className="border-t border-gray-200 pb-1 pt-4 dark:border-gray-600">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800 dark:text-gray-200">
-                                {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
-                        </div>
-
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            {header && (
-                <header className="bg-white shadow dark:bg-gray-800">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
-                    </div>
-                </header>
-            )}
-
-            <main>{children}</main>
+  return (
+    <div className="h-screen bg-gray-200 flex overflow-hidden relative">
+      {/* Sidebar for Desktop */}
+      {!isMobile && (
+        <div className="hidden md:block">
+          <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
         </div>
-    );
+      )}
+
+      {/* Sidebar for Mobile */}
+      <AnimatePresence>
+        {isMobileOpen && isMobile && (
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-0 left-0 z-50 w-64 h-full bg-white border"
+          >
+            <Sidebar isOpen={true} setIsOpen={setIsMobileOpen} />
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="absolute top-4 right-4 p-2"
+            >
+              <X />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Overlay behind mobile sidebar */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black opacity-30"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Main Content */}
+      <main className="w-full h-full overflow-auto bg-gray-50">
+        <header className="flex justify-between items-center border-b bg-white px-4 py-3">
+          {/* Left side: toggle + search */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleSidebar}
+              className="p-2 bg-white rounded-lg border"
+            >
+              <AlignLeft />
+            </button>
+
+            {/* Search input: shown only on medium+ screens */}
+            <input
+              placeholder="Search"
+              className="hidden md:block ml-3 w-72 border rounded-lg border-gray-200 px-3 py-1.5 text-sm"
+            />
+          </div>
+
+          {/* Right side */}
+          <div className="flex items-center gap-4">
+            {/* Language, Theme, Notification */}
+            <div className="hidden sm:flex items-center gap-3">
+              {/* Language Dropdown */}
+              <Dropdown>
+                <Dropdown.Trigger>
+                  <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200">
+                    <Languages size={22} className="text-gray-600" />
+                  </div>
+                </Dropdown.Trigger>
+                <Dropdown.Content>
+                  <ul className="py-1 px-2 text-sm text-gray-700">
+                    <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">English</li>
+                    <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">Filipino</li>
+                  </ul>
+                </Dropdown.Content>
+              </Dropdown>
+
+              {/* Theme Toggle */}
+              <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200 cursor-pointer">
+                <Moon size={20} className="text-gray-600" />
+              </div>
+
+              {/* Notification */}
+              <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200 cursor-pointer">
+                <Bell size={20} className="text-gray-600" />
+              </div>
+            </div>
+
+            {/* User Dropdown */}
+            <div className="flex items-center gap-2">
+              <Dropdown>
+                <Dropdown.Trigger>
+                  <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition">
+                    <img
+                      src="https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
+                      alt="Profile"
+                      className="w-9 h-9 rounded-full object-cover border"
+                    />
+                    <span className="hidden sm:inline text-sm font-medium text-gray-700">
+                      {auth?.name}
+                    </span>
+                    <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </Dropdown.Trigger>
+
+                <Dropdown.Content>
+                  <Dropdown.Link href={route('profile.edit')} className="px-4 py-2 hover:bg-gray-100">
+                    Profile
+                  </Dropdown.Link>
+                  <Dropdown.Link
+                    href={route('logout')}
+                    method="post"
+                    as="button"
+                    className="flex items-center justify-between px-4 py-2 hover:bg-gray-100"
+                  >
+                    <span>Log Out</span>
+                    <LogOut size={18} className="text-gray-500" />
+                  </Dropdown.Link>
+                </Dropdown.Content>
+              </Dropdown>
+            </div>
+          </div>
+
+        </header>
+
+        <div className='p-2 md:p-3 lg:p-4 xl:p-6 sl:p-8'>
+          {children}
+        </div>
+        
+      </main>
+    </div>
+  );
 }

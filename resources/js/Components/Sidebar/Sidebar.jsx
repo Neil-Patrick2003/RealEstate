@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ChevronDown, Home, User, Settings, UserRound,
-  Landmark, Calendar, LandPlot, ChartNoAxesCombined
+  Landmark, Calendar, LandPlot, ChartNoAxesCombined,
+  Map,
+  Mail
 } from 'lucide-react';
 import logo from '../../../assets/framer_logo.png';
 import { Link, usePage } from '@inertiajs/react';
@@ -38,51 +40,26 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       path: "/dashboard"
     },
     {
-      name: "Users",
-      Icon: UserRound,
-      subMenu: [
-        { name: "Sellers", Icon: User, path: "/admin/users/seller" },
-        { name: "Buyer", Icon: Settings, path: "/admin/users/buyer" },
-        { name: "Agent", Icon: Settings, path: "/admin/users/agent" }
-      ]
-    },
-    {
       name: "Properties",
-      Icon: Landmark,
-      subMenu: [
-        { name: "Property Listing", Icon: User, path: "/admin/properties" },
-        { name: "Pending Property", Icon: Settings, path: "/admin/properties/pending" },
-      ]
+      Icon: Map,
+      path: "/properties"
     },
     {
-      name: "Schedule",
+      name: "Enquiries",
+      Icon: Mail,
+      path: "/enquiries"
+    },
+    {
+      name: "Tripping",
       Icon: Calendar,
-      subMenu: [
-        { name: "Schedule View", Icon: User, path: "/admin/schedule/view" },
-        { name: "Pending Schedule", Icon: Settings, path: "/admin/schedule/pending" },
-      ]
+      path: "/tripping"
     },
     {
-      name: "Maps",
-      Icon: LandPlot,
-      subMenu: [
-        { name: "Map View", Icon: User, path: "/admin/maps/view" },
-        { name: "Location Settings", Icon: Settings, path: "/admin/maps/settings" },
-      ]
-    },
-    {
-      name: "Analytics",
+      name: "Sales",
       Icon: ChartNoAxesCombined,
-      subMenu: [
-        { name: "Traffic", Icon: User, path: "/admin/analytics/traffic" },
-        { name: "Performance", Icon: Settings, path: "/admin/analytics/performance" },
-      ]
+      path: "/my-sales"
     },
-    {
-      name: "System",
-      Icon: Settings,
-      path: "/admin/systems",
-    }
+    
   ];
 
   return (

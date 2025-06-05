@@ -450,7 +450,7 @@ const ListProperty = () => {
                   className="bg-green-600 text-white w-full sm:w-auto px-6 py-2 rounded hover:bg-green-700 transition"
                   disabled={processing}
                 >
-                  Submit Property
+                  { processing ? "Submiting" : "Submit"}
                 </button>
             </div>
 

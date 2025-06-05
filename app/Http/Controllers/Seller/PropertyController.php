@@ -8,13 +8,16 @@ use App\Models\PropertyFeature;
 use App\Models\PropertyImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class PropertyController extends Controller
 {   
+    public function index(){
+        return Inertia::render('Seller/Properties/Index');
+    }
     public function store(Request $request){
         
-        try {
-            $validated = $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:1000',
             'property_type' => 'required|string',
@@ -39,9 +42,6 @@ class PropertyController extends Controller
 
             'image_url' => 'required|array',
         ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            dd($e->errors()); // Shows which fields are failing and why
-        }
 
         //create property
         $property = Property::create([

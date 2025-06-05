@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/Components/SIdebar/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlignLeft, Bell, LogOut, Moon, X } from 'lucide-react';
+import { AlignLeft, Bell, Languages, LogOut, Moon, X } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
@@ -78,7 +78,7 @@ export default function AdminLayout({ children }) {
 
       {/* Main Content */}
       <main className="w-full h-full overflow-auto bg-gray-50">
-        <header className="flex justify-between items-center border-b bg-white px-4 py-2">
+        <header className="flex justify-between items-center border-b bg-white px-4 py-3">
           {/* Left side: toggle + search */}
           <div className="flex items-center gap-2">
             <button
@@ -96,60 +96,76 @@ export default function AdminLayout({ children }) {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2">
-              {/* Hide icons on extra-small */}
-              <div className="border p-2.5 rounded-full">
-                <Moon />
+          <div className="flex items-center gap-4">
+            {/* Language, Theme, Notification */}
+            <div className="hidden sm:flex items-center gap-3">
+              {/* Language Dropdown */}
+              <Dropdown>
+                <Dropdown.Trigger>
+                  <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200">
+                    <Languages size={22} className="text-gray-600" />
+                  </div>
+                </Dropdown.Trigger>
+                <Dropdown.Content>
+                  <ul className="py-1 px-2 text-sm text-gray-700">
+                    <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">English</li>
+                    <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">Filipino</li>
+                  </ul>
+                </Dropdown.Content>
+              </Dropdown>
+
+              {/* Theme Toggle */}
+              <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200 cursor-pointer">
+                <Moon size={20} className="text-gray-600" />
               </div>
-              <div className="border p-2.5 rounded-full">
-                <Bell />
+
+              {/* Notification */}
+              <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200 cursor-pointer">
+                <Bell size={20} className="text-gray-600" />
               </div>
             </div>
 
-            {/* User dropdown */}
+            {/* User Dropdown */}
             <div className="flex items-center gap-2">
               <Dropdown>
                 <Dropdown.Trigger>
-                  <span className="inline-flex items-center gap-2">
+                  <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition">
                     <img
                       src="https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
-                      className="w-10 h-10  rounded-full object-cover"
+                      alt="Profile"
+                      className="w-9 h-9 rounded-full object-cover border"
                     />
-                    <span className="hidden sm:inline text-sm text-gray-700 font-medium">
+                    <span className="hidden sm:inline text-sm font-medium text-gray-700">
                       {auth?.name}
                     </span>
-                    <svg
-                      className="w-4 h-4 text-gray-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
+                    <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
                         d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
                         clipRule="evenodd"
                       />
                     </svg>
-                  </span>
+                  </div>
                 </Dropdown.Trigger>
 
                 <Dropdown.Content>
-                  <Dropdown.Link href={route('profile.edit')}>
+                  <Dropdown.Link href={route('profile.edit')} className="px-4 py-2 hover:bg-gray-100">
                     Profile
                   </Dropdown.Link>
                   <Dropdown.Link
                     href={route('logout')}
                     method="post"
                     as="button"
-                    className="flex items-center justify-between"
+                    className="flex items-center justify-between px-4 py-2 hover:bg-gray-100"
                   >
                     <span>Log Out</span>
-                    <LogOut size={20} className="text-gray-500" />
+                    <LogOut size={18} className="text-gray-500" />
                   </Dropdown.Link>
                 </Dropdown.Content>
               </Dropdown>
             </div>
           </div>
+
         </header>
 
         <div className='p-2 md:p-3 lg:p-4 xl:p-6 sl:p-8'>

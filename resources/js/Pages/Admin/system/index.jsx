@@ -2,7 +2,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
-import AdminLayout from '@/Layouts/AdminLayout'
+import AdminLayout from '@/Layouts/User'
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react'
 
