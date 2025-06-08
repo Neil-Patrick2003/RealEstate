@@ -87,15 +87,8 @@ const index = () => {
     ];
 
     const [selectedType, setSelectedType] = useState(null);
-
-   
-
     
 
-
-  console.log(selectedType);
-        
-    
 
 
 

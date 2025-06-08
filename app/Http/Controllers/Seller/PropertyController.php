@@ -12,8 +12,18 @@ use Inertia\Inertia;
 
 class PropertyController extends Controller
 {   
-    public function index(){
-        return Inertia::render('Seller/Properties/Index');
+    public function index(Request $request){
+
+        $properties = Property::where('seller_id', '=', Auth::id())
+        ->when($request->search, function ($q) use ($request) {
+            return $q->where('title', 'like', '%' . $request->search . '%');
+        })
+            ->latest()
+            ->paginate(20, ['*'], 'page', $request->input('page', 1));
+
+        return Inertia::render('Seller/Properties/Index', [
+            'properties' => $properties
+        ]);
     }
     public function store(Request $request){
         

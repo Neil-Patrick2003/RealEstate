@@ -30,7 +30,7 @@ Route::get('/post-property', function(){
 })->middleware('auth')->name('post-property');
 
 Route::post('/post-property', [PropertyController::class, 'store'])->middleware('auth')->name('post-property');
-Route::get('/properties', [PropertyController::class, 'index']);
+Route::get('/properties', [PropertyController::class, 'index'])->name('my-properties');
 
 
 
