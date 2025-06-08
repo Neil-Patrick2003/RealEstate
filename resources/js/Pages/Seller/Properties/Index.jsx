@@ -46,9 +46,9 @@ const Index = ({ properties, search = '', page = 1 }) => {
 
   return (
     <AuthenticatedLayout>
-      <div className="p-4 md:p-6 h-screen overflow-auto bg-gray-50">
-        <div className="bg-white h-full shadow rounded-2xl">
-          <div className="p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="p-1 md:p-6 min-h-screen bg-gray-50">
+        <div className=" bg-white h-full shadow rounded-2xl overflow-x-auto">
+          <div className="p-4 border flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <select name="type" id="type" className="border border-gray-300 rounded-md px-3 py-2">
               {types.map((type) => (
                 <option key={type} value={type}>{type}</option>
@@ -66,7 +66,7 @@ const Index = ({ properties, search = '', page = 1 }) => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500" />
             </div>
           </div>
-          <div className="overflow-auto h-full">
+          <div className=" h-full">
             <table className="min-w-full text-sm text-left text-gray-700">
               <thead className="bg-gray-100 sticky top-0 z-10">
                 <tr>
