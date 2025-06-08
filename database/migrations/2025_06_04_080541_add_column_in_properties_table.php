@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('properties', function (Blueprint $table) {
             $table->boolean('isPresell')->default(false);
+            $table->string('image_url');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('properties', function (Blueprint $table) {
             $table->dropColumn('isPresell');
+            $table->dropColumn('image_url');
         });
     }
 };
