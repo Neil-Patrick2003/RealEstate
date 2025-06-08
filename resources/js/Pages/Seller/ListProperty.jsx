@@ -33,10 +33,13 @@ const ListProperty = () => {
     total_bedrooms: '',
     total_bathrooms: '',
     car_slots: '',
+    isPresell: '',
+    image_url: '',
     feature_name: [],
-    image_url: [],
+    image_urls: [],
     boundary: null,
     pin: null,
+    image_preview: ''
   });
 
   
@@ -76,13 +79,13 @@ const ListProperty = () => {
     }));
 
     setImagePreviews((prev) => [...prev, ...newPreviews]);
-    setData('image_url', [...data.image_url, ...files]);
+    setData('image_urls', [...data.image_urls, ...files]);
   };
 
   // Removes selected image preview + file
   const handleRemoveImage = (index) => {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
-    setData('image_url', data.image_url.filter((_, i) => i !== index));
+    setData('image_urls', data.image_urls.filter((_, i) => i !== index));
   };
 
  
@@ -158,7 +161,24 @@ const ListProperty = () => {
       setData('property_type', typeName);
     };
 
-    const [enabled, setEnabled] = useState(false)
+    const [enabled, setEnabled] = useState(false);
+
+    const [preview, setPreview] = useState(null); // For image preview
+
+
+     
+    const handleImagePropertyChange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        setPreview(URL.createObjectURL(file)); // Preview image instantly
+        setData('image_url', file); // File for upload via Inertia
+      }
+    };
+
+
+
+
+    
 
   
 
@@ -204,6 +224,66 @@ const ListProperty = () => {
                     />
                     <InputError message={errors.description} className="mt-2" />
                   </div>
+
+                  {/* property image */}
+                  <div className="flex flex-col items-center">
+                    <label
+                      htmlFor="property_image"
+                      className={`mt-2 flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed rounded-xl transition ${
+                        preview ? 'border-transparent' : 'border-gray-300 bg-white hover:bg-gray-50 cursor-pointer'
+                      }`}
+                    >
+                      {!preview && (
+                        <div className="flex flex-col items-center justify-center px-6 pt-5 pb-6">
+                          <div className="mb-4 bg-gray-100 rounded-full p-3">
+                            <svg
+                              className="w-6 h-6 text-gray-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1M12 12v6m0-6l-3 3m3-3l3 3M16 8a4 4 0 0 0-8 0v1H5a2 2 0 0 0 0 4h14a2 2 0 0 0 0-4h-3V8z"
+                              />
+                            </svg>
+                          </div>
+                          <p className="mb-2 text-lg font-semibold text-gray-700">Drag & Drop Files Here</p>
+                          <p className="text-sm text-gray-500 text-center">PNG, JPG, WebP — or click to browse</p>
+                        </div>
+                      )}
+
+                      {preview && (
+                        <div className="flex flex-col items-center">
+                          <img
+                            src={preview}
+                            alt="Preview"
+                            className="h-40 w-40 rounded-full object-cover shadow-md"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById('property_image').click()}
+                            className="mt-2 px-4 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded"
+                          >
+                            Change
+                          </button>
+                        </div>
+                      )}
+                    </label>
+
+                    <input
+                      type="file"
+                      id="property_image"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImagePropertyChange}
+                    />
+                  </div>
+
+
+  
 
                   {/* Property Type */}
                   <div>
@@ -390,7 +470,7 @@ const ListProperty = () => {
                       </div>
                     ))}
                   </div>
-                  <InputError message={errors.image_url} className="mt-2" />
+                  <InputError message={errors.image_urls} className="mt-2" />
                 </div>
 
                 {/* Feature Tags */}

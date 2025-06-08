@@ -41,6 +41,9 @@ const Index = ({ properties, search = '', page = 1 }) => {
     }
   };
 
+      const imageUrl = '/storage/';
+
+
   return (
     <AuthenticatedLayout>
       <div className="p-4 md:p-6 h-screen overflow-auto bg-gray-50">
@@ -86,6 +89,12 @@ const Index = ({ properties, search = '', page = 1 }) => {
                         <input type="checkbox" name={property.title} id={property.id} />
                       </td>
                       <td className="px-4 py-4 flex items-center gap-4 whitespace-nowrap">
+
+                        <img
+                          src={`${imageUrl}${property.image_url}`}
+                          alt={property.title}
+                          className=" h-20 w-20  object-cover"
+                        />
                         <div>
                           <div className="font-semibold text-gray-900">{property.title}</div>
                           <div className="text-xs text-gray-500">{property.address}</div>

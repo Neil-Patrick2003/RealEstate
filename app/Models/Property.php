@@ -22,6 +22,7 @@ class Property extends Model
         'bathrooms',
         'car_slots',
         'isPresell',
+        'image_url'
     ];
 
     public function images(){

@@ -26,6 +26,7 @@ class PropertyController extends Controller
         ]);
     }
     public function store(Request $request){
+
         
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -40,6 +41,8 @@ class PropertyController extends Controller
             'total_bedrooms' => 'required|integer|min:0',
             'total_bathrooms' => 'required|integer|min:0',
             'car_slots' => 'required|integer|min:0',
+            'image_url' => 'required',
+
 
             'feature_name' => 'nullable|array',
             'feature_name.*' => 'string|max:255',
@@ -48,10 +51,21 @@ class PropertyController extends Controller
 
             'pin' => 'nullable|array',
 
-            'isPresell' => 'nullable|boolean',
+            'isPresell' => 'nullable|boolean',           
 
-            'image_url' => 'required|array',
+            'image_urls' => 'required|array',
         ]);
+
+        $property_image_url = null;
+        if ($request->hasFile('image_url')) {
+            $destination_path = 'images';
+            $image_url = $request->file('image_url');
+            $photo_name = $image_url->getClientOriginalName();
+            $property_image_url = $image_url->storeAs($destination_path, $photo_name, 'public');
+            
+        }
+
+
 
         //create property
         $property = Property::create([
@@ -69,7 +83,8 @@ class PropertyController extends Controller
             'bedrooms' => $validated['total_bedrooms'],
             'bathrooms' => $validated['total_bathrooms'],
             'car_slots' => $validated['car_slots'],
-            'isPresell' => $validated['isPresell']
+            'isPresell' => $validated['isPresell'],
+            'image_url' => $property_image_url
         ]);
 
         
@@ -84,8 +99,8 @@ class PropertyController extends Controller
 
 
         //create property image
-        if ($request->hasFile('image_url')) {
-            foreach ($request->file('image_url') as $file) {
+        if ($request->hasFile('image_urls')) {
+            foreach ($request->file('image_urls') as $file) {
                 $destination_path = 'images';
                 $photo_name = $file->getClientOriginalName();
                 $stored_path = $file->storeAs($destination_path, $photo_name, 'public');
