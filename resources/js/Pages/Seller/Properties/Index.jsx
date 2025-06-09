@@ -2,7 +2,7 @@ import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { EllipsisVertical, Eye, Pencil, Search, Trash } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { debounce } from 'lodash';
 
 const Index = ({ properties, search = '', page = 1 }) => {
@@ -167,6 +167,28 @@ const Index = ({ properties, search = '', page = 1 }) => {
               </tbody>
             </table>
           </div>
+          <div className="flex justify-end items-end gap-2 p-2 mt-4">
+                    {properties.links.map((link, i) =>
+                        link.url ? (
+                            <Link
+                                key={i}
+                                href={link.url}
+                                className={`px-4 py-2 text-sm font-medium rounded-md border border-gray-200 transition-all ${
+                                    link.active
+                                        ? 'bg-green-500 text-white font-bold' // Active link color (blue background)
+                                        : 'bg-white text-gray-700 hover:bg-green-100'
+                                }`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ) : (
+                            <span
+                                key={i}
+                                className="px-4 py-2 text-sm font-medium text-slate-400 bg-white border border-gray-200 rounded-md cursor-not-allowed"
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        )
+                    )}
+                </div>
         </div>
       </div>
     </AuthenticatedLayout>

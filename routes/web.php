@@ -16,23 +16,29 @@ Route::get('/', function () {
     ]);
 });
 
+Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-
-// Route::get(uri: '/admin/systems', [SystemController::class, 'index']);
-
-
-Route::get('/post-property', function(){
-    return Inertia::render('Seller/ListProperty');
-})->middleware('auth')->name('post-property');
-
-Route::post('/post-property', [PropertyController::class, 'store'])->middleware('auth')->name('post-property');
-Route::get('/properties', [PropertyController::class, 'index'])->name('my-properties');
+    Route::get('/post-property', function(){
+        return Inertia::render('Seller/ListProperty');
+    })->name('post-property');
 
 
+});
+
+
+// only seller
+Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
+
+    Route::get('/properties', [PropertyController::class, 'index'])->name('my-properties');
+
+
+});
 
 
 
@@ -40,6 +46,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/post-property', function(){
+        return Inertia::render('Seller/ListProperty');
+    })->name('post-property');
+
+    Route::post('/post-property', [PropertyController::class, 'store'])->name('post-property');
 });
 
 require __DIR__.'/auth.php';
