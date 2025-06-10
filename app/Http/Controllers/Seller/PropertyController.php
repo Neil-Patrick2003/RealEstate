@@ -14,19 +14,44 @@ class PropertyController extends Controller
 {   
     public function index(Request $request){
 
-        
+
+        $allCount = Property::where('seller_id', '=', Auth::id())->count();
+        $pendingCount = Property::where('seller_id', '=', Auth::id())
+        ->where('status', 'pending')
+        ->count();
+
+
+
+        $approvedCount = Property::where('seller_id', '=', Auth::id())
+        ->where('status', 'approved')
+        ->count();
+
+        $rejectedCount = Property::where('seller_id', '=', Auth::id())
+        ->where('status', 'rejected')
+        ->count();
+
+
+
 
         $properties = Property::where('seller_id', '=', Auth::id())
         ->when($request->search, function ($q) use ($request) {
             return $q->where('title', 'like', '%' . $request->search . '%');
         })
+        ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
+            return $q->where('status', '=', $request->status );
+        })
             ->latest()
             ->paginate($request->items_per_page, ['*'], 'page', $request->input('page', 1));
 
         return Inertia::render('Seller/Properties/Index', [
-            'properties' => $properties
+            'properties' => $properties,
+            'all' => $allCount,
+            'pending' => $pendingCount,
+            'approved' => $approvedCount,
+            'rejected' => $rejectedCount
         ]);
     }
+    
     public function store(Request $request){
 
         
