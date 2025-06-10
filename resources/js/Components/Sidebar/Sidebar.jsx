@@ -65,7 +65,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <div className="flex">
       <motion.div
-        className="bg-white text-gray z-[999] h-screen overflow-hidden md:relative fixed"
+        className="bg-gray-100 border-r text-gray z-[999] h-screen overflow-hidden md:relative fixed"
         variants={Sidebar_animation}
         animate={isOpen ? "open" : "closed"}
         initial={false}
@@ -82,7 +82,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         {/* Menu */}
-        <ul className='px-4 py-5 border-r flex flex-col gap-3 font-medium overflow-x-hidden scrollbar-thin scrollbar-track-white scrollbar-thumb-slate-100 md:h-[88%] h-[90%]'>
+        <ul className='px-4 py-5 flex flex-col gap-2 font-medium overflow-x-hidden scrollbar-thin scrollbar-track-white scrollbar-thumb-slate-100 md:h-[88%] h-[90%]'>
           {menus.map(({ name, Icon, path, subMenu }, i) => {
             const isClicked = clicked === i;
             const hasSubMenu = subMenu?.length > 0;
@@ -94,9 +94,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     href={path}
                     className={classNames(
                       url?.startsWith(path)
-                        ? 'bg-green-100 text-green-700'
-                        : 'text-gray-700 hover:bg-green-50 hover:text-green-700',
-                      'flex items-center gap-x-3 px-5 py-2 rounded-xl font-medium transition-all'
+                        ? 'bg-green-200 text-green-700'
+                        : 'text-gray-700 hover:bg-green-200 hover:text-green-700',
+                      'flex items-center gap-x-3 px-5 py-2 rounded-md font-medium transition-all'
                     )}
                     onClick={() => setClicked(null)} // close submenu when navigating
                   >

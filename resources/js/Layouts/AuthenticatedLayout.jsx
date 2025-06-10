@@ -81,23 +81,23 @@ export default function AuthenticatedLayout({ children }) {
       </AnimatePresence>
 
       {/* Main content */}
-      <main className="w-full h-full overflow-auto bg-gray-50 pt-14"> {/* Add top padding for fixed header */}
+      <main className="w-full h-full overflow-auto bg-gray-100 pt-14"> {/* Add top padding for fixed header */}
           <header
-  className={`fixed top-0 left-0 right-0 flex justify-between items-center border-b bg-white px-4 py-3 z-50 transition-all duration-300
-    ${
-      // If mobile and sidebar open, no ml because sidebar overlays content
-      isMobile ? 'ml-0' : isOpen ? 'ml-[18rem]' : 'ml-[6rem]'
-    }
-  `}
->
+            className={`fixed top-0 left-0 right-0 flex justify-between items-center bg-gray-100/10 backdrop-blur-sm px-4 py-3 z-50 transition-all duration-300
+              ${
+                // If mobile and sidebar open, no ml because sidebar overlays content
+                isMobile ? 'ml-0' : isOpen ? 'ml-[18rem]' : 'ml-[6rem]'
+              }
+            `}
+          >
          {/* Left: Sidebar toggle + Search */}
           <div className="flex items-center gap-2">
             <button
               onClick={toggleSidebar}
-              className="p-2 bg-white rounded-lg border"
+              className="p-2 rounded-lg border"
               aria-label="Toggle sidebar"
             >
-              <AlignLeft size={20} />
+              <AlignLeft size={16}  className='text-gray-400'/>
             </button>
 
             {/* Search input visible md+ */}

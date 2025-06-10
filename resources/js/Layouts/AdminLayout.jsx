@@ -77,13 +77,13 @@ export default function AdminLayout({ children }) {
       )}
 
       {/* Main Content */}
-      <main className="w-full h-full overflow-auto bg-gray-50">
-        <header className="flex justify-between items-center border-b bg-white px-4 py-3">
+      <main className="w-full h-full overflow-auto bg-gray-100">
+        <header className="flex justify-between items-center border-b bg-gray-100 px-4 py-3">
           {/* Left side: toggle + search */}
           <div className="flex items-center gap-2">
             <button
               onClick={toggleSidebar}
-              className="p-2 bg-white rounded-lg border"
+              className="p-2 rounded-lg border"
             >
               <AlignLeft />
             </button>
