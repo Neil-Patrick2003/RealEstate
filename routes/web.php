@@ -16,11 +16,9 @@ Route::get('/', function () {
     ]);
 });
 
-Route::middleware(['auth', 'role:user'])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
 
+//all auth user
+Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
     })->name('post-property');
@@ -29,8 +27,8 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 });
 
 
-// only seller
-Route::middleware(['auth', 'role:user'])->group(function () {
+// only seller  addd it ----->>>>'role:Seller'<<<<-------
+Route::middleware(['auth', ])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
