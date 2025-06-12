@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  ChevronDown, Home, User, Settings, UserRound,
-  Landmark, Calendar, LandPlot, ChartNoAxesCombined,
-  Map,
-  Mail
+  ChevronDown, 
 } from 'lucide-react';
 import logo from '../../../assets/framer_logo.png';
 import { Link, usePage } from '@inertiajs/react';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHouse, faMapLocationDot, faEnvelope, faCalendar, faChartSimple } from "@fortawesome/free-solid-svg-icons";
+
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -36,27 +36,27 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menus = [
     {
       name: "Dashboard",
-      Icon: Home,
+      Icon: faHouse,
       path: "/dashboard"
     },
     {
       name: "Properties",
-      Icon: Map,
+      Icon: faMapLocationDot,
       path: "/properties"
     },
     {
       name: "Enquiries",
-      Icon: Mail,
+      Icon: faEnvelope,
       path: "/enquiries"
     },
     {
       name: "Tripping",
-      Icon: Calendar,
+      Icon: faCalendar,
       path: "/tripping"
     },
     {
       name: "Sales",
-      Icon: ChartNoAxesCombined,
+      Icon: faChartSimple,
       path: "/my-sales"
     },
     
@@ -95,13 +95,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     className={classNames(
                       url?.startsWith(path)
                         ? 'bg-green-200 text-green-700'
-                        : 'text-gray-700 hover:bg-green-200 hover:text-green-700',
+                        : 'text-gray-4  00 hover:bg-green-200 hover:text-green-700',
                       'flex items-center gap-x-3 px-5 py-2 rounded-md font-medium transition-all'
                     )}
                     onClick={() => setClicked(null)} // close submenu when navigating
                   >
                     <div className='flex justify-center items-center gap-3 cursor-pointer'>
-                      <Icon size={23} />
+                       <FontAwesomeIcon icon={Icon} className=" w-6 h-6" />
                       {isOpen && (
                         <span className='flex justify-between w-full'>
                           <span>{name}</span>
@@ -118,7 +118,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 ) : (
                   <button
                     className={classNames(
-                      'text-gray-700 hover:bg-green-50 hover:text-green-700',
+                      'text-gray-400 hover:bg-green-50 hover:text-green-700',
                       'flex items-center gap-x-3 px-5 py-2 rounded-xl font-medium w-full text-left transition-all'
                     )}
                     onClick={() => setClicked(isClicked ? null : i)}

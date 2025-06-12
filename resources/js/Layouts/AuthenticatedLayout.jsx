@@ -5,6 +5,9 @@ import { AlignLeft, Bell, Languages, LogOut, Moon, X } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
+import { faBell, faMoon, faLanguage } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 
 export default function AuthenticatedLayout({ children }) {
   const auth = usePage().props.auth.user;
@@ -110,13 +113,13 @@ export default function AuthenticatedLayout({ children }) {
           </div>
 
           {/* Right side controls */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-3">
               {/* Language Dropdown */}
               <Dropdown>
                 <Dropdown.Trigger>
                   <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200" aria-haspopup="true" aria-expanded="false" role="button">
-                    <Languages size={22} className="text-gray-600" />
+                    <FontAwesomeIcon icon={faLanguage} className='text-gray-400 w-6 h-5' />
                   </div>
                 </Dropdown.Trigger>
                 <Dropdown.Content width="48">
@@ -129,12 +132,13 @@ export default function AuthenticatedLayout({ children }) {
 
               {/* Theme toggle */}
               <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200 cursor-pointer" role="button" aria-label="Toggle theme">
-                <Moon size={20} className="text-gray-600" />
+                <FontAwesomeIcon icon={faMoon} className='text-gray-400 w-6 h-5' />
               </div>
 
               {/* Notification */}
               <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200 cursor-pointer" role="button" aria-label="Notifications">
-                <Bell size={20} className="text-gray-600" />
+                {/* <Bell size={20} className="text-gray-600" /> */}
+                <FontAwesomeIcon icon={faBell} className='text-gray-400 w-6 h-5' />
               </div>
             </div>
 
