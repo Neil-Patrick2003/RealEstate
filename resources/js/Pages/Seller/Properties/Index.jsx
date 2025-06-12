@@ -73,9 +73,6 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
 
   const imageUrl = '/storage/'; // Base path for property images
 
-  console.log
-
-
 
   return (
     <AuthenticatedLayout>

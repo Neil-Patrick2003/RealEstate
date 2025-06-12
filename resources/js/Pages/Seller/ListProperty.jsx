@@ -520,6 +520,8 @@ const ListProperty = () => {
                 <div className="">
                   <h1 className="text-2xl font-bold mb-4">Draw Property Location</h1>
                   <MapWithDraw userId={auth.user.id}  onChange={handleMapChange} />
+                  <InputError message={errors.boundary} className="mt-2" />
+                  <InputError message={errors.pin} className="mt-2" />
                 </div>               
               </Collapsable>
               

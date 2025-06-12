@@ -4,7 +4,7 @@ import SignupForm from "./SignupForm";
 import SigninForm from "./SigninForm";
 import log from "../../../assets/signin.svg";
 import register from "../../../assets/signup.svg";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+  import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "@inertiajs/react";
 // Main component

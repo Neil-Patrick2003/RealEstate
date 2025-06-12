@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Models\Property;
+use App\Models\PropertyCoordinate;
 use App\Models\PropertyFeature;
 use App\Models\PropertyImage;
 use Illuminate\Http\Request;
@@ -13,14 +14,11 @@ use Inertia\Inertia;
 class PropertyController extends Controller
 {   
     public function index(Request $request){
-
-
+        
         $allCount = Property::where('seller_id', '=', Auth::id())->count();
         $pendingCount = Property::where('seller_id', '=', Auth::id())
         ->where('status', 'pending')
         ->count();
-
-
 
         $approvedCount = Property::where('seller_id', '=', Auth::id())
         ->where('status', 'approved')
@@ -29,9 +27,6 @@ class PropertyController extends Controller
         $rejectedCount = Property::where('seller_id', '=', Auth::id())
         ->where('status', 'rejected')
         ->count();
-
-
-
 
         $properties = Property::where('seller_id', '=', Auth::id())
         ->when($request->search, function ($q) use ($request) {
@@ -53,6 +48,7 @@ class PropertyController extends Controller
     }
     
     public function store(Request $request){
+  
 
         
         $validated = $request->validate([
@@ -83,6 +79,8 @@ class PropertyController extends Controller
             'image_urls' => 'required|array',
         ]);
 
+
+        //save image and generate image url to save in database
         $property_image_url = null;
         if ($request->hasFile('image_url')) {
             $destination_path = 'images';
@@ -91,8 +89,6 @@ class PropertyController extends Controller
             $property_image_url = $image_url->storeAs($destination_path, $photo_name, 'public');
             
         }
-
-
 
         //create property
         $property = Property::create([
@@ -114,8 +110,6 @@ class PropertyController extends Controller
             'image_url' => $property_image_url
         ]);
 
-        
-
         //create property feature
         foreach ($request->feature_name as $feature) {
             PropertyFeature::create([
@@ -123,7 +117,6 @@ class PropertyController extends Controller
                 'name' => $feature,
             ]);
         }
-
 
         //create property image
         if ($request->hasFile('image_urls')) {
@@ -139,8 +132,25 @@ class PropertyController extends Controller
             }   
         }
 
-        return redirect()->back();
+        //save property boundery
+        PropertyCoordinate::create([
+            'property_id' => $property->id,
+            'coordinates' => $request->boundary,
+            'type' => 'polygon',
+        ]);
 
+        //save property pin location
+        PropertyCoordinate::create([
+            'property_id' => $property->id,
+            'coordinates' => [
+                'lat' => $request->pin['lat'],
+                'lng' => $request->pin['lng'],
+            ],
+            'type' => 'marker',
+        ]);
+
+
+        return redirect()->back();
 
     }
 }
