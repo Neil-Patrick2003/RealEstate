@@ -1,6 +1,8 @@
 import InputError from '@/Components/InputError';
 import { useForm } from '@inertiajs/react';
 import React from 'react'
+import { motion } from 'framer-motion';
+import { BarLoader, MoonLoader } from 'react-spinners';
 
 const SigninForm= ({buttonClasses, buttonForGFT}) => {
 
@@ -21,7 +23,17 @@ const SigninForm= ({buttonClasses, buttonForGFT}) => {
 
   return (
     
-    <div className="w-full bg-white rounded-lg shadow-xl md:mt-0 sm:max-w-md xl:p-0 border border-gray-100">
+    <motion.div
+    initial={{ y: 200}}
+    animate={{ y: 0 }}
+    transition={{
+      type: "spring",
+      stiffness: 200,   // higher = faster & more bouncy
+      damping: 20,      // higher = less bouncy
+      mass: 1           // affects how heavy the element feels
+    }}
+    className="w-full bg-white rounded-lg shadow-xl md:mt-0 sm:max-w-md xl:p-0 border border-gray-100">
+
       <div className="p-6 space-y-6 md:space-y-7 sm:p-8">
         <h1 className="text-xl font-bold leading-tight tracking-tight text-backgroundColor md:text-2xl text-center">
           Welcome Back
@@ -114,9 +126,11 @@ const SigninForm= ({buttonClasses, buttonForGFT}) => {
             </a>
           </div>
 
-          <button type="submit" className={buttonClasses}>
-            Sign in
-          </button>
+          <button type="submit" className={buttonClasses} disabled={processing}>
+          
+          {processing ? 'Signing in...' : 'Sign in'}
+        </button>
+
         </form>
 
         <div className="relative">
@@ -176,7 +190,7 @@ const SigninForm= ({buttonClasses, buttonForGFT}) => {
           If you don&apos;t have an account, Do Sign Up
         </p>
       </div>
-    </div>
+    </motion.div>
 
   )
 }
