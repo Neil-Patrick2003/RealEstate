@@ -70,8 +70,13 @@ export default function MobMenu({ Menus }) {
                                 </motion.ul>
                             )}
                         </li>
+                        
+                        
                     );
                 })}
+                <li>
+                    Dashboard
+                </li>
             </ul>
         </motion.div>
     </div>

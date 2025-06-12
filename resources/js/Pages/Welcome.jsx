@@ -1,9 +1,11 @@
 import React from 'react';
 import Hero from './LandingPage/Hero';
+import NavBar from '@/Components/NavBar';
 
 const Welcome = ({ auth }) => {
   return (
     <div className="scrollbar-thin scrollbar-track-white scrollbar-thumb-slate-100 md:min-h-[88vh] min-h-[90vh] overflow-y-auto">
+      <NavBar/>
       <Hero auth={auth} />
 
       {/* Optional Welcome Section */}
@@ -15,6 +17,8 @@ const Welcome = ({ auth }) => {
           Find your dream property with us — fast, reliable, and hassle-free.
         </p>
       </section>
+
+      <section className='h-screen bg-primary'></section>
     </div>
   );
 };
