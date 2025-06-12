@@ -112,7 +112,7 @@ const NavBar = () => {
               </motion.div>
             </motion.div>
           ) : (
-            <motion.div initial={{ y: 50 }} animate={{ y: 0 }}>
+            <motion.div initial={{ y: -50 }} animate={{ y: 0 }}>
               <Link href={route('login')} className="border border-secondary px-4 py-2 text-sm text-secondary hover:bg-secondary hover:text-white rounded-md">
                 {t('Login')}
               </Link>
