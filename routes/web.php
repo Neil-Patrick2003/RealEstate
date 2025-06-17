@@ -17,16 +17,13 @@ Route::get('/', function () {
     ]);
 });
 
-
 //all auth user
 Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
     })->name('post-property');
 
-
 });
-
 
 // only seller  addd it ----->>>>'role:Seller'<<<<-------
 Route::middleware(['auth', ])->group(function () {
@@ -42,7 +39,6 @@ Route::middleware(['auth', ])->group(function () {
 
 
 });
-
 
 
 Route::middleware('auth')->group(function () {
