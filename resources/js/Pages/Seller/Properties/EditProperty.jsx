@@ -1,8 +1,11 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import React from 'react'
 
 const EditProperty = ({property}) => {
   return (
-    <div>{property.title}</div>
+    <AuthenticatedLayout>
+        {property.title}
+    </AuthenticatedLayout>
   )
 }
 

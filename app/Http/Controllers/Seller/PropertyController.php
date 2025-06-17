@@ -154,14 +154,15 @@ class PropertyController extends Controller
 
     public function show(Property $property){
 
-        
-
-            $property = $property->load('images', 'coordinate', 'features');
-
-
-        
+        $property = $property->load('images', 'coordinate', 'features');
 
         return Inertia::render('Seller/Properties/ShowProperty', [
+            'property' => $property
+        ]);
+    }
+
+    public function edit(Property $property){
+        return Inertia::render('Seller/Properties/EditProperty', [
             'property' => $property
         ]);
     }

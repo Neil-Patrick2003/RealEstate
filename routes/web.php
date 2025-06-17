@@ -33,6 +33,8 @@ Route::middleware(['auth', ])->group(function () {
     
     
     Route::get('/properties/{property}', [ PropertyController::class, 'show']);
+    Route::get('/properties/{property}/edit', [ PropertyController::class, 'EDIT']);
+
 
 
     Route::get('/properties', [PropertyController::class, 'index'])->name('my-properties');
