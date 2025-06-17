@@ -1,8 +1,8 @@
 import React from 'react'
 
-const EditProperty = () => {
+const EditProperty = ({property}) => {
   return (
-    <div>EditProperty</div>
+    <div>{property.title}</div>
   )
 }
 
