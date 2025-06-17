@@ -16,7 +16,7 @@ export default {
                 inter: ["Inter", ...defaultTheme.fontFamily.sans],
             },
            colors: {
-                text: '#050315',           // clean dark text
+                text: '#1C252E',           // clean dark text
                 background: '#fbfbfe',     // off-white background
                 primary: '#5C7934',        // leafy green
                 secondary: '#E0B52B',      // sunlight gold

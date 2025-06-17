@@ -37,7 +37,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
         replace: true,
       });
     }, 500),
-    [page, selectedItemsPerPage]
+    [page, selectedItemsPerPage, selectedStatus]
   );
 
   // Cleanup debounce on component unmount
@@ -77,7 +77,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
   return (
     <AuthenticatedLayout>
       <div className="md:p-6 min-h-screen">
-        <div className="bg-white shadow-sm h-full rounded-2xl overflow-x-auto">
+        <div className="bg-white border-t shadow-md h-full rounded-2xl overflow-x-auto">
           
           
           {/* Filter tab for property status counts and search */}
@@ -165,10 +165,13 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
                             </div>
                           </Dropdown.Trigger>
                           <Dropdown.Content className="absolute right-0 top-10 origin-top-right rounded-md bg-white shadow-md ring-1 ring-black ring-opacity-5 z-[9999] py-1 text-sm text-gray-700 w-36">
-                            <ul role="menu" className="divide-y divide-gray-100">
-                              <li role="menuitem" onClick={() => handleView(property.title)} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <Eye size={16} className="text-gray-500" /> View
-                              </li>
+                            <ul role="menu" className="divide-y px-1 divide-gray-100">
+                              <Link href={`/properties/${property.id}`}>
+                                <li role="menuitem" className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-100 cursor-pointer">
+                                  <Eye size={16} className="text-gray-500" /> View
+                                </li>
+                              </Link>
+                              
                               <li role="menuitem" onClick={() => handleEdit(property.title)} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer">
                                 <Pencil size={16} className="text-blue-500" /> Edit
                               </li>
@@ -193,9 +196,8 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
             </table>
           </div>
 
-          {/* Pagination controls */}
           {/* pagination settings */}
-          <div className=" flex border justify-between flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className=" flex justify-between flex-col gap-4 md:flex-row md:items-center md:justify-between">
             
             {/* Dropdown: Items per page */}
             <select
@@ -217,6 +219,8 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
                 });
 
                 const urlWithParams = link.url ? `${link.url}&${query.toString()}` : null;
+
+               
 
                 return link.url ? (
                   <Link

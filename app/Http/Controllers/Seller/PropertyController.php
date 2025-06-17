@@ -48,9 +48,7 @@ class PropertyController extends Controller
     }
     
     public function store(Request $request){
-  
-
-        
+   
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:1000',
@@ -151,6 +149,19 @@ class PropertyController extends Controller
 
 
         return redirect()->back();
+  
+    }
 
+    public function show(Property $property){
+
+        
+
+            $property = $property->load('images', 'coordinate');
+
+        
+
+        return Inertia::render('Seller/Properties/ShowProperty', [
+            'property' => $property
+        ]);
     }
 }
