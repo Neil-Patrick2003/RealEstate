@@ -107,6 +107,7 @@ export default function AuthenticatedLayout({ children }) {
             {/* Search input visible md+ */}
             <input
               type="search"
+              id='search_all'
               placeholder="Search"
               className="hidden md:block ml-3 w-72 border rounded-lg border-gray-200 px-3 py-1.5 text-sm"
               aria-label="Search"

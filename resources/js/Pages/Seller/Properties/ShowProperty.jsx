@@ -48,7 +48,7 @@ const ShowProperty = ({ property }) => {
 
         {/* Side Images */}
         
-        <div className="flex max-h-[50vh] overflow-x-auto flex-row md:flex-col gap-3 scroll-hidden">
+        <div className="flex max-h-[50vh] overflow-hidden flex-row md:flex-col gap-3 scroll-hidden">
           {visibleImages.map((image, index) => {
             const isLastImage = index === visibleImages.length - 1;
             const isDesktop = window.innerWidth >= 768;

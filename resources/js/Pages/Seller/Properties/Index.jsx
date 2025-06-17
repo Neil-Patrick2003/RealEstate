@@ -96,6 +96,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
                 onChange={(e) => handleSearchTermChange(e.target.value)}
                 type="search"
                 name="search"
+                id='search'
                 placeholder="Search properties..."
                 className="border border-gray-300 rounded-md h-10 px-4 pl-10 text-sm text-gray-600 w-full shadow-sm "
               />
@@ -202,6 +203,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
             {/* Dropdown: Items per page */}
             <select
               value={selectedItemsPerPage}
+              id='selectedItemsPerPage'
               onChange={handleItemsPerPageChange}
               className="w-20 border-gray-300 rounded-md text-sm mt-4 ml-4"
             >

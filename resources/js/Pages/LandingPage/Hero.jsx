@@ -74,6 +74,8 @@ const Hero = ({ auth }) => {
             {/* Search Input */}
             <input
               type="text"
+              id='search_myproperty'
+              name='search_myproperty'
               placeholder={t('Search')}
               className="flex-1 min-w-[180px] sm:min-w-[300px] md:min-w-[500px] lg:min-w-[600px] xl:min-w-[700px] px-3 py-1.5 border-0  md:py-3 lg:py-4 text-black placeholder-gray-600 text-sm md:text-md lg:text-lg focus:outline-none"
             />
