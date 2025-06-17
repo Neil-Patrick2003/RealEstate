@@ -36,7 +36,7 @@ export default function DesktopMenu({menu}) {
     const hasSubMenu = menu.subMenu?.length > 0;
     return (
         <motion.li className="group/link" onHoverStart={toggleHoverMenu} onHoverEnd={toggleHoverMenu}>
-            <span className="flex-center text-white gap-1 cursor-pointer px-3 py-1 rounded-md hover:bg-accent duration-200">
+            <span className="flex-center text-primary gap-1 cursor-pointer px-3 py-1 rounded-md hover:bg-accent duration-200">
                 {menu.name}
                 {hasSubMenu && (
                     <ChevronDown className="mt-[0.6px] group-hover/link:rotate-180 duration-200" />
