@@ -23,7 +23,6 @@ Route::middleware(['auth'])->group(function () {
         return Inertia::render('Seller/ListProperty');
     })->name('post-property');
 
-
 });
 
 // only seller  addd it ----->>>>'role:Seller'<<<<-------
@@ -40,7 +39,6 @@ Route::middleware(['auth', ])->group(function () {
 
 
 });
-
 
 
 Route::middleware('auth')->group(function () {
