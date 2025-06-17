@@ -156,7 +156,8 @@ class PropertyController extends Controller
 
         
 
-            $property = $property->load('images', 'coordinate');
+            $property = $property->load('images', 'coordinate', 'features');
+
 
         
 

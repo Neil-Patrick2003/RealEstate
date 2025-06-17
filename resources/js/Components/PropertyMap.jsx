@@ -18,7 +18,7 @@ const PropertyMap = ({ coordinates }) => {
   const center = markerCoords || polygonCoords[0] || [13.9407, 121.6151]; // default center
 
   return (
-    <MapContainer center={center} zoom={17} style={{ height: "400px", width: "100%" }}>
+    <MapContainer center={center} zoom={17} style={{ height: "400px", width: "100%", zIndex: 0, position: "relative" }}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
       {coordinates.map((item, index) => {

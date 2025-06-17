@@ -172,13 +172,20 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
                                   <Eye size={16} className="text-gray-500" /> View
                                 </li>
                               </Link>
+                              <Link href={`/properties/${property.id}/edit`}>
+                                <li role="menuitem" className="flex rounded-md items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                  <Pencil size={16} className="text-blue-500" /> Edit
+                                </li>
+                              </Link>   
                               
-                              <li role="menuitem" onClick={() => handleEdit(property.title)} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <Pencil size={16} className="text-blue-500" /> Edit
-                              </li>
-                              <li role="menuitem" onClick={() => handleDelete(property.title)} className="flex items-center gap-2 px-4 py-2 hover:bg-red-100 text-red-600 cursor-pointer">
+                              <li role="menuitem" onClick={() => handleDelete(property.title)} className="flex rounded-md items-center gap-2 px-4 py-2 hover:bg-red-100 text-red-600 cursor-pointer">
                                 <Trash size={16} className="text-red-500" /> Delete
                               </li>
+                              
+
+                              
+                              
+                              
                             </ul>
                           </Dropdown.Content>
                         </Dropdown>
