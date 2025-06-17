@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Seller\PropertyController;
+use App\Models\Property;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,6 +33,10 @@ Route::middleware(['auth', ])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+    
+    
+    Route::get('/properties/{property}', [ PropertyController::class, 'show']);
+
 
     Route::get('/properties', [PropertyController::class, 'index'])->name('my-properties');
 

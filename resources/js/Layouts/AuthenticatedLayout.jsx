@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/Components/SIdebar/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,7 +44,7 @@ export default function AuthenticatedLayout({ children }) {
   }, [isMobile]);
 
   return (
-    <div className="h-screen bg-gray-200 flex overflow-hidden relative">
+    <div className="h-screen flex overflow-hidden relative">
       {/* Sidebar Desktop */}
       {!isMobile && (
         <div className="hidden md:block">
@@ -84,9 +85,9 @@ export default function AuthenticatedLayout({ children }) {
       </AnimatePresence>
 
       {/* Main content */}
-      <main className="w-full h-full overflow-auto bg-gray-100 pt-14"> {/* Add top padding for fixed header */}
+      <main className="w-full h-full overflow-auto pt-14"> {/* Add top padding for fixed header */}
           <header
-            className={`fixed top-0 left-0 right-0 flex justify-between items-center bg-gray-100/10 backdrop-blur-sm px-4 py-3 z-50 transition-all duration-300
+            className={`fixed top-0 left-0 right-0 flex justify-between items-center border-b bg-gray-100/10 backdrop-blur-sm px-4 py-3 z-50 transition-all duration-300
               ${
                 // If mobile and sidebar open, no ml because sidebar overlays content
                 isMobile ? 'ml-0' : isOpen ? 'ml-[18rem]' : 'ml-[6rem]'
@@ -184,7 +185,7 @@ export default function AuthenticatedLayout({ children }) {
         </header>
 
         {/* Content wrapper with padding */}
-        <div className="p-2 md:p-3 lg:p-4 xl:p-6 sl:p-8 mt-2">
+        <div className="p-2 md:p-4 lg:p-6 xl:p-8 sl:p-8 mt-2">
           {children}
         </div>
       </main>

@@ -6,7 +6,7 @@
 
 /* body style */
 body{
-    @apply bg-white text-green-900 font-inter;
+    @apply bg-white text-text font-inter;
 }
 
 @layer components {
