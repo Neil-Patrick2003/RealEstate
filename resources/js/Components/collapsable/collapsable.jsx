@@ -4,12 +4,24 @@ import { useState, useRef, useEffect } from 'react';
 export default function Collapsable({ title = "Click to toggle", children, description }) {
   const [open, setOpen] = useState(true);
   const contentRef = useRef(null);
+  const wrapperRef = useRef(null);
 
   useEffect(() => {
     if (open) {
-      contentRef.current.style.maxHeight = contentRef.current.scrollHeight + 'px';
+      const scrollHeight = wrapperRef.current.scrollHeight;
+      contentRef.current.style.height = scrollHeight + "px";
+
+      const timeout = setTimeout(() => {
+        contentRef.current.style.height = "auto"; // Let content grow freely after animation
+      }, 300); // match your CSS transition time
+
+      return () => clearTimeout(timeout);
     } else {
-      contentRef.current.style.maxHeight = '0px';
+      const currentHeight = wrapperRef.current.offsetHeight;
+      contentRef.current.style.height = currentHeight + "px";
+      requestAnimationFrame(() => {
+        contentRef.current.style.height = "0px";
+      });
     }
   }, [open]);
 
@@ -31,13 +43,13 @@ export default function Collapsable({ title = "Click to toggle", children, descr
         />
       </div>
 
-      {/* Content */}
+      {/* Animated Content */}
       <div
         ref={contentRef}
-        className="overflow-auto transition-all duration-300 ease-in-out"
-        style={{ maxHeight: '0px' }}
+        className="transition-all duration-900 ease-in-out overflow-hidden"
+        style={{ height: open ? 'auto' : '0px' }}
       >
-        <div className=" px-6 py-3 md:py-4 lg:py-5 sm:px-7 lg:px-8 bg-white border-t border-gray-200 text-gray-700">
+        <div ref={wrapperRef} className="px-6 py-3 md:py-4 lg:py-5 sm:px-7 lg:px-8 bg-white border-t border-gray-200 text-gray-700">
           {children}
         </div>
       </div>
