@@ -21,6 +21,7 @@ export default {
                 primary: '#5C7934',        // leafy green
                 secondary: '#E0B52B',      // sunlight gold
                 accent: '#719440',         // sage green
+                lightaccent: '#d8fac7',    // light sage green
                 sidebar: '#F5F7F4',        // very light green-gray
                 topbar: '#5C7934',         // same as primary
             }
