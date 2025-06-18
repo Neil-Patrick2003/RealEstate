@@ -17,7 +17,6 @@ Route::get('/', function () {
     ]);
 });
 
-
 //all auth user
 Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
@@ -26,7 +25,6 @@ Route::middleware(['auth'])->group(function () {
 
 
 });
-
 
 // only seller  addd it ----->>>>'role:Seller'<<<<-------
 Route::middleware(['auth', ])->group(function () {
