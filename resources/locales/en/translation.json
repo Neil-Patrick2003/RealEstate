@@ -1,0 +1,36 @@
+{
+    "welcome": "Welcome to Dashboard",
+    "Login": "Login",
+    "Register": "Register",
+    "Search": "Search",
+    "Property Type": "Property Type",
+    "Language": "Language",
+    "List your property": "List your property",
+    "steps": {
+        "welcome": {
+        "label": "Welcome to MJVI Realty",
+        "description": "Thank you for choosing MJVI Realty. Before listing your property, ensure all required documents are available. This helps us verify your listing efficiently and maintain service quality."
+        },
+        "required": {
+        "label": "Required Documentation",
+        "description": "📄 Please ensure you have the following documents ready:\n\n✅ Land Title or Deed of Sale\n✅ A Valid Government-Issued ID\n✅ Latest Tax Declaration or Official Tax Receipt\n✅ Barangay Clearance\n✅ Any additional permits relevant to your property"
+        },
+        "reminder": {
+        "label": "Important Reminder",
+        "description": "All submissions undergo verification by our agents. Incomplete documentation may delay or prevent your property from being listed. Kindly review your materials before proceeding."
+        },
+        "ready": {
+        "label": "You’re Ready to List!",
+        "description": "Once you’ve gathered all the required documents, proceed to submit your property details. One of our agents will contact you shortly for final verification. We’re excited to work with you!"
+        }
+    },
+    "Exit": "Exit",
+    "Next": "Next",
+    "Continue": "Continue"
+
+    
+    
+    
+
+    
+}

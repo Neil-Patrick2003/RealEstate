@@ -38,17 +38,17 @@ class RegisteredUserController extends Controller
             'address' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:500',
             'photo_url' => 'nullable|url|max:255',
+            'role' => 'required|in:Seller,Buyer,Agent',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'name' => $request->name,       
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'user', 
+            'role' => $request->role, 
             'contact_numer' => $request->contact_number ?? null,
             'address' => $request->address ?? null,
             'bio' => $request->bio ?? null,
-
         ]);
 
         event(new Registered($user));

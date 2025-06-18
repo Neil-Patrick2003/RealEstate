@@ -37,52 +37,46 @@ const Trigger = ({ children }) => {
 
 const Content = ({
     align = 'right',
-    width = '48',
+    width = 'auto', // default to auto
     contentClasses = 'py-1 bg-white dark:bg-gray-700',
     children,
 }) => {
     const { open, setOpen } = useContext(DropDownContext);
 
-    let alignmentClasses = 'origin-top';
+    let alignmentClasses = {
+        left: 'ltr:origin-top-left rtl:origin-top-right start-0',
+        right: 'ltr:origin-top-right rtl:origin-top-left end-0',
+        center: 'left-1/2 -translate-x-1/2 origin-top',
+    }[align] || 'end-0';
 
-    if (align === 'left') {
-        alignmentClasses = 'ltr:origin-top-left rtl:origin-top-right start-0';
-    } else if (align === 'right') {
-        alignmentClasses = 'ltr:origin-top-right rtl:origin-top-left end-0';
-    }
-
-    let widthClasses = '';
-
-    if (width === '48') {
-        widthClasses = 'w-48';
-    }
+    const widthClass = {
+        auto: 'w-auto',
+        full: 'w-full',
+        48: 'w-48',
+        64: 'w-64',
+    }[width] || 'w-auto';
 
     return (
-        <>
-            <Transition
-                show={open}
-                enter="transition ease-out duration-200"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
+        <Transition
+            show={open}
+            enter="transition ease-out duration-200"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="transition ease-in duration-75"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+        >
+            <div
+                className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClass}`}
+                onClick={() => setOpen(false)}
             >
                 <div
-                    className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
-                    onClick={() => setOpen(false)}
+                    className={`rounded-md ring-1 ring-black ring-opacity-5 ${contentClasses}`}
                 >
-                    <div
-                        className={
-                            `rounded-md ring-1 ring-black ring-opacity-5 ` +
-                            contentClasses
-                        }
-                    >
-                        {children}
-                    </div>
+                    {children}
                 </div>
-            </Transition>
-        </>
+            </div>
+        </Transition>
     );
 };
 
