@@ -36,10 +36,10 @@ export default function DesktopMenu({menu}) {
     const hasSubMenu = menu.subMenu?.length > 0;
     return (
         <motion.li className="group/link" onHoverStart={toggleHoverMenu} onHoverEnd={toggleHoverMenu}>
-            <span className="flex-center text-primary gap-1 cursor-pointer px-3 py-1 rounded-md hover:bg-accent duration-200">
+            <span className="flex-center text-primary gap-1 cursor-pointer px-3 py-1 rounded-md hover:text-white hover:bg-accent duration-200">
                 {menu.name}
                 {hasSubMenu && (
-                    <ChevronDown className="mt-[0.6px] group-hover/link:rotate-180 duration-200" />
+                    <ChevronDown className="mt-[0.6px] h-5 group-hover/link:rotate-180 duration-200" />
                 )}
             </span>
             {hasSubMenu && (
@@ -54,7 +54,7 @@ export default function DesktopMenu({menu}) {
                         { menu?.subMenu?.map((subMenu, i) => (
                             <div key={i} className="relative cursor-pointer">
                                 <div className="flex-center gap-x-4 group/menubox">
-                                    <div className="bg-green-100 w-fit p-2 rounded-md group-hover/menubox:bg-accent group-hover/menubox:text-white duration-300">
+                                    <div className="bg-lightaccent w-fit p-2 rounded-md group-hover/menubox:bg-accent group-hover/menubox:text-white duration-300">
                                         {subMenu?.icon && <subMenu.icon/>}
                                     </div>
                                     <div>
