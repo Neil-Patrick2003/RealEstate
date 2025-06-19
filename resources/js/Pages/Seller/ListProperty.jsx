@@ -177,11 +177,6 @@ const ListProperty = () => {
 
 
 
-
-    
-
-  
-
   return (
     <div className=" pt-20 bg-gray-100 min-h-screen">
       <NavBar />
