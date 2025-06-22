@@ -8,6 +8,7 @@ import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
 import { faBell, faMoon, faLanguage } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Breadcrumb from '@/Components/Breadcrumbs';
 
 
 export default function AuthenticatedLayout({ children }) {
@@ -187,6 +188,7 @@ export default function AuthenticatedLayout({ children }) {
 
         {/* Content wrapper with padding */}
         <div className="p-2 md:p-4 lg:p-6 xl:p-8 sl:p-8 mt-2">
+          <Breadcrumb/>
           {children}
         </div>
       </main>

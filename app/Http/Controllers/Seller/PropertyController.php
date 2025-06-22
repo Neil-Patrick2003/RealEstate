@@ -10,6 +10,8 @@ use App\Models\PropertyImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class PropertyController extends Controller
 {   
@@ -48,7 +50,7 @@ class PropertyController extends Controller
     }
     
     public function store(Request $request){
-   
+        //validate request
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:1000',
@@ -63,18 +65,11 @@ class PropertyController extends Controller
             'total_bathrooms' => 'required|integer|min:0',
             'car_slots' => 'required|integer|min:0',
             'image_url' => 'required',
-
-
             'feature_name' => 'nullable|array',
             'feature_name.*' => 'string|max:255',
-
             'boundary' => 'required|array',
-
             'pin' => 'nullable|array',
-
             'isPresell' => 'nullable|boolean',           
-
-            'image_urls' => 'required|array',
         ]);
 
 
@@ -108,45 +103,31 @@ class PropertyController extends Controller
             'image_url' => $property_image_url
         ]);
 
-        //create property feature
-        foreach ($request->feature_name as $feature) {
-            PropertyFeature::create([
-                'property_id' => $property->id,
-                'name' => $feature,
-            ]);
-        }
+        // //create property feature
+        // foreach ($request->feature_name as $feature) {
+        //     PropertyFeature::create([
+        //         'property_id' => $property->id,
+        //         'name' => $feature,
+        //     ]);
+        // }
 
-        //create property image
-        if ($request->hasFile('image_urls')) {
-            foreach ($request->file('image_urls') as $file) {
-                $destination_path = 'images';
-                $photo_name = $file->getClientOriginalName();
-                $stored_path = $file->storeAs($destination_path, $photo_name, 'public');
-
-                PropertyImage::create([
-                    'property_id' => $property->id,
-                    'image_url' => $stored_path, 
-                ]);
-            }   
-        }
 
         //save property boundery
-        PropertyCoordinate::create([
-            'property_id' => $property->id,
-            'coordinates' => $request->boundary,
-            'type' => 'polygon',
-        ]);
+        // PropertyCoordinate::create([
+        //     'property_id' => $property->id,
+        //     'coordinates' => $request->boundary,
+        //     'type' => 'polygon',
+        // ]);
 
         //save property pin location
-        PropertyCoordinate::create([
-            'property_id' => $property->id,
-            'coordinates' => [
-                'lat' => $request->pin['lat'],
-                'lng' => $request->pin['lng'],
-            ],
-            'type' => 'marker',
-        ]);
-
+        // PropertyCoordinate::create([
+        //     'property_id' => $property->id,
+        //     'coordinates' => [
+        //         'lat' => $request->pin['lat'],
+        //         'lng' => $request->pin['lng'],
+        //     ],
+        //     'type' => 'marker',
+        // ]);
 
         return redirect()->back();
   
@@ -162,8 +143,84 @@ class PropertyController extends Controller
     }
 
     public function edit(Property $property){
+        $property = $property->load('images', 'coordinate', 'features');
+
         return Inertia::render('Seller/Properties/EditProperty', [
             'property' => $property
+
         ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+
+        $property = Property::findOrFail($id);
+
+        //  Validate request data
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:1000',
+            'property_type' => 'required|string',
+            'property_sub_type' => 'required|string',
+            'price' => 'required|numeric|min:0',
+            'address' => 'required|string|max:255',
+            'lot_area' => 'nullable|numeric|min:0',
+            'floor_area' => 'nullable|numeric|min:0',
+            'total_rooms' => 'required|integer|min:0',
+            'total_bedrooms' => 'required|integer|min:0',
+            'total_bathrooms' => 'required|integer|min:0',
+            'car_slots' => 'required|integer|min:0',
+            'image_url' => 'nullable', // up to 5MB
+            'image_urls' => 'nullable',
+            'boundary' => 'nullable|array',
+            'pin' => 'nullable|array',
+            'isPresell' => 'nullable|boolean',
+        ]);
+
+
+        //  Main image upload
+        $property_image_url = $property->image_url;
+        if ($request->hasFile('image_url')) {
+            $image = $request->file('image_url');
+            $photo_name = $image->getClientOriginalName();
+            $property_image_url = $image->storeAs('images', $photo_name, 'public');
+        }
+
+        //  Update main property data
+        $property->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'property_type' => $validated['property_type'],
+            'sub_type' => $validated['property_sub_type'],
+            'price' => $validated['price'],
+            'address' => $validated['address'],
+            'status' => 'pending',
+            'lot_area' => $validated['lot_area'],
+            'floor_area' => $validated['floor_area'],
+            'total_rooms' => $validated['total_rooms'],
+            'bedrooms' => $validated['total_bedrooms'],
+            'bathrooms' => $validated['total_bathrooms'],
+            'car_slots' => $validated['car_slots'],
+            'isPresell' => $validated['isPresell'],
+            'image_url' => $property_image_url,
+        ]);
+
+        // (Optional) dump for testing
+        // dd($request->toArray());
+
+        return redirect()->back()->with('success', 'Property updated successfully.');
+    }
+
+
+    public function destroy( Property $property, $id){
+        $property_image = PropertyImage::findOrFail($id);
+        if ($property_image) {
+            $property_image->delete();
+            return redirect()->back()->with('success', 'Property image deleted successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Property image not found.');
+        }
+
+
     }
 }
