@@ -132,6 +132,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
               <input
                 type="search"
                 value={searchTerm}
+                name='searchProperty'
                 onChange={(e) => handleSearchTermChange(e.target.value)}
                 placeholder="Search properties..."
                 className="w-full h-10 pl-10 pr-4 rounded-md border border-gray-300 text-sm text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-green-200 focus:outline-none"
@@ -146,7 +147,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
               <thead className="bg-gray-100 sticky top-0 z-10 text-xs text-gray-500 uppercase tracking-wide">
                 <tr>
                   <th className="p-3 text-center">
-                    <input type="checkbox" className="rounded border-gray-400" />
+                    <input type="checkbox" id='deleteAll' className="rounded border-gray-400" />
                   </th>
                   <th className="p-3">Title</th>
                   <th className="p-3">Type</th>
@@ -161,7 +162,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
                   properties.data.map((property) => (
                     <tr key={property.id} className="hover:bg-gray-50">
                       <td className="p-3 text-center">
-                        <input type="checkbox" className="rounded border-gray-400" />
+                        <input type="checkbox" id={property.id} className="rounded border-gray-400" />
                       </td>
                       <td className="p-3">
                         <div className="flex items-center gap-3">
