@@ -86,9 +86,9 @@ export default function AuthenticatedLayout({ children }) {
       </AnimatePresence>
 
       {/* Main content */}
-      <main className="w-full h-full overflow-auto pt-14"> {/* Add top padding for fixed header */}
+      <main className="w-full h-full overflow-auto pt-14 border"> {/* Add top padding for fixed header */}
           <header
-            className={`fixed top-0 left-0 right-0 flex justify-between items-center border-b bg-gray-100/10 backdrop-blur-sm px-4 py-3 z-50 transition-all duration-300
+            className={`fixed top-0 left-0 right-0 flex justify-between items-center border-b bg-white backdrop-blur-sm px-4 py-3 z-50 transition-all duration-300
               ${
                 // If mobile and sidebar open, no ml because sidebar overlays content
                 isMobile ? 'ml-0' : isOpen ? 'ml-[18rem]' : 'ml-[6rem]'
