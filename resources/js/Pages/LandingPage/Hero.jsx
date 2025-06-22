@@ -93,6 +93,7 @@ const Hero = ({ auth }) => {
                                 </div>
                                 <input
                                     type="text"
+                                    id='search_my_property'
                                     placeholder="Enter location, property type, or keywords..."
                                     className="w-full pl-12 pr-4 py-3 lg:py-4 border-0 text-gray-700 placeholder-gray-500 text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl lg:rounded-none bg-gray-50 hover:bg-white focus:bg-white transition-colors duration-200"
                                 />
