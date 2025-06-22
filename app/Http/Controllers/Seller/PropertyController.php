@@ -211,16 +211,15 @@ class PropertyController extends Controller
         return redirect()->back()->with('success', 'Property updated successfully.');
     }
 
+    public function destroy($id){
+        $property = Property::findOrFail($id);
 
-    public function destroy( Property $property, $id){
-        $property_image = PropertyImage::findOrFail($id);
-        if ($property_image) {
-            $property_image->delete();
-            return redirect()->back()->with('success', 'Property image deleted successfully.');
-        } else {
-            return redirect()->back()->with('error', 'Property image not found.');
-        }
+        $property->delete();
 
-
+        return redirect()->back()->with('sucess', 'Deleted propety sucessfully!');
     }
+
+
+    
+    
 }

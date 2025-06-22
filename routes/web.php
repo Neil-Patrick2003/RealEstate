@@ -34,9 +34,13 @@ Route::middleware(['auth', ])->group(function () {
     
     
     Route::get('/properties/{property}', [ PropertyController::class, 'show']);
+    Route::delete('/properties/{id}', [ PropertyController::class, 'destroy']);
+
+
+
     Route::get('/properties/{property}/edit', [ PropertyController::class, 'edit']);
     Route::patch('/properties/{proeprty}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
-    Route::delete('/properties/{property}/edit/{id}', [ PropertyController::class, 'destroy'])->name('seller.properties.destroy');
+    Route::delete('/properties/{property}/edit/{id}', [ PropertyImageController::class, 'destroy'])->name('seller.properties.destroy');
     Route::post('/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
 
     Route::get('/properties', [PropertyController::class, 'index'])->name('my-properties');

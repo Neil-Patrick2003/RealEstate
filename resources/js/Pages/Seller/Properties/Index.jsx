@@ -6,7 +6,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { debounce } from 'lodash';
 import SellerPropertiesFilterTab from '@/Components/tabs/SellerPropetiesFilterTab';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faPenToSquare, faExpand, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import ConfirmDialog from '@/Components/modal/ConfirmDialog';
 // Main component
 const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status='', all, approved, rejected, pending }) => {
   // Property types
@@ -65,127 +67,148 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
   // Actions for each property (view/edit/delete)
   const handleView = (title) => alert(`Viewing ${title}`);
   const handleEdit = (title) => alert(`Editing ${title}`);
-  const handleDelete = (title) => {
-    if (confirm(`Are you sure you want to delete ${title}?`)) {
-      alert(`Deleted ${title}`);
-    }
-  };
+  
 
   const imageUrl = '/storage/'; // Base path for property images
+  const [openDeleteDiaglog, setOpenDeleteDialog] = useState(false);
+  const [ deletingId, setDeletingId] = useState(false);
+
+  const handleOpenDeleteDialog = (id) => {
+    setOpenDeleteDialog(true);
+    setDeletingId(id);
+  }
+
+  const handleDelete = () => {
+      if (!deletingId) return;
+  
+      router.delete(`/properties/${deletingId}`, {
+        onSuccess: () => {
+          setDeletingId(null);
+        },
+      });
+    };
 
 
   return (
     <AuthenticatedLayout>
-      <div className="md:p-6 min-h-screen">
-        <div className="bg-white border-t shadow-md h-full rounded-2xl overflow-x-auto">
-          
-          
-          {/* Filter tab for property status counts and search */}
-          <div className='flex flex-row justify-between border-b'>
-            <SellerPropertiesFilterTab
-              count={[all, pending, approved, rejected]}
-              selectedStatus={selectedStatus}
-              setSelectedStatus={setSelectedStatus}
-              searchTerm={searchTerm}
-              page={page}
-              selectedItemsPerPage={selectedItemsPerPage}
-            />
-            <div className="relative pt-4 pr-6 w-full md:max-w-md">
+      <ConfirmDialog
+        open={openDeleteDiaglog}
+        setOpen={setOpenDeleteDialog}
+        title="Delete Image"
+        description="Are you sure you want to delete this image?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDelete}
+        loading={false}
+      />
+
+      <div className="max-w-7xl mx-auto min-h-screen px-4 py-6 space-y-6">
+        {/* Page Heading */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Properties</h1>
+            <p className="text-sm text-gray-500">Manage your properties here.</p>
+          </div>
+          <button className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-accent shadow-sm">
+            <FontAwesomeIcon icon={faPlus} />
+            Add Property
+          </button>
+        </div>
+
+        {/* Filters & Search */}
+        <div className='flex flex-col'>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-gray-100 rounded-t-xl shadow-sm">
+            <div className="w-full md:w-auto overflow-x-auto">
+              <SellerPropertiesFilterTab
+                count={[all, pending, approved, rejected]}
+                selectedStatus={selectedStatus}
+                setSelectedStatus={setSelectedStatus}
+                searchTerm={searchTerm}
+                page={page}
+                selectedItemsPerPage={selectedItemsPerPage}
+              />
+            </div>
+            <div className="relative w-full md:w-96">
               <input
+                type="search"
                 value={searchTerm}
                 onChange={(e) => handleSearchTermChange(e.target.value)}
-                type="search"
-                name="search"
-                id='search'
                 placeholder="Search properties..."
-                className="border border-gray-300 rounded-md h-10 px-4 pl-10 text-sm text-gray-600 w-full shadow-sm "
+                className="w-full h-10 pl-10 pr-4 rounded-md border border-gray-300 text-sm text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-green-200 focus:outline-none"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            </div> 
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+            </div>
           </div>
 
-          {/* Property listing table */}
-          <div className="h-full">
-            <table className="min-w-full text-sm text-left text-gray-600">
-              <thead className="bg-gray-100 sticky top-0 z-10">
+          {/* Properties Table */}
+          <div className="overflow-x-auto  bg-white border border-gray-100 rounded-b-xl shadow-sm">
+            <table className="min-w-full text-sm text-left text-gray-700">
+              <thead className="bg-gray-100 sticky top-0 z-10 text-xs text-gray-500 uppercase tracking-wide">
                 <tr>
-                  <th className="p-2 font-medium">
-                    <center><input type="checkbox" id='all' className='border border-gray-700 p-2 rounded'/></center>
+                  <th className="p-3 text-center">
+                    <input type="checkbox" className="rounded border-gray-400" />
                   </th>
-                  <th className="py-4 px-3 font-medium">Title</th>
-                  <th className="px-4 py-3 font-medium">Type</th>
-                  <th className="px-4 py-3 font-medium">Price</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Size (sqm)</th>
-                  <th className="px-4 py-3 text-right font-medium">Actions</th>
+                  <th className="p-3">Title</th>
+                  <th className="p-3">Type</th>
+                  <th className="p-3">Price</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Size (sqm)</th>
+                  <th className="p-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {/* Loop through each property item */}
+              <tbody className="divide-y divide-dashed">
                 {properties.data.length > 0 ? (
                   properties.data.map((property) => (
-                    <tr key={property.id} className="p-2hover:bg-gray-50 transition-colors">
-                      <td>
-                        <center>
-                          <input type="checkbox" id={property.id} className='border border-gray-700 p-2 rounded'/>
-                        </center>
+                    <tr key={property.id} className="hover:bg-gray-50">
+                      <td className="p-3 text-center">
+                        <input type="checkbox" className="rounded border-gray-400" />
                       </td>
-
-                      {/* Property title with image */}
-                      <td className="py-4 px-3 flex items-center gap-4 whitespace-nowrap">
-                        <img
-                          src={`${imageUrl}${property.image_url}`}
-                          alt={property.title}
-                          className="h-16 w-16 object-cover rounded-md"
-                        />
-                        <div>
-                          <div className="font-semibold text-gray-900">{property.title}</div>
-                          <div className="text-xs text-gray-500">{property.address}</div>
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={`${imageUrl}${property.image_url}`}
+                            alt={property.title}
+                            className="w-14 h-14 object-cover rounded-md"
+                          />
+                          <div>
+                            <p className="font-semibold text-gray-800">{property.title}</p>
+                            <p className="text-xs text-gray-500">{property.address}</p>
+                          </div>
                         </div>
                       </td>
-
-                      {/* Property details */}
-                      <td className="p-4 whitespace-nowrap">{property.property_type}, {property.sub_type}</td>
-                      <td className="p-4 whitespace-nowrap">{property.price}</td>
-                      <td className="p-4">
-
-                       
-                        
-                        <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-700 ring-1 ring-inset ring-green-300">
+                      <td className="p-3 whitespace-nowrap">{property.property_type}, {property.sub_type}</td>
+                      <td className="p-3 whitespace-nowrap">{property.price}</td>
+                      <td className="p-3">
+                        <span className="inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs ring-1 ring-orange-200">
                           {property.status}
                         </span>
                       </td>
-                      <td className="p-4 whitespace-nowrap">{property?.floor_area} {property?.lot_area} sqm</td>
-
-                      {/* Dropdown menu for actions */}
-                      <td className="flex justify-end whitespace-nowrap relative p-4">
+                      <td className="p-3 whitespace-nowrap">{property.floor_area ?? 0} / {property.lot_area ?? 0}</td>
+                      <td className="p-3 text-right">
                         <Dropdown>
                           <Dropdown.Trigger>
-                            <div className="hover:bg-gray-200 p-2 rounded-full cursor-pointer">
+                            <div className="p-2 w-9 rounded-full hover:bg-gray-200 cursor-pointer">
                               <EllipsisVertical size={20} className="text-gray-600" />
                             </div>
                           </Dropdown.Trigger>
-                          <Dropdown.Content className="absolute right-0 top-10 origin-top-right rounded-md bg-white shadow-md ring-1 ring-black ring-opacity-5 z-[9999] py-1 text-sm text-gray-700 w-36">
-                            <ul role="menu" className="divide-y px-1 divide-gray-100">
+                          <Dropdown.Content className="absolute right-0 top-10 w-36 bg-white shadow-md rounded-md z-50 text-sm">
+                            <ul className="divide-y divide-gray-100">
                               <Link href={`/properties/${property.id}`}>
-                                <li role="menuitem" className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-100 cursor-pointer">
-                                  <Eye size={16} className="text-gray-500" /> View
+                                <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                  <FontAwesomeIcon icon={faExpand} /> View
                                 </li>
                               </Link>
                               <Link href={`/properties/${property.id}/edit`}>
-                                <li role="menuitem" className="flex rounded-md items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                  <Pencil size={16} className="text-blue-500" /> Edit
+                                <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                  <FontAwesomeIcon icon={faPenToSquare} /> Edit
                                 </li>
-                              </Link>   
-                              
-                              <li role="menuitem" onClick={() => handleDelete(property.title)} className="flex rounded-md items-center gap-2 px-4 py-2 hover:bg-red-100 text-red-600 cursor-pointer">
-                                <Trash size={16} className="text-red-500" /> Delete
+                              </Link>
+                              <li
+                                onClick={() => handleOpenDeleteDialog(property.id)}
+                                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-100 cursor-pointer"
+                              >
+                                <FontAwesomeIcon icon={faTrashCan} /> Delete
                               </li>
-                              
-
-                              
-                              
-                              
                             </ul>
                           </Dropdown.Content>
                         </Dropdown>
@@ -193,9 +216,8 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
                     </tr>
                   ))
                 ) : (
-                  // Display message if no properties are available
                   <tr>
-                    <td colSpan="7" className="text-center py-6 text-gray-500">
+                    <td colSpan="7" className="text-center py-6 text-gray-400">
                       No properties found.
                     </td>
                   </tr>
@@ -203,56 +225,56 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
               </tbody>
             </table>
           </div>
+        </div>
+        
 
-          {/* pagination settings */}
-          <div className=" flex justify-between flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            
-            {/* Dropdown: Items per page */}
+        {/* Pagination & Items per page */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6">
+          <div className="flex items-center gap-2">
+            <label htmlFor="selectedItemsPerPage" className="text-sm text-gray-600">Items per page:</label>
             <select
+              id="selectedItemsPerPage"
               value={selectedItemsPerPage}
-              id='selectedItemsPerPage'
               onChange={handleItemsPerPageChange}
-              className="w-20 border-gray-300 rounded-md text-sm mt-4 ml-4"
+              className="border-gray-300 rounded-md text-sm"
             >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="15">15</option>
-              <option value="20">20</option>
+              {[5, 10, 15, 20].map((val) => (
+                <option key={val} value={val}>{val}</option>
+              ))}
             </select>
-            <div className="flex justify-end items-end gap-2 p-2 mr-3 mt-4">
-              {properties.links.map((link, i) => {
-                const query = new URLSearchParams({
-                  search: searchTerm || '',
-                  status: selectedStatus || '',
-                  items_per_page: selectedItemsPerPage,
-                });
+          </div>
 
-                const urlWithParams = link.url ? `${link.url}&${query.toString()}` : null;
+          <div className="flex gap-2 flex-wrap justify-end">
+            {properties.links.map((link, i) => {
+              const query = new URLSearchParams({
+                search: searchTerm || '',
+                status: selectedStatus || '',
+                items_per_page: selectedItemsPerPage,
+              });
+              const urlWithParams = link.url ? `${link.url}&${query.toString()}` : null;
 
-               
-
-                return link.url ? (
-                  <Link
-                    key={i}
-                    href={urlWithParams}
-                    className={`px-4 py-2 text-sm font-medium rounded-md border border-gray-200 transition-all ${
-                      link.active ? 'bg-green-500 text-white font-bold' : 'bg-white text-gray-700 hover:bg-green-100'
-                    }`}
-                    dangerouslySetInnerHTML={{ __html: link.label }}
-                  />
-                ) : (
-                  <span
-                    key={i}
-                    className="px-4 py-2 text-sm font-medium text-slate-400 bg-white border border-gray-200 rounded-md cursor-not-allowed"
-                    dangerouslySetInnerHTML={{ __html: link.label }}
-                  />
-                );
-              })}
-            </div>
-          </div>     
+              return link.url ? (
+                <Link
+                  key={i}
+                  href={urlWithParams}
+                  className={`px-4 py-2 text-sm rounded-md border transition ${
+                    link.active ? 'bg-primary text-white font-semibold' : 'bg-white text-gray-600 hover:bg-gray-100'
+                  }`}
+                  dangerouslySetInnerHTML={{ __html: link.label }}
+                />
+              ) : (
+                <span
+                  key={i}
+                  className="px-4 py-2 text-sm text-slate-400 bg-white border rounded-md cursor-not-allowed"
+                  dangerouslySetInnerHTML={{ __html: link.label }}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
     </AuthenticatedLayout>
+
   );
 };
 

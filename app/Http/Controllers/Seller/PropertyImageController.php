@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
+use App\Models\Property;
 use App\Models\PropertyImage;
 use Illuminate\Http\Request;
 
@@ -33,5 +34,17 @@ class PropertyImageController extends Controller
 
 
         return redirect()->back()->with('success', 'Images uploaded successfully.');
-    }   
+    }
+    
+    public function destroy( Property $property, $id){
+        $property_image = PropertyImage::findOrFail($id);
+        if ($property_image) {
+            $property_image->delete();
+            return redirect()->back()->with('success', 'Property image deleted successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Property image not found.');
+        }
+
+
+    }
 }

@@ -88,55 +88,10 @@ const index = () => {
 
     const [selectedType, setSelectedType] = useState(null);
     
-
-
-
-
-  return ( 
+    return ( 
     
 
     <AdminLayout>
-        {/* <Modal show={isAddPropertyTypeOpen} onClose={closeAddProprtyType} maxWidth="lg">
-            <div className="p-6">
-                <form onSubmit={submitAddPropertyType} className="space-y-6">
-                    <h2 className="text-2xl font-semibold text-gray-800">Add Property Type</h2>
-
-                    <div>
-                        <InputLabel htmlFor="name" value="Property Type" />
-
-                        <TextInput
-                            id="name"
-                            type="text"
-                            name="name"
-                            value={data.name}
-                            className="mt-1 block w-full"
-                            autoComplete="name"
-                            isFocused={true}
-                            onChange={(e) => setData('name', e.target.value)}
-                        />
-
-                        <InputError message={errors.name} className="mt-2" />
-                    </div>
-
-                    <div className="flex justify-end space-x-3">
-                        <button
-                            type="button"
-                            onClick={closeAddProprtyType}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
-                        >
-                            Submit
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </Modal> */}
-
         <h1 className='font-bold text-lg md:text-xl lg:text-2xl '>Property type</h1>
         <div className="space-y-4">
             {/* Property Type Section */}
