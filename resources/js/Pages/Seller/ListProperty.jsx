@@ -176,9 +176,16 @@ const ListProperty = () => {
     };
 
 
+    const [isOpenNotice, setIsOpenNotice] = useState(true);
+
+
 
   return (
     <div className=" pt-20 bg-gray-100 min-h-screen">
+      <Modal show={isOpenNotice}  onClose={() => setIsOpenNotice(false)} maxWidth='xl' closeable={false}>
+        <ListingRequirements closeModal={() => setIsOpenNotice(false)} />
+      </Modal>
+      
       <NavBar />
       <div className="max-w-5xl mx-auto">
         <form onSubmit={handleSubmit}>
