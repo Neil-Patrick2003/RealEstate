@@ -53,7 +53,7 @@ class PropertyController extends Controller
         //validate request
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
+            'description' => 'required|string|max:3000',
             'property_type' => 'required|string',
             'property_sub_type' => 'required|string',
             'price' => 'required|numeric|min:0',
@@ -69,7 +69,7 @@ class PropertyController extends Controller
             'feature_name.*' => 'string|max:255',
             'boundary' => 'required|array',
             'pin' => 'nullable|array',
-            'isPresell' => 'nullable|boolean',           
+            'isPresell' => 'isPresell',           
         ]);
 
 

@@ -6,24 +6,24 @@ import { Switch } from '@headlessui/react';
 export default function Toggle({ data, setData }) {
   const [enabled, setEnabled] = useState(false);
 
-  // Set initial state from data.isPresell (e.g., "yes" or true)
+  // Sync toggle state with initial form value
   useEffect(() => {
-    setEnabled(data.isPresell === true || data.isPresell === 'yes');
+    setEnabled(Boolean(data.isPresell));
   }, [data.isPresell]);
 
-  const toggle = (value) => {
+  const handleToggle = (value) => {
     setEnabled(value);
-    setData('isPresell', value); // or use 'yes'/'no' if needed
+    setData('isPresell', value);
     console.log('isPresell:', value);
   };
 
   return (
     <Switch
       checked={enabled}
-      onChange={toggle}
+      onChange={handleToggle}
       className={`${
-        enabled ? 'bg-accent' : 'bg-gray-200'
-      } relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200`}
+        enabled ? 'bg-accent' : 'bg-gray-300'
+      } relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none`}
     >
       <span
         className={`${

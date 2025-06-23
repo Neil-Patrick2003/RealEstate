@@ -33,7 +33,7 @@ const ListProperty = () => {
     total_bedrooms: '',
     total_bathrooms: '',
     car_slots: '',
-    isPresell: '',
+    isPresell: false,
     image_url: '',
     feature_name: [],
     image_urls: [],
