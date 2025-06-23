@@ -47,7 +47,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     {
       name: "Enquiries",
       Icon: faEnvelope,
-      path: "/enquiries"
+      path: "/messages"
     },
     {
       name: "Tripping",

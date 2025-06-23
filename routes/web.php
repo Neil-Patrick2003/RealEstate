@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\SystemController;
+use App\Http\Controllers\Seller\MessageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Seller\PropertyController;
 use App\Http\Controllers\Seller\PropertyImageController;
@@ -42,6 +43,10 @@ Route::middleware(['auth', ])->group(function () {
     Route::patch('/properties/{proeprty}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
     Route::delete('/properties/{property}/edit/{id}', [ PropertyImageController::class, 'destroy'])->name('seller.properties.destroy');
     Route::post('/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
+
+    Route::get('/messages', [MessageController::class, 'index']);
+    Route::post('/messages/{receiver}/sent_message', [MessageController::class, 'send']);
+
 
     Route::get('/properties', [PropertyController::class, 'index'])->name('my-properties');
 
