@@ -5,6 +5,8 @@ use App\Http\Controllers\Seller\MessageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Seller\PropertyController;
 use App\Http\Controllers\Seller\PropertyImageController;
+use App\Http\Controllers\Seller\TrippingController;
+use App\Http\Controllers\Seller\TransactionController;
 use App\Models\Property;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -44,8 +46,16 @@ Route::middleware(['auth', ])->group(function () {
     Route::delete('/properties/{property}/edit/{id}', [ PropertyImageController::class, 'destroy'])->name('seller.properties.destroy');
     Route::post('/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
 
+    //message
     Route::get('/messages', [MessageController::class, 'index']);
     Route::post('/messages/{receiver}/sent_message', [MessageController::class, 'send']);
+
+    //trippings
+    Route::get('/trippings', [TrippingController::class, 'index']);
+
+    //transaction
+    Route::get('/my-sales', [TransactionController::class, 'index']);
+
 
 
     Route::get('/properties', [PropertyController::class, 'index'])->name('my-properties');

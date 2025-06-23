@@ -52,7 +52,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     {
       name: "Tripping",
       Icon: faCalendar,
-      path: "/tripping"
+      path: "/trippings"
     },
     {
       name: "Sales",
