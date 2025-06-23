@@ -103,31 +103,31 @@ class PropertyController extends Controller
             'image_url' => $property_image_url
         ]);
 
-        // //create property feature
-        // foreach ($request->feature_name as $feature) {
-        //     PropertyFeature::create([
-        //         'property_id' => $property->id,
-        //         'name' => $feature,
-        //     ]);
-        // }
+        //create property feature
+        foreach ($request->feature_name as $feature) {
+            PropertyFeature::create([
+                'property_id' => $property->id,
+                'name' => $feature,
+            ]);
+        }
 
 
         //save property boundery
-        // PropertyCoordinate::create([
-        //     'property_id' => $property->id,
-        //     'coordinates' => $request->boundary,
-        //     'type' => 'polygon',
-        // ]);
+        PropertyCoordinate::create([
+            'property_id' => $property->id,
+            'coordinates' => $request->boundary,
+            'type' => 'polygon',
+        ]);
 
-        //save property pin location
-        // PropertyCoordinate::create([
-        //     'property_id' => $property->id,
-        //     'coordinates' => [
-        //         'lat' => $request->pin['lat'],
-        //         'lng' => $request->pin['lng'],
-        //     ],
-        //     'type' => 'marker',
-        // ]);
+        // save property pin location
+        PropertyCoordinate::create([
+            'property_id' => $property->id,
+            'coordinates' => [
+                'lat' => $request->pin['lat'],
+                'lng' => $request->pin['lng'],
+            ],
+            'type' => 'marker',
+        ]);
 
         return redirect()->back();
   
@@ -153,6 +153,8 @@ class PropertyController extends Controller
 
     public function update(Request $request, $id)
     {
+
+         
 
         $property = Property::findOrFail($id);
 
@@ -204,6 +206,8 @@ class PropertyController extends Controller
             'isPresell' => $validated['isPresell'],
             'image_url' => $property_image_url,
         ]);
+
+       
 
         // (Optional) dump for testing
         // dd($request->toArray());
