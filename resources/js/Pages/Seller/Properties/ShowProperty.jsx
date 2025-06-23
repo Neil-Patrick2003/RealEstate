@@ -18,6 +18,8 @@ import PropertyMap from '@/Components/PropertyMap';
 import ImageModal from '@/Components/Modal/ImageModal';
 
 const ShowProperty = ({ property }) => {
+
+  console.log(property);
   const imageBasePath = '/storage/';
   const [visibleImages, setVisibleImages] = useState([]);
   const [openImage, setOpenImage] = useState(false);

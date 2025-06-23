@@ -97,7 +97,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
         title="Delete Image"
         description="Are you sure you want to delete this image?"
         confirmText="Delete"
-        cancelText="Cancel"
+        cancelText="Cancel"x
         onConfirm={handleDelete}
         loading={false}
       />
@@ -109,10 +109,13 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
             <h1 className="text-2xl font-bold text-gray-800">Properties</h1>
             <p className="text-sm text-gray-500">Manage your properties here.</p>
           </div>
-          <button className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-accent shadow-sm">
-            <FontAwesomeIcon icon={faPlus} />
-            Add Property
-          </button>
+          <Link href='/post-property'>
+            <button className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-accent shadow-sm">
+              <FontAwesomeIcon icon={faPlus} />
+              Add Property
+            </button>
+          </Link>
+          
         </div>
 
         {/* Filters & Search */}
