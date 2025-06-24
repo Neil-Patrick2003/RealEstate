@@ -42,11 +42,12 @@ const Hero = ({ auth }) => {
 
                     {/* Enhanced Search Bar */}
                     <motion.div
-                        initial={{ opacity: 0, y: 50 }}
+                        initial={{ opacity: 0.5, y: 60 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
                             duration: 0.8,
-                            delay: 0.3,
+                            delay: 0.1
+                       
                         }}
                         className="bg-white/95 backdrop-blur-lg p-4 sm:p-6 lg:p-8 rounded-2xl shadow-2xl border border-white/20 max-w-5xl mx-auto"
                     >
