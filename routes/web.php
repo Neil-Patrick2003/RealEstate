@@ -36,8 +36,8 @@ Route::middleware(['auth', ])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
-    
-    
+
+
     Route::get('/properties/{property}', [ PropertyController::class, 'show']);
     Route::delete('/properties/{id}', [ PropertyController::class, 'destroy']);
 
@@ -67,6 +67,7 @@ Route::middleware(['auth', ])->group(function () {
 
 
 //for agent
+Route::get('/agents/dashboard', [\App\Http\Controllers\AgentController::class, 'index']);
 
 
 

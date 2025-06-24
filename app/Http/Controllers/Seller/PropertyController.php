@@ -14,9 +14,9 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 
 class PropertyController extends Controller
-{   
+{
     public function index(Request $request){
-        
+
         $allCount = Property::where('seller_id', '=', Auth::id())->count();
         $pendingCount = Property::where('seller_id', '=', Auth::id())
         ->where('status', 'pending')
@@ -48,7 +48,7 @@ class PropertyController extends Controller
             'rejected' => $rejectedCount
         ]);
     }
-    
+
     public function store(Request $request){
         //validate request
         $validated = $request->validate([
@@ -69,7 +69,7 @@ class PropertyController extends Controller
             'feature_name.*' => 'string|max:255',
             'boundary' => 'required|array',
             'pin' => 'nullable|array',
-            'isPresell' => 'isPresell',           
+            'isPresell' => 'boolean',
         ]);
 
 
@@ -80,7 +80,7 @@ class PropertyController extends Controller
             $image_url = $request->file('image_url');
             $photo_name = $image_url->getClientOriginalName();
             $property_image_url = $image_url->storeAs($destination_path, $photo_name, 'public');
-            
+
         }
 
         //create property
@@ -99,7 +99,7 @@ class PropertyController extends Controller
             'bedrooms' => $validated['total_bedrooms'],
             'bathrooms' => $validated['total_bathrooms'],
             'car_slots' => $validated['car_slots'],
-            'isPresell' => $validated['isPresell'],
+            'isPresell' => $request['isPresell'],
             'image_url' => $property_image_url
         ]);
 
@@ -130,7 +130,7 @@ class PropertyController extends Controller
         ]);
 
         return redirect()->back();
-  
+
     }
 
     public function show(Property $property){
@@ -154,7 +154,7 @@ class PropertyController extends Controller
     public function update(Request $request, $id)
     {
 
-         
+
 
         $property = Property::findOrFail($id);
 
@@ -207,7 +207,7 @@ class PropertyController extends Controller
             'image_url' => $property_image_url,
         ]);
 
-       
+
 
         // (Optional) dump for testing
         // dd($request->toArray());
@@ -224,6 +224,6 @@ class PropertyController extends Controller
     }
 
 
-    
-    
+
+
 }

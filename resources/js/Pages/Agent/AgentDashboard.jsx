@@ -1,14 +1,9 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
-import React from 'react'
+import AgentLayout from "@/Layouts/AgentLayout.jsx";
 
-const AgentDashboard = () => {
-  return (
-<<<<<<< HEAD
-    <AuthenticatedLayout></AuthenticatedLayout>
-=======
-    <AuthenticatedLayout>   </AuthenticatedLayout>
->>>>>>> origin/develop
-  )
+export default function  AgentDashboard(){
+    return (
+        <AgentLayout>
+            Dashboard
+        </AgentLayout>
+    )
 }
-
-export default AgentDashboard

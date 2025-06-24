@@ -15,7 +15,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { Link } from '@inertiajs/react';
 import PropertyMap from '@/Components/PropertyMap';
-import ImageModal from '@/Components/Modal/ImageModal';
+import ImageModal from '@/Components/modal/ImageModal.jsx';
 
 const ShowProperty = ({ property }) => {
 
