@@ -191,18 +191,21 @@ const ListProperty = () => {
         <form onSubmit={handleSubmit}>
           <div className="">
             <section className="space-y-6 p-4 md:p-6 rounded-2xl">
-              <Collapsable title="Key Information" description="Detailed description about property.">
+              <Collapsable
+                title="Key Information"
+                description="Provide essential details about the property you're listing."
+              >
                 <div className="space-y-6">
-
+                  
                   {/* Pre-Sell Toggle */}
                   <div className="flex items-center justify-between p-4 border rounded-xl shadow-sm bg-gray-50">
-                    <span className="font-medium text-gray-700">Is Pre-sell?</span>
+                    <span className="font-medium text-gray-700">Is this a pre-sell property?</span>
                     <Toggle data={data} setData={setData} />
                   </div>
 
                   {/* Title Input */}
                   <div>
-                    <InputLabel htmlFor="title" value="Title" />
+                    <InputLabel htmlFor="title" value="Property Title" />
                     <TextInput
                       id="title"
                       name="title"
@@ -217,9 +220,9 @@ const ListProperty = () => {
 
                   {/* Description Editor */}
                   <div>
-                    <InputLabel htmlFor="description" value="Description" />
+                    <InputLabel htmlFor="description" value="Detailed Description" />
                     <Editor
-                      id="select"
+                      id="description"
                       value={data.description}
                       onChange={(e) => setData('description', e.target.value)}
                       className="h-60 mt-2"
@@ -227,15 +230,17 @@ const ListProperty = () => {
                     <InputError message={errors.description} className="mt-2" />
                   </div>
 
-                  {/* property image */}
+                  {/* Property Image Upload */}
                   <div className="flex flex-col items-center">
                     <label
                       htmlFor="property_image"
                       className={`mt-2 flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed rounded-xl transition ${
-                        preview ? 'border-transparent' : 'border-gray-300 bg-white hover:bg-gray-50 cursor-pointer'
+                        preview
+                          ? 'border-transparent'
+                          : 'border-gray-300 bg-white hover:bg-gray-50 cursor-pointer'
                       }`}
                     >
-                      {!preview && (
+                      {!preview ? (
                         <div className="flex flex-col items-center justify-center px-6 pt-5 pb-6">
                           <div className="mb-4 bg-gray-100 rounded-full p-3">
                             <svg
@@ -252,24 +257,22 @@ const ListProperty = () => {
                               />
                             </svg>
                           </div>
-                          <p className="mb-2 text-lg font-semibold text-gray-700">Drag & Drop Files Here</p>
-                          <p className="text-sm text-gray-500 text-center">PNG, JPG, WebP — or click to browse</p>
+                          <p className="mb-1 text-lg font-semibold text-gray-700">Drag & Drop to Upload</p>
+                          <p className="text-sm text-gray-500 text-center">PNG, JPG, WebP – or click to select</p>
                         </div>
-                      )}
-
-                      {preview && (
+                      ) : (
                         <div className="flex flex-col items-center">
                           <img
                             src={preview}
                             alt="Preview"
-                            className="h-40 w-40 rounded-full object-cover shadow-md"
+                            className="h-40 w-40 rounded-xl object-cover shadow-md"
                           />
                           <button
                             type="button"
                             onClick={() => document.getElementById('property_image').click()}
-                            className="mt-2 px-4 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded"
+                            className="mt-3 px-4 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded"
                           >
-                            Change
+                            Change Image
                           </button>
                         </div>
                       )}
@@ -284,10 +287,7 @@ const ListProperty = () => {
                     />
                   </div>
 
-
-  
-
-                  {/* Property Type */}
+                  {/* Property Type Selection */}
                   <div>
                     <InputLabel value="Property Type" />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
@@ -311,7 +311,7 @@ const ListProperty = () => {
                     </div>
                   </div>
 
-                  {/* Subcategories */}
+                  {/* Subcategory Selection */}
                   <div className="p-5 border rounded-xl bg-white shadow-sm">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">Subcategories</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -331,129 +331,135 @@ const ListProperty = () => {
                             </div>
                           ))
                         ) : (
-                          <p className="text-gray-500 col-span-full text-center">No subcategories available for this type.</p>
+                          <p className="text-gray-500 col-span-full text-center">
+                            No subcategories available for this type.
+                          </p>
                         )
                       ) : (
-                        <p className="text-gray-500 col-span-full text-center">Please select a property type to see subcategories.</p>
+                        <p className="text-gray-500 col-span-full text-center">
+                          Please select a property type to see subcategories.
+                        </p>
                       )}
                     </div>
                   </div>
 
-
                 </div>
               </Collapsable>
-
-
-              <Collapsable title="Pricing" description="haha">
+              <Collapsable
+                title="Pricing"
+                description="Set the price and address for the property listing."
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
                   {/* Price Input */}
-                  <div className="flex flex-col">
-                    <InputLabel htmlFor="price" value="Price" />
+                  <div>
+                    <InputLabel htmlFor="price" value="Price (₱)" />
                     <input
                       id="price"
                       type="number"
                       value={data.price}
                       onChange={(e) => setData('price', e.target.value)}
-                      placeholder="e.g. 1000000.00"
-                      className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      placeholder="e.g. 1,000,000.00"
+                      className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm text-sm text-gray-700 focus:border-primary focus:ring-2 focus:ring-primary outline-none transition-all"
                     />
                   </div>
 
                   {/* Address Input */}
-                  <div className="flex flex-col">
-                    <InputLabel htmlFor="address" value="Address" />
+                  <div>
+                    <InputLabel htmlFor="address" value="Full Address" />
                     <TextInput
                       id="address"
                       type="text"
                       value={data.address}
                       onChange={(e) => setData('address', e.target.value)}
-                      className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                      placeholder="Magahis tres, Tuy Batangas"
+                      className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm text-sm text-gray-700 focus:border-primary focus:ring-2 focus:ring-primary outline-none transition-all"
+                      placeholder="e.g. Magahis Tres, Tuy, Batangas"
                       autoComplete="address"
                     />
                   </div>
+
                 </div>
               </Collapsable>
+
               <Collapsable title="Property Details" isOpen={true}>
-                {/* Lot Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                  {[
-                    { label: 'Lot Area (sqm)', key: 'lot_area' },
-                    { label: 'Floor Area (sqm)', key: 'floor_area' },
-                    { label: 'Car Slots', key: 'car_slots' },
-                  ].map(({ label, key }) => (
-                    <div key={key}>
-                      <InputLabel htmlFor={key} value={label} />
-                      <input
-                        id={key}
-                        type="number"
-                        value={data[key]}
-                        onChange={(e) => setData(key, e.target.value)}
-                        className="mt-2 w-full rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none px-3 py-2"
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Room Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                  {[
-                    { label: 'Total Rooms', key: 'total_rooms' },
-                    { label: 'Bedrooms', key: 'total_bedrooms' },
-                    { label: 'Bathrooms', key: 'total_bathrooms' },
-                  ].map(({ label, key }) => (
-                    <div key={key}>
-                      <InputLabel htmlFor={key} value={label} />
-                      <input
-                        id={key}
-                        type="number"
-                        value={data[key]}
-                        onChange={(e) => setData(key, e.target.value)}
-                        className="mt-2 w-full rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none px-3 py-2"
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Image Upload */}
-                <div className="mb-6">
-                  <InputLabel htmlFor="image_upload" className="block text-sm font-medium text-gray-700">
-                    Property Images
-                  </InputLabel>
-                  <label
-                    htmlFor="image_upload"
-                    className="mt-2 flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-300 rounded-xl bg-white cursor-pointer hover:bg-gray-50 transition"
-                  >
-                    <div className="flex flex-col items-center justify-center px-6 pt-5 pb-6">
-                      <div className="mb-4 bg-gray-100 rounded-full p-3">
-                        <svg
-                          className="w-6 h-6 text-gray-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1M12 12v6m0-6l-3 3m3-3l3 3M16 8a4 4 0 0 0-8 0v1H5a2 2 0 0 0 0 4h14a2 2 0 0 0 0-4h-3V8z"
-                          />
-                        </svg>
-                      </div>
-                      <p className="mb-2 text-lg font-semibold text-gray-700">Drag & Drop Files Here</p>
-                      <p className="text-sm text-gray-500 text-center">PNG, JPG, WebP, SVG — or click to browse</p>
-                    </div>
+              {/* Lot, Floor, Car Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                {[
+                  { label: 'Lot Area (sqm)', key: 'lot_area' },
+                  { label: 'Floor Area (sqm)', key: 'floor_area' },
+                  { label: 'Car Slots', key: 'car_slots' },
+                ].map(({ label, key }) => (
+                  <div key={key}>
+                    <InputLabel htmlFor={key} value={label} />
                     <input
-                      id="image_upload"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageChange}
-                      className="hidden"
+                      id={key}
+                      type="number"
+                      value={data[key]}
+                      onChange={(e) => setData(key, e.target.value)}
+                      className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm text-sm focus:border-primary focus:ring-2 focus:ring-primary outline-none transition-all"
                     />
-                  </label>
+                  </div>
+                ))}
+              </div>
 
-                  {/* Image Previews */}
+              {/* Room Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                {[
+                  { label: 'Total Rooms', key: 'total_rooms' },
+                  { label: 'Bedrooms', key: 'total_bedrooms' },
+                  { label: 'Bathrooms', key: 'total_bathrooms' },
+                ].map(({ label, key }) => (
+                  <div key={key}>
+                    <InputLabel htmlFor={key} value={label} />
+                    <input
+                      id={key}
+                      type="number"
+                      value={data[key]}
+                      onChange={(e) => setData(key, e.target.value)}
+                      className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm text-sm focus:border-primary focus:ring-2 focus:ring-primary outline-none transition-all"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Property Image Upload */}
+              <div className="mb-6">
+                <InputLabel htmlFor="image_upload" value="Property Images" />
+                <label
+                  htmlFor="image_upload"
+                  className="mt-2 flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-300 rounded-xl bg-white cursor-pointer hover:bg-gray-50 transition"
+                >
+                  <div className="flex flex-col items-center justify-center px-6 pt-5 pb-6">
+                    <div className="mb-4 bg-gray-100 rounded-full p-3">
+                      <svg
+                        className="w-6 h-6 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1M12 12v6m0-6l-3 3m3-3l3 3M16 8a4 4 0 0 0-8 0v1H5a2 2 0 0 0 0 4h14a2 2 0 0 0 0-4h-3V8z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="mb-1 text-lg font-semibold text-gray-700">Drag & Drop Files Here</p>
+                    <p className="text-sm text-gray-500 text-center">PNG, JPG, WebP, SVG — or click to browse</p>
+                  </div>
+                  <input
+                    id="image_upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Image Previews */}
+                {imagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-4 mt-4">
                     {imagePreviews.map((img, index) => (
                       <div key={index} className="relative w-24 h-24">
@@ -472,75 +478,81 @@ const ListProperty = () => {
                       </div>
                     ))}
                   </div>
-                  <InputError message={errors.image_urls} className="mt-2" />
-                </div>
+                )}
+                <InputError message={errors.image_urls} className="mt-2" />
+              </div>
 
-                {/* Feature Tags */}
-                <div>
-                  <InputLabel htmlFor="feature_input" value="Features" />
-                  <input
-                    id="feature_input"
-                    type="text"
-                    placeholder="Add feature and press Enter"
-                    className="mt-2 border rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    value={featureInput}
-                    onChange={(e) => setFeatureInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && featureInput.trim() !== '') {
-                        setData('feature_name', [...data.feature_name, featureInput.trim()]);
-                        setFeatureInput('');
-                        e.preventDefault();
-                      }
-                    }}
-                  />
+              {/* Feature Tags */}
+              <div>
+                <InputLabel htmlFor="feature_input" value="Features" />
+                <input
+                  id="feature_input"
+                  type="text"
+                  placeholder="Add a feature and press Enter (e.g. Balcony, Maid's Room)"
+                  className="mt-2 border rounded px-3 py-2 w-full focus:ring-2 focus:ring-primary focus:outline-none"
+                  value={featureInput}
+                  onChange={(e) => setFeatureInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && featureInput.trim() !== '') {
+                      setData('feature_name', [...data.feature_name, featureInput.trim()]);
+                      setFeatureInput('');
+                      e.preventDefault();
+                    }
+                  }}
+                />
 
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {data.feature_name.map((feature, index) => (
-                      <div
-                        key={index}
-                        className="relative inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full"
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {data.feature_name.map((feature, index) => (
+                    <div
+                      key={index}
+                      className="relative inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      <span>{feature}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = data.feature_name.filter((_, i) => i !== index);
+                          setData('feature_name', updated);
+                        }}
+                        className="absolute -top-1 -right-1 text-xs text-red-500 bg-white w-5 h-5 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white"
                       >
-                        <span>{feature}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updated = data.feature_name.filter((_, i) => i !== index);
-                            setData('feature_name', updated);
-                          }}
-                          className="absolute -top-1 -right-1 text-xs text-red-500 bg-transparent w-5 h-5 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <InputError message={errors.feature_name} className="mt-2" />
+                        ✕
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              </Collapsable>
+                <InputError message={errors.feature_name} className="mt-2" />
+              </div>
+            </Collapsable>
+            <Collapsable
+              title="Map"
+              description="Draw a line for property boundery overview"
+            >
+              <div className="space-y-4">
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+                  Draw Property Location
+                </h2>
 
-              <Collapsable title='Key Information'description='Detailed desctiption about ptoperty.'>
-                <div className="">
-                  <h1 className="text-2xl font-bold mb-4">Draw Property Location</h1>
-                  <MapWithDraw userId={auth.user.id}  onChange={handleMapChange} />
-                  <InputError message={errors.boundary} className="mt-2" />
-                  <InputError message={errors.pin} className="mt-2" />
-                </div>               
-              </Collapsable>
-              
-            </section>
-            <div className="px-4 py-3 md:py-4 lg:py-5 sm:px-7 lg:px-6">
-                <button
-                  type="submit"
-                  className="bg-green-600 text-white w-full sm:w-auto px-6 py-2 rounded hover:bg-green-700 transition"
-                  disabled={processing}
-                >
-                  { processing ? "Submiting" : "Submit"}
-                </button>
+                <MapWithDraw userId={auth.user.id} onChange={handleMapChange} />
+
+                <div>
+                  <InputError message={errors.boundary} className="mt-1 text-sm" />
+                  <InputError message={errors.pin} className="mt-1 text-sm" />
+                </div>
+              </div>
+            </Collapsable>        
+          </section>
+          {/* Submit Button Section */}
+          {/* Submit Button Section */}
+            <div className="px-4 py-6 sm:px-6 lg:px-8 flex justify-end">
+              <button
+                type="submit"
+                disabled={processing}
+                className="w-full sm:w-auto bg-primary hover:bg-primary-dark text-white font-medium px-6 py-2 rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {processing ? 'Submitting...' : 'Submit'}
+              </button>
             </div>
-
-            
-
-             
           </div>
         </form>
       </div>
