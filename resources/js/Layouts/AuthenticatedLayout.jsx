@@ -1,20 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/Components/SIdebar/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlignLeft, Bell, Languages, LogOut, Moon, X } from 'lucide-react';
+import { AlignLeft, LogOut, X } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
-import { faBell, faMoon, faLanguage } from "@fortawesome/free-solid-svg-icons";
+import { faBell, faMoon, faLanguage } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Breadcrumb from '@/Components/Breadcrumbs';
-
 
 export default function AuthenticatedLayout({ children }) {
   const auth = usePage().props.auth.user;
 
-  // Sidebar open state (desktop)
   const [isOpen, setIsOpen] = useState(() => {
     const saved = localStorage.getItem('sidebar-isOpen');
     return saved === null ? false : JSON.parse(saved);
@@ -24,9 +21,7 @@ export default function AuthenticatedLayout({ children }) {
     localStorage.setItem('sidebar-isOpen', JSON.stringify(isOpen));
   }, [isOpen]);
 
-  // Sidebar open state (mobile)
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-
   const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
 
   const toggleSidebar = () => {
@@ -37,23 +32,22 @@ export default function AuthenticatedLayout({ children }) {
     }
   };
 
-  // Close mobile sidebar when switching to desktop
   useEffect(() => {
-    if (!isMobile) {
-      setIsMobileOpen(false);
-    }
+    if (!isMobile) setIsMobileOpen(false);
   }, [isMobile]);
 
+  useEffect(() => {
+    document.body.style.overflow = isMobileOpen ? 'hidden' : '';
+  }, [isMobileOpen]);
+
   return (
-    <div className="h-screen flex overflow-hidden relative">
-      {/* Sidebar Desktop */}
+    <div className="h-screen flex overflow-hidden relative bg-gray-50">
       {!isMobile && (
         <div className="hidden md:block">
           <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
         </div>
       )}
 
-      {/* Sidebar Mobile */}
       <AnimatePresence>
         {isMobileOpen && isMobile && (
           <>
@@ -61,23 +55,27 @@ export default function AuthenticatedLayout({ children }) {
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ duration: 0.3 }}
-              className="fixed top-0 left-0 z-50 w-64 h-full bg-white border shadow-lg"
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
+              className="fixed top-0 left-0 z-50 w-64 h-full bg-white shadow-2xl border-r rounded-tr-2xl rounded-br-2xl"
               role="dialog"
               aria-modal="true"
             >
               <Sidebar isOpen={true} setIsOpen={setIsMobileOpen} />
               <button
                 onClick={() => setIsMobileOpen(false)}
-                className="absolute top-4 right-4 p-2"
+                className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-800"
                 aria-label="Close sidebar"
               >
                 <X size={24} />
               </button>
             </motion.div>
-            {/* Overlay */}
-            <div
-              className="fixed inset-0 z-40 bg-black opacity-30"
+
+            <motion.div
+              className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
               onClick={() => setIsMobileOpen(false)}
               aria-hidden="true"
             />
@@ -85,78 +83,64 @@ export default function AuthenticatedLayout({ children }) {
         )}
       </AnimatePresence>
 
-      {/* Main content */}
-      <main className="w-full h-full overflow-auto pt-14 border"> {/* Add top padding for fixed header */}
-          <header
-            className={`fixed top-0 left-0 right-0 flex justify-between items-center border-b bg-white backdrop-blur-sm px-4 py-3 z-50 transition-all duration-300
-              ${
-                // If mobile and sidebar open, no ml because sidebar overlays content
-                isMobile ? 'ml-0' : isOpen ? 'ml-[18rem]' : 'ml-[6rem]'
-              }
-            `}
-          >
-         {/* Left: Sidebar toggle + Search */}
+      <main className="w-full h-full overflow-auto pt-14">
+        <motion.header
+          initial={false}
+          animate={{
+            marginLeft: isMobile ? 0 : isOpen ? '18rem' : '6rem',
+          }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          className="fixed top-0 left-0 right-0 flex justify-between items-center bg-white border-b shadow-md px-6 py-3 z-50"
+        >
           <div className="flex items-center gap-2">
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-lg border"
+              className="p-2 rounded-lg border bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition"
               aria-label="Toggle sidebar"
             >
-              <AlignLeft size={16}  className='text-gray-400'/>
+              <AlignLeft size={20} className="text-gray-500" />
             </button>
-
-            {/* Search input visible md+ */}
             <input
               type="search"
-              id='search_all'
-              placeholder="Search"
-              className="hidden md:block ml-3 w-72 border rounded-lg border-gray-200 px-3 py-1.5 text-sm"
+              id="search_all"
+              placeholder="Search anything..."
+              className="hidden md:block ml-3 w-72 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring focus:ring-blue-100 focus:outline-none transition"
               aria-label="Search"
             />
           </div>
 
-          {/* Right side controls */}
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-3">
-              {/* Language Dropdown */}
               <Dropdown>
                 <Dropdown.Trigger>
-                  <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200" aria-haspopup="true" aria-expanded="false" role="button">
-                    <FontAwesomeIcon icon={faLanguage} className='text-gray-400 w-6 h-5' />
+                  <div className="hover:bg-gray-100 p-2 rounded-full transition" role="button">
+                    <FontAwesomeIcon icon={faLanguage} className="text-gray-500 w-5 h-5" />
                   </div>
                 </Dropdown.Trigger>
                 <Dropdown.Content width="48">
-                  <ul className="py-1 px-2 text-sm text-gray-700" role="menu">
-                    <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer" role="menuitem">English</li>
-                    <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer" role="menuitem">Filipino</li>
+                  <ul className="py-1 px-2 text-sm text-gray-700">
+                    <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">English</li>
+                    <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">Filipino</li>
                   </ul>
                 </Dropdown.Content>
               </Dropdown>
-
-              {/* Theme toggle */}
-              <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200 cursor-pointer" role="button" aria-label="Toggle theme">
-                <FontAwesomeIcon icon={faMoon} className='text-gray-400 w-6 h-5' />
+              <div className="hover:bg-gray-100 p-2 rounded-full transition cursor-pointer" role="button">
+                <FontAwesomeIcon icon={faMoon} className="text-gray-500 w-5 h-5" />
               </div>
-
-              {/* Notification */}
-              <div className="hover:bg-gray-200 p-2 rounded-full transition duration-200 cursor-pointer" role="button" aria-label="Notifications">
-                {/* <Bell size={20} className="text-gray-600" /> */}
-                <FontAwesomeIcon icon={faBell} className='text-gray-400 w-6 h-5' />
+              <div className="hover:bg-gray-100 p-2 rounded-full transition cursor-pointer" role="button">
+                <FontAwesomeIcon icon={faBell} className="text-gray-500 w-5 h-5" />
               </div>
             </div>
 
-            {/* User Dropdown */}
             <Dropdown>
               <Dropdown.Trigger>
-                <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition" aria-haspopup="true" aria-expanded="false" role="button">
+                <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition" role="button">
                   <img
                     src="https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
                     alt="Profile"
-                    className="w-9 h-9 rounded-full object-cover border"
+                    className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-200"
                   />
-                  <span className="hidden sm:inline text-sm font-medium text-gray-700">
-                    {auth?.name}
-                  </span>
+                  <span className="hidden sm:inline text-sm font-medium text-gray-700">{auth?.name}</span>
                   <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -166,9 +150,8 @@ export default function AuthenticatedLayout({ children }) {
                   </svg>
                 </div>
               </Dropdown.Trigger>
-
               <Dropdown.Content width="48">
-                <Dropdown.Link href={route('profile.edit')} className="px-4 py-2 hover:bg-gray-100" role="menuitem">
+                <Dropdown.Link href={route('profile.edit')} className="px-4 py-2 hover:bg-gray-100">
                   Profile
                 </Dropdown.Link>
                 <Dropdown.Link
@@ -176,7 +159,6 @@ export default function AuthenticatedLayout({ children }) {
                   method="post"
                   as="button"
                   className="flex items-center justify-between px-4 py-2 hover:bg-gray-100"
-                  role="menuitem"
                 >
                   <span>Log Out</span>
                   <LogOut size={18} className="text-gray-500" />
@@ -184,11 +166,10 @@ export default function AuthenticatedLayout({ children }) {
               </Dropdown.Content>
             </Dropdown>
           </div>
-        </header>
+        </motion.header>
 
-        {/* Content wrapper with padding */}
-        <div className="p-2 md:p-4 lg:p-6 xl:p-8 sl:p-8 mt-2">
-          <Breadcrumb/>
+        <div className="p-4 sm:p-6 md:p-8 mt-4">
+          <Breadcrumb />
           {children}
         </div>
       </main>
