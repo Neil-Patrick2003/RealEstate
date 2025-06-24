@@ -127,7 +127,7 @@ export default function Index({ users, messages = [], auth }) {
                       isOwn ? 'justify-end' : 'justify-start'
                     }`}
                   >
-                    {/* Avatar */}
+                    {/* Anovatar */}
                     {!isOwn && (
                       <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
                         {senderInitial}
