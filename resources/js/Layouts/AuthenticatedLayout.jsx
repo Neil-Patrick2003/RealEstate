@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/Components/SIdebar/sidebar';
+import Sidebar from '@/Components/Sidebar/Sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlignLeft, LogOut, X } from 'lucide-react';
 import { usePage } from '@inertiajs/react';

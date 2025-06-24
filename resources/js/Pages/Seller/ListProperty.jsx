@@ -16,7 +16,7 @@ import Editor from 'react-simple-wysiwyg';
 import MapWithDraw from '@/Components/MapWithDraw';
 import { Accordion, AccordionDetails, AccordionSummary, Typography } from '@mui/material';
 import Collapsable from '@/Components/collapsable/collapsable';
-import Toggle from '@/Components/toggle';
+import Toggle from '@/Components/Toggle';
 
 
 const ListProperty = () => {
