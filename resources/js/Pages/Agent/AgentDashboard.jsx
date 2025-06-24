@@ -3,7 +3,11 @@ import React from 'react'
 
 const AgentDashboard = () => {
   return (
+<<<<<<< HEAD
     <AuthenticatedLayout></AuthenticatedLayout>
+=======
+    <AuthenticatedLayout>   </AuthenticatedLayout>
+>>>>>>> origin/develop
   )
 }
 

@@ -21,6 +21,8 @@ Route::get('/', function () {
     ]);
 });
 
+
+
 //all auth user
 Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
