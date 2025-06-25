@@ -70,6 +70,7 @@ Route::get('/agents/properties', [\App\Http\Controllers\Agent\AgentPropertyContr
 
 
 
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
