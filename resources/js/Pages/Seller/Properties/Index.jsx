@@ -1,7 +1,7 @@
 // Import necessary components and libraries
 import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { EllipsisVertical, Eye, Pencil, Search, Trash } from 'lucide-react';
+import { EllipsisVertical, Search,  } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { debounce } from 'lodash';
@@ -12,7 +12,6 @@ import ConfirmDialog from '@/Components/modal/ConfirmDialog';
 // Main component
 const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status='', all, approved, rejected, pending }) => {
   // Property types
-  const types = ["Apartment", "Commercial", "Condominium", "House", "Land"];
 
   // Local state for search and pagination
   const [searchTerm, setSearchTerm] = useState(search || '');
@@ -60,14 +59,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
     router.get('/properties', { page: 1, search: searchTerm, items_per_page: newItemsPerPage, status: selectedStatus  }, { preserveState: true, replace: true });
   };
 
-  // const handleStatusFilter = (e) => {
-  //   const 
-  // }
 
-  // Actions for each property (view/edit/delete)
-  const handleView = (title) => alert(`Viewing ${title}`);
-  const handleEdit = (title) => alert(`Editing ${title}`);
-  
 
   const imageUrl = '/storage/'; // Base path for property images
   const [openDeleteDiaglog, setOpenDeleteDialog] = useState(false);
@@ -80,7 +72,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
 
   const handleDelete = () => {
       if (!deletingId) return;
-  
+
       router.delete(`/properties/${deletingId}`, {
         onSuccess: () => {
           setDeletingId(null);
@@ -115,7 +107,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
               Add Property
             </button>
           </Link>
-          
+
         </div>
 
         {/* Filters & Search */}
@@ -230,7 +222,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
             </table>
           </div>
         </div>
-        
+
 
         {/* Pagination & Items per page */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6">

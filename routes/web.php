@@ -67,6 +67,8 @@ Route::middleware(['auth', ])->group(function () {
 //for agent
 Route::get('/agents/dashboard', [\App\Http\Controllers\Agent\AgentController::class, 'index']);
 Route::get('/agents/properties', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'index']);
+Route::get('/agents/inquiries', [\App\Http\Controllers\Agent\InquiryController::class, 'index']);
+
 
 
 
