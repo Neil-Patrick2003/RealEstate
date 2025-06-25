@@ -1,13 +1,11 @@
 <?php
 
-use App\Http\Controllers\Admin\SystemController;
-use App\Http\Controllers\Seller\MessageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Seller\MessageController;
 use App\Http\Controllers\Seller\PropertyController;
 use App\Http\Controllers\Seller\PropertyImageController;
-use App\Http\Controllers\Seller\TrippingController;
 use App\Http\Controllers\Seller\TransactionController;
-use App\Models\Property;
+use App\Http\Controllers\Seller\TrippingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -67,7 +65,8 @@ Route::middleware(['auth', ])->group(function () {
 
 
 //for agent
-Route::get('/agents/dashboard', [\App\Http\Controllers\AgentController::class, 'index']);
+Route::get('/agents/dashboard', [\App\Http\Controllers\Agent\AgentController::class, 'index']);
+Route::get('/agents/properties', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'index']);
 
 
 

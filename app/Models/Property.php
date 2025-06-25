@@ -48,4 +48,11 @@ class Property extends Model
     {
         return $this->hasOne(PropertyCoordinate::class)->where('type', 'marker');
     }
+
+
+
+    public function seller()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
