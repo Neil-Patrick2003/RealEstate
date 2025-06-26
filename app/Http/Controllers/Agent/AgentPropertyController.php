@@ -10,7 +10,7 @@ class AgentPropertyController extends Controller
 {
     public function index()
     {
-        $properties = Property::select('id', 'title', 'price', 'address', 'property_type', 'sub_type', 'floor_area', 'lot_area',  'seller_id') // choose columns from Property
+        $properties = Property::select('id', 'title', 'price', 'address', 'property_type', 'sub_type', 'image_url',  'floor_area', 'lot_area',  'seller_id', 'total_rooms', 'bedrooms', 'bathrooms') // choose columns from Property
         ->with(['seller:id,name,email']) // choose columns from Seller
         ->get();
 

@@ -67,8 +67,8 @@ Route::middleware(['auth', ])->group(function () {
 //for agent
 Route::get('/agents/dashboard', [\App\Http\Controllers\Agent\AgentController::class, 'index']);
 Route::get('/agents/properties', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'index']);
-Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent\InquiryController::class, 'store']);
-
+//sent inquiry
+Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent\InquiryController::class, 'store'])->middleware('auth')->name('agent.properties.sent-inquiry');
 
 
 Route::get('/agents/messages', [\App\Http\Controllers\Agent\InquiryController::class, 'index']);
