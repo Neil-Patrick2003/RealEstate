@@ -3,7 +3,6 @@ import ChatHeader from "@/Components/Message/ChatHeader.jsx";
 import MessageContainer from "@/Components/Message/MessageContainer.jsx";
 import { useEffect, useState } from "react";
 import {router, useForm, usePage} from "@inertiajs/react";
-import {Alert} from "@mui/material";
 
 export default function Inquiries({ users, messages = [], selectedChatId = null }) {
     const [selectedChat, setSelectedChat] = useState(selectedChatId);
@@ -11,10 +10,6 @@ export default function Inquiries({ users, messages = [], selectedChatId = null 
     const {data, setData, post, errors, processing, reset} = useForm({
         message: ''
     })
-
-
-
-
 
     // 🧠 Sync local state with selectedChatId from server when page updates
     useEffect(() => {
@@ -30,6 +25,7 @@ export default function Inquiries({ users, messages = [], selectedChatId = null 
         });
     };
 
+    //handle submit form to send message
     function handleMessageSubmit(e) {
         e.preventDefault();
 
@@ -46,6 +42,13 @@ export default function Inquiries({ users, messages = [], selectedChatId = null 
         });
     }
 
+    const getInitials = (name) => {
+        if (!name) return "";
+        return name.trim().split(" ").map(word => word[0]).join("").toUpperCase();
+    };
+
+
+
     return (
         <AgentLayout>
             <div className="text-xl font-semibold ">Messages</div>
@@ -54,6 +57,7 @@ export default function Inquiries({ users, messages = [], selectedChatId = null 
                 {/* Left panel: chat user list */}
                 <div className="w-1/5 border-r p-4 bg-gray-100 rounded-l-xl">
                     <input
+                        name='searchName'
                         className="border w-full border-gray-200 rounded-2xl px-3 py-2"
                         placeholder="Search..."
                     />
@@ -64,12 +68,15 @@ export default function Inquiries({ users, messages = [], selectedChatId = null 
                             users.map((user) => (
                                 <div
                                     key={user.id}
-                                    className={`border px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-100 ${
+                                    className={` py-2 rounded-lg cursor-pointer hover:bg-gray-100 ${
                                         selectedChat === user.id ? "bg-gray-200" : ""
                                     }`}
                                     onClick={() => handleChatSelect(user.id)}
                                 >
-                                    <div className="font-medium">{user.name}</div>
+                                    <div className="flex-center font-medium gap-1" >
+                                        <span className='border rounded-full text-xs font-medium p-1 text-white bg-primary'>{getInitials(user.name)}</span>
+                                        {user.name}
+                                    </div>
                                 </div>
                             ))
                         )}
@@ -80,9 +87,14 @@ export default function Inquiries({ users, messages = [], selectedChatId = null 
                 <div className="w-4/5 overflow-y-auto">
                     {selectedChat ? (
                         <>
-                            <ChatHeader user={users.find((u) => u.id === selectedChat)} />
-                            <div className="">
+
+
+                            <ChatHeader
+                                user={users.find(user => String(user.id) === String(selectedChat)) ?? null}
+                                getInitials={getInitials}
+                            />                            <div className="">
                                 <MessageContainer
+                                    getInitials={getInitials}
                                     messages={messages}
                                     selectedChatId={selectedChat}
                                     currentUserId={auth.user.id} // ✅ pass current user ID
@@ -94,6 +106,7 @@ export default function Inquiries({ users, messages = [], selectedChatId = null 
                             <div className='mt-2 p-4 border-t'>
                                 <form onSubmit={handleMessageSubmit} className='flex-center-between  gap-x-2 '>
                                     <input
+                                        name='message'
                                         className='w-full py-1.5 rounded-md border-gray-400'
                                         value={data.message}
                                         onChange={(e) => setData('message', e.target.value)}
