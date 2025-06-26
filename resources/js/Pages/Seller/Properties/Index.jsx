@@ -111,7 +111,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
         </div>
 
         {/* Filters & Search */}
-        <div className='flex flex-col'>
+        <div className='flex min-h-[50vh] flex-col bg-white rounded-b-xl shadow-sm'>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-gray-100 rounded-t-xl shadow-sm">
             <div className="w-full md:w-auto overflow-x-auto">
               <SellerPropertiesFilterTab
@@ -137,7 +137,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
           </div>
 
           {/* Properties Table */}
-          <div className="overflow-x-auto  bg-white border border-gray-100 rounded-b-xl shadow-sm">
+          <div className="bg-white border border-gray-100 ">
             <table className="min-w-full text-sm text-left text-gray-700">
               <thead className="bg-gray-100 sticky top-0 z-10 text-xs text-gray-500 uppercase tracking-wide">
                 <tr>
