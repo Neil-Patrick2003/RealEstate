@@ -57,7 +57,19 @@ class User extends Authenticatable
         return $this->hasMany(Property::class);
     }
 
-    public function inquiries(){
-        return $this->hasMany(Inquiry::class);
+    public function buyerInquiriesAsAgent()
+    {
+        return $this->hasMany(Inquiry::class, 'buyer_id')
+            ->where('agent_id', auth()->id());
+    }
+
+    public function sellerInquiriesAsAgent()
+    {
+        return $this->hasMany(Inquiry::class, 'seller_id')
+            ->where('agent_id', auth()->id());
+    }
+
+    public function messages(){
+        return $this->hasMany(Message::class);
     }
 }

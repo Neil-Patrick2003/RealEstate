@@ -201,7 +201,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
                               </Link>
                               <li
                                 onClick={() => handleOpenDeleteDialog(property.id)}
-                                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-100 cursor-pointer"
+                                className="flex items-center     gap-2 px-4 py-2 text-red-600 hover:bg-red-100 cursor-pointer"
                               >
                                 <FontAwesomeIcon icon={faTrashCan} /> Delete
                               </li>

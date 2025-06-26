@@ -13,6 +13,7 @@ class Message extends Model
         'sender_id',
         'receiver_id',
         'message',
+        'inquiry_id',
     ];
 
     // Sender relationship
@@ -26,4 +27,14 @@ class Message extends Model
     {
         return $this->belongsTo(User::class, 'receiver_id');
     }
+
+    public function user(){
+        return $this->belongsTo(User::class);
+    }
+
+    public function inquiry(){
+        return $this->belongsTo(Inquiry::class);
+    }
+
+
 }

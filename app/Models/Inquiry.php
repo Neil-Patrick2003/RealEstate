@@ -6,10 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class Inquiry extends Model
 {
-    protected $fillable = ['agent_id', 'seller_id', 'buyer_id', 'status'];
+    protected $fillable = ['agent_id',  'buyer_id',  'seller_id',  'property_id', 'status'];
 
-    public function user ()
+    public function seller ()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'seller_id');
     }
+
+    public function buyer(){
+        return $this->belongsTo(User::class, 'buyer_id');
+    }
+
+    public function agent(){
+        return $this->belongsTo(User::class, 'agent');
+    }
+
+
+
+    public function property (){
+        return $this->belongsTo(Property::class, 'property_id');
+    }
+
+
 }
