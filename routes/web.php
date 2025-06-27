@@ -77,6 +77,8 @@ Route::post('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageControl
 
 
 Route::get('/agents/inquiries', [\App\Http\Controllers\Agent\InquiryController::class, 'index']);
+Route::patch('/agents/inquiries/{id}', [\App\Http\Controllers\Agent\InquiryController::class, 'update']);
+
 
 
 

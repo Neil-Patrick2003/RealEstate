@@ -82,5 +82,14 @@ class InquiryController extends Controller
 
     }
 
+    public function update(Request $request, $id){
+        $inquiry = Inquiry::findOrFail($id);
+        $inquiry->update([
+            'status' => "Cancelled"
+        ]);
+
+        return redirect()->back();
+    }
+
 
 }

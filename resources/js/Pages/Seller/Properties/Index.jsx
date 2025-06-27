@@ -94,7 +94,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
         loading={false}
       />
 
-      <div className="max-w-7xl mx-auto min-h-screen px-4 py-6 space-y-6">
+          <div className="max-w-7xl mx-auto min-h-screen px-4 py-6 space-y-6">
         {/* Page Heading */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
