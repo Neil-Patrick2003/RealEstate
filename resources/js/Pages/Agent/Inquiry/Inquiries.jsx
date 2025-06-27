@@ -1,128 +1,151 @@
-import AgentLayout from "@/Layouts/AgentLayout.jsx";
-import ChatHeader from "@/Components/Message/ChatHeader.jsx";
-import MessageContainer from "@/Components/Message/MessageContainer.jsx";
-import { useEffect, useState } from "react";
-import {router, useForm, usePage} from "@inertiajs/react";
+import AgentLayout from '@/Layouts/AgentLayout';
+import React, { useState } from 'react';
+import { Link, router } from '@inertiajs/react';
+import dayjs from 'dayjs';
+import AgentInquiriesFilterTab from '@/Components/tabs/AgentInquiriesFilterTab.jsx';
 
-export default function Inquiries({ users, messages = [], selectedChatId = null }) {
-    const [selectedChat, setSelectedChat] = useState(selectedChatId);
-    const auth = usePage().props.auth;
-    const {data, setData, post, errors, processing, reset} = useForm({
-        message: ''
-    })
+const Inquiries = ({
+                       inquiries,
+                       inquiriesCount,
+                       rejectedCount,
+                       acceptedCount,
+                       pendingCount,
+                       cancelledCount,
+                       page = 1,
+                       itemsPerPage = 10,
+                       status = 'All',
+                   }) => {
+    const imageUrl = '/storage/';
+    const [selectedStatus, setSelectedStatus] = useState(status);
+    const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
 
-    // 🧠 Sync local state with selectedChatId from server when page updates
-    useEffect(() => {
-        setSelectedChat(selectedChatId);
-    }, [selectedChatId]);
-
-    const handleChatSelect = (id) => {
-        setSelectedChat(id); // local state for UI responsiveness
-        router.get(`/agents/messages/${id}`, {}, {
-            preserveScroll: true,
-            preserveState: true,
-            only: ['messages', 'selectedChatId', 'users'], // ensure users stay
-        });
+    const handleItemsPerPageChange = (e) => {
+        const newItemsPerPage = e.target.value;
+        setSelectedItemsPerPage(newItemsPerPage);
+        router.get('/agents/inquiries', {
+            page: 1,
+            items_per_page: newItemsPerPage,
+            status: selectedStatus,
+        }, { preserveState: true, replace: true });
     };
-
-    //handle submit form to send message
-    function handleMessageSubmit(e) {
-        e.preventDefault();
-
-        if (!selectedChat) {
-            alert("Please select a user to send a message to.");
-            return;
-        }
-
-        post(`/agents/messages/${selectedChat}`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                reset();
-            }
-        });
-    }
-
-    const getInitials = (name) => {
-        if (!name) return "";
-        return name.trim().split(" ").map(word => word[0]).join("").toUpperCase();
-    };
-
-
 
     return (
         <AgentLayout>
-            <div className="text-xl font-semibold ">Messages</div>
+            {/* Filter Tabs */}
+            <div className="rounded-t-xl shadow-sm overflow-x-auto">
+                <AgentInquiriesFilterTab
+                    count={[inquiriesCount, pendingCount, acceptedCount, rejectedCount, cancelledCount]}
+                    selectedStatus={selectedStatus}
+                    setSelectedStatus={setSelectedStatus}
+                    page={page}
+                    selectedItemsPerPage={selectedItemsPerPage}
+                />
+            </div>
 
-            <div className="h-[75vh] border rounded-xl mt-6 flex">
-                {/* Left panel: chat user list */}
-                <div className="w-1/5 border-r p-4 bg-gray-100 rounded-l-xl">
-                    <input
-                        name='searchName'
-                        className="border w-full border-gray-200 rounded-2xl px-3 py-2"
-                        placeholder="Search..."
-                    />
-                    <ul className="mt-4 space-y-2">
-                        {users?.length === 0 ? (
-                            <p className="text-gray-500">No inquiries yet</p>
-                        ) : (
-                            users.map((user) => (
-                                <div
-                                    key={user.id}
-                                    className={` py-2 rounded-lg cursor-pointer hover:bg-gray-100 ${
-                                        selectedChat === user.id ? "bg-gray-200" : ""
-                                    }`}
-                                    onClick={() => handleChatSelect(user.id)}
-                                >
-                                    <div className="flex-center font-medium gap-1" >
-                                        <span className='border rounded-full text-xs font-medium p-1 text-white bg-primary'>{getInitials(user.name)}</span>
-                                        {user.name}
+            {/* Responsive Table */}
+            <div className="overflow-x-auto bg-white shadow-sm rounded-b-lg">
+                <table className="min-w-full text-sm text-left text-gray-700">
+                    <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
+                    <tr>
+                        <th className="p-3 text-center">
+                            <input type="checkbox" id='deleteAll' className="rounded border-gray-400" />
+                        </th>
+                        <th className="p-3">Image</th>
+                        <th className="p-3">Seller</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3">Date</th>
+                        <th className="p-3 text-right">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody className="divide-y divide-dashed">
+                    {inquiries.data.length > 0 ? (
+                        inquiries.data.map((inquiry) => (
+                            <tr key={inquiry.id} className="hover:bg-gray-50 flex flex-col md:table-row w-full">
+                                <td className="p-3 text-center hidden md:table-cell">
+                                    <input id={inquiry.id} type="checkbox" className="rounded border-gray-400" />
+                                </td>
+                                <td className="p-3 md:table-cell ">
+                                    <div className="flex items-center gap-3">
+                                        <img
+                                            src={`${imageUrl}${inquiry.property.image_url}`}
+                                            alt={inquiry.id}
+                                            className="w-14 h-14 object-cover rounded-md"
+                                        />
+                                        <div className="flex flex-col">
+                                            <p className="font-semibold text-gray-800">{inquiry.property.title}</p>
+                                            <p className="text-xs text-gray-500">{inquiry.property.property_type} | {inquiry.property.sub_type}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
-                        )}
-                    </ul>
+                                </td>
+
+                                <td className="p-3 whitespace-nowrap md:table-cell">
+                                    <p className="hover:cursor-pointer hover:underline hover:text-primary">{inquiry.seller.name}</p>
+                                </td>
+                                <td className="p-3 md:table-cell">
+                                        <span className="inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs ring-1 ring-orange-200">
+                                            {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                                        </span>
+                                </td>
+                                <td className="p-3 whitespace-nowrap md:table-cell">
+                                    {dayjs(inquiry.created_at).format('MMMM D, YYYY')}
+                                </td>
+                                <td className="p-3 text-right md:table-cell">
+                                    <button className="bg-red-600 text-white rounded-md px-4 py-2 text-sm hover:bg-red-400">
+                                        Cancel
+                                    </button>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan="7" className="text-center py-6 text-gray-400">
+                                No inquiries found.
+                            </td>
+                        </tr>
+                    )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Pagination & Items Per Page */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
+                <div className="flex items-center gap-2">
+                    <label htmlFor="selectedItemsPerPage" className="text-sm text-gray-600">Items per page:</label>
+                    <select
+                        id="selectedItemsPerPage"
+                        value={selectedItemsPerPage}
+                        onChange={handleItemsPerPageChange}
+                        className="border-gray-300 rounded-md text-sm"
+                    >
+                        {[5, 10, 15, 20].map((val) => (
+                            <option key={val} value={val}>{val}</option>
+                        ))}
+                    </select>
                 </div>
 
-                {/* Right panel: messages */}
-                <div className="w-4/5 overflow-y-auto">
-                    {selectedChat ? (
-                        <>
-
-
-                            <ChatHeader
-                                user={users.find(user => String(user.id) === String(selectedChat)) ?? null}
-                                getInitials={getInitials}
-                            />                            <div className="">
-                                <MessageContainer
-                                    getInitials={getInitials}
-                                    messages={messages}
-                                    selectedChatId={selectedChat}
-                                    currentUserId={auth.user.id} // ✅ pass current user ID
-                                />
-                            </div>
-
-
-                            {/*message text feild and button*/}
-                            <div className='mt-2 p-4 border-t'>
-                                <form onSubmit={handleMessageSubmit} className='flex-center-between  gap-x-2 '>
-                                    <input
-                                        name='message'
-                                        className='w-full py-1.5 rounded-md border-gray-400'
-                                        value={data.message}
-                                        onChange={(e) => setData('message', e.target.value)}
-                                    />
-                                    <button type='submit' className='border bg-secondary text-white py-1.5 px-4  rounded-lg cursor-pointer'>Send</button>
-                                </form>
-
-                            </div>
-                        </>
-                    ) : (
-                        <div className="h-full flex items-center justify-center text-gray-500 text-lg italic">
-                            Please select a chat to begin
-                        </div>
+                <div className="flex flex-wrap gap-2 justify-end">
+                    {inquiries.links.map((link, i) =>
+                        link.url ? (
+                            <Link
+                                key={i}
+                                href={link.url}
+                                className={`px-4 py-2 text-sm rounded-md border transition ${
+                                    link.active ? 'bg-gray-500 text-white font-semibold' : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ) : (
+                            <span
+                                key={i}
+                                className="px-4 py-2 text-sm text-slate-400 bg-white border rounded-md cursor-not-allowed"
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        )
                     )}
                 </div>
             </div>
         </AgentLayout>
     );
-}
+};
+
+export default Inquiries;

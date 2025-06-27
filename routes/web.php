@@ -71,12 +71,12 @@ Route::get('/agents/properties', [\App\Http\Controllers\Agent\AgentPropertyContr
 Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent\InquiryController::class, 'store'])->middleware('auth')->name('agent.properties.sent-inquiry');
 
 
-Route::get('/agents/messages', [\App\Http\Controllers\Agent\InquiryController::class, 'index']);
+Route::get('/agents/messages', [\App\Http\Controllers\Agent\MessageController::class, 'index']);
 Route::get('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageController::class, 'show']);
 Route::post('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageController::class, 'store']);
 
 
-
+Route::get('/agents/inquiries', [\App\Http\Controllers\Agent\InquiryController::class, 'index']);
 
 
 

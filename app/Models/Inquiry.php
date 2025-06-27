@@ -18,7 +18,7 @@ class Inquiry extends Model
     }
 
     public function agent(){
-        return $this->belongsTo(User::class, 'agent');
+        return $this->belongsTo(User::class, 'agent_id');
     }
 
 

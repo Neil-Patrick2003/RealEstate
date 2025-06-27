@@ -3,6 +3,8 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(relativeTime);
 
 export default function MessageContainer({ messages, currentUserId }) {
+    const imageUrl = '/storage/'; // Base path for property images
+
     return (
         <ul className="h-[57vh] overflow-y-auto space-y-4 px-4 py-3">
             {messages.map((msg, index) => {
@@ -14,6 +16,10 @@ export default function MessageContainer({ messages, currentUserId }) {
                             {/* Optional: property title */}
                             {msg.inquiry?.property?.title && (
                                 <div className="text-xs text-gray-400 mb-1 italic">
+                                    <img
+                                        src={`${imageUrl}${msg.inquiry?.property?.image_url}`}
+                                        className='object-cover rounded-t-xl w-full h-[40vh]'
+                                    />
                                     {msg.inquiry.property.title}
                                 </div>
                             )}
@@ -37,6 +43,6 @@ export default function MessageContainer({ messages, currentUserId }) {
                     </li>
                 );
             })}
-        </ul>
+                </ul>
     );
 }

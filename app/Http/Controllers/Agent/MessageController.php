@@ -11,6 +11,21 @@ use Inertia\Inertia;
 class MessageController extends Controller
 {
 
+    public function index() {
+        $users = User::where('id', '!=', auth()->id())
+            ->where(function ($query) {
+                $query->whereHas('buyerInquiriesAsAgent')
+                    ->orWhereHas('sellerInquiriesAsAgent');
+            })
+            ->get(['name', 'id', 'email']);
+
+
+        return Inertia::render('Agent/Messages/Messages', [
+            'users' => $users
+        ]);
+
+    }
+
     public function store(Request $request, $id)
     {
 
@@ -25,7 +40,7 @@ class MessageController extends Controller
     public function show($id){
         $messages = Message::with([
             'inquiry' => function ($query) {
-                $query->with(['property:id,title']); // 👈 only load id + title from property
+                $query->with(['property:id,title,image_url']); // 👈 only load id + title from property
             }
         ])
             ->where(function ($query) use ($id) {
@@ -45,6 +60,7 @@ class MessageController extends Controller
                     ->orWhereHas('sellerInquiriesAsAgent');
             })
             ->get(['name', 'id', 'email']);
+
 
 
         return Inertia::render('Agent/Inquiry/Inquiries', [
