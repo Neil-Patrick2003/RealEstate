@@ -54,9 +54,13 @@ export default function Index({ users, messages = [], auth }) {
       (msg.receiver_id === auth.id && msg.sender_id === selectedId)
   );
 
-  return (
+  const imageUrl = '/storage/';
+
+
+
+    return (
     <AuthenticatedLayout>
-      <div className="h-[85vh] flex border rounded-xl shadow overflow-hidden bg-white">
+      <div className="h-[80vh] flex border rounded-xl shadow overflow-hidden bg-white">
         {/* Sidebar */}
         <aside className="w-1/4 border-r bg-gray-50 flex flex-col">
           <div className="p-3">
@@ -111,6 +115,7 @@ export default function Index({ users, messages = [], auth }) {
           </header>
 
           {/* Messages */}
+
           <main
             ref={chatRef}
             className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-100"
@@ -120,36 +125,89 @@ export default function Index({ users, messages = [], auth }) {
                 const isOwn = msg.sender_id === auth.id;
                 const senderInitial = users.find(u => u.id === msg.sender_id)?.name?.[0]?.toUpperCase() || '?';
 
-                return (
-                  <div
-                    key={i}
-                    className={`flex items-end gap-2 ${
-                      isOwn ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    {/* Anovatar */}
-                    {!isOwn && (
-                      <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                        {senderInitial}
-                      </div>
-                    )}
 
-                    {/* Message Bubble */}
-                    <div
-                      className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm text-sm relative ${
-                        isOwn
-                          ? 'bg-primary text-white rounded-br-none'
-                          : 'bg-white text-gray-800 border rounded-bl-none'
-                      }`}
-                    >
-                      <p className="break-words whitespace-pre-line">{msg.message}</p>
-                      <div className="text-[10px] mt-1 text-gray-400 text-right">
-                        {dayjs(msg.created_at).fromNow()}
-                        {isOwn && <span className="ml-2 text-green-200">✔</span>}
+                  return (
+                      <div
+                          key={i}
+                          className={`flex flex-col gap-1 mb-5 ${isOwn ? 'items-end' : 'items-start'}`}
+                      >
+                          {/* Property + Agent Info */}
+                          {msg?.inquiry && (
+                              <div className="w-full max-w-2xl mb-4 bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-4 flex flex-col sm:flex-row gap-4">
+                                  {/* Property Image */}
+                                  <div className="sm:w-1/3">
+                                      <img
+                                          src={`${imageUrl}${msg.inquiry.property.image_url}`}
+                                          alt={msg.inquiry.property.title}
+                                          className="h-40 w-full object-cover rounded-md"
+                                      />
+                                  </div>
+
+                                  {/* Property & Agent Info */}
+                                  <div className="sm:w-2/3 flex flex-col justify-between text-sm text-gray-700 space-y-3">
+                                      {/* Property Details */}
+                                      <div className="space-y-1">
+                                          <p className="text-lg font-semibold text-gray-800">
+                                              {msg.inquiry.property?.title}
+                                          </p>
+                                          <p className="text-gray-600">
+                                              <span className="font-medium">Type:</span>{' '}
+                                              {msg.inquiry.property?.property_type} | {msg.inquiry.property?.sub_type}
+                                          </p>
+                                          <p className="text-gray-600">
+                                              <span className="font-medium">Price:</span>{' '}
+                                              ₱{parseFloat(msg.inquiry.property?.price).toLocaleString()}
+                                          </p>
+                                          <p className="text-gray-600">
+                                              <span className="font-medium">Address:</span>{' '}
+                                              {msg.inquiry.property?.address}
+                                          </p>
+                                      </div>
+
+                                      {/* Agent Details */}
+                                      <div className="border-t border-gray-200 pt-2">
+                                          <p className="text-gray-700">
+                                              <span className="font-medium text-gray-800">Agent:</span>{' '}
+                                              {msg.inquiry.agent?.name}
+                                          </p>
+                                          <p className="text-gray-700">
+                                              <span className="font-medium text-gray-800">Email:</span>{' '}
+                                              {msg.inquiry.agent?.email}
+                                          </p>
+                                      </div>
+                                  </div>
+
+                              </div>
+
+
+                          )}
+
+                          {/* Message Row (avatar + bubble) */}
+                          <div className={`flex items-end gap-2 w-full ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                              {!isOwn && (
+                                  <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                      {senderInitial}
+                                  </div>
+                              )}
+
+                              {/* Message Bubble */}
+                              <div
+                                  className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm relative break-words whitespace-pre-line shadow-sm ${
+                                      isOwn
+                                          ? 'bg-primary text-white rounded-br-none'
+                                          : 'bg-white text-gray-800 border rounded-bl-none'
+                                  }`}
+                              >
+                                  <p>{msg.message}</p>
+                                  <div className="text-[10px] mt-1 text-gray-400 text-right">
+                                      {dayjs(msg.created_at).fromNow()}
+                                      {isOwn && <span className="ml-2 text-green-200">✔</span>}
+                                  </div>
+                              </div>
+                          </div>
                       </div>
-                    </div>
-                  </div>
-                );
+                  );
+
               })
             ) : (
               <p className="text-sm text-gray-500 text-center">No messages yet.</p>

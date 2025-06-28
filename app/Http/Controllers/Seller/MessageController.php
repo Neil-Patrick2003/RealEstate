@@ -17,10 +17,16 @@ class MessageController extends Controller
 
         $users = User::where('id', '!=', $authUser->id)->get(['id', 'name']);
 
-        $messages = Message::where('sender_id', $authUser->id)
-                    ->orWhere('receiver_id', $authUser->id)
-                    ->orderBy('created_at', 'asc')
-                    ->get();
+
+
+        $messages = Message::with([
+            'inquiry.property:id,title,image_url,property_type,sub_type,price,address',
+            'inquiry.agent:id,name'
+        ])
+        ->where('sender_id', $authUser->id)
+        ->orWhere('receiver_id', $authUser->id)
+        ->orderBy('created_at', 'asc')
+        ->get();
 
         return Inertia::render('Seller/Message/Index', [
             'users' => $users,

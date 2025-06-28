@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  ChevronDown, 
+  ChevronDown,
 } from 'lucide-react';
 import logo from '../../../assets/framer_logo.png';
 import { Link, usePage } from '@inertiajs/react';
@@ -48,6 +48,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       name: "Enquiries",
       Icon: faEnvelope,
       path: "/messages"
+
     },
     {
       name: "Tripping",
@@ -59,7 +60,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       Icon: faChartSimple,
       path: "/my-sales"
     },
-    
+
   ];
 
   return (
@@ -76,7 +77,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <Link href={'/'}>
               <img src={logo} width={45} alt="Logo" />
             </Link>
-            
+
             {isOpen && <span className="text-xl">MJVI Realty</span>}
           </div>
         </div>
