@@ -50,6 +50,9 @@ Route::middleware(['auth', ])->group(function () {
     Route::get('/messages', [MessageController::class, 'index']);
     Route::post('/messages/{receiver}/sent_message', [MessageController::class, 'send']);
 
+    //Inquiries
+    Route::get('/inquiries', [\App\Http\Controllers\Seller\InquiryController::class, 'index']);
+
     //trippings
     Route::get('/trippings', [TrippingController::class, 'index']);
 
@@ -65,7 +68,7 @@ Route::middleware(['auth', ])->group(function () {
 
 
 //for agent
-Route::get('/agents/dashboard', [\App\Http\Controllers\Agent\AgentController::class, 'index'])->name('agent.dashboard');
+Route::get('/agents/dashboard', [\App\Http\Controllers\Agent\AgentController::class, 'index'])->name('agent.    dashboard');
 Route::get('/agents/properties', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'index']);
 //sent inquiry
 Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent\InquiryController::class, 'store'])->middleware('auth')->name('agent.properties.sent-inquiry');
