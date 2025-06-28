@@ -42,10 +42,10 @@ class RegisteredUserController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $request->name,       
+            'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role, 
+            'role' => $request->role,
             'contact_numer' => $request->contact_number ?? null,
             'address' => $request->address ?? null,
             'bio' => $request->bio ?? null,
@@ -55,6 +55,11 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return match ($user->role) {
+            'Seller' => redirect()->intended(route('seller.dashboard')),
+            'Agent'  => redirect()->intended(route('agent.dashboard')),
+            'Admin'  => redirect()->intended(route('admin.dashboard')),
+            default  => redirect()->intended(route('dashboard')),
+        };
     }
 }
