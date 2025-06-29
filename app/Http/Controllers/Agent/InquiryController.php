@@ -14,7 +14,7 @@ class InquiryController extends Controller
     public function index(Request $request){
 
 
-        $inquiries = Inquiry::with('buyer', 'seller', 'agent', 'property')
+        $inquiries = Inquiry::with('seller', 'property')
             ->where('agent_id', auth()->id())
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 return $q->where('status', '=', $request->status);

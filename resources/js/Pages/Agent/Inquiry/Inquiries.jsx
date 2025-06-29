@@ -20,7 +20,7 @@ const Inquiries = ({
     const [selectedStatus, setSelectedStatus] = useState(status);
     const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
     const [ openCancelDialog, setOpenCancelDialog ] = useState(false);
-    const [ cancelInquiryId, setcancelInquiryId ] = useState(null);
+    const [ cancelInquiryId, setCancelInquiryId ] = useState(null);
 
     const handleItemsPerPageChange = (e) => {
         const newItemsPerPage = e.target.value;
@@ -35,7 +35,7 @@ const Inquiries = ({
     // click button and open delete modal
     const handleOpenCancelDialog = (id) => {
         setOpenCancelDialog(true);
-        setcancelInquiryId(id);
+        setCancelInquiryId(id);
     }
 
     const handleUpdate = () => {

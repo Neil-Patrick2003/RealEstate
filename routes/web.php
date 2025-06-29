@@ -53,7 +53,7 @@ Route::middleware(['auth', ])->group(function () {
     //Inquiries
     Route::get('/inquiries', [\App\Http\Controllers\Seller\InquiryController::class, 'index']);
 
-    //trippings
+    //tripping
     Route::get('/trippings', [TrippingController::class, 'index']);
 
     //transaction
