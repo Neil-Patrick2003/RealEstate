@@ -6,22 +6,33 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class MessageController extends Controller
 {
 
     public function index() {
-        $users = User::where('id', '!=', auth()->id())
-            ->where(function ($query) {
-                $query->whereHas('buyerInquiriesAsAgent')
-                    ->orWhereHas('sellerInquiriesAsAgent');
-            })
-            ->get(['name', 'id', 'email']);
+        $authUser = Auth::user();
 
+        $users = User::where('id', '!=', $authUser->id)->get(['id', 'name']);
+        
+
+
+
+        $messages = Message::with([
+            'inquiry.property:id,title,image_url,property_type,sub_type,price,address',
+            'inquiry.agent:id,name'
+        ])
+            ->where('sender_id', $authUser->id)
+            ->orWhere('receiver_id', $authUser->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         return Inertia::render('Agent/Messages/Messages', [
-            'users' => $users
+            'users' => $users,
+            'messages' => $messages,
+            'auth' => $authUser,
         ]);
 
     }
