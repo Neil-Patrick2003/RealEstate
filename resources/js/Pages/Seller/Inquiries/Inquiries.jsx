@@ -3,6 +3,8 @@ import React, {useState} from "react";
 import dayjs from "dayjs";
 import {Link, router} from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
+import AgentInquiriesFilterTab from "@/Components/tabs/AgentInquiriesFilterTab.jsx";
+import SellerInquiriesFilterTab from "@/Components/tabs/SellerInquiriesFilter.jsx";
 
 export default function Inquiries({
       inquiries,
@@ -86,7 +88,6 @@ export default function Inquiries({
                 onConfirm={handleAccept}
                 loading={false}
             />
-
             <ConfirmDialog
                 open={openRejectDialog}
                 setOpen={setRejectDialog}
@@ -97,7 +98,20 @@ export default function Inquiries({
                 onConfirm={handleReject}
                 loading={false}
             />
+
+
+
             <div className='flex flex-col max-w-7xl mx-auto'>
+                <div className='bg-white rounded-t-xl'>
+                    <SellerInquiriesFilterTab
+                        count={[inquiriesCount, pendingCount, acceptedCount, rejectedCount, cancelledCount]}
+                        selectedStatus={selectedStatus}
+                        setSelectedStatus={setSelectedStatus}
+                        page={page}
+                        selectedItemsPerPage={selectedItemsPerPage}
+                    />
+                </div>
+
                 <div className="overflow-x-auto bg-white shadow-sm rounded-b-lg">
                     <table className="min-w-full text-sm text-left text-gray-700">
                         <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
