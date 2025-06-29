@@ -52,30 +52,43 @@ class InquiryController extends Controller
 
     public function store($id)
     {
-
         $property = Property::findOrFail($id);
+        $seller = $property->seller;
 
+        if (!$seller) {
+            return redirect()->back()->with('error', 'Seller not found for this property.');
+        }
 
-        $message = 'Im interested in this property.';
+        // Prevent duplicate inquiries
+        $existing = Inquiry::where('agent_id', auth()->id())
+            ->where('property_id', $property->id)
+            ->first();
+
+        if ($existing) {
+            return redirect()->back()->with('error', 'You have already inquired about this property.');
+        }
+
+        $message = 'I\'m interested in this property.';
+
         $inquiry = Inquiry::create([
-            'agent_id' => auth()->user()->id,
-            'seller_id' => $property->seller()->first()->id,
+            'agent_id' => auth()->id(),
+            'seller_id' => $seller->id,
             'property_id' => $property->id,
             'message' => $message,
-            'status' => 'Pending'
+            'status' => 'Pending',
         ]);
 
         Message::create([
-            'sender_id' => auth()->user()->id,
-            'receiver_id' => $property->seller()->first()->id,
+            'sender_id' => auth()->id(),
+            'receiver_id' => $seller->id,
             'property_id' => $property->id,
             'message' => $message,
-            'inquiry_id' => $inquiry->id
-
+            'inquiry_id' => $inquiry->id,
         ]);
 
-        return redirect()->back();
+        return redirect()->route('agent.properties')->with('success', 'Inquiry submitted successfully.');
     }
+
 
     public function show($id)
     {
@@ -88,7 +101,7 @@ class InquiryController extends Controller
             'status' => "Cancelled"
         ]);
 
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Inquiry has been Cancelled.');
     }
 
 

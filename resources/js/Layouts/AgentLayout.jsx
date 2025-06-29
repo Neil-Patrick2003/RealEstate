@@ -24,6 +24,7 @@ import {
     XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+import FlashMessage from "@/Components/FlashMessage.jsx";
 
 const navigation = [
     { name: 'Dashboard', href: '/agents/dashboard', icon: HomeIcon, current: true },
@@ -311,6 +312,7 @@ export default function AgentLayout({ children }) {
 
                     <main className="py-10">
                         <div className="px-4 sm:px-6 lg:px-8">
+                            <FlashMessage/>
                             {children}
                         </div>
                     </main>

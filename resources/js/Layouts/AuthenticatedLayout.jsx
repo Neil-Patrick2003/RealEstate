@@ -8,6 +8,7 @@ import Dropdown from '@/Components/Dropdown';
 import { faBell, faMoon, faLanguage } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Breadcrumb from '@/Components/Breadcrumbs';
+import FlashMessage from "@/Components/FlashMessage.jsx";
 
 export default function AuthenticatedLayout({ children }) {
   const auth = usePage().props.auth.user;
@@ -169,6 +170,7 @@ export default function AuthenticatedLayout({ children }) {
         </motion.header>
 
         <div className="p-4 sm:p-6 md:p-8 mt-4">
+            <FlashMessage/>
           <Breadcrumb />
           {children}
         </div>

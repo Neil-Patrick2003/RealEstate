@@ -142,23 +142,22 @@ export default function Inquiries({
                                         </p>
                                     </td>
                                     <td className="p-3 md:table-cell">
-                                            <span
-                                                className={`
-    inline-block px-3 py-1 rounded-full text-xs ring-1
-    ${
+                                        <span
+                                            className={`inline-block px-3 py-1 rounded-full text-xs ring-1
+                                                ${
                                                     inquiry.status === 'accepted'
-                                                        ? 'bg-green-100 text-green-700 ring-green-200'
-                                                        : inquiry.status === 'rejected'
-                                                            ? 'bg-red-100 text-red-700 ring-red-200'
-                                                            : inquiry.status === 'pending'
-                                                            ? 'bg-yellow-100 text-yellow-700 ring-yellow-200'
-                                                            : inquiry.status === 'cancelled'
-                                                            ? 'bg-gray-100 text-gray-700 ring-gray-200'
-                                                            : 'bg-orange-100 text-orange-700 ring-orange-200'
-                                                            }`}
-                                                        >
-                                                      {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
-                                                    </span>
+                                                ? 'bg-green-100 text-green-700 ring-green-200'
+                                                : inquiry.status === 'rejected'
+                                                    ? 'bg-red-100 text-red-700 ring-red-200'
+                                                    : inquiry.status === 'pending'
+                                                    ? 'bg-yellow-100 text-yellow-700 ring-yellow-200'
+                                                    : inquiry.status === 'cancelled'
+                                                    ? 'bg-gray-100 text-gray-700 ring-gray-200'
+                                                    : 'bg-orange-100 text-orange-700 ring-orange-200'
+                                                    }`}
+                                                >
+                                              {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                                        </span>
 
                                     </td>
                                     <td className="p-3 whitespace-nowrap md:table-cell">
