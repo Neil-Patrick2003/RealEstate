@@ -146,9 +146,10 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
                       </th>
                       <th className="p-3">Title</th>
                       <th className="p-3">Type</th>
+                      <th className="p-3">Description</th>
                       <th className="p-3">Price</th>
                       <th className="p-3">Status</th>
-                      <th className="p-3">Size (sqm)</th>
+                      <th className="p-3">Size<span className='lowercase'>(m2)</span></th>
                       <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -173,7 +174,11 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
                             </div>
                           </td>
                           <td className="p-3 whitespace-nowrap">{property.property_type}, {property.sub_type}</td>
-                          <td className="p-3 whitespace-nowrap">{property.price}</td>
+                          <td className="p-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+                            {property.description} akjsdahkjdashjkasdhjldjhklsalkjlhadsjhkashjkahhj
+                          </td>
+
+                            <td className="p-3 whitespace-nowrap">{property.price}</td>
                           <td className="p-3">
                             <span className="inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs ring-1 ring-orange-200">
                               {property.status}

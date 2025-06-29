@@ -16,7 +16,7 @@ class MessageController extends Controller
         $authUser = Auth::user();
 
         $users = User::where('id', '!=', $authUser->id)->get(['id', 'name']);
-        
+
 
 
 
