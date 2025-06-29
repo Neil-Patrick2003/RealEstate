@@ -52,7 +52,7 @@ Route::middleware(['auth', ])->group(function () {
 
     //Inquiries
     Route::get('/inquiries', [\App\Http\Controllers\Seller\InquiryController::class, 'index']);
-
+    Route::patch('/sellers/inquiries/{inquiry}/{action}', [\App\Http\Controllers\Seller\InquiryController::class, 'updateStatus'])->where('action', 'accept|reject');
     //tripping
     Route::get('/trippings', [TrippingController::class, 'index']);
 

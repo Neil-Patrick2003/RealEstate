@@ -1,31 +1,32 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
-import React, {useState} from "react";
+import React, { useState } from "react";
 import dayjs from "dayjs";
-import {Link, router} from "@inertiajs/react";
+import { Link, router, useForm } from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
-import AgentInquiriesFilterTab from "@/Components/tabs/AgentInquiriesFilterTab.jsx";
 import SellerInquiriesFilterTab from "@/Components/tabs/SellerInquiriesFilter.jsx";
 
 export default function Inquiries({
-      inquiries,
-      inquiriesCount,
-      rejectedCount,
-      acceptedCount,
-      pendingCount,
-      cancelledCount,
-      page = 1,
-      itemsPerPage = 10,
-      status = 'All',
-  }){
+                                      inquiries,
+                                      inquiriesCount,
+                                      rejectedCount,
+                                      acceptedCount,
+                                      pendingCount,
+                                      cancelledCount,
+                                      page = 1,
+                                      itemsPerPage = 10,
+                                      status = 'All',
+                                  }) {
+    const imageUrl = '/storage/';
+    const [selectedStatus, setSelectedStatus] = useState(status);
+    const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
+    const [openAcceptDialog, setOpenAcceptDialog] = useState(false);
+    const [openRejectDialog, setRejectDialog] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
 
-    const imageUrl = '/storage/'
-    const [ selectedStatus, setSelectedStatus ] = useState(status);
-    const [selectedItemsPerPage, setSelectedItemsPerPage ] = useState(itemsPerPage);
-    const [ openAcceptDialog, setOpenAcceptDialog ] = useState(false);
-    const [ openRejectDialog, setRejectDialog ] = useState(false)
-    const [ selectedId, setSelectedId ] = useState(null);
+    const { data, setData } = useForm({
+        status: '',
+    });
 
-    // handle change items per page iin table
     const handleItemsPerPageChange = (e) => {
         const newItemsPerPage = e.target.value;
         setSelectedItemsPerPage(newItemsPerPage);
@@ -36,73 +37,56 @@ export default function Inquiries({
         }, { preserveState: true, replace: true });
     };
 
-    //handle open accept dialog
     const handleOpenAcceptDialog = (id) => {
-        setOpenAcceptDialog(true);
         setSelectedId(id);
-    }
+        setOpenAcceptDialog(true);
+    };
 
+    const handleOpenRejectDialog = (id) => {
+        setSelectedId(id);
+        setRejectDialog(true);
+    };
 
-    //handle accept
-    const handleAccept = () => {
+    const handleStatusUpdate = (statusType) => {
         if (!selectedId) return;
 
-        router.patch(`/sellers/inquiries/${selectedId}/accept`, {
+        router.patch(`/sellers/inquiries/${selectedId}/${statusType}`, {}, {
             onSuccess: () => {
-                selectedId(null);
-            }
+                setSelectedId(null);
+                setOpenAcceptDialog(false);
+                setRejectDialog(false);
+            },
         });
-    }
+    };
 
-    //handle open reject dialog
-    const handleOpenRejectDialog = (id) => {
-        setRejectDialog(true);
-        setSelectedId(id);
-    }
-
-    //handle reject
-    const handleReject = () => {
-
-        router.patch(`/sellers/inquiries/${selectedId}/reject`, {
-            onSuccess: () => {
-                selectedId(null);
-            }
-        });
-    }
-
-
-
-
-
-    return(
-
-
+    return (
         <AuthenticatedLayout>
+            {/* Accept Dialog */}
             <ConfirmDialog
                 open={openAcceptDialog}
                 setOpen={setOpenAcceptDialog}
-                title="Accpet Inquiry"
-                description="Are you sure you want to accept this inquiry? This allow agent to handle your property posting"
-                confirmText='Confirm'
-                cancelText='Cancel'
-                onConfirm={handleAccept}
+                title="Accept Inquiry"
+                description="Are you sure you want to accept this inquiry? This allows the agent to handle your property posting."
+                confirmText="Confirm"
+                cancelText="Cancel"
+                onConfirm={() => handleStatusUpdate('accept')}
                 loading={false}
             />
+
+            {/* Reject Dialog */}
             <ConfirmDialog
                 open={openRejectDialog}
                 setOpen={setRejectDialog}
                 title="Reject Inquiry"
                 description="Are you sure you want to reject this inquiry? This action cannot be undone."
-                confirmText='Confirm'
-                cancelText='Cancel'
-                onConfirm={handleReject}
+                confirmText="Confirm"
+                cancelText="Cancel"
+                onConfirm={() => handleStatusUpdate('reject')}
                 loading={false}
             />
 
-
-
-            <div className='flex flex-col max-w-7xl mx-auto'>
-                <div className='bg-white rounded-t-xl'>
+            <div className="flex flex-col max-w-7xl mx-auto">
+                <div className="bg-white rounded-t-xl">
                     <SellerInquiriesFilterTab
                         count={[inquiriesCount, pendingCount, acceptedCount, rejectedCount, cancelledCount]}
                         selectedStatus={selectedStatus}
@@ -117,7 +101,7 @@ export default function Inquiries({
                         <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
                         <tr>
                             <th className="p-3 text-center">
-                                <input type="checkbox" id='deleteAll' className="rounded border-gray-400" />
+                                <input type="checkbox" id="deleteAll" className="rounded border-gray-400" />
                             </th>
                             <th className="p-3">Image</th>
                             <th className="p-3">Agent</th>
@@ -133,7 +117,7 @@ export default function Inquiries({
                                     <td className="p-3 text-center hidden md:table-cell">
                                         <input id={inquiry.id} type="checkbox" className="rounded border-gray-400" />
                                     </td>
-                                    <td className="p-3 md:table-cell ">
+                                    <td className="p-3 md:table-cell">
                                         <div className="flex items-center gap-3">
                                             <img
                                                 src={`${imageUrl}${inquiry.property.image_url}`}
@@ -142,25 +126,68 @@ export default function Inquiries({
                                             />
                                             <div className="flex flex-col">
                                                 <p className="font-semibold text-gray-800">{inquiry.property.title}</p>
-                                                <p className="text-xs text-gray-500">{inquiry.property.property_type} | {inquiry.property.sub_type}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {inquiry.property.property_type} | {inquiry.property.sub_type}
+                                                </p>
                                             </div>
                                         </div>
                                     </td>
-
                                     <td className="p-3 whitespace-nowrap md:table-cell">
-                                        <p className="hover:cursor-pointer hover:underline hover:text-primary">{inquiry.agent.name}</p>
+                                        <p className="hover:cursor-pointer hover:underline hover:text-primary">
+                                            {inquiry.agent.name}
+                                        </p>
                                     </td>
                                     <td className="p-3 md:table-cell">
-                                        <span className="inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs ring-1 ring-orange-200">
-                                            {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
-                                        </span>
+                                            <span
+                                                className={`
+    inline-block px-3 py-1 rounded-full text-xs ring-1
+    ${
+                                                    inquiry.status === 'accepted'
+                                                        ? 'bg-green-100 text-green-700 ring-green-200'
+                                                        : inquiry.status === 'rejected'
+                                                            ? 'bg-red-100 text-red-700 ring-red-200'
+                                                            : inquiry.status === 'pending'
+                                                            ? 'bg-yellow-100 text-yellow-700 ring-yellow-200'
+                                                            : inquiry.status === 'cancelled'
+                                                            ? 'bg-gray-100 text-gray-700 ring-gray-200'
+                                                            : 'bg-orange-100 text-orange-700 ring-orange-200'
+                                                            }`}
+                                                        >
+                                                      {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                                                    </span>
+
                                     </td>
                                     <td className="p-3 whitespace-nowrap md:table-cell">
                                         {dayjs(inquiry.created_at).format('MMMM D, YYYY')}
                                     </td>
                                     <td className="p-3 text-right md:table-cell">
-                                        <button className='border bg-primary px-4 py-1.5 text-xs text-white rounded-l-md' onClick={() => setOpenAcceptDialog(true)}>Accept</button>
-                                        <button className='bg-secondary px-4 py-1.5 text-xs text-white rounded-r-md' onClick={() => setRejectDialog(true)}>Reject</button>
+                                        {inquiry.status?.toLowerCase() === 'pending' ? (
+                                            <div className="flex justify-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    title="Accept Inquiry"
+                                                    className="bg-primary hover:bg-primary-dark border border-primary px-4 py-1.5 text-xs text-white rounded-l-md transition"
+                                                    onClick={() => handleOpenAcceptDialog(inquiry.id)}
+                                                >
+                                                    Accept
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    title="Reject Inquiry"
+                                                    className="bg-secondary hover:bg-secondary-dark border border-secondary px-4 py-1.5 text-xs text-white rounded-r-md transition"
+                                                    onClick={() => handleOpenRejectDialog(inquiry.id)}
+                                                >
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className="flex justify-center text-gray-400 text-sm italic"
+                                                title="Actions already taken"
+                                            >
+                                                {inquiry.status}
+                                            </div>
+                                        )}
 
                                     </td>
                                 </tr>
@@ -179,7 +206,9 @@ export default function Inquiries({
                 {/* Pagination & Items Per Page */}
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
                     <div className="flex items-center gap-2">
-                        <label htmlFor="selectedItemsPerPage" className="text-sm text-gray-600">Items per page:</label>
+                        <label htmlFor="selectedItemsPerPage" className="text-sm text-gray-600">
+                            Items per page:
+                        </label>
                         <select
                             id="selectedItemsPerPage"
                             value={selectedItemsPerPage}
@@ -187,7 +216,9 @@ export default function Inquiries({
                             className="border-gray-300 rounded-md text-sm"
                         >
                             {[5, 10, 15, 20].map((val) => (
-                                <option key={val} value={val}>{val}</option>
+                                <option key={val} value={val}>
+                                    {val}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -199,7 +230,9 @@ export default function Inquiries({
                                     key={i}
                                     href={link.url}
                                     className={`px-4 py-2 text-sm rounded-md border transition ${
-                                        link.active ? 'bg-gray-500 text-white font-semibold' : 'bg-white text-gray-600 hover:bg-gray-100'
+                                        link.active
+                                            ? "bg-gray-500 text-white font-semibold"
+                                            : "bg-white text-gray-600 hover:bg-gray-100"
                                     }`}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
@@ -214,7 +247,6 @@ export default function Inquiries({
                     </div>
                 </div>
             </div>
-
         </AuthenticatedLayout>
     );
 }

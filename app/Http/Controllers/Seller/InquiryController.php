@@ -49,4 +49,22 @@ class InquiryController extends Controller
             'cancelledCount' => $cancelledCount,
         ]);
     }
+
+    public function updateStatus(Request $request, Inquiry $inquiry, $action)
+    {
+        // Optional: Authorization (only if seller must own the property)
+        if ($inquiry->property->seller_id !== Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        if (!in_array($action, ['accept', 'reject'])) {
+            abort(400, 'Invalid action');
+        }
+
+        $status = $action === 'accept' ? 'accepted' : 'rejected';
+
+        $inquiry->update(['status' => $status]);
+
+        return back()->with('success', "Inquiry successfully {$status}.");
+    }
 }
