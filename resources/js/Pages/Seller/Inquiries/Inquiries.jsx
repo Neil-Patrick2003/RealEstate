@@ -86,7 +86,11 @@ export default function Inquiries({
             />
 
             <div className="flex flex-col max-w-7xl mx-auto">
-                <div className="bg-white rounded-t-xl">
+                <h1 className="text-2xl font-semibold text-gray-800">Seller Inquiries</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                    View and manage inquiries sent by agents for your listed properties. You can choose to accept or reject each request based on your preferences.
+                </p>
+                <div className="bg-white mt-6 rounded-t-xl">
                     <SellerInquiriesFilterTab
                         count={[inquiriesCount, pendingCount, acceptedCount, rejectedCount, cancelledCount]}
                         selectedStatus={selectedStatus}

@@ -12,7 +12,7 @@ class InquiryController extends Controller
 {
     public function index(Request $request)
     {
-        $inquiries = Inquiry::with(['agent:id,name,email', 'property:id,title,image_url'])
+        $inquiries = Inquiry::with(['agent:id,name,email', 'property:id,title,image_url,property_type,sub_type'])
         ->where('seller_id', Auth::id())
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 $q->where('status', $request->status);
@@ -62,6 +62,7 @@ class InquiryController extends Controller
         }
 
         $status = $action === 'accept' ? 'accepted' : 'rejected';
+
 
         $inquiry->update(['status' => $status]);
 
