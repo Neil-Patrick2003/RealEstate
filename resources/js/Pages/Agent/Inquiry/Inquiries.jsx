@@ -94,7 +94,7 @@ const Inquiries = ({
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-dashed">
-                        {inquiries.data.length > 0 ? (
+                        {inquiries?.data.length > 0 ? (
                             inquiries.data.map((inquiry) => {
                                 const statusClass = statusStyles[inquiry.status] || statusStyles.default;
                                 const isPending = inquiry.status.toLowerCase() === 'pending';
@@ -177,7 +177,7 @@ const Inquiries = ({
                     </div>
 
                     <div className="flex flex-wrap gap-2 justify-end">
-                        {inquiries.links.map((link, index) =>
+                        {inquiries?.links.map((link, index) =>
                             link.url ? (
                                 <Link
                                     key={index}

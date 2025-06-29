@@ -63,7 +63,7 @@ class MessageController extends Controller
 
 
 
-        return Inertia::render('Agent/Inquiry/Inquiries', [
+        return Inertia::render('Agent/Messages/Messages', [
             'messages' => $messages,
             'selectedChatId' => $id,
             'users' => $users, // 👈 include users again
