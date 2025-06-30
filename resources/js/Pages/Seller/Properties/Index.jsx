@@ -80,8 +80,23 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
       });
     };
 
+    const getStatusClasses = (status) => {
+        switch (status.toLowerCase()) {
+            case 'to published':
+                return 'bg-lightaccent text-yellow-700 ring-yellow-200';
+            case 'published':
+                return 'bg-green-100 text-green-700 ring-green-200';
+            case 'rejected':
+                return 'bg-red-100 text-red-700 ring-red-200';
+            case 'sold':
+                return 'bg-gray-100 text-gray-700 ring-gray-200';
+            default:
+                return 'bg-orange-100 text-orange-700 ring-orange-200'; // fallback
+        }
+    };
 
-  return (
+
+    return (
     <AuthenticatedLayout>
       <ConfirmDialog
         open={openDeleteDiaglog}
@@ -111,7 +126,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
             </div>
 
             {/* Filters & Search */}
-            <div className='flex min-h-[50vh] flex-col bg-white rounded-t-xl shadow-sm'>
+            <div className='flex min-h-[50vh] flex-col  mt-6 bg-white rounded-t-xl shadow-sm'>
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-gray-100 rounded-t-xl shadow-sm">
                 <div className="w-full md:w-auto overflow-x-auto">
                   <SellerPropertiesFilterTab
@@ -137,7 +152,7 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
               </div>
 
               {/* Properties Table */}
-              <div className="bg-white border border-gray-100 ">
+              <div className="bg-white border  border-gray-100 ">
                 <table className="min-w-full text-sm text-left text-gray-700">
                   <thead className="bg-gray-100 sticky top-0 z-10 text-xs text-gray-500 uppercase tracking-wide">
                     <tr>
@@ -180,11 +195,18 @@ const Index = ({ properties, search = '', page = 1, itemsPerPage = 10, status=''
 
                             <td className="p-3 whitespace-nowrap">{property.price}</td>
                           <td className="p-3">
-                            <span className="inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs ring-1 ring-orange-200">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${getStatusClasses(property.status)}`}>
                               {property.status}
                             </span>
                           </td>
-                          <td className="p-3 whitespace-nowrap">{property.floor_area ?? 0} / {property.lot_area ?? 0}</td>
+                          <td className="p-3 whitespace-nowrap">
+                              {property.property_type === 'land' ? (
+                                  <>{property?.lot} </>
+                              ) : (
+                                  <>{property?.floor_area} </>
+                              )}
+                              m2
+                          </td>
                           <td className="p-3 text-right">
                             <Dropdown>
                               <Dropdown.Trigger>

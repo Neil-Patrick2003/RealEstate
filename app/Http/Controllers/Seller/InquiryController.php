@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
+use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -65,6 +66,10 @@ class InquiryController extends Controller
 
 
         $inquiry->update(['status' => $status]);
+
+        $newStatus = $status === 'accepted' ? 'To Published' : 'Rejected';
+
+        $inquiry->property->update(['status' => $newStatus]);
 
         return back()->with('success', "Inquiry successfully {$status}.");
     }
