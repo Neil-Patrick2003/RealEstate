@@ -311,8 +311,8 @@ export default function AgentLayout({ children }) {
                         </div>
                     </div>
 
-                    <main className="py-10">
-                        <div className="px-4 sm:px-6 lg:px-8">
+                    <main className="">
+                        <div className="px-2 md:px-6 lg:px-8">
                             <FlashMessage/>
                             {children}
                         </div>

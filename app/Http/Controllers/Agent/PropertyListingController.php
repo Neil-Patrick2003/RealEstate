@@ -11,32 +11,66 @@ class PropertyListingController extends Controller
 {
     public function index(Request $request)
     {
-
-        $properties = PropertyListing::with('property')
-            ->with('seller')
+        $properties = PropertyListing::with(['property', 'seller'])
             ->where('agent_id', auth()->id())
-            ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
-                return $q->where('status', '=', $request->status);
+
+            // Search filter
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $searchTerm = trim($request->search);
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->orWhereHas('property', function ($subQuery) use ($searchTerm) {
+                        $subQuery->where('title', 'like', "%{$searchTerm}%");
+                    })->orWhereHas('seller', function ($subQuery) use ($searchTerm) {
+                        $subQuery->where('name', 'like', "%{$searchTerm}%");
+                    });
+                });
             })
+
+            // Status filter (excluding "All")
+            ->when($request->filled('status') && $request->status !== 'All', function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+
+            // Property Type filter
+            ->when($request->filled('property_type'), function ($query) use ($request) {
+                $query->whereHas('property', function ($subQuery) use ($request) {
+                    $subQuery->where('property_type', $request->property_type);
+                });
+            })
+
+            // Sub Type filter
+            ->when($request->filled('sub_type'), function ($query) use ($request) {
+                $query->whereHas('property', function ($subQuery) use ($request) {
+                    $subQuery->where('sub_type', $request->sub_type);
+                });
+            })
+
+            // Location filter
+            ->when($request->filled('location'), function ($query) use ($request) {
+                $query->whereHas('property', function ($subQuery) use ($request) {
+                    $subQuery->where('address', 'like', '%' . $request->location . '%');
+                });
+            })
+
             ->orderByDesc('created_at')
-            ->paginate($request->get('items_per_page', 10));
+            ->paginate((int) $request->get('items_per_page', 10))
+            ->withQueryString(); // important to keep filters during pagination
 
+        // Stats
         $propertiesCount = PropertyListing::where('agent_id', auth()->id())->count();
-
         $forPublishCount = PropertyListing::where('status', 'for_publish')->count();
         $publishedCount = PropertyListing::where('status', 'published')->count();
         $soldCount = PropertyListing::where('status', 'sold')->count();
 
-
-
-
-
+        // Return to Inertia view
         return Inertia::render('Agent/PropertyListing/Properties', [
             'properties' => $properties,
             'propertiesCount' => $propertiesCount,
             'forPublishCount' => $forPublishCount,
             'publishedCount' => $publishedCount,
             'soldCount' => $soldCount,
+            'search' => $request->query('search'),
         ]);
     }
+
 }

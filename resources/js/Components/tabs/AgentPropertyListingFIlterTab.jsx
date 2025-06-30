@@ -9,31 +9,41 @@ const tabs = [
     { name: 'sold', color: 'red' },
 ];
 
-export default function AgentPropertyListingFilterTab({ count, selectedStatus, setSelectedStatus, page, selectedItemsPerPage }) {
+export default function AgentPropertyListingFilterTab({
+                                                          count = [],
+                                                          selectedStatus,
+                                                          setSelectedStatus,
+                                                          page,
+                                                          selectedItemsPerPage,
+                                                          search = '',
+                                                          propertyType = '',
+                                                          subType = '',
+                                                          location = '',
+                                                      }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const tabsRef = useRef([]);
     const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
 
     useLayoutEffect(() => {
         const index = tabs.findIndex(tab => tab.name === selectedStatus);
-        if (index !== -1) {
-            setSelectedIndex(index);
-            const current = tabsRef.current[index];
-            if (current) {
-                const { offsetLeft, offsetWidth } = current;
-                setUnderlineStyle({ left: offsetLeft, width: offsetWidth });
-            }
+        const safeIndex = index !== -1 ? index : 0;
+        setSelectedIndex(safeIndex);
+
+        const current = tabsRef.current[safeIndex];
+        if (current) {
+            const { offsetLeft, offsetWidth } = current;
+            setUnderlineStyle({ left: offsetLeft, width: offsetWidth });
         }
     }, [selectedStatus]);
 
     const getBadgeClass = (name, isActive) => {
-        const colorMap = {
-            All: isActive ? 'bg-black text-white' : 'bg-black text-white',
-            Pending: isActive ? 'bg-secondary text-white' : 'bg-orange-100 text-orange-800',
-            Accepted: isActive ? 'bg-green-400 text-white' : 'bg-green-100 text-green-800',
-            Rejected: isActive ? 'bg-red-400 text-white' : 'bg-red-100 text-red-800',
+        const map = {
+            All: isActive ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700',
+            for_publish: isActive ? 'bg-secondary text-white' : 'bg-orange-100 text-secondary',
+            published: isActive ? 'bg-accent text-white' : 'bg-lightaccent text-green-800',
+            sold: isActive ? 'bg-primary text-white' : 'bg-lightaccent text-primary',
         };
-        return colorMap[name] || 'bg-gray-100 text-gray-800';
+        return map[name] || 'bg-gray-100 text-gray-800';
     };
 
     const selectTab = (idx, name) => {
@@ -41,10 +51,13 @@ export default function AgentPropertyListingFilterTab({ count, selectedStatus, s
         setSelectedStatus(name);
 
         router.get('/agents/my-listings', {
-
-            items_per_page: selectedItemsPerPage,
             page: 1,
             status: name,
+            items_per_page: selectedItemsPerPage,
+            search,
+            property_type: propertyType,
+            sub_type: subType,
+            location,
         }, {
             preserveState: true,
             replace: true,
@@ -52,10 +65,10 @@ export default function AgentPropertyListingFilterTab({ count, selectedStatus, s
     };
 
     return (
-        <div className="relative border-b border-gray-300 px-4 pt-4">
+        <div className="relative border-b overflow-x-auto border-gray-300 px-4 pt-4">
             <div className="relative flex justify-start space-x-1">
                 {tabs.map((tab, idx) => {
-                    const isActive = tab.name === selectedStatus;
+                    const isActive = tab.name === selectedStatus || (!selectedStatus && tab.name === 'All');
                     return (
                         <button
                             key={tab.name}
@@ -65,11 +78,11 @@ export default function AgentPropertyListingFilterTab({ count, selectedStatus, s
                                 isActive ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'
                             }`}
                         >
-                            {tab.name}
+                            {tab.name.replace('_', ' ')}
                             {count?.[idx] !== undefined && (
                                 <span className={`text-xs font-semibold px-3 py-1 rounded-md ${getBadgeClass(tab.name, isActive)}`}>
-                  {count[idx]}
-                </span>
+                                    {count[idx]}
+                                </span>
                             )}
                         </button>
                     );
@@ -82,7 +95,6 @@ export default function AgentPropertyListingFilterTab({ count, selectedStatus, s
                     style={underlineStyle}
                 />
             </div>
-
         </div>
     );
 }

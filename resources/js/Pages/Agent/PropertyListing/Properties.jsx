@@ -1,13 +1,23 @@
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
 import dayjs from "dayjs";
-import React, {useState} from "react";
-import {Link, router} from "@inertiajs/react";
-import AgentInquiriesFilterTab from "@/Components/tabs/AgentInquiriesFilterTab.jsx";
+import React, { useEffect, useState, useRef } from "react";
+import { Link, router } from "@inertiajs/react";
 import AgentPropertyListingFilterTab from "@/Components/tabs/AgentPropertyListingFIlterTab.jsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { debounce } from "lodash";
 
-export default function Properties({properties, propertiesCount, forPublishCount, publishedCount, soldCount,                        itemsPerPage = 10, status = 'All', page = 1}) {
-
-    // styles for status
+export default function Properties({
+                                       properties,
+                                       propertiesCount,
+                                       forPublishCount,
+                                       publishedCount,
+                                       soldCount,
+                                       itemsPerPage = 10,
+                                       status = 'All',
+                                       page = 1,
+                                       search = ''
+                                   }) {
     const statusStyles = {
         accepted: 'bg-green-100 text-green-700 ring-green-200',
         rejected: 'bg-red-100 text-red-700 ring-red-200',
@@ -16,23 +26,69 @@ export default function Properties({properties, propertiesCount, forPublishCount
         default: 'bg-orange-100 text-orange-700 ring-orange-200'
     };
 
-    // const formatStatusLabel = (status) => {
-    //     switch (status.toLowerCase()) {
-    //         case 'for_publish':
-    //             return 'For Publish';
-    //         case 'published':
-    //             return 'Published';
-    //         case 'sold':
-    //             return 'Sold';
-    //         default:
-    //             return status.charAt(0).toUpperCase() + status.slice(1);
-    //     }
-    // };
-
-
-    const [selectedStatus, setSelectedStatus] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState(status);
     const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
 
+    // Filters state
+    const [searchTerm, setSearchTerm] = useState(search || '');
+    const [propertyType, setPropertyType] = useState('');
+    const [subType, setSubType] = useState('');
+    const [location, setLocation] = useState('');
+
+    const imageUrl = '/storage/';
+
+    // Update searchTerm if prop changes
+    useEffect(() => {
+        if (search) setSearchTerm(search);
+    }, [search]);
+
+    // Debounced filter function to call router.get once filters stop changing
+    const debouncedFilter = useRef(
+        debounce((params) => {
+            router.get('/agents/my-listings', params, {
+                preserveState: true,
+                replace: true,
+            });
+        }, 500)
+    ).current;
+
+    // Helper to trigger filter with current states merged with any updates
+    const handleFiltersChange = (newFilters = {}) => {
+        const params = {
+            page: 1,
+            items_per_page: selectedItemsPerPage,
+            status: selectedStatus,
+            search: searchTerm,
+            property_type: propertyType,
+            sub_type: subType,
+            location,
+            ...newFilters,
+        };
+        debouncedFilter(params);
+    };
+
+    // Handlers for each filter input
+    const handleSearchTermChange = (value) => {
+        setSearchTerm(value);
+        handleFiltersChange({ search: value });
+    };
+
+    const handlePropertyTypeChange = (e) => {
+        setPropertyType(e.target.value);
+        handleFiltersChange({ property_type: e.target.value });
+    };
+
+    const handleSubTypeChange = (e) => {
+        setSubType(e.target.value);
+        handleFiltersChange({ sub_type: e.target.value });
+    };
+
+    const handleLocationChange = (e) => {
+        setLocation(e.target.value);
+        handleFiltersChange({ location: e.target.value });
+    };
+
+    // Handle items per page change
     const handleItemsPerPageChange = (e) => {
         const newItemsPerPage = e.target.value;
         setSelectedItemsPerPage(newItemsPerPage);
@@ -40,36 +96,116 @@ export default function Properties({properties, propertiesCount, forPublishCount
             page: 1,
             items_per_page: newItemsPerPage,
             status: selectedStatus,
+            search: searchTerm,
+            property_type: propertyType,
+            sub_type: subType,
+            location,
         }, { preserveState: true, replace: true });
     };
 
-
-    const imageUrl = '/storage/';
+    // Cleanup debounce on unmount
+    useEffect(() => {
+        return () => {
+            debouncedFilter.cancel();
+        };
+    }, []);
 
     return (
         <AgentLayout>
-            <div className="p-6">
+            <div className="px-2 py-4">
                 <h1 className="text-2xl font-bold mb-4">My Property Listings</h1>
-                <p className="text-gray-700 mb-6">
+                <p className="text-gray-700 mb-6 text-sm  md:text-medium font-sans">
                     This is the agent dashboard page where you can view and manage the property listings you handle for sellers. Keep track of active, pending, or sold properties easily from here.
                 </p>
 
-
-                <div className="rounded-t-xl shadow-sm overflow-x-auto">
+                <div className="rounded-t-xl shadow-sm">
                     <AgentPropertyListingFilterTab
                         count={[propertiesCount, forPublishCount, publishedCount, soldCount]}
                         selectedStatus={selectedStatus}
                         setSelectedStatus={setSelectedStatus}
                         page={page}
                         selectedItemsPerPage={selectedItemsPerPage}
+                        search={searchTerm}
+                        propertyType={propertyType}
+                        subType={subType}
+                        location={location}
                     />
+
+                    {/* Filter Row */}
+                    <div className='p-6 flex flex-wrap md:flex-row gap-4 relative z-30'>
+                        {/* Search Input */}
+                        <div className="relative w-full md:w-1/4">
+                            <input
+                                value={searchTerm}
+                                onChange={(e) => handleSearchTermChange(e.target.value)}
+                                type="text"
+                                name="search"
+                                placeholder="Search..."
+                                className="border border-gray-300 rounded-md h-10 px-4 pl-10 text-sm text-gray-800 w-full"
+                            />
+                            <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                        </div>
+
+                        {/* Property Type Select */}
+                        <select
+                            className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
+                            value={propertyType}
+                            onChange={handlePropertyTypeChange}
+                        >
+                            <option value=''>Property Type</option>
+                            <option value='house'>House</option>
+                            <option value='apartment'>Apartment</option>
+                            <option value='condo'>Condo</option>
+                            {/* Add more options as needed */}
+                        </select>
+
+                        {/* Property Subtype Select */}
+                        <select
+                            className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
+                            value={subType}
+                            onChange={handleSubTypeChange}
+                        >
+                            <option value=''>Property Subtype</option>
+                            <option value='detached'>Detached</option>
+                            <option value='semi-detached'>Semi-Detached</option>
+                            <option value='townhouse'>Townhouse</option>
+                            {/* Add more options as needed */}
+                        </select>
+
+                        {/* Location Select */}
+                        <select
+                            className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
+                            value={location}
+                            onChange={handleLocationChange}
+                        >
+                            <option value=''>Location</option>
+                            <option value='new-york'>New York</option>
+                            <option value='los-angeles'>Los Angeles</option>
+                            <option value='chicago'>Chicago</option>
+                            {/* Add more options as needed */}
+                        </select>
+
+                        {/* Items Per Page Select */}
+                        <select
+                            className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto ml-auto'
+                            value={selectedItemsPerPage}
+                            onChange={handleItemsPerPageChange}
+                        >
+                            <option value="5">5 per page</option>
+                            <option value="10">10 per page</option>
+                            <option value="20">20 per page</option>
+                            <option value="50">50 per page</option>
+                        </select>
+                    </div>
                 </div>
+
+                {/* Table */}
                 <div className="overflow-x-auto bg-white shadow-sm rounded-b-lg">
                     <table className="min-w-full text-sm text-left text-gray-700">
                         <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
                         <tr>
                             <th className="p-3 text-center">
-                                <input  id='deleteAll' type="checkbox" className="rounded border-gray-400" />
+                                <input id='deleteAll' type="checkbox" className="rounded border-gray-400" />
                             </th>
                             <th className="p-3">Image</th>
                             <th className="p-3">Seller</th>
@@ -86,8 +222,6 @@ export default function Properties({properties, propertiesCount, forPublishCount
                         {properties?.data.length > 0 ? (
                             properties.data.map((property) => {
                                 const statusClass = statusStyles[property.status] || statusStyles.default;
-                                const isPending = property.status.toLowerCase() === 'pending';
-                                const isCancelled = property.status.toLowerCase() === 'cancelled';
 
                                 return (
                                     <tr key={property.id} className="hover:bg-gray-50 flex flex-col md:table-row w-full">
@@ -116,21 +250,20 @@ export default function Properties({properties, propertiesCount, forPublishCount
                                                 <span className='font-medium text-xs'>{property.seller.email}</span>
                                             </p>
                                         </td>
-                                        <td className="p-3 whitespace-nowrap  md:table-cell">
-                                            {property.property.property_type}|{property.property.sub_type}
+                                        <td className="p-3 whitespace-nowrap md:table-cell">
+                                            {property.property.property_type} | {property.property.sub_type}
                                         </td>
-                                        <td className="p-3 whitespace-nowrap  md:table-cell">
+                                        <td className="p-3 whitespace-nowrap md:table-cell">
                                             {property.property.address}
                                         </td>
-                                        <td className="p-3 whitespace-nowrap  md:table-celll">
+                                        <td className="p-3 whitespace-nowrap md:table-cell">
                                             {property.property.price}
                                         </td>
-                                        <td className="p-3 whitespace-nowrap  md:table-cell">
+                                        <td className="p-3 whitespace-nowrap md:table-cell">
                                             {property.property?.lot_area}
                                         </td>
-                                        <td className="p-3 whitespace-nowrap  md:table-cell">
+                                        <td className="p-3 whitespace-nowrap md:table-cell">
                                                 <span className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}>
-                                                    {/*{formatStatusLabel(property.status)}*/}
                                                     {property.status}
                                                 </span>
                                         </td>
@@ -138,14 +271,14 @@ export default function Properties({properties, propertiesCount, forPublishCount
                                             {dayjs(property.created_at).format('MMMM D, YYYY')}
                                         </td>
                                         <td className="p-3 text-right md:table-cell">
-                                            <button>edit    </button>
+                                            <button className="text-blue-600 hover:underline">Edit</button>
                                         </td>
                                     </tr>
                                 );
                             })
                         ) : (
                             <tr>
-                                <td colSpan="7" className="text-center py-6 text-gray-400">
+                                <td colSpan="10" className="text-center py-6 text-gray-400">
                                     No properties found.
                                 </td>
                             </tr>
@@ -153,7 +286,9 @@ export default function Properties({properties, propertiesCount, forPublishCount
                         </tbody>
                     </table>
                 </div>
-                <div className="flex flex-wrap gap-2 justify-end">
+
+                {/* Pagination */}
+                <div className="flex flex-wrap gap-2 justify-end mt-4">
                     {properties?.links.map((link, index) =>
                         link.url ? (
                             <Link
