@@ -75,6 +75,7 @@ class InquiryController extends Controller
         PropertyListing::create([
             'agent_id' => $inquiry->agent_id,
             'property_id' => $inquiry->property_id,
+            'seller_id' => $inquiry->seller_id,
             'status' => 'For Published',
         ]);
 
