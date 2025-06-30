@@ -4,7 +4,14 @@ import dayjs from "dayjs";
 import { Link, router, useForm } from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 import SellerInquiriesFilterTab from "@/Components/tabs/SellerInquiriesFilter.jsx";
+import {Popover} from "react-tiny-popover";
+import * as PropTypes from "prop-types";
 
+function RxCaretSort(props) {
+    return null;
+}
+
+RxCaretSort.propTypes = {className: PropTypes.string};
 export default function Inquiries({
                                       inquiries,
                                       inquiriesCount,
@@ -26,6 +33,9 @@ export default function Inquiries({
     const { data, setData } = useForm({
         status: '',
     });
+
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
 
     const handleItemsPerPageChange = (e) => {
         const newItemsPerPage = e.target.value;
@@ -59,6 +69,22 @@ export default function Inquiries({
         });
     };
 
+    const popoverContent = (
+        <div className="relative">
+            {/* Arrow */}
+            <div className="absolute top-6  -left-1.5 w-3 h-3 rotate-45 bg-white z-10" />
+
+            {/* Popover box */}
+            <div className="bg-white border-gray-200 shadow-lg rounded-md p-2 w-40 z-20">
+                <ul className="space-y-1 text-sm">
+                    <li><button className="w-full text-left hover:text-primary">View Profile</button></li>
+                    <li><button className="w-full text-left hover:text-primary">Sent a message  </button></li>
+                </ul>
+            </div>
+        </div>
+    );
+
+
     return (
         <AuthenticatedLayout>
             {/* Accept Dialog */}
@@ -84,6 +110,10 @@ export default function Inquiries({
                 onConfirm={() => handleStatusUpdate('reject')}
                 loading={false}
             />
+
+
+
+
 
             <div className="flex flex-col max-w-7xl mx-auto">
                 <h1 className="text-2xl font-semibold text-gray-800">Seller Inquiries</h1>
@@ -138,7 +168,21 @@ export default function Inquiries({
                                     </td>
                                     <td className="p-3 whitespace-nowrap md:table-cell">
                                         <p className="hover:cursor-pointer hover:underline hover:text-primary">
-                                            {inquiry.agent.name}
+                                            <Popover
+                                                isOpen={isPopoverOpen}
+                                                positions={["right"]} // try bottom or top
+                                                padding={8}
+                                                onClickOutside={() => setIsPopoverOpen(false)}
+                                                content={popoverContent}
+                                            >
+                                                <button
+                                                    onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+                                                    className="flex items-center gap-1  px-3 py-1 rounded text-sm "
+                                                >
+                                                    {inquiry.agent.name}
+                                                </button>
+                                            </Popover>
+
                                         </p>
                                     </td>
                                     <td className="p-3 md:table-cell">
