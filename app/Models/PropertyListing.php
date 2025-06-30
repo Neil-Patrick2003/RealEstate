@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PropertyListing extends Model
 {
-    protected $fillable = ['property_id', 'agent_id', 'status'];
+    protected $fillable = ['property_id', 'agent_id', 'seller_id', 'status'];
 
     public function property(){
         return $this->belongsTo(Property::class);
@@ -14,5 +14,9 @@ class PropertyListing extends Model
 
     public function agent(){
         return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    public function seller(){
+        return $this->belongsTo(User::class, 'seller_id');
     }
 }

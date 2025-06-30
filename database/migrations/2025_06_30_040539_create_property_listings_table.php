@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('property_id');
             $table->unsignedBigInteger('agent_id');
+            $table->unsignedBigInteger('seller_id');
             $table->string('status');
 
             $table->foreign('property_id')->references('id')->on('properties');
             $table->foreign('agent_id')->references('id')->on('users');
+            $table->foreign('seller_id')->references('id')->on('users');
             $table->timestamps();
         });
     }
