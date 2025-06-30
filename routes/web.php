@@ -47,7 +47,7 @@ Route::middleware(['auth', ])->group(function () {
     Route::post('/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
 
     //message
-    Route::get('/messages', [MessageController::class, 'index']);
+    Route::get('/messages', [MessageController::class, 'index'])->name('seller.messages');
     Route::post('/messages/{receiver}/sent_message', [MessageController::class, 'send']);
 
     //Inquiries

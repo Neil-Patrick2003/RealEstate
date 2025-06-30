@@ -8,10 +8,12 @@ import 'dayjs/locale/en';
 dayjs.extend(relativeTime);
 dayjs.locale('en');
 
-export default function Index({ users, messages = [], auth }) {
+export default function Index({ users, messages = [], auth, selectedUserId=null }) {
   const { data, setData, post, reset } = useForm({ message: '' });
 
   const [selectedId, setSelectedId] = useState(null);
+
+  console.log(selectedId, selectedUserId);
   const [selectedName, setSelectedName] = useState('');
   const [search, setSearch] = useState('');
   const chatRef = useRef(null);
@@ -28,7 +30,18 @@ export default function Index({ users, messages = [], auth }) {
     });
   };
 
-  const scrollToBottom = () => {
+    useEffect(() => {
+        if (selectedUserId) {
+            const user = users.find((u) => u.id === Number(selectedUserId));
+            if (user) {
+                setSelectedId(user.id);
+                setSelectedName(user.name);
+            }
+        }
+    }, [selectedUserId, users]);
+
+
+    const scrollToBottom = () => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }

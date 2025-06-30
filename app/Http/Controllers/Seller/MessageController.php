@@ -11,7 +11,7 @@ use Inertia\Inertia;
 
 class MessageController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $authUser = Auth::user();
 
@@ -32,6 +32,7 @@ class MessageController extends Controller
             'users' => $users,
             'messages' => $messages,
             'auth' => $authUser,
+            'selectedUserId' => $request->selectedUserId, // ✅ Pass selected user ID
         ]);
     }
 

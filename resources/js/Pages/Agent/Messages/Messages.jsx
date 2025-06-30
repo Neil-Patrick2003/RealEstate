@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/en';
+import AgentLayout from "@/Layouts/AgentLayout.jsx";
 
 dayjs.extend(relativeTime);
 dayjs.locale('en');
@@ -59,7 +60,7 @@ export default function Index({ users, messages = [], auth }) {
 
 
     return (
-        <AuthenticatedLayout>
+        <AgentLayout>
             <div className="h-[80vh] flex border rounded-xl shadow overflow-hidden bg-white">
                 {/* Sidebar */}
                 <aside className="w-1/4 border-r bg-gray-50 flex flex-col">
@@ -236,6 +237,6 @@ export default function Index({ users, messages = [], auth }) {
                     )}
                 </section>
             </div>
-        </AuthenticatedLayout>
+        </AgentLayout>
     );
 }

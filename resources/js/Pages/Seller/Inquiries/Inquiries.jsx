@@ -78,7 +78,13 @@ export default function Inquiries({
             <div className="bg-white border-gray-200 shadow-lg rounded-md p-2 w-40 z-20">
                 <ul className="space-y-1 text-sm">
                     <li><button className="w-full text-left hover:text-primary">View Profile</button></li>
-                    <li><button className="w-full text-left hover:text-primary">Sent a message  </button></li>
+                    <li><
+                        button className="w-full text-left hover:text-primary"
+                                onClick={() => {
+                                router.visit(route('seller.messages', { selectedUserId: selectedId }));
+                        }}>
+                        Sent a Message
+                    </button></li>
                 </ul>
             </div>
         </div>
@@ -176,7 +182,11 @@ export default function Inquiries({
                                                 content={popoverContent}
                                             >
                                                 <button
-                                                    onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+                                                    onClick={() => {
+                                                        setSelectedId(inquiry.agent.id);
+                                                        setIsPopoverOpen(!isPopoverOpen);
+                                                    }}
+
                                                     className="flex items-center gap-1  px-3 py-1 rounded text-sm "
                                                 >
                                                     {inquiry.agent.name}
