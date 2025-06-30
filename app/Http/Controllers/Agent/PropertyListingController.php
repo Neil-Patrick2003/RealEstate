@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inquiry;
-use App\Models\Property;
 use App\Models\PropertyListing;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,8 +21,22 @@ class PropertyListingController extends Controller
             ->orderByDesc('created_at')
             ->paginate($request->get('items_per_page', 10));
 
+        $propertiesCount = PropertyListing::where('agent_id', auth()->id())->count();
+
+        $forPublishCount = PropertyListing::where('status', 'for_publish')->count();
+        $publishedCount = PropertyListing::where('status', 'published')->count();
+        $soldCount = PropertyListing::where('status', 'sold')->count();
+
+
+
+
+
         return Inertia::render('Agent/PropertyListing/Properties', [
-            'properties' => $properties
+            'properties' => $properties,
+            'propertiesCount' => $propertiesCount,
+            'forPublishCount' => $forPublishCount,
+            'publishedCount' => $publishedCount,
+            'soldCount' => $soldCount,
         ]);
     }
 }

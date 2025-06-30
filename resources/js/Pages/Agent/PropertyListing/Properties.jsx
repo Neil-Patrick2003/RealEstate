@@ -1,8 +1,11 @@
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
 import dayjs from "dayjs";
-import React from "react";
+import React, {useState} from "react";
+import {Link, router} from "@inertiajs/react";
+import AgentInquiriesFilterTab from "@/Components/tabs/AgentInquiriesFilterTab.jsx";
+import AgentPropertyListingFilterTab from "@/Components/tabs/AgentPropertyListingFIlterTab.jsx";
 
-export default function Properties({properties}) {
+export default function Properties({properties, propertiesCount, forPublishCount, publishedCount, soldCount,                        itemsPerPage = 10, status = 'All', page = 1}) {
 
     // styles for status
     const statusStyles = {
@@ -12,6 +15,34 @@ export default function Properties({properties}) {
         cancelled: 'bg-gray-100 text-gray-700 ring-gray-200',
         default: 'bg-orange-100 text-orange-700 ring-orange-200'
     };
+
+    // const formatStatusLabel = (status) => {
+    //     switch (status.toLowerCase()) {
+    //         case 'for_publish':
+    //             return 'For Publish';
+    //         case 'published':
+    //             return 'Published';
+    //         case 'sold':
+    //             return 'Sold';
+    //         default:
+    //             return status.charAt(0).toUpperCase() + status.slice(1);
+    //     }
+    // };
+
+
+    const [selectedStatus, setSelectedStatus] = useState('');
+    const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
+
+    const handleItemsPerPageChange = (e) => {
+        const newItemsPerPage = e.target.value;
+        setSelectedItemsPerPage(newItemsPerPage);
+        router.get('/agents/my-listings', {
+            page: 1,
+            items_per_page: newItemsPerPage,
+            status: selectedStatus,
+        }, { preserveState: true, replace: true });
+    };
+
 
     const imageUrl = '/storage/';
 
@@ -24,6 +55,15 @@ export default function Properties({properties}) {
                 </p>
 
 
+                <div className="rounded-t-xl shadow-sm overflow-x-auto">
+                    <AgentPropertyListingFilterTab
+                        count={[propertiesCount, forPublishCount, publishedCount, soldCount]}
+                        selectedStatus={selectedStatus}
+                        setSelectedStatus={setSelectedStatus}
+                        page={page}
+                        selectedItemsPerPage={selectedItemsPerPage}
+                    />
+                </div>
                 <div className="overflow-x-auto bg-white shadow-sm rounded-b-lg">
                     <table className="min-w-full text-sm text-left text-gray-700">
                         <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
@@ -90,7 +130,8 @@ export default function Properties({properties}) {
                                         </td>
                                         <td className="p-3 whitespace-nowrap  md:table-cell">
                                                 <span className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}>
-                                                    {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+                                                    {/*{formatStatusLabel(property.status)}*/}
+                                                    {property.status}
                                                 </span>
                                         </td>
                                         <td className="p-3 whitespace-nowrap md:table-cell">
@@ -111,6 +152,28 @@ export default function Properties({properties}) {
                         )}
                         </tbody>
                     </table>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-end">
+                    {properties?.links.map((link, index) =>
+                        link.url ? (
+                            <Link
+                                key={index}
+                                href={link.url}
+                                className={`px-4 py-2 text-sm rounded-md border transition ${
+                                    link.active
+                                        ? 'bg-gray-500 text-white font-semibold'
+                                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ) : (
+                            <span
+                                key={index}
+                                className="px-4 py-2 text-sm text-slate-400 bg-white border rounded-md cursor-not-allowed"
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        )
+                    )}
                 </div>
             </div>
         </AgentLayout>
