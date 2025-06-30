@@ -60,4 +60,9 @@ class Property extends Model
     {
         return $this->hasMany(Inquiry::class);
     }
+
+    public function property_listing()
+    {
+        return $this->hasMany(PropertyListing::class);
+    }
 }

@@ -29,6 +29,7 @@ import FlashMessage from "@/Components/FlashMessage.jsx";
 const navigation = [
     { name: 'Dashboard', href: '/agents/dashboard', icon: HomeIcon, current: true },
     { name: 'Properties', href: '/agents/properties', icon: UsersIcon, current: false },
+    { name: 'My Listing', href: '/agents/my-listings', icon: UsersIcon, current: false },
     { name: 'Messages', href: '/agents/messages', icon: FolderIcon, current: false },
     { name: 'Inquiries', href: '/agents/inquiries', icon: FolderIcon, current: false },
     { name: 'Tripping', href: '/agents/tripping', icon: CalendarIcon, current: false },
