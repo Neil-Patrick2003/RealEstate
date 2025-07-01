@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import SignupForm from "./SignupForm";
 import SigninForm from "./SigninForm";
-import log from "../../../assets/signin.svg";
+import log from "../../../assets/loginimage.png";
 import register from "../../../assets/signup.svg";
   import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
@@ -106,13 +106,13 @@ const SlidingLoginSignup = () => {
               isSignUpMode ? "lg:translate-x-[-800px] max-lg:translate-y-[-300px]" : ""
             }`}
           >
-            <h3 className="font-semibold leading-none text-[1.2rem] lg:text-[1.5rem] text-gray-700">New here ?</h3>
+            <h3 className="font-semibold leading-none text-[1.2rem] lg:text-[1.5rem] text-white-700">New here ?</h3>
             <p className="text-[0.7rem] lg:text-[0.95rem] px-0 py-2 lg:py-[0.7rem]">
               Sign up and discover our platform
             </p>
             <button
-              className="bg-accent w-[110px] h-[35px] text-gray-700 text-[0.7rem] lg:w-[130px] lg:h-[41px] 
-              lg:text-[0.8rem] font-semibold rounded-full transition-colors duration-300 
+              className="bg-accent w-[110px] h-[35px] text-white-700 text-[0.7rem] lg:w-[130px] lg:h-[41px] 
+              lg:text-[0.8rem] font-semibold border-2 border-white rounded-full transition-colors duration-300 
               hover:bg-white hover:text-gray-700"
               id="sign-up-btn"
               onClick={toggleSignUpMode}
@@ -147,12 +147,12 @@ const SlidingLoginSignup = () => {
               isSignUpMode ? "" : "lg:translate-x-[800px] max-lg:translate-y-[300px]"
             }`}
           >
-            <h3 className="font-semibold leading-none text-[1.2rem] lg:text-[1.5rem] text-gray-700">One of us ?</h3>
+            <h3 className="font-semibold leading-none text-[1.2rem] lg:text-[1.5rem] text-white-700">One of us ?</h3>
             <p className="py-2 text-[0.7rem] lg:text-[0.95rem] px-0 lg:py-[0.7rem]">
               Sign in to your account to have hassle free experience
             </p>
             <button
-              className="text-gray-700 bg-accent w-[110px] h-[35px] text-[0.7rem] lg:w-[130px] 
+              className="text-white-700 bg-accent w-[110px] h-[35px] text-[0.7rem] lg:w-[130px] 
               lg:h-[41px] lg:text-[0.8rem] font-semibold border-2 border-white rounded-full 
               transition-colors duration-300 hover:bg-white hover:text-gray-700"
               id="sign-in-btn"
