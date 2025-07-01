@@ -257,10 +257,11 @@ export default function Properties({
                                             {property.property.address}
                                         </td>
                                         <td className="p-3 whitespace-nowrap md:table-cell">
-                                            {property.property.price}
+
+                                            ₱ {property.property.price}
                                         </td>
                                         <td className="p-3 whitespace-nowrap md:table-cell">
-                                            {property.property?.lot_area}
+                                            {property.property?.lot_area} m2
                                         </td>
                                         <td className="p-3 whitespace-nowrap md:table-cell">
                                                 <span className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}>

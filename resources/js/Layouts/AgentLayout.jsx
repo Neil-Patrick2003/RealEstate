@@ -285,11 +285,11 @@ export default function AgentLayout({ children }) {
                                             className="size-8 rounded-full bg-gray-50"
                                         />
                                         <span className="hidden lg:flex lg:items-center">
-                      <span aria-hidden="true" className="ml-4 text-sm/6 font-semibold text-gray-900">
-                        Tom Cook
-                      </span>
-                      <ChevronDownIcon aria-hidden="true" className="ml-2 size-5 text-gray-400" />
-                    </span>
+                                          <span aria-hidden="true" className="ml-4 text-sm/6 font-semibold text-gray-900">
+                                            Tom Cook
+                                          </span>
+                                          <ChevronDownIcon aria-hidden="true" className="ml-2 size-5 text-gray-400" />
+                                        </span>
                                     </MenuButton>
                                     <MenuItems
                                         transition
