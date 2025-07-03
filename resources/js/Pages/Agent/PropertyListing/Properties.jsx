@@ -28,6 +28,7 @@ export default function Properties({
 
     const [selectedStatus, setSelectedStatus] = useState(status);
     const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
+    const [selectedProperty, setSelectedProperty] = useState('');
 
     // Filters state
     const [searchTerm, setSearchTerm] = useState(search || '');
@@ -272,7 +273,7 @@ export default function Properties({
                                             {dayjs(property.created_at).format('MMMM D, YYYY')}
                                         </td>
                                         <td className="p-3 text-right md:table-cell">
-                                            <button className="text-blue-600 hover:underline">Edit</button>
+                                            <Link href={`/agents/my-listings/${property.id}`}>View</Link>
                                         </td>
                                     </tr>
                                 );
