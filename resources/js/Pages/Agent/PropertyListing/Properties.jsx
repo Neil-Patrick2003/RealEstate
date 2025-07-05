@@ -118,75 +118,192 @@ export default function Properties({
                 <p className="text-gray-700 mb-6 text-sm  md:text-medium font-sans">
                     This is the agent dashboard page where you can view and manage the property listings you handle for sellers. Keep track of active, pending, or sold properties easily from here.
                 </p>
+                <div className='border border-gray-100 rounded-xl'>
+                    <div className="rounded-t-xl shadow-sm">
+                        <AgentPropertyListingFilterTab
+                            count={[propertiesCount, forPublishCount, publishedCount, soldCount]}
+                            selectedStatus={selectedStatus}
+                            setSelectedStatus={setSelectedStatus}
+                            page={page}
+                            selectedItemsPerPage={selectedItemsPerPage}
+                            search={searchTerm}
+                            propertyType={propertyType}
+                            subType={subType}
+                            location={location}
+                        />
 
-                <div className="rounded-t-xl shadow-sm">
-                    <AgentPropertyListingFilterTab
-                        count={[propertiesCount, forPublishCount, publishedCount, soldCount]}
-                        selectedStatus={selectedStatus}
-                        setSelectedStatus={setSelectedStatus}
-                        page={page}
-                        selectedItemsPerPage={selectedItemsPerPage}
-                        search={searchTerm}
-                        propertyType={propertyType}
-                        subType={subType}
-                        location={location}
-                    />
+                        {/* Filter Row */}
+                        <div className='p-6 flex flex-wrap md:flex-row gap-4 relative z-30'>
+                            {/* Search Input */}
+                            <div className="relative w-full md:w-1/4">
+                                <input
+                                    value={searchTerm}
+                                    onChange={(e) => handleSearchTermChange(e.target.value)}
+                                    type="text"
+                                    name="search"
+                                    placeholder="Search..."
+                                    className="border border-gray-300 rounded-md h-10 px-4 pl-10 text-sm text-gray-800 w-full"
+                                />
+                                <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                            </div>
 
-                    {/* Filter Row */}
-                    <div className='p-6 flex flex-wrap md:flex-row gap-4 relative z-30'>
-                        {/* Search Input */}
-                        <div className="relative w-full md:w-1/4">
-                            <input
-                                value={searchTerm}
-                                onChange={(e) => handleSearchTermChange(e.target.value)}
-                                type="text"
-                                name="search"
-                                placeholder="Search..."
-                                className="border border-gray-300 rounded-md h-10 px-4 pl-10 text-sm text-gray-800 w-full"
-                            />
-                            <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                            {/* Property Type Select */}
+                            <select
+                                className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
+                                value={propertyType}
+                                onChange={handlePropertyTypeChange}
+                            >
+                                <option value=''>Property Type</option>
+                                <option value='house'>House</option>
+                                <option value='apartment'>Apartment</option>
+                                <option value='condo'>Condo</option>
+                                {/* Add more options as needed */}
+                            </select>
+
+                            {/* Property Subtype Select */}
+                            <select
+                                className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
+                                value={subType}
+                                onChange={handleSubTypeChange}
+                            >
+                                <option value=''>Property Subtype</option>
+                                <option value='detached'>Detached</option>
+                                <option value='semi-detached'>Semi-Detached</option>
+                                <option value='townhouse'>Townhouse</option>
+                                {/* Add more options as needed */}
+                            </select>
+
+                            {/* Location Select */}
+                            <select
+                                className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
+                                value={location}
+                                onChange={handleLocationChange}
+                            >
+                                <option value=''>Location</option>
+                                <option value='new-york'>New York</option>
+                                <option value='los-angeles'>Los Angeles</option>
+                                <option value='chicago'>Chicago</option>
+                                {/* Add more options as needed */}
+                            </select>
+
+                            {/* Items Per Page Select */}
+
                         </div>
+                    </div>
 
-                        {/* Property Type Select */}
-                        <select
-                            className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
-                            value={propertyType}
-                            onChange={handlePropertyTypeChange}
-                        >
-                            <option value=''>Property Type</option>
-                            <option value='house'>House</option>
-                            <option value='apartment'>Apartment</option>
-                            <option value='condo'>Condo</option>
-                            {/* Add more options as needed */}
-                        </select>
+                    {/* Table */}
+                    <div className="overflow-x-auto h-[45vh] bg-white scrollbar-thumb-gray-300 scrollbar-track-transparent   [overflow:scroll]">
+                        <table className="min-w-full text-sm text-left text-gray-700">
+                            <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
+                            <tr>
+                                <th className="p-3 text-center">
+                                    <input id='deleteAll' type="checkbox" className="rounded border-gray-400" />
+                                </th>
+                                <th className="p-3">Image</th>
+                                <th className="p-3">Seller</th>
+                                <th className="p-3">Type</th>
+                                <th className="p-3">Address</th>
+                                <th className="p-3">Price</th>
+                                <th className="p-3">Size(m2)</th>
+                                <th className="p-3">Status</th>
+                                <th className="p-3">Date Inquired</th>
+                                <th className="p-3 text-right">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody className="divide-y divide-dashed">
+                            {properties?.data.length > 0 ? (
+                                properties.data.map((property) => {
+                                    const statusClass = statusStyles[property.status] || statusStyles.default;
 
-                        {/* Property Subtype Select */}
-                        <select
-                            className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
-                            value={subType}
-                            onChange={handleSubTypeChange}
-                        >
-                            <option value=''>Property Subtype</option>
-                            <option value='detached'>Detached</option>
-                            <option value='semi-detached'>Semi-Detached</option>
-                            <option value='townhouse'>Townhouse</option>
-                            {/* Add more options as needed */}
-                        </select>
+                                    return (
+                                        <tr key={property.id} className="hover:bg-gray-50 flex flex-col md:table-row w-full">
+                                            <td className="p-3 text-center hidden md:table-cell">
+                                                <input id={property.id} type="checkbox" className="rounded border-gray-400" />
+                                            </td>
+                                            <td className="p-3 md:table-cell">
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={`${imageUrl}${property.property.image_url}`}
+                                                        onError={(e) => e.target.src = '/placeholder.png'}
+                                                        alt={property.property.title}
+                                                        className="w-14 h-14 object-cover rounded-md"
+                                                    />
+                                                    <div className="flex flex-col">
+                                                        <p className="font-semibold text-gray-800">{property.property.title}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {property.property.property_type} | {property.property.sub_type}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="p-3 whitespace-nowrap md:table-cell">
+                                                <p className="flex flex-col cursor-pointer font-bold hover:underline text-primary">
+                                                    {property.seller.name}
+                                                    <span className='font-medium text-xs'>{property.seller.email}</span>
+                                                </p>
+                                            </td>
+                                            <td className="p-3 whitespace-nowrap md:table-cell">
+                                                {property.property.property_type} | {property.property.sub_type}
+                                            </td>
+                                            <td className="p-3 whitespace-nowrap md:table-cell">
+                                                {property.property.address}
+                                            </td>
+                                            <td className="p-3 whitespace-nowrap md:table-cell">
 
-                        {/* Location Select */}
-                        <select
-                            className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
-                            value={location}
-                            onChange={handleLocationChange}
-                        >
-                            <option value=''>Location</option>
-                            <option value='new-york'>New York</option>
-                            <option value='los-angeles'>Los Angeles</option>
-                            <option value='chicago'>Chicago</option>
-                            {/* Add more options as needed */}
-                        </select>
+                                                ₱ {property.property.price}
+                                            </td>
+                                            <td className="p-3 whitespace-nowrap md:table-cell">
+                                                {property.property?.lot_area} m2
+                                            </td>
+                                            <td className="p-3 whitespace-nowrap md:table-cell">
+                                                <span className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}>
+                                                    {property.status}
+                                                </span>
+                                            </td>
+                                            <td className="p-3 whitespace-nowrap md:table-cell">
+                                                {dayjs(property.created_at).format('MMMM D, YYYY')}
+                                            </td>
+                                            <td className="p-3 text-right md:table-cell">
+                                                <Link href={`/agents/my-listings/${property.id}`}>View</Link>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan="10" className="text-center py-6 text-gray-400">
+                                        No properties found.
+                                    </td>
+                                </tr>
+                            )}
+                            </tbody>
+                        </table>
+                    </div>
 
-                        {/* Items Per Page Select */}
+                    {/* Pagination */}
+                    <div className="flex flex-wrap gap-2 justify-end p-4 border-dashed border-t ">
+
+                        {properties?.links.map((link, index) =>
+                            link.url ? (
+                                <Link
+                                    key={index}
+                                    href={link.url}
+                                    className={`px-4 py-2 text-sm rounded-md border transition ${
+                                        link.active
+                                            ? 'bg-gray-500 text-white font-semibold'
+                                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ) : (
+                                <span
+                                    key={index}
+                                    className="px-4 py-2 text-sm text-slate-400 bg-white border rounded-md cursor-not-allowed"
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            )
+                        )}
+
                         <select
                             className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto ml-auto'
                             value={selectedItemsPerPage}
@@ -200,118 +317,7 @@ export default function Properties({
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-x-auto bg-white shadow-sm rounded-b-lg">
-                    <table className="min-w-full text-sm text-left text-gray-700">
-                        <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
-                        <tr>
-                            <th className="p-3 text-center">
-                                <input id='deleteAll' type="checkbox" className="rounded border-gray-400" />
-                            </th>
-                            <th className="p-3">Image</th>
-                            <th className="p-3">Seller</th>
-                            <th className="p-3">Type</th>
-                            <th className="p-3">Address</th>
-                            <th className="p-3">Price</th>
-                            <th className="p-3">Size(m2)</th>
-                            <th className="p-3">Status</th>
-                            <th className="p-3">Date Inquired</th>
-                            <th className="p-3 text-right">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody className="divide-y divide-dashed">
-                        {properties?.data.length > 0 ? (
-                            properties.data.map((property) => {
-                                const statusClass = statusStyles[property.status] || statusStyles.default;
 
-                                return (
-                                    <tr key={property.id} className="hover:bg-gray-50 flex flex-col md:table-row w-full">
-                                        <td className="p-3 text-center hidden md:table-cell">
-                                            <input id={property.id} type="checkbox" className="rounded border-gray-400" />
-                                        </td>
-                                        <td className="p-3 md:table-cell">
-                                            <div className="flex items-center gap-3">
-                                                <img
-                                                    src={`${imageUrl}${property.property.image_url}`}
-                                                    onError={(e) => e.target.src = '/placeholder.png'}
-                                                    alt={property.property.title}
-                                                    className="w-14 h-14 object-cover rounded-md"
-                                                />
-                                                <div className="flex flex-col">
-                                                    <p className="font-semibold text-gray-800">{property.property.title}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {property.property.property_type} | {property.property.sub_type}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap md:table-cell">
-                                            <p className="flex flex-col cursor-pointer font-bold hover:underline text-primary">
-                                                {property.seller.name}
-                                                <span className='font-medium text-xs'>{property.seller.email}</span>
-                                            </p>
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap md:table-cell">
-                                            {property.property.property_type} | {property.property.sub_type}
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap md:table-cell">
-                                            {property.property.address}
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap md:table-cell">
-
-                                            ₱ {property.property.price}
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap md:table-cell">
-                                            {property.property?.lot_area} m2
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap md:table-cell">
-                                                <span className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}>
-                                                    {property.status}
-                                                </span>
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap md:table-cell">
-                                            {dayjs(property.created_at).format('MMMM D, YYYY')}
-                                        </td>
-                                        <td className="p-3 text-right md:table-cell">
-                                            <Link href={`/agents/my-listings/${property.id}`}>View</Link>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        ) : (
-                            <tr>
-                                <td colSpan="10" className="text-center py-6 text-gray-400">
-                                    No properties found.
-                                </td>
-                            </tr>
-                        )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex flex-wrap gap-2 justify-end mt-4">
-                    {properties?.links.map((link, index) =>
-                        link.url ? (
-                            <Link
-                                key={index}
-                                href={link.url}
-                                className={`px-4 py-2 text-sm rounded-md border transition ${
-                                    link.active
-                                        ? 'bg-gray-500 text-white font-semibold'
-                                        : 'bg-white text-gray-600 hover:bg-gray-100'
-                                }`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ) : (
-                            <span
-                                key={index}
-                                className="px-4 py-2 text-sm text-slate-400 bg-white border rounded-md cursor-not-allowed"
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        )
-                    )}
-                </div>
             </div>
         </AgentLayout>
     );

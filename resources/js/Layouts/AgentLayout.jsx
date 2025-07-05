@@ -29,14 +29,14 @@ const menus = [
         Icon: faEnvelope,
         subMenu: [
             {
-                name: "Seller Inquiries",
+                name: "Properties",
                 Icon: faMapLocationDot,
-                path: "/messages",
+                path: "/agents/properties",
             },
             {
-                name: "Buyer Inquiries",
+                name: "Handle Properties",
                 Icon: faMapLocationDot,
-                path: "/inquiries",
+                path: "/agents/my-listings",
             },
         ],
     },
