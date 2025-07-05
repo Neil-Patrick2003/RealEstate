@@ -6,11 +6,21 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import PropertyMap from "@/Components/PropertyMap.jsx";
 import React from "react";
+import CustomSlider from "@/Components/Slider/custom.slider.jsx";
 
 dayjs.extend(relativeTime);
 
 export default function ShowProperty({ propertyListing }) {
-    const { property, seller } = propertyListing;
+    const { property, seller, } = propertyListing;
+
+    const images = property.images;
+    const features = property.features;
+
+
+
+
+
+    console.log(features);
 
     const formattedPrice = new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -44,22 +54,11 @@ export default function ShowProperty({ propertyListing }) {
                     {/* Stats & Publish */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                         <div className="flex flex-wrap gap-4 text-sm text-gray-700">
-                            {[
-                                { label: "Rooms", value: property.total_rooms },
-                                { label: "Bedrooms", value: property.bedrooms },
-                                { label: "Bathrooms", value: property.bathrooms },
-                                { label: "Car Slots", value: property.car_slots },
-                            ].map(
-                                (item, index) =>
-                                    item.value && (
-                                        <div className="flex items-center gap-1" key={index}>
-                                            <BedSingle className="h-5 w-5 text-gray-500" />
-                                            <span>
-                                                {item.value} {item.label}
-                                            </span>
-                                        </div>
-                                    )
-                            )}
+                            { features.map(feature => (
+                                <div key={feature.id} className='border px-4 py-1 rounded-2xl'>
+                                    {feature.name}
+                                </div>
+                            ))}
                         </div>
 
                         <button
@@ -74,16 +73,21 @@ export default function ShowProperty({ propertyListing }) {
                     {/* Image & Description Section */}
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Property Image */}
-                        <div className="w-full lg:w-[60%] h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] rounded-xl overflow-hidden shadow">
-                            <img
-                                src={`/storage/${property.image_url}`}
-                                alt={property.title || "Property image"}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.target.src = "/images/default-property.jpg";
-                                    e.target.alt = "Default property image";
-                                }}
-                            />
+                        <div className="w-full lg:w-[50%]  rounded-xl overflow-hidden shadow">
+                            {/*<img*/}
+                            {/*    src={`/storage/${property.image_url}`}*/}
+                            {/*    alt={property.title || "Property image"}*/}
+                            {/*    className="w-full h-full object-cover"*/}
+                            {/*    onError={(e) => {*/}
+                            {/*        e.target.src = "/images/default-property.jpg";*/}
+                            {/*        e.target.alt = "Default property image";*/}
+                            {/*    }}*/}
+                            {/*/>*/}
+                            <CustomSlider>
+                                {images.map((image, index) => {
+                                    return <img key={index} src={`/storage/${image.image_url}`} alt={image.image_url} className='object-cover'/>;
+                                })}
+                            </CustomSlider>
                         </div>
 
                         {/* Description */}
@@ -95,6 +99,28 @@ export default function ShowProperty({ propertyListing }) {
                                 <p className="text-gray-600 leading-relaxed whitespace-pre-line">
                                     {property.description}
                                 </p>
+                            </div>
+                            <div className="grid grid-cols-2  gap-4 text-sm text-gray-700">
+                                {[
+                                    { label: "Rooms", value: property.total_rooms },
+                                    { label: "Bedrooms", value: property.bedrooms },
+                                    { label: "Bathrooms", value: property.bathrooms },
+                                    { label: "Car Slots", value: property.car_slots },
+                                ].map(
+                                    (item, index) =>
+                                        item.value && (
+                                            <div className="flex flex-col  gap-1" key={index}>
+                                                <div className='flex-center gap-2'>
+                                                    <BedSingle className="h-5 w-5 text-gray-500" />
+                                                    <span>
+                                                        {item.label}
+                                                    </span>
+                                                </div>
+
+                                                <p className='font-bold tex-xl font-bold'>{item.value}</p>
+                                            </div>
+                                        )
+                                )}
                             </div>
                             <div className="border-t mt-6 pt-4">
                                 <div className="flex items-center text-gray-500 text-sm mb-1">

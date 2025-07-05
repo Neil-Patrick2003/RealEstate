@@ -75,7 +75,8 @@ class PropertyListingController extends Controller
 
     public function show(PropertyListing $propertyListing)
     {
-        $propertyListing->load(['property.coordinate', 'seller']);
+        $propertyListing->load(['property.coordinate', 'seller', 'property.images', 'property.features']);
+
 
 
 

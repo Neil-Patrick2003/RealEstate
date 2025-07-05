@@ -9,11 +9,11 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useMemo, useState, useEffect } from "react";
+import   logo  from '../../assets/framer_logo.png'
 
 // Custom marker icon
 const customIcon = new L.Icon({
-    iconUrl:
-        "https://w7.pngwing.com/pngs/789/777/png-transparent-computer-icons-tinyurl-hyperlink-symbol-url-shortening-chain-miscellaneous-text-technic.png",
+    iconUrl: logo,
     iconSize: [30, 45],
     iconAnchor: [15, 45],
     popupAnchor: [0, -40],
@@ -69,7 +69,7 @@ const TileLayerManager = ({ base, showLabels }) => {
 };
 
 const PropertyMap = ({ coordinates }) => {
-    const [mapType, setMapType] = useState("Satellite");
+    const [mapType, setMapType] = useState("Street");
     const [labelsVisible, setLabelsVisible] = useState(true);
 
     const markerItem = coordinates?.find((c) => c.type === "marker");
@@ -88,7 +88,11 @@ const PropertyMap = ({ coordinates }) => {
         ) || [];
 
     const center = markerCoords || polygonCoords[0] || [13.9407, 121.6151];
-    const zoomLevel = markerCoords || polygonCoords.length ? 17 : 12;
+    const zoomLevel = markerCoords
+        ? 15
+        : polygonCoords.length > 0
+            ? 16
+            : 12;
 
     const polygonOptions = {
         color: "#2563eb",
