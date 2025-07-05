@@ -6,9 +6,56 @@ import { usePage } from '@inertiajs/react';
 import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
 import { faBell, faMoon, faLanguage } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Breadcrumb from '@/Components/Breadcrumbs';
 import FlashMessage from "@/Components/FlashMessage.jsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+    faHouse,
+    faMapLocationDot,
+    faEnvelope,
+    faCalendar,
+    faChartSimple,
+} from "@fortawesome/free-solid-svg-icons";
+
+
+const menus = [
+    {
+        name: "Dashboard",
+        Icon: faHouse,
+        path: "/dashboard",
+    },
+    {
+        name: "Properties",
+        Icon: faMapLocationDot,
+        path: "/properties",
+    },
+    {
+        name: "Enquiries",
+        Icon: faEnvelope,
+        subMenu: [
+            {
+                name: "Messages",
+                Icon: faEnvelope,
+                path: "/messages",
+            },
+            {
+                name: "Inquiries",
+                Icon: faEnvelope,
+                path: "/inquiries",
+            },
+        ],
+    },
+    {
+        name: "Tripping",
+        Icon: faCalendar,
+        path: "/trippings",
+    },
+    {
+        name: "Sales",
+        Icon: faChartSimple,
+        path: "/my-sales",
+    },
+];
 
 export default function AuthenticatedLayout({ children }) {
   const auth = usePage().props.auth.user;
@@ -45,7 +92,7 @@ export default function AuthenticatedLayout({ children }) {
     <div className="h-screen flex overflow-hidden relative bg-gray-50">
       {!isMobile && (
         <div className="hidden md:block">
-          <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
+          <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} menus={menus} />
         </div>
       )}
 

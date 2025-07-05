@@ -3,7 +3,7 @@ import { useState } from "react";
 import {motion} from 'framer-motion';
 
 export default function DesktopMenu({menu}) {
-    
+
     const [ isHover, setIsHover] = useState(false);
 
 
@@ -17,7 +17,7 @@ export default function DesktopMenu({menu}) {
             opacity: 1,
             rotateX: 0,
             transition: {
-                duration: 0.3 
+                duration: 0.3
             },
             display: "block"
 
@@ -35,7 +35,7 @@ export default function DesktopMenu({menu}) {
     // checking if the menu has submenu
     const hasSubMenu = menu.subMenu?.length > 0;
     return (
-        <motion.li className="group/link" onHoverStart={toggleHoverMenu} onHoverEnd={toggleHoverMenu}>
+        <motion.ul className="group/link" onHoverStart={toggleHoverMenu} onHoverEnd={toggleHoverMenu}>
             <span className="flex-center gap-1 cursor-pointer px-3 py-1 rounded-xl hover:bg-lightaccent">
                 {menu.name}
                 {hasSubMenu && (
@@ -67,7 +67,7 @@ export default function DesktopMenu({menu}) {
                     </div>
                 </motion.div>
             )}
-            
-        </motion.li>
+
+        </motion.ul>
     );
-}   
+}

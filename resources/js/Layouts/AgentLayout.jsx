@@ -1,324 +1,248 @@
-'use client'
-
-import { useState } from 'react'
-import {
-    Dialog,
-    DialogBackdrop,
-    DialogPanel,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
-    TransitionChild,
-} from '@headlessui/react'
-import {
-    Bars3Icon,
-    BellIcon,
-    CalendarIcon,
-    ChartPieIcon,
-    Cog6ToothIcon,
-    DocumentDuplicateIcon,
-    FolderIcon,
-    HomeIcon,
-    UsersIcon,
-    XMarkIcon,
-} from '@heroicons/react/24/outline'
-import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+import React, { useState, useEffect } from 'react';
+import Sidebar from '@/Components/Sidebar/Sidebar';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AlignLeft, LogOut, X } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
+import { useMediaQuery } from 'react-responsive';
+import Dropdown from '@/Components/Dropdown';
+import { faBell, faMoon, faLanguage } from '@fortawesome/free-solid-svg-icons';
+import Breadcrumb from '@/Components/Breadcrumbs';
 import FlashMessage from "@/Components/FlashMessage.jsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+    faHouse,
+    faMapLocationDot,
+    faEnvelope,
+    faCalendar,
+    faChartSimple,
+} from "@fortawesome/free-solid-svg-icons";
 
-const navigation = [
-    { name: 'Dashboard', href: '/agents/dashboard', icon: HomeIcon, current: true },
-    { name: 'Properties', href: '/agents/properties', icon: UsersIcon, current: false },
-    { name: 'My Listing', href: '/agents/my-listings', icon: UsersIcon, current: false },
-    { name: 'Messages', href: '/agents/messages', icon: FolderIcon, current: false },
-    { name: 'Inquiries', href: '/agents/inquiries', icon: FolderIcon, current: false },
-    { name: 'Tripping', href: '/agents/tripping', icon: CalendarIcon, current: false },
-    { name: 'Documents', href: '#', icon: DocumentDuplicateIcon, current: false },
-    { name: 'Reports', href: '#', icon: ChartPieIcon, current: false },
-]
-const teams = [
-    { id: 1, name: 'Heroicons', href: '#', initial: 'H', current: false },
-    { id: 2, name: 'Tailwind Labs', href: '#', initial: 'T', current: false },
-    { id: 3, name: 'Workcation', href: '#', initial: 'W', current: false },
-]
-const userNavigation = [
-    { name: 'Your profile', href: '#' },
-    { name: 'Sign out', href: '#' },
-]
 
-function classNames(...classes) {
-    return classes.filter(Boolean).join(' ')
-}
+const menus = [
+    {
+        name: "Dashboard",
+        Icon: faHouse,
+        path: "/agents/dashboard",
+    },
+    {
+        name: "Properties",
+        Icon: faEnvelope,
+        subMenu: [
+            {
+                name: "Seller Inquiries",
+                Icon: faMapLocationDot,
+                path: "/messages",
+            },
+            {
+                name: "Buyer Inquiries",
+                Icon: faMapLocationDot,
+                path: "/inquiries",
+            },
+        ],
+    },
+    {
+        name: "Messages",
+        Icon: faChartSimple,
+        path: "/my-sales",
+    },
+    {
+        name: "Enquiries",
+        Icon: faEnvelope,
+        subMenu: [
+            {
+                name: "Seller Inquiries",
+                Icon: faEnvelope,
+                path: "/messages",
+            },
+            {
+                name: "Buyer Inquiries",
+                Icon: faEnvelope,
+                path: "/inquiries",
+            },
+        ],
+    },
+    {
+        name: "Tripping",
+        Icon: faCalendar,
+        path: "/trippings",
+    },
+    {
+        name: "Sales",
+        Icon: faChartSimple,
+        path: "/my-sales",
+    },
+    {
+        name: "Transactions",
+        Icon: faChartSimple,
+        path: "/my-sales",
+    },
+];
 
-export default function AgentLayout({ children }) {
-    const [sidebarOpen, setSidebarOpen] = useState(false)
+export default function AuthenticatedLayout({ children }) {
+    const auth = usePage().props.auth.user;
+
+    const [isOpen, setIsOpen] = useState(() => {
+        const saved = localStorage.getItem('sidebar-isOpen');
+        return saved === null ? false : JSON.parse(saved);
+    });
+
+    useEffect(() => {
+        localStorage.setItem('sidebar-isOpen', JSON.stringify(isOpen));
+    }, [isOpen]);
+
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
+
+    const toggleSidebar = () => {
+        if (isMobile) {
+            setIsMobileOpen(!isMobileOpen);
+        } else {
+            setIsOpen(!isOpen);
+        }
+    };
+
+    useEffect(() => {
+        if (!isMobile) setIsMobileOpen(false);
+    }, [isMobile]);
+
+    useEffect(() => {
+        document.body.style.overflow = isMobileOpen ? 'hidden' : '';
+    }, [isMobileOpen]);
 
     return (
-        <>
-            {/*
-        This example requires updating your template:
+        <div className="h-screen flex overflow-hidden relative">
+            {!isMobile && (
+                <div className="hidden md:block">
+                    <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} menus={menus} />
+                </div>
+            )}
 
-        ```
-        <html class="h-full bg-white">
-        <body class="h-full">
-        ```
-      */}
-            <div>
-                <Dialog open={sidebarOpen} onClose={setSidebarOpen} className="relative z-50 lg:hidden">
-                    <DialogBackdrop
-                        transition
-                        className="fixed inset-0 bg-gray-900/80 transition-opacity duration-300 ease-linear data-closed:opacity-0"
-                    />
-
-                    <div className="fixed inset-0 flex">
-                        <DialogPanel
-                            transition
-                            className="relative mr-16 flex w-full max-w-xs flex-1 transform transition duration-300 ease-in-out data-closed:-translate-x-full"
+            <AnimatePresence>
+                {isMobileOpen && isMobile && (
+                    <>
+                        <motion.div
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
+                            transition={{ duration: 0.4, ease: 'easeInOut' }}
+                            className="fixed top-0 left-0 z-50 w-64 h-full bg-white shadow-2xl border-r rounded-tr-2xl rounded-br-2xl"
+                            role="dialog"
+                            aria-modal="true"
                         >
-                            <TransitionChild>
-                                <div className="absolute top-0 left-full flex w-16 justify-center pt-5 duration-300 ease-in-out data-closed:opacity-0">
-                                    <button type="button" onClick={() => setSidebarOpen(false)} className="-m-2.5 p-2.5">
-                                        <span className="sr-only">Close sidebar</span>
-                                        <XMarkIcon aria-hidden="true" className="size-6 text-white" />
-                                    </button>
-                                </div>
-                            </TransitionChild>
+                            <Sidebar isOpen={true} setIsOpen={setIsMobileOpen} />
+                            <button
+                                onClick={() => setIsMobileOpen(false)}
+                                className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-800"
+                                aria-label="Close sidebar"
+                            >
+                                <X size={24} />
+                            </button>
+                        </motion.div>
 
-                            {/* Sidebar component, swap this element with another sidebar if you like */}
-                            <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-primary px-6 pb-4">
-                                <div className="flex h-16 shrink-0 items-center">
-                                    <img
-                                        alt="Your Company"
-                                        src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=white"
-                                        className="h-8 w-auto"
-                                    />
-                                </div>
-                                <nav className="flex flex-1 flex-col">
-                                    <ul role="list" className="flex flex-1 flex-col gap-y-7">
-                                        <li>
-                                            <ul role="list" className="-mx-2 space-y-1">
-                                                {navigation.map((item) => (
-                                                    <li key={item.name}>
-                                                        <a
-                                                            href={item.href}
-                                                            className={classNames(
-                                                                item.current
-                                                                    ? 'bg-indigo-700 text-white'
-                                                                    : 'text-indigo-200 hover:bg-indigo-700 hover:text-white',
-                                                                'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold',
-                                                            )}
-                                                        >
-                                                            <item.icon
-                                                                aria-hidden="true"
-                                                                className={classNames(
-                                                                    item.current ? 'text-white' : 'text-indigo-200 group-hover:text-white',
-                                                                    'size-6 shrink-0',
-                                                                )}
-                                                            />
-                                                            {item.name}
-                                                        </a>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </li>
-                                        <li>
-                                            <div className="text-xs/6 font-semibold text-indigo-200">Your teams</div>
-                                            <ul role="list" className="-mx-2 mt-2 space-y-1">
-                                                {teams.map((team) => (
-                                                    <li key={team.name}>
-                                                        <a
-                                                            href={team.href}
-                                                            className={classNames(
-                                                                team.current
-                                                                    ? 'bg-indigo-700 text-white'
-                                                                    : 'text-indigo-200 hover:bg-indigo-700 hover:text-white',
-                                                                'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold',
-                                                            )}
-                                                        >
-                                                              <span className="flex size-6 shrink-0 items-center justify-center rounded-lg border border-indigo-400 bg-indigo-500 text-[0.625rem] font-medium text-white">
-                                                                {team.initial}
-                                                              </span>
-                                                            <span className="truncate">{team.name}</span>
-                                                        </a>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </li>
-                                        <li className="mt-auto">
-                                            <a
-                                                href="#"
-                                                className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold text-indigo-200 hover:bg-indigo-700 hover:text-white"
-                                            >
-                                                <Cog6ToothIcon
-                                                    aria-hidden="true"
-                                                    className="size-6 shrink-0 text-indigo-200 group-hover:text-white"
-                                                />
-                                                Settings
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </DialogPanel>
-                    </div>
-                </Dialog>
+                        <motion.div
+                            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.4, ease: 'easeInOut' }}
+                            onClick={() => setIsMobileOpen(false)}
+                            aria-hidden="true"
+                        />
+                    </>
+                )}
+            </AnimatePresence>
 
-                {/* Static sidebar for desktop */}
-                <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-                    {/* Sidebar component, swap this element with another sidebar if you like */}
-                    <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-primary px-6 pb-4">
-                        <div className="flex h-16 shrink-0 items-center">
-                            <img
-                                alt="Your Company"
-                                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=white"
-                                className="h-8 w-auto"
-                            />
-                        </div>
-                        <nav className="flex flex-1 flex-col">
-                            <ul role="list" className="flex flex-1 flex-col gap-y-7">
-                                <li>
-                                    <ul role="list" className="-mx-2 space-y-1">
-                                        {navigation.map((item) => (
-                                            <li key={item.name}>
-                                                <a
-                                                    href={item.href}
-                                                    className={classNames(
-                                                        item.current
-                                                            ? 'bg-lightaccent text-primary'
-                                                            : 'text-indigo-200 hover:bg-lightaccent hover:text-primary',
-                                                        'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold',
-                                                    )}
-                                                >
-                                                    <item.icon
-                                                        aria-hidden="true"
-                                                        className={classNames(
-                                                            item.current ? 'text-primary' : 'text-indigo-200 group-hover:text-primary',
-                                                            'size-6 shrink-0',
-                                                        )}
-                                                    />
-                                                    {item.name}
-                                                </a>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </li>
-                                <li>
-                                    <div className="text-xs/6 font-semibold text-indigo-200">Your teams</div>
-                                    <ul role="list" className="-mx-2 mt-2 space-y-1">
-                                        {teams.map((team) => (
-                                            <li key={team.name}>
-                                                <a
-                                                    href={team.href}
-                                                    className={classNames(
-                                                        team.current
-                                                            ? 'bg-indigo-700 text-white'
-                                                            : 'text-indigo-200 hover:bg-indigo-700 hover:text-white',
-                                                        'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold',
-                                                    )}
-                                                >
-                          <span className="flex size-6 shrink-0 items-center justify-center rounded-lg border border-indigo-400 bg-indigo-500 text-[0.625rem] font-medium text-white">
-                            {team.initial}
-                          </span>
-                                                    <span className="truncate">{team.name}</span>
-                                                </a>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </li>
-                                <li className="mt-auto">
-                                    <a
-                                        href="#"
-                                        className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold text-indigo-200 hover:bg-indigo-700 hover:text-white"
-                                    >
-                                        <Cog6ToothIcon
-                                            aria-hidden="true"
-                                            className="size-6 shrink-0 text-indigo-200 group-hover:text-white"
-                                        />
-                                        Settings
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-
-                <div className="lg:pl-72">
-                    <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-xs sm:gap-x-6 sm:px-6 lg:px-8">
-                        <button type="button" onClick={() => setSidebarOpen(true)} className="-m-2.5 p-2.5 text-gray-700 lg:hidden">
-                            <span className="sr-only">Open sidebar</span>
-                            <Bars3Icon aria-hidden="true" className="size-6" />
+            <main className="w-full h-full overflow-auto pt-14">
+                <motion.header
+                    initial={false}
+                    animate={{
+                        marginLeft: isMobile ? 0 : isOpen ? '18rem' : '5rem',
+                    }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="fixed top-0 left-0 right-0 flex justify-between items-center bg-white px-6 py-3 z-50"
+                >
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={toggleSidebar}
+                            className="p-2 rounded-lg border bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition"
+                            aria-label="Toggle sidebar"
+                        >
+                            <AlignLeft size={20} className="text-gray-500" />
                         </button>
-
-                        {/* Separator */}
-                        <div aria-hidden="true" className="h-6 w-px bg-gray-900/10 lg:hidden" />
-
-                        <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-                            <form action="#" method="GET" className="grid flex-1 grid-cols-1">
-                                <input
-                                    name="search"
-                                    type="search"
-                                    placeholder="Search"
-                                    aria-label="Search"
-                                    className="col-start-1 row-start-1 border-0 block size-full bg-white pl-8 text-base text-gray-900 outline-hidden placeholder:text-gray-400 sm:text-sm/6"
-                                />
-                                <MagnifyingGlassIcon
-                                    aria-hidden="true"
-                                    className="pointer-events-none col-start-1 row-start-1 size-5 self-center text-gray-400"
-                                />
-                            </form>
-                            <div className="flex items-center gap-x-4 lg:gap-x-6">
-                                <button type="button" className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
-                                    <span className="sr-only">View notifications</span>
-                                    <BellIcon aria-hidden="true" className="size-6" />
-                                </button>
-
-                                {/* Separator */}
-                                <div aria-hidden="true" className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10" />
-
-                                {/* Profile dropdown */}
-                                <Menu as="div" className="relative">
-                                    <MenuButton className="-m-1.5 flex items-center p-1.5">
-                                        <span className="sr-only">Open user menu</span>
-                                        <img
-                                            alt=""
-                                            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                            className="size-8 rounded-full bg-gray-50"
-                                        />
-                                        <span className="hidden lg:flex lg:items-center">
-                                          <span aria-hidden="true" className="ml-4 text-sm/6 font-semibold text-gray-900">
-                                            Tom Cook
-                                          </span>
-                                          <ChevronDownIcon aria-hidden="true" className="ml-2 size-5 text-gray-400" />
-                                        </span>
-                                    </MenuButton>
-                                    <MenuItems
-                                        transition
-                                        className="absolute right-0 z-10 mt-2.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
-                                    >
-                                        {userNavigation.map((item) => (
-                                            <MenuItem key={item.name}>
-                                                <a
-                                                    href={item.href}
-                                                    className="block px-3 py-1 text-sm/6 text-gray-900 data-focus:bg-gray-50 data-focus:outline-hidden"
-                                                >
-                                                    {item.name}
-                                                </a>
-                                            </MenuItem>
-                                        ))}
-                                    </MenuItems>
-                                </Menu>
-                            </div>
-                        </div>
+                        <input
+                            type="search"
+                            id="search_all"
+                            placeholder="Search anything..."
+                            className="hidden md:block ml-3 w-72 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring focus:ring-blue-100 focus:outline-none transition"
+                            aria-label="Search"
+                        />
                     </div>
 
-                    <main className="">
-                        <div className="px-2 md:px-6 lg:px-8">
-                            <FlashMessage/>
-                            {children}
+                    <div className="flex items-center gap-2">
+                        <div className="hidden sm:flex items-center gap-3">
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <div className="hover:bg-gray-100 p-2 rounded-full transition" role="button">
+                                        <FontAwesomeIcon icon={faLanguage} className="text-gray-500 w-5 h-5" />
+                                    </div>
+                                </Dropdown.Trigger>
+                                <Dropdown.Content width="48">
+                                    <ul className="py-1 px-2 text-sm text-gray-700">
+                                        <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">English</li>
+                                        <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">Filipino</li>
+                                    </ul>
+                                </Dropdown.Content>
+                            </Dropdown>
+                            <div className="hover:bg-gray-100 p-2 rounded-full transition cursor-pointer" role="button">
+                                <FontAwesomeIcon icon={faMoon} className="text-gray-500 w-5 h-5" />
+                            </div>
+                            <div className="hover:bg-gray-100 p-2 rounded-full transition cursor-pointer" role="button">
+                                <FontAwesomeIcon icon={faBell} className="text-gray-500 w-5 h-5" />
+                            </div>
                         </div>
-                    </main>
+
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition" role="button">
+                                    <img
+                                        src="https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
+                                        alt="Profile"
+                                        className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-200"
+                                    />
+                                    <span className="hidden sm:inline text-sm font-medium text-gray-700">{auth?.name}</span>
+                                    <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path
+                                            fillRule="evenodd"
+                                            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
+                                            clipRule="evenodd"
+                                        />
+                                    </svg>
+                                </div>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content width="48">
+                                <Dropdown.Link href={route('profile.edit')} className="px-4 py-2 hover:bg-gray-100">
+                                    Profile
+                                </Dropdown.Link>
+                                <Dropdown.Link
+                                    href={route('logout')}
+                                    method="post"
+                                    as="button"
+                                    className="flex items-center justify-between px-4 py-2 hover:bg-gray-100"
+                                >
+                                    <span>Log Out</span>
+                                    <LogOut size={18} className="text-gray-500" />
+                                </Dropdown.Link>
+                            </Dropdown.Content>
+                        </Dropdown>
+                    </div>
+                </motion.header>
+
+                <div className="p-4 sm:p-6 md:p-8 mt-4">
+                    <FlashMessage/>
+                    <Breadcrumb />
+                    {children}
                 </div>
-            </div>
-        </>
-    )
+            </main>
+        </div>
+    );
 }
