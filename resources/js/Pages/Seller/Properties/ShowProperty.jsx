@@ -19,7 +19,6 @@ import ImageModal from '@/Components/modal/ImageModal.jsx';
 
 const ShowProperty = ({ property }) => {
 
-  console.log(property);
   const imageBasePath = '/storage/';
   const [visibleImages, setVisibleImages] = useState([]);
   const [openImage, setOpenImage] = useState(false);
