@@ -15,7 +15,7 @@ class AgentPropertyController extends Controller
             'sub_type', 'image_url', 'floor_area', 'lot_area',
             'seller_id', 'total_rooms', 'bedrooms', 'bathrooms'
         )
-            ->where('status', '=', 'pending') // Only properties with status 'pending'
+            ->where('status', '=', 'Unassigned') // Only properties with status 'pending'
             ->with(['seller:id,name,email'])   // Eager load seller with limited fields
             ->get();
 

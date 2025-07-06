@@ -81,7 +81,6 @@ class PropertyController extends Controller
             $image_url = $request->file('image_url');
             $photo_name = $image_url->getClientOriginalName();
             $property_image_url = $image_url->storeAs($destination_path, $photo_name, 'public');
-
         }
 
         //create property
@@ -93,7 +92,7 @@ class PropertyController extends Controller
             'sub_type' => $validated['property_sub_type'],
             'price' => $validated['price'],
             'address' => $validated['address'],
-            'status' => "pending",
+            'status' => "Unassigned",
             'lot_area' => $validated['lot_area'],
             'floor_area' => $validated['lot_area'],
             'total_rooms' => $validated['total_rooms'],
@@ -103,6 +102,20 @@ class PropertyController extends Controller
             'isPresell' => $request['isPresell'],
             'image_url' => $property_image_url
         ]);
+
+        if ($request->hasFile('image_urls')) {
+            foreach ($request->file('image_urls') as $file) {
+                $destination_path = 'images';
+                $photo_name = $file->getClientOriginalName();
+                $stored_path = $file->storeAs($destination_path, $photo_name, 'public');
+
+                PropertyImage::create(attributes: [
+                    'property_id' => $property->id,
+                    'image_url' => $stored_path,
+                ]);
+            }
+        }
+
 
         //create property feature
         foreach ($request->feature_name as $feature) {
@@ -130,7 +143,7 @@ class PropertyController extends Controller
             'type' => 'marker',
         ]);
 
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Property has been created.');
 
     }
 

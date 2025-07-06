@@ -68,7 +68,7 @@ class InquiryController extends Controller
 
         $inquiry->update(['status' => $status]);
 
-        $newStatus = $status === 'accepted' ? 'To Published' : 'Rejected';
+        $newStatus = $status === 'accepted' ? 'Assigned' : 'Rejected';
 
         $inquiry->property->update(['status' => $newStatus]);
 
@@ -76,7 +76,7 @@ class InquiryController extends Controller
             'agent_id' => $inquiry->agent_id,
             'property_id' => $inquiry->property_id,
             'seller_id' => $inquiry->seller_id,
-            'status' => 'For Published',
+            'status' => $newStatus
         ]);
 
         return back()->with('success', "Inquiry successfully {$status}.");

@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 class PropertyImageController extends Controller
 {
     public function store(Request $request, $propertyId)
-    
     {
         // Validate the request
         $request->validate([
@@ -26,16 +25,16 @@ class PropertyImageController extends Controller
 
                 PropertyImage::create(attributes: [
                     'property_id' => $propertyId,
-                    'image_url' => $stored_path, 
+                    'image_url' => $stored_path,
                 ]);
-            }   
+            }
         }
 
 
 
         return redirect()->back()->with('success', 'Images uploaded successfully.');
     }
-    
+
     public function destroy( Property $property, $id){
         $property_image = PropertyImage::findOrFail($id);
         if ($property_image) {
