@@ -50,6 +50,8 @@ class PropertyController extends Controller
     }
 
     public function store(Request $request){
+
+
         //validate request
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -60,10 +62,10 @@ class PropertyController extends Controller
             'address' => 'required|string|max:255',
             'lot_area' => 'nullable|numeric|min:0',
             'floor_area' => 'nullable|numeric|min:0',
-            'total_rooms' => 'required|integer|min:0',
-            'total_bedrooms' => 'required|integer|min:0',
-            'total_bathrooms' => 'required|integer|min:0',
-            'car_slots' => 'required|integer|min:0',
+            'total_rooms' => 'nullable|integer|min:0',
+            'total_bedrooms' => 'nullable|integer|min:0',
+            'total_bathrooms' => 'nullable|integer|min:0',
+            'car_slots' => 'nullable|integer|min:0',
             'image_url' => 'required',
             'feature_name' => 'nullable|array',
             'feature_name.*' => 'string|max:255',
@@ -71,7 +73,6 @@ class PropertyController extends Controller
             'pin' => 'nullable|array',
             'isPresell' => 'boolean',
         ]);
-
 
         //save image and generate image url to save in database
         $property_image_url = null;
