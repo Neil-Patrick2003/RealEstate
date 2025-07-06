@@ -16,6 +16,7 @@ import CustomSlider from "@/Components/Slider/custom.slider.jsx";
 import React from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import {router} from "@inertiajs/react";
 
 dayjs.extend(relativeTime);
 
@@ -50,20 +51,27 @@ export default function ShowProperty({ propertyListing }) {
         currency: "USD",
     }).format(property.price);
 
+
+    const handlePublish = () => {
+        router.patch(`/agents/my-listings/${property.id}`);
+    }
+
     const listingAgeInDays = dayjs().diff(dayjs(property.created_at), "day");
 
     const propertyDetails = [
         { icon: faBed, label: "Bedrooms", value: property.bedrooms },
         { icon: faBath, label: "Bathrooms", value: property.bathrooms },
         { icon: faCar, label: "Parking", value: property.car_slots },
-        { icon: faDoorClosed, label: "Rooms", value: property.total_rooms },
+        { icon: faDoorClosed, label: "Rooms", value: property.total_roomsW },
     ];
+
+
 
     return (
         <AgentLayout>
             <ListingHeader
                 onBack={() => window.history.back()}
-                onPublish={() => console.log("Publishing...")}
+                onPublish={handlePublish}
             />
 
             <main className="max-w-9xl mx-auto px-4 md:px-6 space-y-10">

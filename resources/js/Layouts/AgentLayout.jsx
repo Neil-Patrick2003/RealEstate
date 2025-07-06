@@ -40,7 +40,7 @@ const menus = [
             },
         ],
     },
-    
+
     {
         name: "Enquiries",
         Icon: faEnvelope,

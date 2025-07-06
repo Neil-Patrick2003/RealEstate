@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Models\Property;
 use App\Models\PropertyListing;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -83,6 +84,24 @@ class PropertyListingController extends Controller
         return Inertia::render('Agent/PropertyListing/ShowProperty', [
             'propertyListing' => $propertyListing,
         ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $property = Property::findOrFail($id);
+
+        $property->update([
+            'status' => "Published",
+        ]);
+
+        // Update the related property_listing (assuming one-to-one)
+        if ($property->property_listing) {
+            $property->property_listing->update([
+                'status' => 'Published',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Property Published Successfully');
     }
 
 }

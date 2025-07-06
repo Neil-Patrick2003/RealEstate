@@ -63,6 +63,6 @@ class Property extends Model
 
     public function property_listing()
     {
-        return $this->hasMany(PropertyListing::class);
+        return $this->hasOne(PropertyListing::class);
     }
 }
