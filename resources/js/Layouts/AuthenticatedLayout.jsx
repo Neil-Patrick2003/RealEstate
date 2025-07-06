@@ -89,7 +89,7 @@ export default function AuthenticatedLayout({ children }) {
   }, [isMobileOpen]);
 
   return (
-    <div className="h-screen flex overflow-hidden relative bg-gray-50">
+    <div className="h-screen flex overflow-hidden relative  ">
       {!isMobile && (
         <div className="hidden md:block">
           <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} menus={menus} />
@@ -138,7 +138,7 @@ export default function AuthenticatedLayout({ children }) {
             marginLeft: isMobile ? 0 : isOpen ? '18rem' : '5rem',
           }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="fixed top-0 left-0 right-0 flex justify-between items-center bg-white border-b shadow-sm px-6 py-3 z-50"
+          className="fixed top-0 left-0 right-0 flex justify-between items-center bg-white px-6 py-3 z-50"
         >
           <div className="flex items-center gap-2">
             <button

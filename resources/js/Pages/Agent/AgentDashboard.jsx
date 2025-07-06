@@ -7,7 +7,11 @@ export default function  AgentDashboard(){
         <AgentLayout>
             <Head title="Dashboard" />
 
-            Dashboard
+            <div className='grid grid-cols-2 md:grid-cols-4'>
+                <div className='p-6 border rounded-xl'>
+                    <p className='text-primary font-bold uppercase'>Total Listing</p>
+                </div>
+            </div>
         </AgentLayout>
     )
 }
