@@ -40,11 +40,7 @@ const menus = [
             },
         ],
     },
-    {
-        name: "Messages",
-        Icon: faChartSimple,
-        path: "/my-sales",
-    },
+    
     {
         name: "Enquiries",
         Icon: faEnvelope,
@@ -52,29 +48,29 @@ const menus = [
             {
                 name: "Seller Inquiries",
                 Icon: faEnvelope,
-                path: "/messages",
+                path: "/agents/messages",
             },
             {
                 name: "Buyer Inquiries",
                 Icon: faEnvelope,
-                path: "/inquiries",
+                path: "/agents/inquiries",
             },
         ],
     },
     {
         name: "Tripping",
         Icon: faCalendar,
-        path: "/trippings",
+        path: "/agents/trippings",
     },
     {
         name: "Sales",
         Icon: faChartSimple,
-        path: "/my-sales",
+        path: "/agents/my-sales",
     },
     {
         name: "Transactions",
         Icon: faChartSimple,
-        path: "/my-sales",
+        path: "/agents/my-sales",
     },
 ];
 
