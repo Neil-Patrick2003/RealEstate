@@ -12,7 +12,6 @@ class AgentController extends Controller
         $user = auth()->user();
         $notifications = $user->unreadNotifications; // collection of unread notifications
 
-        dd($notifications->toArray());
         return Inertia::render('Agent/AgentDashboard');
     }
 

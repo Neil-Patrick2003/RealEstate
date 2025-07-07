@@ -44,14 +44,12 @@ export default function AuthenticatedLayout({ children }) {
     const markAsRead = (id) =>
         router.post(`/notifications/${id}/read`, {}, { preserveScroll: true });
 
-    const SidebarComponent = user?.role === 'agent' ? AgentSidebar : Sidebar;
-
     return (
         <div className="h-screen flex overflow-hidden relative">
             {/* Sidebar */}
             {!isMobile && (
                 <div className="hidden md:block">
-                    <SidebarComponent isOpen={isOpen} setIsOpen={setIsOpen} />
+                    <AgentSidebar isOpen={isOpen} setIsOpen={setIsOpen} />
                 </div>
             )}
 
@@ -67,7 +65,7 @@ export default function AuthenticatedLayout({ children }) {
                             className="fixed top-0 left-0 z-50 w-64 h-full bg-white shadow-2xl border-r rounded-tr-2xl rounded-br-2xl"
                             role="dialog"
                         >
-                            <SidebarComponent
+                            <AgentSidebar
                                 isOpen={true}
                                 setIsOpen={setIsMobileOpen}
                             />

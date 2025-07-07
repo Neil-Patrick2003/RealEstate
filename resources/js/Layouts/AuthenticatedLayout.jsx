@@ -16,9 +16,10 @@ import SellerSidebar from "@/Components/Sidebar/SellerSidebar.jsx";
 
 
 export default function AuthenticatedLayout({ children }) {
-  const auth = usePage().props.auth.user;
+    const auth = usePage().props?.auth?.user ?? null;
 
-  const [isOpen, setIsOpen] = useState(() => {
+
+    const [isOpen, setIsOpen] = useState(() => {
     const saved = localStorage.getItem('sidebar-isOpen');
     return saved === null ? false : JSON.parse(saved);
   });
@@ -139,7 +140,7 @@ export default function AuthenticatedLayout({ children }) {
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        viewBox=""
+
                         fill="currentColor"
                         className="w-6 h-6 text-gray-600"
                         aria-hidden="true"
