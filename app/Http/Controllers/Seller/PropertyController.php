@@ -18,12 +18,17 @@ class PropertyController extends Controller
     public function index(Request $request){
 
         $allCount = Property::where('seller_id', '=', Auth::id())->count();
-        $pendingCount = Property::where('seller_id', '=', Auth::id())
-        ->where('status', 'pending')
+
+        $publishedCount = Property::where('seller_id', '=', Auth::id())
+            ->where('status', 'Published')
+            ->count();
+
+        $unassignedCount = Property::where('seller_id', '=', Auth::id())
+        ->where('status', 'Unassigned')
         ->count();
 
-        $approvedCount = Property::where('seller_id', '=', Auth::id())
-        ->where('status', 'approved')
+        $assignedCount = Property::where('seller_id', '=', Auth::id())
+        ->where('status', 'Assigned')
         ->count();
 
         $rejectedCount = Property::where('seller_id', '=', Auth::id())
@@ -43,9 +48,10 @@ class PropertyController extends Controller
         return Inertia::render('Seller/Properties/Index', [
             'properties' => $properties,
             'all' => $allCount,
-            'pending' => $pendingCount,
-            'approved' => $approvedCount,
-            'rejected' => $rejectedCount
+            'unassigned' => $unassignedCount,
+            'assigned' => $assignedCount,
+            'rejected' => $rejectedCount,
+            'published' => $publishedCount,
         ]);
     }
 

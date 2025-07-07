@@ -4,9 +4,11 @@ import { router } from '@inertiajs/react';
 
 const tabs = [
   { name: 'All', color: 'black' },
-  { name: 'Pending', color: 'orange' },
-  { name: 'Accepted', color: 'green' },
+    { name: 'Published', color: 'blue' },
+  { name: 'Unassigned', color: 'orange' },
+  { name: 'Assigned', color: 'green' },
   { name: 'Rejected', color: 'red' },
+
 ];
 
 export default function SellerPropertiesFilterTab({ count, selectedStatus, setSelectedStatus, searchTerm, page, selectedItemsPerPage }) {
@@ -82,7 +84,7 @@ export default function SellerPropertiesFilterTab({ count, selectedStatus, setSe
           style={underlineStyle}
         />
       </div>
-      
+
     </div>
   );
 }
