@@ -92,6 +92,9 @@ Route::patch('/agents/inquiries/{id}', [\App\Http\Controllers\Agent\InquiryContr
 
 
 
+Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])
+    ->middleware('auth')
+    ->name('notifications.read');
 
 
 Route::middleware('auth')->group(function () {

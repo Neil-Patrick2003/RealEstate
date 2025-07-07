@@ -1,85 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/Components/Sidebar/Sidebar';
+import Sidebar from '@/Components/Sidebar/SellerSidebar.jsx';
+import AgentSidebar from '@/Components/Sidebar/AgentSidebar.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlignLeft, LogOut, X } from 'lucide-react';
-import { usePage } from '@inertiajs/react';
+import { AlignLeft, LogOut, X, Bell } from 'lucide-react';
+import { router, usePage } from '@inertiajs/react';
 import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
-import { faBell, faMoon, faLanguage } from '@fortawesome/free-solid-svg-icons';
 import Breadcrumb from '@/Components/Breadcrumbs';
-import FlashMessage from "@/Components/FlashMessage.jsx";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import FlashMessage from '@/Components/FlashMessage.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faHouse,
-    faMapLocationDot,
-    faEnvelope,
-    faCalendar,
-    faChartSimple,
-} from "@fortawesome/free-solid-svg-icons";
-
-
-const menus = [
-    {
-        name: "Dashboard",
-        Icon: faHouse,
-        path: "/agents/dashboard",
-    },
-    {
-        name: "Properties",
-        Icon: faEnvelope,
-        subMenu: [
-            {
-                name: "Properties",
-                Icon: faMapLocationDot,
-                path: "/agents/properties",
-            },
-            {
-                name: "Handle Properties",
-                Icon: faMapLocationDot,
-                path: "/agents/my-listings",
-            },
-        ],
-    },
-
-    {
-        name: "Enquiries",
-        Icon: faEnvelope,
-        subMenu: [
-            {
-                name: "Seller Inquiries",
-                Icon: faEnvelope,
-                path: "/agents/messages",
-            },
-            {
-                name: "Buyer Inquiries",
-                Icon: faEnvelope,
-                path: "/agents/inquiries",
-            },
-        ],
-    },
-    {
-        name: "Tripping",
-        Icon: faCalendar,
-        path: "/agents/trippings",
-    },
-    {
-        name: "Sales",
-        Icon: faChartSimple,
-        path: "/agents/my-sales",
-    },
-    {
-        name: "Transactions",
-        Icon: faChartSimple,
-        path: "/agents/my-sales",
-    },
-];
+    faLanguage,
+    faMoon,
+} from '@fortawesome/free-solid-svg-icons';
 
 export default function AuthenticatedLayout({ children }) {
-    const auth = usePage().props.auth.user;
+    const { auth } = usePage().props;
+    const { notifications = [], user } = auth;
 
     const [isOpen, setIsOpen] = useState(() => {
         const saved = localStorage.getItem('sidebar-isOpen');
-        return saved === null ? false : JSON.parse(saved);
+        return saved ? JSON.parse(saved) : false;
     });
 
     useEffect(() => {
@@ -89,13 +30,8 @@ export default function AuthenticatedLayout({ children }) {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
 
-    const toggleSidebar = () => {
-        if (isMobile) {
-            setIsMobileOpen(!isMobileOpen);
-        } else {
-            setIsOpen(!isOpen);
-        }
-    };
+    const toggleSidebar = () =>
+        isMobile ? setIsMobileOpen(!isMobileOpen) : setIsOpen(!isOpen);
 
     useEffect(() => {
         if (!isMobile) setIsMobileOpen(false);
@@ -105,27 +41,36 @@ export default function AuthenticatedLayout({ children }) {
         document.body.style.overflow = isMobileOpen ? 'hidden' : '';
     }, [isMobileOpen]);
 
+    const markAsRead = (id) =>
+        router.post(`/notifications/${id}/read`, {}, { preserveScroll: true });
+
+    const SidebarComponent = user?.role === 'agent' ? AgentSidebar : Sidebar;
+
     return (
         <div className="h-screen flex overflow-hidden relative">
+            {/* Sidebar */}
             {!isMobile && (
                 <div className="hidden md:block">
-                    <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} menus={menus} />
+                    <SidebarComponent isOpen={isOpen} setIsOpen={setIsOpen} />
                 </div>
             )}
 
+            {/* Mobile sidebar */}
             <AnimatePresence>
-                {isMobileOpen && isMobile && (
+                {isMobileOpen && (
                     <>
                         <motion.div
                             initial={{ x: '-100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
-                            transition={{ duration: 0.4, ease: 'easeInOut' }}
+                            transition={{ duration: 0.4 }}
                             className="fixed top-0 left-0 z-50 w-64 h-full bg-white shadow-2xl border-r rounded-tr-2xl rounded-br-2xl"
                             role="dialog"
-                            aria-modal="true"
                         >
-                            <Sidebar isOpen={true} setIsOpen={setIsMobileOpen} />
+                            <SidebarComponent
+                                isOpen={true}
+                                setIsOpen={setIsMobileOpen}
+                            />
                             <button
                                 onClick={() => setIsMobileOpen(false)}
                                 className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-800"
@@ -134,107 +79,137 @@ export default function AuthenticatedLayout({ children }) {
                                 <X size={24} />
                             </button>
                         </motion.div>
-
                         <motion.div
                             className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.4, ease: 'easeInOut' }}
+                            transition={{ duration: 0.4 }}
                             onClick={() => setIsMobileOpen(false)}
-                            aria-hidden="true"
                         />
                     </>
                 )}
             </AnimatePresence>
 
-            <main className="w-full h-full overflow-auto pt-14">
+            {/* Main content */}
+            <main className="flex-1 h-full overflow-auto pt-14">
                 <motion.header
                     initial={false}
                     animate={{
                         marginLeft: isMobile ? 0 : isOpen ? '18rem' : '5rem',
                     }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="fixed top-0 left-0 right-0 flex justify-between items-center bg-white px-6 py-3 z-50"
+                    transition={{ duration: 0.3 }}
+                    className="fixed top-0 left-0 right-0 z-50 bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm"
                 >
                     <div className="flex items-center gap-2">
                         <button
                             onClick={toggleSidebar}
-                            className="p-2 rounded-lg border bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition"
+                            className="p-2 rounded border bg-gray-50 hover:bg-gray-100"
                             aria-label="Toggle sidebar"
                         >
                             <AlignLeft size={20} className="text-gray-500" />
                         </button>
                         <input
                             type="search"
-                            id="search_all"
-                            placeholder="Search anything..."
-                            className="hidden md:block ml-3 w-72 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring focus:ring-blue-100 focus:outline-none transition"
-                            aria-label="Search"
+                            placeholder="Search..."
+                            className="hidden md:block ml-4 border rounded px-3 py-2 text-sm focus:ring focus:outline-none"
                         />
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <div className="hidden sm:flex items-center gap-3">
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <div className="hover:bg-gray-100 p-2 rounded-full transition" role="button">
-                                        <FontAwesomeIcon icon={faLanguage} className="text-gray-500 w-5 h-5" />
-                                    </div>
-                                </Dropdown.Trigger>
-                                <Dropdown.Content width="48">
-                                    <ul className="py-1 px-2 text-sm text-gray-700">
-                                        <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">English</li>
-                                        <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">Filipino</li>
-                                    </ul>
-                                </Dropdown.Content>
-                            </Dropdown>
-                            <div className="hover:bg-gray-100 p-2 rounded-full transition cursor-pointer" role="button">
-                                <FontAwesomeIcon icon={faMoon} className="text-gray-500 w-5 h-5" />
-                            </div>
-                            <div className="hover:bg-gray-100 p-2 rounded-full transition cursor-pointer" role="button">
-                                <FontAwesomeIcon icon={faBell} className="text-gray-500 w-5 h-5" />
-                            </div>
-                        </div>
-
+                    <div className="flex items-center gap-4">
+                        {/* Language */}
                         <Dropdown>
                             <Dropdown.Trigger>
-                                <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition" role="button">
+                                <FontAwesomeIcon icon={faLanguage} className="text-gray-500 w-5 h-5 p-2 hover:bg-gray-100 rounded-full" />
+                            </Dropdown.Trigger>
+                            <Dropdown.Content width="auto">
+                                <ul className="text-sm text-gray-700">
+                                    <li className="hover:bg-gray-100 cursor-pointer px-3 py-1">English</li>
+                                    <li className="hover:bg-gray-100 cursor-pointer px-3 py-1">Filipino</li>
+                                </ul>
+                            </Dropdown.Content>
+                        </Dropdown>
+
+                        {/* Theme */}
+                        <button className="p-2 hover:bg-gray-100 rounded-full transition">
+                            <FontAwesomeIcon icon={faMoon} className="text-gray-500 w-5 h-5" />
+                        </button>
+
+                        {/* Notifications */}
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <Bell className="text-gray-500 w-5  hover:bg-gray-100 rounded-full" />
+                                {notifications.some(n => !n.read_at) && (
+                                    <span className="absolute top-2 right-2 block w-2 h-2 rounded-full bg-red-500" />
+                                )}
+                            </Dropdown.Trigger>
+                            <Dropdown.Content width="80">
+                                <div className="max-h-64 overflow-y-auto p-2">
+                                    {notifications.length === 0 && (
+                                        <p className="text-center text-gray-500 text-sm">No notifications</p>
+                                    )}
+                                    {notifications.map(n => {
+                                        const date = new Date(n.created_at).toLocaleString();
+                                        return (
+                                            <div
+                                                key={n.id}
+                                                className="flex justify-between items-center py-2 border-b last:border-none"
+                                            >
+                                                <span className={n.read_at ? 'text-gray-700' : 'font-medium'}>
+                                                  {n.data.message}
+                                                </span>
+                                                <div className="text-xs text-gray-400 text-right">
+                                                    {date}
+                                                    {!n.read_at && (
+                                                        <button
+                                                            onClick={() => markAsRead(n.id)}
+                                                            className="ml-2 text-blue-500 hover:underline"
+                                                        >
+                                                            Mark as read
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </Dropdown.Content>
+                        </Dropdown>
+
+                        {/* User profile */}
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <div className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded-lg">
                                     <img
-                                        src="https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
+                                        src={user.profile_photo_url || '/default-avatar.png'}
                                         alt="Profile"
-                                        className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-200"
+                                        className="w-9 h-9 rounded-full"
                                     />
-                                    <span className="hidden sm:inline text-sm font-medium text-gray-700">{auth?.name}</span>
-                                    <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
+                                    <span className="hidden sm:inline text-sm font-medium text-gray-700">
+                                    {user.name}
+                                  </span>
                                 </div>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="48">
-                                <Dropdown.Link href={route('profile.edit')} className="px-4 py-2 hover:bg-gray-100">
+                                <Dropdown.Link href={route('profile.edit')} className="block px-4 py-2 hover:bg-gray-100">
                                     Profile
                                 </Dropdown.Link>
                                 <Dropdown.Link
                                     href={route('logout')}
                                     method="post"
                                     as="button"
-                                    className="flex items-center justify-between px-4 py-2 hover:bg-gray-100"
+                                    className="flex justify-between px-4 py-2 hover:bg-gray-100 w-full"
                                 >
-                                    <span>Log Out</span>
-                                    <LogOut size={18} className="text-gray-500" />
+                                    Logout <LogOut size={18} />
                                 </Dropdown.Link>
                             </Dropdown.Content>
                         </Dropdown>
                     </div>
                 </motion.header>
 
-                <div className="p-4 sm:p-6 md:p-8 mt-4">
-                    <FlashMessage/>
+                {/* Body */}
+                <div className="pt-14 p-4 sm:p-6 lg:p-8">
+                    <FlashMessage />
                     <Breadcrumb />
                     {children}
                 </div>

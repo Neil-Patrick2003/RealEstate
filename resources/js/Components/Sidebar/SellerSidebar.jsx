@@ -2,42 +2,88 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import logo from '../../../assets/framer_logo.png';
-import {Head, Link, usePage} from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+    faHouse,
+    faMapLocationDot,
+    faEnvelope,
+    faCalendar,
+    faChartSimple,
+} from '@fortawesome/free-solid-svg-icons';
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ');
 }
 
-const Sidebar = ({ isOpen, setIsOpen, menus }) => {
+const menus = [
+    {
+        name: 'Dashboard',
+        Icon: faHouse,
+        path: '/dashboard',
+    },
+    {
+        name: 'Properties',
+        Icon: faMapLocationDot,
+        path: '/properties',
+    },
+    {
+        name: 'Enquiries',
+        Icon: faEnvelope,
+        subMenu: [
+            {
+                name: 'Messages',
+                Icon: faEnvelope,
+                path: '/messages',
+            },
+            {
+                name: 'Inquiries',
+                Icon: faEnvelope,
+                path: '/inquiries',
+            },
+        ],
+    },
+    {
+        name: 'Tripping',
+        Icon: faCalendar,
+        path: '/trippings',
+    },
+    {
+        name: 'Sales',
+        Icon: faChartSimple,
+        path: '/my-sales',
+    },
+];
+
+const Sidebar_animation = {
+    open: {
+        width: '18rem',
+        transition: { duration: 0.3, ease: 'easeInOut' },
+    },
+    closed: {
+        width: '6rem',
+        transition: { duration: 0.3, ease: 'easeInOut' },
+    },
+};
+
+const subMenuDrawer = {
+    enter: {
+        height: 'auto',
+        opacity: 1,
+        overflow: 'hidden',
+        transition: { duration: 0.2 },
+    },
+    exit: {
+        height: 0,
+        opacity: 0,
+        overflow: 'hidden',
+        transition: { duration: 0.2 },
+    },
+};
+
+const SellerSidebar = ({ isOpen, setIsOpen }) => {
     const [clicked, setClicked] = useState(null);
     const { url } = usePage();
-
-    const Sidebar_animation = {
-        open: {
-            width: "18rem",
-            transition: { duration: 0.3, ease: "easeInOut" },
-        },
-        closed: {
-            width: "6rem",
-            transition: { duration: 0.3, ease: "easeInOut" },
-        },
-    };
-
-    const subMenuDrawer = {
-        enter: {
-            height: 'auto',
-            opacity: 1,
-            overflow: 'hidden',
-            transition: { duration: 0.2 },
-        },
-        exit: {
-            height: 0,
-            opacity: 0,
-            overflow: 'hidden',
-            transition: { duration: 0.2 },
-        },
-    };
 
     return (
         <div className="flex">
@@ -75,8 +121,7 @@ const Sidebar = ({ isOpen, setIsOpen, menus }) => {
 
                         // Highlight menu if current URL matches parent or any of its submenus
                         const isActiveParent =
-                            url.startsWith(path) ||
-                            subMenu?.some((item) => url.startsWith(item.path));
+                            url.startsWith(path) || subMenu?.some((item) => url.startsWith(item.path));
 
                         return (
                             <React.Fragment key={name}>
@@ -98,9 +143,7 @@ const Sidebar = ({ isOpen, setIsOpen, menus }) => {
                                         </Link>
                                     ) : (
                                         <button
-                                            onClick={() =>
-                                                setClicked(isClicked ? null : i)
-                                            }
+                                            onClick={() => setClicked(isClicked ? null : i)}
                                             className={classNames(
                                                 isActiveParent
                                                     ? 'bg-green-100 text-green-700'
@@ -109,15 +152,13 @@ const Sidebar = ({ isOpen, setIsOpen, menus }) => {
                                                 'w-full flex items-center justify-between py-3 rounded-lg transition-all'
                                             )}
                                         >
-                                            <span className="flex items-center gap-3">
-                                                <FontAwesomeIcon icon={Icon} className="w-5 h-5" />
-                                                {isOpen && <span>{name}</span>}
-                                            </span>
+                      <span className="flex items-center gap-3">
+                        <FontAwesomeIcon icon={Icon} className="w-5 h-5" />
+                          {isOpen && <span>{name}</span>}
+                      </span>
                                             {isOpen && hasSubMenu && (
                                                 <ChevronDown
-                                                    className={`transition-transform ${
-                                                        isClicked ? 'rotate-180' : ''
-                                                    }`}
+                                                    className={`transition-transform ${isClicked ? 'rotate-180' : ''}`}
                                                     size={18}
                                                 />
                                             )}
@@ -133,29 +174,22 @@ const Sidebar = ({ isOpen, setIsOpen, menus }) => {
                                         animate={isClicked ? 'enter' : 'exit'}
                                         className="pl-10 text-gray-500 text-sm font-normal"
                                     >
-                                        {subMenu.map(
-                                            ({ name: subName, Icon: SubIcon, path: subPath }) => (
-                                                <li key={subName}>
-                                                    <Link
-                                                        href={subPath}
-                                                        className={classNames(
-                                                            url.startsWith(subPath)
-                                                                ? 'text-green-600 bg-green-50'
-                                                                : 'hover:text-green-600 hover:bg-gray-50',
-                                                            'flex items-center gap-2 py-2 px-3 rounded-md transition-all'
-                                                        )}
-                                                    >
-                                                        {SubIcon && (
-                                                            <FontAwesomeIcon
-                                                                icon={SubIcon}
-                                                                className="w-4 h-4"
-                                                            />
-                                                        )}
-                                                        {isOpen && <span>{subName}</span>}
-                                                    </Link>
-                                                </li>
-                                            )
-                                        )}
+                                        {subMenu.map(({ name: subName, Icon: SubIcon, path: subPath }) => (
+                                            <li key={subName}>
+                                                <Link
+                                                    href={subPath}
+                                                    className={classNames(
+                                                        url.startsWith(subPath)
+                                                            ? 'text-green-600 bg-green-50'
+                                                            : 'hover:text-green-600 hover:bg-gray-50',
+                                                        'flex items-center gap-2 py-2 px-3 rounded-md transition-all'
+                                                    )}
+                                                >
+                                                    {SubIcon && <FontAwesomeIcon icon={SubIcon} className="w-4 h-4" />}
+                                                    {isOpen && <span>{subName}</span>}
+                                                </Link>
+                                            </li>
+                                        ))}
                                     </motion.ul>
                                 )}
                             </React.Fragment>
@@ -167,4 +201,4 @@ const Sidebar = ({ isOpen, setIsOpen, menus }) => {
     );
 };
 
-export default React.memo(Sidebar);
+export default SellerSidebar;

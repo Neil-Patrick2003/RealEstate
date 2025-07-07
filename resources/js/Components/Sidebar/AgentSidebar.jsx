@@ -15,45 +15,62 @@ import {
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ');
 }
-
 const menus = [
     {
-        name: 'Dashboard',
+        name: "Dashboard",
         Icon: faHouse,
-        path: '/dashboard',
+        path: "/agents/dashboard",
     },
     {
-        name: 'Properties',
-        Icon: faMapLocationDot,
-        path: '/properties',
-    },
-    {
-        name: 'Enquiries',
+        name: "Properties",
         Icon: faEnvelope,
         subMenu: [
             {
-                name: 'Messages',
-                Icon: faEnvelope,
-                path: '/messages',
+                name: "Properties",
+                Icon: faMapLocationDot,
+                path: "/agents/properties",
             },
             {
-                name: 'Inquiries',
+                name: "Handle Properties",
+                Icon: faMapLocationDot,
+                path: "/agents/my-listings",
+            },
+        ],
+    },
+
+    {
+        name: "Enquiries",
+        Icon: faEnvelope,
+        subMenu: [
+            {
+                name: "Seller Inquiries",
                 Icon: faEnvelope,
-                path: '/inquiries',
+                path: "/agents/messages",
+            },
+            {
+                name: "Buyer Inquiries",
+                Icon: faEnvelope,
+                path: "/agents/inquiries",
             },
         ],
     },
     {
-        name: 'Tripping',
+        name: "Tripping",
         Icon: faCalendar,
-        path: '/trippings',
+        path: "/agents/trippings",
     },
     {
-        name: 'Sales',
+        name: "Sales",
         Icon: faChartSimple,
-        path: '/my-sales',
+        path: "/agents/my-sales",
+    },
+    {
+        name: "Transactions",
+        Icon: faChartSimple,
+        path: "/agents/my-sales",
     },
 ];
+
 
 const Sidebar_animation = {
     open: {

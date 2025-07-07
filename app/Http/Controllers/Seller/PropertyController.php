@@ -7,6 +7,8 @@ use App\Models\Property;
 use App\Models\PropertyCoordinate;
 use App\Models\PropertyFeature;
 use App\Models\PropertyImage;
+use App\Models\User;
+use App\Notifications\Seller\PropertyPostedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -148,6 +150,12 @@ class PropertyController extends Controller
             ],
             'type' => 'marker',
         ]);
+
+        $agents = User::where('role', 'Agent')->get();
+
+        foreach ($agents as $agent) {
+            $agent->notify(new PropertyPostedNotification($property));
+        }
 
         return redirect()->back()->with('success', 'Property has been created.');
 

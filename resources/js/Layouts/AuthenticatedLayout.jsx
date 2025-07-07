@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/Components/Sidebar/Sidebar';
+import Sidebar from '@/Components/Sidebar/SellerSidebar.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlignLeft, LogOut, X } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
@@ -9,53 +9,11 @@ import { faBell, faMoon, faLanguage } from '@fortawesome/free-solid-svg-icons';
 import Breadcrumb from '@/Components/Breadcrumbs';
 import FlashMessage from "@/Components/FlashMessage.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faHouse,
-    faMapLocationDot,
-    faEnvelope,
-    faCalendar,
-    faChartSimple,
-} from "@fortawesome/free-solid-svg-icons";
+
+import SellerSidebar from "@/Components/Sidebar/SellerSidebar.jsx";
 
 
-const menus = [
-    {
-        name: "Dashboard",
-        Icon: faHouse,
-        path: "/dashboard",
-    },
-    {
-        name: "Properties",
-        Icon: faMapLocationDot,
-        path: "/properties",
-    },
-    {
-        name: "Enquiries",
-        Icon: faEnvelope,
-        subMenu: [
-            {
-                name: "Messages",
-                Icon: faEnvelope,
-                path: "/messages",
-            },
-            {
-                name: "Inquiries",
-                Icon: faEnvelope,
-                path: "/inquiries",
-            },
-        ],
-    },
-    {
-        name: "Tripping",
-        Icon: faCalendar,
-        path: "/trippings",
-    },
-    {
-        name: "Sales",
-        Icon: faChartSimple,
-        path: "/my-sales",
-    },
-];
+
 
 export default function AuthenticatedLayout({ children }) {
   const auth = usePage().props.auth.user;
@@ -92,7 +50,7 @@ export default function AuthenticatedLayout({ children }) {
     <div className="h-screen flex overflow-hidden relative  ">
       {!isMobile && (
         <div className="hidden md:block">
-          <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} menus={menus} />
+          <SellerSidebar isOpen={isOpen} setIsOpen={setIsOpen}/>
         </div>
       )}
 
