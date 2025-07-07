@@ -16,6 +16,8 @@ import {
 
 export default function AuthenticatedLayout({ children }) {
     const { auth } = usePage().props;
+
+    console.log(auth);
     const { notifications = [], user } = auth;
 
     const [isOpen, setIsOpen] = useState(() => {
@@ -96,113 +98,103 @@ export default function AuthenticatedLayout({ children }) {
                     animate={{
                         marginLeft: isMobile ? 0 : isOpen ? '18rem' : '5rem',
                     }}
-                    transition={{ duration: 0.3 }}
-                    className="fixed top-0 left-0 right-0 z-50 bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm"
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="fixed top-0 left-0 right-0 flex justify-between items-center bg-white px-6 py-3 z-50"
                 >
                     <div className="flex items-center gap-2">
                         <button
                             onClick={toggleSidebar}
-                            className="p-2 rounded border bg-gray-50 hover:bg-gray-100"
+                            className="p-2 rounded-lg border-0 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition"
                             aria-label="Toggle sidebar"
                         >
                             <AlignLeft size={20} className="text-gray-500" />
                         </button>
                         <input
                             type="search"
-                            placeholder="Search..."
-                            className="hidden md:block ml-4 border rounded px-3 py-2 text-sm focus:ring focus:outline-none"
+                            id="search_all"
+                            placeholder="Search anything..."
+                            className="hidden md:block ml-3 w-72 border-0 bg-gray-100 rounded-md px-3 py-2 text-sm "
+                            aria-label="Search"
                         />
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        {/* Language */}
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <FontAwesomeIcon icon={faLanguage} className="text-gray-500 w-5 h-5 p-2 hover:bg-gray-100 rounded-full" />
-                            </Dropdown.Trigger>
-                            <Dropdown.Content width="auto">
-                                <ul className="text-sm text-gray-700">
-                                    <li className="hover:bg-gray-100 cursor-pointer px-3 py-1">English</li>
-                                    <li className="hover:bg-gray-100 cursor-pointer px-3 py-1">Filipino</li>
-                                </ul>
-                            </Dropdown.Content>
-                        </Dropdown>
+                    <div className="flex items-center gap-2">
+                        <div className="hidden sm:flex items-center gap-3">
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <div className="hover:bg-gray-100 p-2 rounded-full transition" role="button">
+                                        <img loading="lazy" alt="GB" className="w-6 h-6"
+                                             src="https://purecatamphetamine.github.io/country-flag-icons/3x2/GB.svg" />
+                                    </div>
+                                </Dropdown.Trigger>
+                                <Dropdown.Content width="48">
+                                    <ul className="py-1 px-2 text-sm text-gray-700">
+                                        <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">English</li>
+                                        <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">Filipino</li>
+                                    </ul>
+                                </Dropdown.Content>
+                            </Dropdown>
 
-                        {/* Theme */}
-                        <button className="p-2 hover:bg-gray-100 rounded-full transition">
-                            <FontAwesomeIcon icon={faMoon} className="text-gray-500 w-5 h-5" />
-                        </button>
+                            <div
+                                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition cursor-pointer"
+                                role="button"
+                                aria-label="Notifications"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
 
-                        {/* Notifications */}
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <Bell className="text-gray-500 w-5  hover:bg-gray-100 rounded-full" />
-                                {notifications.some(n => !n.read_at) && (
-                                    <span className="absolute top-2 right-2 block w-2 h-2 rounded-full bg-red-500" />
-                                )}
-                            </Dropdown.Trigger>
-                            <Dropdown.Content width="80">
-                                <div className="max-h-64 overflow-y-auto p-2">
-                                    {notifications.length === 0 && (
-                                        <p className="text-center text-gray-500 text-sm">No notifications</p>
-                                    )}
-                                    {notifications.map(n => {
-                                        const date = new Date(n.created_at).toLocaleString();
-                                        return (
-                                            <div
-                                                key={n.id}
-                                                className="flex justify-between items-center py-2 border-b last:border-none"
-                                            >
-                                                <span className={n.read_at ? 'text-gray-700' : 'font-medium'}>
-                                                  {n.data.message}
-                                                </span>
-                                                <div className="text-xs text-gray-400 text-right">
-                                                    {date}
-                                                    {!n.read_at && (
-                                                        <button
-                                                            onClick={() => markAsRead(n.id)}
-                                                            className="ml-2 text-blue-500 hover:underline"
-                                                        >
-                                                            Mark as read
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </Dropdown.Content>
-                        </Dropdown>
-
-                        {/* User profile */}
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <div className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded-lg">
-                                    <img
-                                        src={user.profile_photo_url || '/default-avatar.png'}
-                                        alt="Profile"
-                                        className="w-9 h-9 rounded-full"
+                                    fill="currentColor"
+                                    className="w-6 h-6 text-gray-600"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        opacity="0.4"
+                                        d="M18.75 9v.704c0 .845.24 1.671.692 2.374l1.108 1.723c1.011 1.574.239 3.713-1.52 4.21a25.8 25.8 0 0 1-14.06 0c-1.759-.497-2.531-2.636-1.52-4.21l1.108-1.723a4.4 4.4 0 0 0 .693-2.374V9c0-3.866 3.022-7 6.749-7s6.75 3.134 6.75 7"
                                     />
-                                    <span className="hidden sm:inline text-sm font-medium text-gray-700">
-                                    {user.name}
-                                  </span>
+                                    <path d="M12.75 6a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0zM7.243 18.545a5.002 5.002 0 0 0 9.513 0c-3.145.59-6.367.59-9.513 0" />
+                                </svg>
+                            </div>
+
+
+                        </div>
+
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <div
+                                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition"
+                                    role="button">
+                                    <img
+                                        src="https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
+                                        alt="Profile"
+                                        className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-200"
+                                    />
+                                    <span className="hidden sm:inline text-sm font-medium text-gray-700">{auth?.user?.name || 'Guest'}</span>
+                                    <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path
+                                            fillRule="evenodd"
+                                            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
+                                            clipRule="evenodd"
+                                        />
+                                    </svg>
                                 </div>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="48">
-                                <Dropdown.Link href={route('profile.edit')} className="block px-4 py-2 hover:bg-gray-100">
+                                <Dropdown.Link href={route('profile.edit')} className="px-4 py-2 hover:bg-gray-100">
                                     Profile
                                 </Dropdown.Link>
                                 <Dropdown.Link
                                     href={route('logout')}
                                     method="post"
                                     as="button"
-                                    className="flex justify-between px-4 py-2 hover:bg-gray-100 w-full"
+                                    className="flex items-center justify-between px-4 py-2 hover:bg-gray-100"
                                 >
-                                    Logout <LogOut size={18} />
+                                    <span>Log Out</span>
+                                    <LogOut size={18} className="text-gray-500" />
                                 </Dropdown.Link>
                             </Dropdown.Content>
                         </Dropdown>
                     </div>
+
                 </motion.header>
 
                 {/* Body */}
