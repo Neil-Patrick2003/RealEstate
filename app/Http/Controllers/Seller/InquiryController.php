@@ -14,42 +14,54 @@ class InquiryController extends Controller
 {
     public function index(Request $request)
     {
-        $inquiries = Inquiry::with(['agent:id,name,email', 'property:id,title,image_url,property_type,sub_type'])
-        ->where('seller_id', Auth::id())
-            ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
-                $q->where('status', $request->status);
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate($request->get('items_per_page', 10));
 
-        $inquiryCount = Inquiry::where('seller_id', auth()->id())->count();
-
-        $rejectedCount = Inquiry::where('seller_id', auth()->id())
-            ->where('status', 'rejected')
-            ->count();
-
-        $acceptedCount = Inquiry::where('seller_id', auth()->id())
-            ->where('status', 'accepted')
-            ->count();
-
-        $pendingCount = Inquiry::where('seller_id', auth()->id())
-            ->where('status', 'pending')
-            ->count();
-
-        $cancelledCount = Inquiry::where('seller_id', auth()->id())
-            ->where('status', 'cancelled')
-            ->count();
-
-
+        $properties = Property::where('seller_id', Auth::id())
+            ->whereHas('inquiries')
+            ->with('inquiries.agent')
+            ->latest()
+            ->paginate($request->items_per_page, ['*'], 'page', $request->input('page', 1));
 
         return Inertia::render('Seller/Inquiries/Inquiries', [
-            'inquiries' => $inquiries,
-            'inquiryCount' => $inquiryCount,
-            'rejectedCount' => $rejectedCount,
-            'acceptedCount' => $acceptedCount,
-            'pendingCount' => $pendingCount,
-            'cancelledCount' => $cancelledCount,
+            'properties' => $properties,
         ]);
+
+
+//        $inquiries = Inquiry::with(['agent:id,name,email', 'property:id,title,image_url,property_type,sub_type'])
+//        ->where('seller_id', Auth::id())
+//            ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
+//                $q->where('status', $request->status);
+//            })
+//            ->orderBy('created_at', 'desc')
+//            ->paginate($request->get('items_per_page', 10));
+//
+//        $inquiryCount = Inquiry::where('seller_id', auth()->id())->count();
+//
+//        $rejectedCount = Inquiry::where('seller_id', auth()->id())
+//            ->where('status', 'rejected')
+//            ->count();
+//
+//        $acceptedCount = Inquiry::where('seller_id', auth()->id())
+//            ->where('status', 'accepted')
+//            ->count();
+//
+//        $pendingCount = Inquiry::where('seller_id', auth()->id())
+//            ->where('status', 'pending')
+//            ->count();
+//
+//        $cancelledCount = Inquiry::where('seller_id', auth()->id())
+//            ->where('status', 'cancelled')
+//            ->count();
+//
+//
+//
+//        return Inertia::render('Seller/Inquiries/Inquiries', [
+//            'inquiries' => $inquiries,
+//            'inquiryCount' => $inquiryCount,
+//            'rejectedCount' => $rejectedCount,
+//            'acceptedCount' => $acceptedCount,
+//            'pendingCount' => $pendingCount,
+//            'cancelledCount' => $cancelledCount,
+//        ]);
     }
 
     public function updateStatus(Request $request, Inquiry $inquiry, $action)
