@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/Components/Sidebar/SellerSidebar.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlignLeft, LogOut, X } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
@@ -21,12 +20,9 @@ export default function AuthenticatedLayout({ children }) {
 
     const [isOpen, setIsOpen] = useState(() => {
     const saved = localStorage.getItem('sidebar-isOpen');
-    return saved === null ? false : JSON.parse(saved);
   });
 
-  useEffect(() => {
-    localStorage.setItem('sidebar-isOpen', JSON.stringify(isOpen));
-  }, [isOpen]);
+
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
@@ -67,7 +63,7 @@ export default function AuthenticatedLayout({ children }) {
               role="dialog"
               aria-modal="true"
             >
-              <Sidebar isOpen={true} setIsOpen={setIsMobileOpen} />
+              <SellerSidebar isOpen={true} setIsOpen={setIsMobileOpen} />
               <button
                 onClick={() => setIsMobileOpen(false)}
                 className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-800"

@@ -60,6 +60,9 @@ const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChan
                                         </button>
                                     </Dropdown.Trigger>
                                     <Dropdown.Content>
+                                        <Dropdown.Link>
+                                            <button>Hello</button>
+                                        </Dropdown.Link>
                                         {propertyTypes.map(({ key, label, color }) => (
                                             <div
                                                 key={key}
