@@ -1,35 +1,31 @@
 import React from 'react';
-import backgroundImage from '../../../assets/background.jpg';
-import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal, Search, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
-
 import Dropdown from '@/Components/Dropdown';
 
-const Hero = ({ auth }) => {
-    const { t } = useTranslation();
+const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChange }) => {
+    // A mapping of property types to display names and color classes for dots
+    const propertyTypes = [
+        { key: 'All', label: 'All', color: 'bg-primary' },
+        { key: 'Residential', label: 'Residential', color: 'bg-primary' },
+        { key: 'Commercial', label: 'Commercial', color: 'bg-secondary' },
+        { key: 'Industrial', label: 'Industrial', color: 'bg-accent' },
+        { key: 'Land', label: 'Land', color: 'bg-primary/70' },
+    ];
+
+    // Find current selected type label and color for showing in trigger button
+    const selected = propertyTypes.find(pt => pt.key === selectedType) || propertyTypes[0];
 
     return (
-        <div
-            className="relative h-screen bg-no-repeat overflow-hidden"
-            style={{
-                backgroundImage: `url(${backgroundImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-            }}
-        >
-            {/* Overlay for better text readability */}
+        <>
             <div className="absolute inset-0 bg-black/10"></div>
-            
-            <main className="relative z-10 flex justify-center items-center min-h-screen">
+
+            <main className="relative z-10 flex justify-center items-center min-h-[90vh]">
                 <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-                    {/* Main Title */}
                     <motion.div
                         initial={{ opacity: 0, y: -30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            duration: 0.8,
-                        }}
+                        transition={{ duration: 0.8 }}
                         className="text-center mb-8 lg:mb-12"
                     >
                         <h1 className="text-white text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-4">
@@ -40,15 +36,10 @@ const Hero = ({ auth }) => {
                         </p>
                     </motion.div>
 
-                    {/* Enhanced Search Bar */}
                     <motion.div
                         initial={{ opacity: 0.5, y: 60 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            duration: 0.8,
-                            delay: 0.1
-                       
-                        }}
+                        transition={{ duration: 0.8, delay: 0.1 }}
                         className="bg-white/95 backdrop-blur-lg p-4 sm:p-6 lg:p-8 rounded-2xl shadow-2xl border border-white/20 max-w-5xl mx-auto"
                     >
                         <div className="flex flex-col lg:flex-row gap-4 lg:gap-0">
@@ -61,28 +52,30 @@ const Hero = ({ auth }) => {
                                             className="w-full lg:w-auto inline-flex items-center justify-center lg:justify-start rounded-xl lg:rounded-l-xl lg:rounded-r-none bg-gray-50 hover:bg-gray-100 px-4 py-3 lg:py-4 border-0 lg:border-r border-gray-200 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none transition-colors duration-200"
                                         >
                                             <SlidersHorizontal size={18} className="text-primary mr-2" />
-                                            <span className="text-sm lg:text-base">
-                                                Property Type
-                                            </span>
+                                            {/* Show selected type with colored dot */}
+                                            <span
+                                                className={`w-2 h-2 rounded-full mr-2 ${selected.color}`}
+                                            ></span>
+                                            <span className="text-sm lg:text-base">{selected.label}</span>
                                         </button>
                                     </Dropdown.Trigger>
                                     <Dropdown.Content>
-                                        <Dropdown.Link href="#" className="flex items-center">
-                                            <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
-                                            Residential
-                                        </Dropdown.Link>
-                                        <Dropdown.Link href="#" className="flex items-center">
-                                            <span className="w-2 h-2 bg-secondary rounded-full mr-2"></span>
-                                            Commercial
-                                        </Dropdown.Link>
-                                        <Dropdown.Link href="#" className="flex items-center">
-                                            <span className="w-2 h-2 bg-accent rounded-full mr-2"></span>
-                                            Industrial
-                                        </Dropdown.Link>
-                                        <Dropdown.Link href="#" className="flex items-center">
-                                            <span className="w-2 h-2 bg-primary/70 rounded-full mr-2"></span>
-                                            Land
-                                        </Dropdown.Link>
+                                        {propertyTypes.map(({ key, label, color }) => (
+                                            <div
+                                                key={key}
+                                                className="hover:bg-gray-100 flex-center px-4 py-2 w-full"
+                                            >
+                                                <button
+                                                    className={`flex-center text-sm hover:bg-gray-100 w-full text-left ${
+                                                        selectedType === key ? 'font-semibold text-primary' : ''
+                                                    }`}
+                                                    onClick={() => handleTypeChange(key)}
+                                                >
+                                                    <span className={`w-2 h-2 rounded-full mr-2 ${color}`}></span>
+                                                    {label}
+                                                </button>
+                                            </div>
+                                        ))}
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
@@ -93,8 +86,10 @@ const Hero = ({ auth }) => {
                                     <MapPin size={18} className="text-gray-400" />
                                 </div>
                                 <input
-                                    type="text"
-                                    id='search_my_property'
+                                    type="search"
+                                    value={searchTerm}
+                                    onChange={handleSearchTermChange}
+                                    id="search_my_property"
                                     placeholder="Enter location, property type, or keywords..."
                                     className="w-full pl-12 pr-4 py-3 lg:py-4 border-0 text-gray-700 placeholder-gray-500 text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl lg:rounded-none bg-gray-50 hover:bg-white focus:bg-white transition-colors duration-200"
                                 />
@@ -124,10 +119,9 @@ const Hero = ({ auth }) => {
                             </div>
                         </div>
                     </motion.div>
-
                 </div>
             </main>
-        </div>
+        </>
     );
 };
 

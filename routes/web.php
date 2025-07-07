@@ -7,15 +7,34 @@ use App\Http\Controllers\Seller\PropertyImageController;
 use App\Http\Controllers\Seller\TransactionController;
 use App\Http\Controllers\Seller\TrippingController;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
+
+
+    $properties = \App\Models\Property::where('status', 'Published')
+        ->when($request->search, function ($q) use ($request) {
+            $q->where(function($query) use ($request) {
+                $query->where('title', 'like', '%' . $request->search . '%')
+                    ->orWhere('address', 'like', '%' . $request->search . '%');
+            });
+        })
+        ->when($request->type && $request->type !== 'All', function ($q) use ($request) {
+            $q->where('property_type', $request->type);
+        })
+        ->latest()
+        ->get();
+
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'properties' => $properties,
+
     ]);
 });
 
