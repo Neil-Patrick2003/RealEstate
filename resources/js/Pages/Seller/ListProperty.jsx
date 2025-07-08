@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useForm, usePage } from '@inertiajs/react';
+import {router, useForm, usePage} from '@inertiajs/react';
 import {
-  CirclePlus,
-  CheckCircle,
+
   Trash2,
+    RotateCcw
 } from 'lucide-react';
 
 import NavBar from '@/Components/NavBar';
@@ -19,7 +19,7 @@ import Collapsable from '@/Components/collapsable/collapsable';
 import Toggle from '@/Components/Toggle';
 
 
-const ListProperty = () => {
+const ListProperty = ({ agents = [] }) => {
   const { data, setData, processing, post, reset, errors } = useForm({
     title: '',
     description: '',
@@ -39,14 +39,23 @@ const ListProperty = () => {
     image_urls: [],
     boundary: null,
     pin: null,
-    image_preview: ''
+    image_preview: '',
+    agent_ids: [],
+    allowMultipleAgent: false
+
   });
 
-  
+
 
   const [imagePreviews, setImagePreviews] = useState([]);
 
   const [featureInput, setFeatureInput] = useState('');
+
+    const [localAgents, setLocalAgents] = useState([]);
+    const [selectedAgentIds, setSelectedAgentIds] = useState([]);
+
+    const [loading, setLoading] = useState(false);
+    const [allowMultiple, setAllowMultiple] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -62,7 +71,7 @@ const ListProperty = () => {
       forceFormData: true, // important for file uploads
     });
   };
-    
+
 
 
   const handleDescriptionChange = (e) => {
@@ -88,7 +97,7 @@ const ListProperty = () => {
     setData('image_urls', data.image_urls.filter((_, i) => i !== index));
   };
 
- 
+
   const auth = usePage().props.auth;
 
   // Called by PropertyMapDraw component on map changes
@@ -98,7 +107,7 @@ const ListProperty = () => {
   };
 
   //type
-  const property_type = 
+  const property_type =
     [
         {
             name: "Apartment",
@@ -166,7 +175,9 @@ const ListProperty = () => {
     const [preview, setPreview] = useState(null); // For image preview
 
 
-     
+
+
+
     const handleImagePropertyChange = (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -179,13 +190,53 @@ const ListProperty = () => {
     const [isOpenNotice, setIsOpenNotice] = useState(true);
 
 
+    //load agents
+
+
+
+    const handleLoadAgent = () => {
+        router.get('/all-agents', {}, {
+            preserveScroll: true,
+            only: ['agents'],
+            onSuccess: (page) => {
+                setLocalAgents(page.props.agents);
+            },
+        });
+    };
+
+    const toggleAgentSelection = (id) => {
+        setSelectedAgentIds((prevSelected) => {
+            let updated;
+            if (allowMultiple) {
+                updated = prevSelected.includes(id)
+                    ? prevSelected.filter((agentId) => agentId !== id)
+                    : [...prevSelected, id];
+            } else {
+                updated = prevSelected.includes(id) ? [] : [id];
+            }
+
+            setData('agent_ids', updated); // ✅ sync with form data
+            return updated;
+        });
+    };
+
+    const toggleAllowMultiple = () => {
+        setAllowMultiple(prev => {
+            const updated = !prev;
+            setData('allow_multiple', updated); // ✅ update form data
+            return updated;
+        });
+    };
+
+
 
   return (
+
     <div className=" pt-20 bg-gray-100 min-h-screen">
-      <Modal show={isOpenNotice}  onClose={() => setIsOpenNotice(false)} maxWidth='xl' closeable={false}>
-        <ListingRequirements closeModal={() => setIsOpenNotice(false)} />
-      </Modal>
-      
+      {/*<Modal show={isOpenNotice}  onClose={() => setIsOpenNotice(false)} maxWidth='xl' closeable={false}>*/}
+      {/*  <ListingRequirements closeModal={() => setIsOpenNotice(false)} />*/}
+      {/*</Modal>*/}
+
       <NavBar />
       <div className="max-w-5xl mx-auto">
         <form onSubmit={handleSubmit}>
@@ -196,7 +247,7 @@ const ListProperty = () => {
                 description="Provide essential details about the property you're listing."
               >
                 <div className="space-y-6">
-                  
+
                   {/* Pre-Sell Toggle */}
                   <div className="flex items-center justify-between p-4 border rounded-xl shadow-sm bg-gray-50">
                     <span className="font-medium text-gray-700">Is this a pre-sell property?</span>
@@ -231,63 +282,68 @@ const ListProperty = () => {
                   </div>
 
                   {/* Property Image Upload */}
-                  <div className="flex flex-col items-center">
-                    <label
-                      htmlFor="property_image"
-                      className={`mt-2 flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed rounded-xl transition ${
-                        preview
-                          ? 'border-transparent'
-                          : 'border-gray-300 bg-white hover:bg-gray-50 cursor-pointer'
-                      }`}
-                    >
-                      {!preview ? (
-                        <div className="flex flex-col items-center justify-center px-6 pt-5 pb-6">
-                          <div className="mb-4 bg-gray-100 rounded-full p-3">
-                            <svg
-                              className="w-6 h-6 text-gray-500"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1M12 12v6m0-6l-3 3m3-3l3 3M16 8a4 4 0 0 0-8 0v1H5a2 2 0 0 0 0 4h14a2 2 0 0 0 0-4h-3V8z"
-                              />
-                            </svg>
-                          </div>
-                          <p className="mb-1 text-lg font-semibold text-gray-700">Drag & Drop to Upload</p>
-                          <p className="text-sm text-gray-500 text-center">PNG, JPG, WebP – or click to select</p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center">
-                          <img
-                            src={preview}
-                            alt="Preview"
-                            className="h-40 w-40 rounded-xl object-cover shadow-md"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => document.getElementById('property_image').click()}
-                            className="mt-3 px-4 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded"
-                          >
-                            Change Image
-                          </button>
-                        </div>
-                      )}
-                    </label>
+                    <div className="flex flex-col items-center">
+                        <label
+                            htmlFor="property_image"
+                            className={`mt-2 flex flex-col items-center justify-center w-full h-48 md:h-80 border-2 border-dashed rounded-xl transition ${
+                                preview
+                                    ? 'border-transparent'
+                                    : 'border-gray-300 bg-white hover:bg-gray-50 cursor-pointer'
+                            }`}
+                            aria-label="Upload Property Image"
+                        >
+                            {!preview ? (
+                                <div className="flex flex-col items-center justify-center px-6 pt-5 pb-6">
+                                    <div className="mb-4 bg-gray-100 rounded-full p-3">
+                                        <svg
+                                            className="w-6 h-6 text-gray-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1M12 12v6m0-6l-3 3m3-3l3 3M16 8a4 4 0 0 0-8 0v1H5a2 2 0 0 0 0 4h14a2 2 0 0 0 0-4h-3V8z"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <p className="mb-1 text-lg font-semibold text-gray-700">Drag & Drop to Upload</p>
+                                    <p className="text-sm text-gray-500 text-center">PNG, JPG, WebP – or click to select</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col relative w-full h-full items-center">
+                                    <img
+                                        src={preview}
+                                        alt="Preview"
+                                        className="h-80 w-full rounded-xl object-cover shadow-md"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => document.getElementById('property_image').click()}
+                                        className="flex-center absolute bottom-2 right-2 px-4 py-2 text-sm text-white bg-primary hover:bg-accent rounded transition duration-200"
+                                    >
+                                        Change Image
+                                        <span><RotateCcw  className='w-5 h-5 ml-1'/></span>
 
-                    <input
-                      type="file"
-                      id="property_image"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImagePropertyChange}
-                    />
-                  </div>
+                                    </button>
+                                </div>
+                            )}
+                        </label>
 
-                  {/* Property Type Selection */}
+                        <input
+                            type="file"
+                            id="property_image"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImagePropertyChange}
+                            aria-label="Select Property Image"
+                        />
+                    </div>
+
+
+                    {/* Property Type Selection */}
                   <div>
                     <InputLabel value="Property Type" />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
@@ -540,9 +596,51 @@ const ListProperty = () => {
                   <InputError message={errors.pin} className="mt-1 text-sm" />
                 </div>
               </div>
-            </Collapsable>        
-          </section>
-          {/* Submit Button Section */}
+            </Collapsable>
+                <Collapsable title="Agents" description="You can select your preferred agent here.">
+                    <button
+                        type="button"
+                        onClick={toggleAllowMultiple}
+                        className="bg-gray-200 text-gray-800 px-4 py-2 rounded mb-2"
+                    >
+                        {allowMultiple ? 'Switch to Single Select' : 'Switch to Multiple Select'}
+                    </button>
+
+                    <button
+                        type='button'
+                        onClick={handleLoadAgent}
+                        className="bg-primary text-white px-4 py-2 rounded mb-4 ml-2"
+                    >
+                        {loading ? 'Loading Agents...' : 'Load Agents'}
+                    </button>
+
+                    {agents.length > 0 && (
+                        <div className="space-y-3">
+                            {agents.map((agent) => (
+                                <div key={agent.id} className="flex items-center justify-between p-3 border rounded">
+                                    <div>
+                                        <p className="font-semibold">{agent.name}</p>
+                                        <p className="text-sm text-gray-600">{agent.email}</p>
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        id={agent.id}
+                                        checked={selectedAgentIds.includes(agent.id)}
+                                        onChange={() => toggleAgentSelection(agent.id)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {selectedAgentIds.length > 0 && (
+                        <div className="mt-4 text-sm text-gray-700">
+                            <strong>Selected Agent IDs:</strong> {selectedAgentIds.join(', ')}
+                        </div>
+                    )}
+                </Collapsable>
+
+            </section>
           {/* Submit Button Section */}
             <div className="px-4 py-6 sm:px-6 lg:px-8 flex justify-end">
               <button
@@ -562,3 +660,4 @@ const ListProperty = () => {
 };
 
 export default ListProperty;
+
