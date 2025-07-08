@@ -114,7 +114,7 @@ class PropertyController extends Controller
             'car_slots' => $validated['car_slots'],
             'isPresell' => $validated['isPresell'] ?? false,
             'image_url' => $propertyImageUrl,
-            'allow_multiple' => $validated['allowMultipleAgent'] ?? false,
+            'allow_multi_agents' => $validated['allowMultipleAgent'],
         ]);
 
         // Multiple images upload

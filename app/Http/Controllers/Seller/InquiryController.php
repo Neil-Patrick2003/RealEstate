@@ -24,73 +24,45 @@ class InquiryController extends Controller
         return Inertia::render('Seller/Inquiries/Inquiries', [
             'properties' => $properties,
         ]);
-
-
-//        $inquiries = Inquiry::with(['agent:id,name,email', 'property:id,title,image_url,property_type,sub_type'])
-//        ->where('seller_id', Auth::id())
-//            ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
-//                $q->where('status', $request->status);
-//            })
-//            ->orderBy('created_at', 'desc')
-//            ->paginate($request->get('items_per_page', 10));
-//
-//        $inquiryCount = Inquiry::where('seller_id', auth()->id())->count();
-//
-//        $rejectedCount = Inquiry::where('seller_id', auth()->id())
-//            ->where('status', 'rejected')
-//            ->count();
-//
-//        $acceptedCount = Inquiry::where('seller_id', auth()->id())
-//            ->where('status', 'accepted')
-//            ->count();
-//
-//        $pendingCount = Inquiry::where('seller_id', auth()->id())
-//            ->where('status', 'pending')
-//            ->count();
-//
-//        $cancelledCount = Inquiry::where('seller_id', auth()->id())
-//            ->where('status', 'cancelled')
-//            ->count();
-//
-//
-//
-//        return Inertia::render('Seller/Inquiries/Inquiries', [
-//            'inquiries' => $inquiries,
-//            'inquiryCount' => $inquiryCount,
-//            'rejectedCount' => $rejectedCount,
-//            'acceptedCount' => $acceptedCount,
-//            'pendingCount' => $pendingCount,
-//            'cancelledCount' => $cancelledCount,
-//        ]);
     }
 
     public function updateStatus(Request $request, Inquiry $inquiry, $action)
     {
-        // Optional: Authorization (only if seller must own the property)
-        if ($inquiry->property->seller_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
-        }
-
         if (!in_array($action, ['accept', 'reject'])) {
             abort(400, 'Invalid action');
         }
 
         $status = $action === 'accept' ? 'accepted' : 'rejected';
+        $property = $inquiry->property;
+        
 
+        // If action is "accept"
+        if ($status === 'accepted') {
+            // If property does NOT allow multiple agents
+            if (!$property->allow_multi_agents) {
+                // Reject all other pending inquiries for the same property
+                Inquiry::where('property_id', $property->id)
+                    ->where('id', '!=', $inquiry->id)
+                    ->where('status', 'Pending')
+                    ->update(['status' => 'rejected']);
+            }
 
+            // Update property status to Assigned (if not already)
+            $property->update(['status' => 'Assigned']);
+
+            // Create a property listing for the accepted agent
+            PropertyListing::create([
+                'agent_id'    => $inquiry->agent_id,
+                'property_id' => $inquiry->property_id,
+                'seller_id'   => $inquiry->seller_id,
+                'status'      => 'Assigned',
+            ]);
+        }
+
+        // Update inquiry status (accept or reject)
         $inquiry->update(['status' => $status]);
-
-        $newStatus = $status === 'accepted' ? 'Assigned' : 'Rejected';
-
-        $inquiry->property->update(['status' => $newStatus]);
-
-        PropertyListing::create([
-            'agent_id' => $inquiry->agent_id,
-            'property_id' => $inquiry->property_id,
-            'seller_id' => $inquiry->seller_id,
-            'status' => $newStatus
-        ]);
 
         return back()->with('success', "Inquiry successfully {$status}.");
     }
+
 }

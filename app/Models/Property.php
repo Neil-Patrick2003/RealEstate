@@ -22,7 +22,8 @@ class Property extends Model
         'bathrooms',
         'car_slots',
         'isPresell',
-        'image_url'
+        'image_url',
+        'allow_multi_agents',
     ];
 
     public function images(){

@@ -221,11 +221,9 @@ const ListProperty = ({ agents = [] }) => {
     };
 
     const toggleAllowMultiple = () => {
-        setAllowMultiple(prev => {
-            const updated = !prev;
-            setData('allow_multiple', updated); // ✅ update form data
-            return updated;
-        });
+        const updated = !allowMultiple;
+        setAllowMultiple(updated);
+        setData('allowMultipleAgent', updated); // Sync with useForm data
     };
 
 

@@ -343,6 +343,7 @@ export default function Inquiries({ properties, itemsPerPage = 0 }) {
         });
     };
 
+    console.log(properties);
     const popoverContent = (
         <div className="relative">
             {/* Arrow */}
@@ -419,6 +420,9 @@ export default function Inquiries({ properties, itemsPerPage = 0 }) {
                                             ₱{Number(property.price).toLocaleString()}
                                         </p>
                                     </div>
+                                </div>
+                                <div className="text-sm text-gray-500 mt-4 md:mt-0">
+                                    {property.allow_multi_agents ? 'Yes' : 'No'}
                                 </div>
                                 <div className="text-sm text-gray-500 mt-4 md:mt-0">
                                     {property.inquiries.length} Inquiry{property.inquiries.length !== 1 && "ies"}
