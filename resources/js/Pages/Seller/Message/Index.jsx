@@ -22,7 +22,7 @@ export default function Index({ users, messages = [], auth, selectedUserId=null 
     e.preventDefault();
     if (!selectedId || !data.message.trim()) return;
 
-    post(`/messages/${selectedId}/sent_message`, {
+    post(`/seller/messages/${selectedId}/sent_message`, {
       onSuccess: () => {
         reset();
         router.reload({ only: ['messages'] });

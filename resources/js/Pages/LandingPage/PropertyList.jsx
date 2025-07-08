@@ -4,13 +4,13 @@ import {faClock, faExpand, faLocationDot} from "@fortawesome/free-solid-svg-icon
 import { Link } from '@inertiajs/react'
 
 const PropertyList = ({properties}) => {
-    console.log(properties);
+
   return (
       <div className='h-screen px-4 md:px-8 lg:px-32'>
         <h1 className='text-white text-2xl font-bold'>All Properties</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
               {properties.map((property) => (
-                  <div className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                  <div key={property.id} className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
                       <div className="relative h-48">
                           <img src={`/storage/${property.image_url}`}className="w-full h-full object-cover"/>
                           <div className="absolute top-4 right-4 bg-[#5C7934] text-white px-2 py-1 rounded-full text-xs font-medium">

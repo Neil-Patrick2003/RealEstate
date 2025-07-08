@@ -99,7 +99,7 @@ const EditProperty = ({ property }) => {
   // Submit main form
   const handleSubmit = (e) => {
     e.preventDefault();
-    patch(`/properties/${property.id}/edit`);
+    patch(`/seller/properties/${property.id}/edit`);
   };
 
   // Set property type
@@ -130,7 +130,7 @@ const EditProperty = ({ property }) => {
       formData.append('image_urls[]', file); // ✅ correct field name
     });
 
-    router.post(`/properties/${property.id}/upload-image`, formData, {
+    router.post(`/seller/properties/${property.id}/upload-image`, formData, {
       forceFormData: true,
       preserveScroll: true,
       onSuccess: () => {
@@ -154,7 +154,7 @@ const EditProperty = ({ property }) => {
       return;
     }
 
-    postImages(`/properties/${property.id}/edit-images`, {
+    postImages(`/seller/properties/${property.id}/edit-images`, {
       preserveScroll: true,
       forceFormData: true,
       onSuccess: () => {
@@ -168,7 +168,7 @@ const EditProperty = ({ property }) => {
   };
 
 
-  
+
 
   // Remove image preview before upload
   const handleRemoveImage = (index) => {
@@ -185,7 +185,7 @@ const EditProperty = ({ property }) => {
   const handleDelete = () => {
     if (!selectedImageId) return;
 
-    router.delete(`/properties/${property.id}/edit/${selectedImageId}`, {
+    router.delete(`/seller/properties/${property.id}/edit/${selectedImageId}`, {
       onSuccess: () => {
         setSelectedImageId(null);
       },
@@ -207,8 +207,8 @@ const EditProperty = ({ property }) => {
   return (
     <AuthenticatedLayout>
       <Breadcrumb pages={breadcrumbPages} />
-      
-      
+
+
       <div className="max-w-5xl mx-auto mb-6 mt-6 px-4 md:px-0">
         <div className='flex-center-between'>
           <h1 className="flex flex-col text-2xl md:text-3xl font-bold text-primary">
@@ -224,13 +224,13 @@ const EditProperty = ({ property }) => {
             disabled={processing}
           >
             <FontAwesomeIcon icon={faCheck} />
-            
+
             {processing ? 'Saving...' : 'Save Changes'  }
-          </button> 
-        
+          </button>
+
         </div>
 
-        
+
       </div>
       <form
         id='property_dertail_form'
@@ -346,9 +346,9 @@ const EditProperty = ({ property }) => {
                 <div
                   key={type.name}
                   onClick={() => handleTypeClick(type.name)}
-                  className={`py-3 px-4 border text-center rounded-lg cursor-pointer shadow-sm transition-all duration-200 
-                  ${selectedType?.name === type.name 
-                    ? 'bg-accent text-white ' 
+                  className={`py-3 px-4 border text-center rounded-lg cursor-pointer shadow-sm transition-all duration-200
+                  ${selectedType?.name === type.name
+                    ? 'bg-accent text-white '
                     : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'}`}
                 >
                   <p className="font-medium text-sm">{type.name}</p>
@@ -367,7 +367,7 @@ const EditProperty = ({ property }) => {
                     <div
                       key={index}
                       onClick={() => setData('property_sub_type', subType)}
-                      className={`py-2 px-4 border text-center rounded-lg cursor-pointer shadow-sm transition-all duration-200 
+                      className={`py-2 px-4 border text-center rounded-lg cursor-pointer shadow-sm transition-all duration-200
                       ${data.property_sub_type === subType
                         ? 'bg-accent text-white border-green-600'
                         : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200'}`}
@@ -386,9 +386,9 @@ const EditProperty = ({ property }) => {
 
 
           <div className='border-b'>
-            
+
           </div>
-          
+
           <div className='grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-4'>
             {/* Price */}
             <div>
@@ -397,7 +397,7 @@ const EditProperty = ({ property }) => {
                 name="price"
                 label="Price"
                 type="number"
-                value={data.price}    
+                value={data.price}
                 onChange={(e) => setData('price', e.target.value)}
                 placeholder="Enter price"
               />
@@ -412,7 +412,7 @@ const EditProperty = ({ property }) => {
                 name="location"
                 label="Location"
                 type="text"
-                value={data.address}    
+                value={data.address}
                 onChange={(e) => setData('address', e.target.value)}
               />
               <InputError message={errors.lcoation} className="mt-2" />
@@ -425,7 +425,7 @@ const EditProperty = ({ property }) => {
                 name="Lot Area"
                 label="Lot Area (sqm)"
                 type="number"
-                value={data.lot_area}    
+                value={data.lot_area}
                 onChange={(e) => setData('lot_area', e.target.value)}
               />
               <InputError message={errors.lot_area} className="mt-2" />
@@ -438,7 +438,7 @@ const EditProperty = ({ property }) => {
                 name="Floor Area"
                 label="Floor Area (sqm)"
                 type="number"
-                value={data.floor_area}    
+                value={data.floor_area}
                 onChange={(e) => setData('floor_area', e.target.value)}
               />
               <InputError message={errors.floor_area} className="mt-2" />
@@ -451,7 +451,7 @@ const EditProperty = ({ property }) => {
                 name="total_rooms"
                 label="Number of Rooms"
                 type="number"
-                value={data.total_rooms}    
+                value={data.total_rooms}
                 onChange={(e) => setData('total_rooms', e.target.value)}
               />
               <InputError message={errors.total_rooms} className="mt-2" />
@@ -464,7 +464,7 @@ const EditProperty = ({ property }) => {
                 name="total_bedrooms"
                 label="Number of Bedrooms"
                 type="number"
-                value={data.total_bedrooms}    
+                value={data.total_bedrooms}
                 onChange={(e) => setData('total_bedrooms', e.target.value)}
               />
               <InputError message={errors.total_bedrooms} className="mt-2" />
@@ -477,7 +477,7 @@ const EditProperty = ({ property }) => {
                 name="total_bathrooms"
                 label="Number of Bathrooms"
                 type="number"
-                value={data.total_bathrooms}    
+                value={data.total_bathrooms}
                 onChange={(e) => setData('total_bathrooms', e.target.value)}
               />
               <InputError message={errors.total_bathrooms} className="mt-2" />
@@ -490,7 +490,7 @@ const EditProperty = ({ property }) => {
                 name="car_slots"
                 label="Number of Car Slots"
                 type="number"
-                value={data.car_slots}    
+                value={data.car_slots}
                 onChange={(e) => setData('car_slots', e.target.value)}
               />
               <InputError message={errors.total_bathrooms} className="mt-2" />

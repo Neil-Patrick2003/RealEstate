@@ -45,7 +45,7 @@
 
             try {
                 router.get(
-                    '/properties',
+                    '/seller/properties',
                     {
                         page: pageValue,
                         search: searchValue,
@@ -103,7 +103,7 @@
         const handleDelete = () => {
             if (!deletingId) return;
 
-            router.delete(`/properties/${deletingId}`, {
+            router.delete(`/seller/properties/${deletingId}`, {
                 onSuccess: () => {
                     setDeletingId(null);
                     setOpenDeleteDialog(false);
@@ -250,12 +250,12 @@
                                                     </Dropdown.Trigger>
                                                     <Dropdown.Content className="absolute right-0 top-10 w-36 bg-white shadow-md rounded-md z-50 text-sm">
                                                         <ul className="divide-y divide-gray-100">
-                                                            <Link href={`/properties/${property.id}`}>
+                                                            <Link href={`/seller/properties/${property.id}`}>
                                                                 <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
                                                                     <FontAwesomeIcon icon={faExpand} /> View
                                                                 </li>
                                                             </Link>
-                                                            <Link href={`/properties/${property.id}/edit`}>
+                                                            <Link href={`/seller/properties/${property.id}/edit`}>
                                                                 <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
                                                                     <FontAwesomeIcon icon={faPenToSquare} /> Edit
                                                                 </li>

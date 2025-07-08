@@ -12,7 +12,8 @@ class AgentController extends Controller
     public function index(){
 
         $user = auth()->user();
-        $notifications = $user->unreadNotifications;
+
+
 
         $properties = PropertyListing::where('agent_id', $user->id)->get();
 

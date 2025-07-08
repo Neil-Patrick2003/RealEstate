@@ -39,7 +39,7 @@ const ShowProperty = ({ property }) => {
     <AuthenticatedLayout>
       {/* Back Link */}
       <div className="px-4 py-4">
-        <Link href="/properties" className="text-sm text-[#5C7934] hover:text-[#719440]">&larr; Back</Link>
+        <Link href="/seller/properties" className="text-sm text-[#5C7934] hover:text-[#719440]">&larr; Back</Link>
       </div>
 
       {/* GALLERY SECTION */}

@@ -50,37 +50,36 @@ Route::middleware(['auth'])->group(function () {
 
 // only seller  addd it ----->>>>'role:Seller'<<<<-------
 Route::middleware(['auth', ])->group(function () {
-    Route::get('/dashboard', function () {
+    Route::get('/seller/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('seller.dashboard');
 
 
-    Route::get('/sellers/properties/{property}', [ PropertyController::class, 'show']);
-    Route::delete('/properties/{id}', [ PropertyController::class, 'destroy']);
+    Route::get('/seller/properties', [PropertyController::class, 'index'])->name('my-properties');
+    Route::get('/seller/properties/{property}', [ PropertyController::class, 'show']);
+    Route::get('/seller/properties/{property}/edit', [ PropertyController::class, 'edit']);
+    Route::patch('/seller/properties/{proeprty}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
+    Route::delete('/seller/properties/{id}', [ PropertyController::class, 'destroy']);
 
 
-
-    Route::get('/properties/{property}/edit', [ PropertyController::class, 'edit']);
-    Route::patch('/properties/{proeprty}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
-    Route::delete('/properties/{property}/edit/{id}', [ PropertyImageController::class, 'destroy'])->name('seller.properties.destroy');
-    Route::post('/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
+    Route::delete('/seller/properties/{property}/edit/{id}', [ PropertyImageController::class, 'destroy'])->name('seller.properties.destroy');
+    Route::post('/seller/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
 
     //message
-    Route::get('/messages', [MessageController::class, 'index'])->name('seller.messages');
-    Route::post('/messages/{receiver}/sent_message', [MessageController::class, 'send']);
+    Route::get('/seller/messages', [MessageController::class, 'index'])->name('seller.messages');
+    Route::post('/seller/messages/{receiver}/sent_message', [MessageController::class, 'send']);
 
     //Inquiries
-    Route::get('/inquiries', [\App\Http\Controllers\Seller\InquiryController::class, 'index']);
-    Route::patch('/sellers/inquiries/{inquiry}/{action}', [\App\Http\Controllers\Seller\InquiryController::class, 'updateStatus'])->where('action', 'accept|reject');
+    Route::get('/seller/inquiries', [\App\Http\Controllers\Seller\InquiryController::class, 'index']);
+    Route::patch('/seller/inquiries/{inquiry}/{action}', [\App\Http\Controllers\Seller\InquiryController::class, 'updateStatus'])->where('action', 'accept|reject');
     //tripping
-    Route::get('/trippings', [TrippingController::class, 'index']);
+    Route::get('/seller/trippings', [TrippingController::class, 'index']);
 
     //transaction
-    Route::get('/my-sales', [TransactionController::class, 'index']);
+    Route::get('/seller/sales', [TransactionController::class, 'index']);
 
 
 
-    Route::get('/properties', [PropertyController::class, 'index'])->name('my-properties');
 
 
 });

@@ -334,7 +334,7 @@ export default function Inquiries({ properties, itemsPerPage = 0 }) {
     const handleStatusUpdate = (statusType) => {
         if (!selectedId) return;
 
-        router.patch(`/sellers/inquiries/${selectedId}/${statusType}`, {}, {
+        router.patch(`/seller/inquiries/${selectedId}/${statusType}`, {}, {
             onSuccess: () => {
                 setSelectedId(null);
                 setOpenAcceptDialog(false);

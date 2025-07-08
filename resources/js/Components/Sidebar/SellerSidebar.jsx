@@ -20,12 +20,12 @@ const menus = [
     {
         name: 'Dashboard',
         Icon: faHouse,
-        path: '/dashboard',
+        path: '/seller/dashboard',
     },
     {
         name: 'Properties',
         Icon: faMapLocationDot,
-        path: '/properties',
+        path: '/seller/properties',
     },
     {
         name: 'Enquiries',
@@ -34,24 +34,24 @@ const menus = [
             {
                 name: 'Messages',
                 Icon: faEnvelope,
-                path: '/messages',
+                path: '/seller/messages',
             },
             {
                 name: 'Inquiries',
                 Icon: faEnvelope,
-                path: '/inquiries',
+                path: '/seller/inquiries',
             },
         ],
     },
     {
         name: 'Tripping',
         Icon: faCalendar,
-        path: '/trippings',
+        path: '/seller/trippings',
     },
     {
         name: 'Sales',
         Icon: faChartSimple,
-        path: '/my-sales',
+        path: '/seller/sales',
     },
 ];
 

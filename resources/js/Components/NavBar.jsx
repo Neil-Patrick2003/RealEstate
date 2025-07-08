@@ -62,9 +62,9 @@ const NavBar = () => {
     <header className="h-16 z-50 fixed top-0 left-0 right-0 bg-white shadow-lg">
       <nav className="flex justify-between items-center h-full max-w-8xl mx-auto px-4 text-sm">
         <Link href="/">
-          <motion.div 
-            initial={{ y: -50, opacity: 0 }} 
-            animate={{ y: 0, opacity: 1 }} 
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="flex items-center gap-3 hover:scale-105 transition-transform duration-200"
           >
@@ -115,46 +115,75 @@ const NavBar = () => {
                 animate={isHover ? 'enter' : 'exit'}
                 variants={languageAnimate}
               >
-                <Link 
-                  href="/dashboard" 
-                  className="flex items-center gap-2 p-3 text-gray-700 hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-200 font-medium"
-                >
-                  <Home size={16} />
-                  Dashboard
-                </Link>
-                
+                  {auth.user.role === 'Seller' && (
+                      <Link
+                          href="/seller/dashboard"
+                          className="flex items-center gap-2 p-3 text-gray-700 hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-200 font-medium"
+                      >
+                          <Home size={16} />
+                          Dashboard
+                      </Link>
+                  )}
+                  {auth.user.role === 'Agent' && (
+                      <Link
+                          href="/agents/dashboard"
+                          className="flex items-center gap-2 p-3 text-gray-700 hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-200 font-medium"
+                      >
+                          <Home size={16} />
+                          Dashboard
+                      </Link>
+                  )}
+                  {auth.user.role === 'Admin' && (
+                      <Link
+                          href="/Admin/dashboard"
+                          className="flex items-center gap-2 p-3 text-gray-700 hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-200 font-medium"
+                      >
+                          <Home size={16} />
+                          Dashboard
+                      </Link>
+                  )}
+                  {auth.user.role === 'Buyer' && (
+                      <Link
+                          href="/dashboard"
+                          className="flex items-center gap-2 p-3 text-gray-700 hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-200 font-medium"
+                      >
+                          <Home size={16} />
+                          Dashboard
+                      </Link>
+                  )}
+
                 <div className="border-t border-gray-100 my-2"></div>
-                
+
                 <div className="px-3 pt-2 pb-1 text-xs text-gray-500 font-semibold uppercase tracking-wide flex items-center gap-1">
                   <Languages size={12} />
                   Language
                 </div>
-                
-                <button 
-                  onClick={() => handleChangeLanguage('fil', 'Filipino')} 
+
+                <button
+                  onClick={() => handleChangeLanguage('fil', 'Filipino')}
                   className="flex items-center w-full px-3 py-2 hover:bg-primary/10 rounded-lg hover:text-primary transition-all duration-200"
                 >
-                  <img src="https://flagcdn.com/ph.svg" alt="Filipino Flag" className="w-5 h-5 mr-3 rounded-sm shadow-sm" /> 
+                  <img src="https://flagcdn.com/ph.svg" alt="Filipino Flag" className="w-5 h-5 mr-3 rounded-sm shadow-sm" />
                   Filipino
                 </button>
-                
-                <button 
-                  onClick={() => handleChangeLanguage('en', 'English')} 
+
+                <button
+                  onClick={() => handleChangeLanguage('en', 'English')}
                   className="flex items-center w-full px-3 py-2 hover:bg-primary/10 rounded-lg hover:text-primary transition-all duration-200"
                 >
-                  <img src="https://flagcdn.com/us.svg" alt="English Flag" className="w-5 h-5 mr-3 rounded-sm shadow-sm" /> 
+                  <img src="https://flagcdn.com/us.svg" alt="English Flag" className="w-5 h-5 mr-3 rounded-sm shadow-sm" />
                   English
                 </button>
               </motion.div>
             </motion.div>
           ) : (
-            <motion.div 
-              initial={{ y: -50, opacity: 0 }} 
+            <motion.div
+              initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Link 
-                href={route('login')} 
+              <Link
+                href={route('login')}
                 className="border-2 border-primary/30 bg-white/10 backdrop-blur-sm px-4 py-2 text-sm text-primary hover:bg-primary hover:text-white rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg"
               >
                 {t('Login')}
@@ -162,8 +191,8 @@ const NavBar = () => {
             </motion.div>
           )}
 
-          <motion.div 
-            initial={{ y: -50, opacity: 0 }} 
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
