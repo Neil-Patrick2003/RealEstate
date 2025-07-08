@@ -49,6 +49,7 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
     const handleTypeChange = (type) => {
         setSelectedType(type);
         fetchProperties(searchTerm, type);
+
     };
 
     return (

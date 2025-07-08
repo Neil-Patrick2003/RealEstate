@@ -55,7 +55,7 @@ Route::middleware(['auth', ])->group(function () {
     })->name('seller.dashboard');
 
 
-    Route::get('/properties/{property}', [ PropertyController::class, 'show']);
+    Route::get('/sellers/properties/{property}', [ PropertyController::class, 'show']);
     Route::delete('/properties/{id}', [ PropertyController::class, 'destroy']);
 
 
@@ -84,6 +84,10 @@ Route::middleware(['auth', ])->group(function () {
 
 
 });
+
+//buyer
+Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
+
 
 
 //for agent
@@ -114,6 +118,10 @@ Route::patch('/agents/inquiries/{id}', [\App\Http\Controllers\Agent\InquiryContr
 Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])
     ->middleware('auth')
     ->name('notifications.read');
+
+
+//buyer
+
 
 
 Route::middleware('auth')->group(function () {

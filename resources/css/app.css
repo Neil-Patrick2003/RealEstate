@@ -7,12 +7,13 @@
 /* body style */
 body{
     @apply bg-white text-text font-inter;
+    @apply font-mono;
 }
 
 @layer components {
     .sub-menu {
         @apply absolute top-[4.2rem] p-[15px] rounded-[6px] origin-[50%_-170px] backdrop-blur bg-white;
-    }   
+    }
 }
 
 
@@ -34,6 +35,37 @@ body{
 .active {
     @apply bg-green-100 text-green-600
 }
+
+.delay-100 {
+    animation-delay: 0.1s;
+}
+
+.delay-200 {
+    animation-delay: 0.2s;
+}
+
+.feature-badge {
+    background-color: #5C7934;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.feature-badge:hover {
+    background-color: #4a6129;
+    transform: translateY(-2px);
+}
+
+.feature-badge i {
+    margin-right: 6px;
+}
+
 /* WebKit-based browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
   width: 4px;

@@ -144,7 +144,7 @@ const PropertyMap = ({ coordinates }) => {
     return (
         <div className="relative">
             {/* Custom map style controls */}
-            <div className="absolute top-3 left-3 z-[1000] flex flex-col md:flex-row gap-2 bg-white bg-opacity-90 rounded-md shadow-md p-2">
+            <div className="absolute top-3 left-3 z-[1000] flex flex-col md:flex-row gap-2 bg-white bg-opacity-90 rounded-md p-2">
                 <button
                     aria-label="Satellite View"
                     onClick={() => setMapType("Satellite")}
@@ -189,7 +189,6 @@ const PropertyMap = ({ coordinates }) => {
                     height: "400px",
                     width: "100%",
                     borderRadius: "12px",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
                     position: "relative",
                     zIndex: 0,
                 }}
