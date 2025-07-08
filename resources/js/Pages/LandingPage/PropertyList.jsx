@@ -1,9 +1,12 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faClock, faExpand, faLocationDot} from "@fortawesome/free-solid-svg-icons";
+import {faClock, faExpand, faHeart, faLocationDot} from "@fortawesome/free-solid-svg-icons";
 import { Link } from '@inertiajs/react'
+import { Heart } from 'lucide-react';
 
 const PropertyList = ({properties}) => {
+
+    const [ isFavourite, setIsFavourite ] = useState(false);
 
   return (
       <div className='h-screen px-4 md:px-8 lg:px-32'>
@@ -14,8 +17,16 @@ const PropertyList = ({properties}) => {
                       <div className="relative h-48">
                           <img src={`/storage/${property.image_url}`}className="w-full h-full object-cover"/>
                           <div className="absolute top-4 right-4 bg-[#5C7934] text-white px-2 py-1 rounded-full text-xs font-medium">
-                              For Sale
+                              {property.isPresell ? 'Pre sell' : 'For Sale'}
                           </div>
+                          <button className="absolute top-4 left-4 bg-[#5C7934] text-white px-2 py-2 rounded-full text-xs font-medium" onClick={() => setIsFavourite(!isFavourite)}>
+                              {isFavourite ? (
+                                  <Heart className='h-5 w-5' />
+                              ) : (
+                                  <FontAwesomeIcon icon={faHeart} className='h-5 w-5'/>
+                              )}
+
+                          </button>
                       </div>
                       <div className="p-6 w-full">
                           <h3 className="text-xl font-semibold text-[#5C7934] mb-1">Contemporary Valley Home</h3>
@@ -32,9 +43,10 @@ const PropertyList = ({properties}) => {
                               </div>
                               <div className="font-bold text-[#5C7934]">₱ 7,850,000</div>
                           </div>
-                          <Link  href={`/properties/${property.id}`} className="w-full border bg-[#5C7934] hover:bg-[#4a6129] text-white py-2 rounded-lg transition duration-200">
-                              View Details
+                          <Link href={`/properties/${property.id}`} className='flex bg-primary justify-center text-white font-bold py-2  rounded-lg'>
+                              View
                           </Link>
+
                       </div>
                   </div>
                   // <div

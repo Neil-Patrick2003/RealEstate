@@ -17,7 +17,7 @@ import { Link } from '@inertiajs/react';
 
 export default function PropertyDetail({ property }) {
     const [visibleImages, setVisibleImages] = useState([]);
-    const imageBasePath = '/storage/';
+    const [openImage, setOpenImage] = useState(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -44,7 +44,7 @@ export default function PropertyDetail({ property }) {
                 {/*images*/}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 animate-fade-in delay-100">
                     <div className="md:col-span-2 h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-lg image-container relative">
-                        <img src="https://placehold.co/1200x800" alt="Modern two-story house with large windows, green lawn, and wooden accents in a suburban neighborhood" className="w-full h-full object-cover"/>
+                        <img src={`/storage/${property.image_url}`} alt="Modern two-story house with large windows, green lawn, and wooden accents in a suburban neighborhood" className="w-full h-full object-cover"/>
                             <div className="image-overlay">
                                 <h3 className="text-xl font-semibold">Premium Sustainable Living</h3>
                             </div>
@@ -53,19 +53,46 @@ export default function PropertyDetail({ property }) {
 
 
                     {/*thumbnaiks*/}
+
                     <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
-                        <div className="h-[190px] md:h-[242px] rounded-2xl overflow-hidden shadow-md image-container relative">
-                            <img src="https://placehold.co/600x400" alt="Spacious living room with modern furniture, large windows, and wooden floors in the featured property" className="w-full h-full object-cover"/>
-                                <div className="image-overlay">
-                                    <h3 className="text-lg font-medium">Elegant Living Space</h3>
+                        {visibleImages.map((image, index) => {
+                            const isLast = index === visibleImages.length - 1;
+                            const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+                            const moreCount = property.images.length - visibleImages.length;
+
+                            return (
+                                <div key={image.id} className="h-[190px] md:h-[242px] rounded-2xl overflow-hidden shadow-md image-container relative"
+                                     onClick={() => isLast && isDesktop && property.images.length > 2 && setOpenImage(true)}
+                                >
+                                    <img src={`/storage/${image.image_url}`} alt="Spacious living room with modern furniture, large windows, and wooden floors in the featured property" className="w-full h-full object-cover"/>
+                                    <div className="image-overlay">
+                                        <h3 className="text-lg font-medium">Elegant Living Space</h3>
+                                    </div>
+                                    {isLast && isDesktop && property.images.length > 2 && (
+                                        <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center text-white font-semibold text-sm md:text-base backdrop-blur-sm group-hover:bg-opacity-50">
+                                            +{moreCount} more
+                                        </div>
+                                    )}
                                 </div>
-                        </div>
-                        <div className="h-[190px] md:h-[242px] rounded-2xl overflow-hidden shadow-md image-container relative">
-                            <img src="https://placehold.co/600x400" alt="Modern kitchen with stainless steel appliances, quartz countertops, and open shelving design in the property" className="w-full h-full object-cover"/>
-                                <div className="image-overlay">
-                                    <h3 className="text-lg font-medium">Chef's Kitchen</h3>
-                                </div>
-                        </div>
+                                // <div
+                                //     key={image.id}
+                                //     className="relative w-36 h-28 md:h-[30vh] md:w-full rounded-xl overflow-hidden border hover:shadow cursor-pointer group"
+                                //     onClick={() => isLast && isDesktop && property.images.length > 2 && setOpenImage(true)}
+                                // >
+                                //     <img
+                                //         src={`/storage/${image.image_url}`}
+                                //         alt={`Gallery ${image.id}`}
+                                //         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                //     />
+                                //
+                                //     {isLast && isDesktop && property.images.length > 2 && (
+                                //         <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center text-white font-semibold text-sm md:text-base backdrop-blur-sm group-hover:bg-opacity-50">
+                                //             +{moreCount} more
+                                //         </div>
+                                //     )}
+                                // </div>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -124,16 +151,10 @@ export default function PropertyDetail({ property }) {
 
                         <div className="mb-8">
                             <h2 className="text-2xl font-bold text-[#5C7934] mb-4 relative property-highlight">Description</h2>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                This stunning modern home in the coveted Green Valley neighborhood offers luxury living with sustainable features.
-                                The open floor plan showcases premium finishes throughout, including wide plank hardwood flooring, energy-efficient
-                                windows, and designer lighting.
-                            </p>
-                            <p className="text-gray-700 leading-relaxed">
-                                The gourmet kitchen features quartz countertops, stainless steel appliances, and a spacious island opening to the
-                                dining and living areas. Upstairs, you'll find the serene primary suite with walk-in closet and spa-like bathroom,
-                                plus three additional bedrooms. The private backyard with its organic garden is perfect for entertaining.
-                            </p>
+                            <div
+                                className="prose max-w-none text-gray-800"
+                                dangerouslySetInnerHTML={{ __html: property.description }}
+                            />
                         </div>
 
                         <div className="mb-8">
@@ -390,7 +411,7 @@ export default function PropertyDetail({ property }) {
                             <h4 className="font-bold mb-4">Newsletter</h4>
                             <p className="text-gray-200 mb-4">Subscribe to get updates on new properties.</p>
                             <div className="flex">
-                                <input type="email" placeholder="Your email" className="px-4 py-2 rounded-l-lg w-full text-gray-800 focus:outline-none"/>
+                                <input type="email" id='email'  autoComplete='email' placeholder="Your email" className="px-4 py-2 rounded-l-lg w-full text-gray-800 focus:outline-none"/>
                                     <button className="bg-[#FFA500] hover:bg-orange-600 text-white px-4 rounded-r-lg transition">
                                         <i className="fas fa-paper-plane"></i>
                                     </button>
