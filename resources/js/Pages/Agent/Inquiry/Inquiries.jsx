@@ -122,7 +122,7 @@ const Inquiries = ({
                                             </div>
                                         </td>
                                         <td className="p-3 whitespace-nowrap md:table-cell">
-                                            <p className="cursor-pointer hover:underline text-primary">{inquiry.seller.name}</p>
+                                            <p className="cursor-pointer hover:underline text-primary">{inquiry?.seller?.name}</p>
                                         </td>
                                         <td className="p-3 md:table-cell">
                                                 <span className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}>

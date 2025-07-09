@@ -10,7 +10,7 @@ class PropertyController extends Controller
 {
     public function show(Property $property )
     {
-        $property->load('images', 'features', 'coordinate');
+        $property->load('images', 'features', 'coordinate', 'seller');
 
         return Inertia::render('Property/PropertyDetails', [
             'property' => $property,

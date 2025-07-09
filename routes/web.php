@@ -136,6 +136,9 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
         return Inertia::render('Buyer/Dashboard');
     })->name('dashboard');
 
+    //sent inquiries
+    Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
+
     //add favourite
     Route::post('/favourites', [\App\Http\Controllers\FavouriteController::class, 'store']);
 

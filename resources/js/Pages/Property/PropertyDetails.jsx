@@ -1,5 +1,4 @@
 import { ChevronLeft } from 'lucide-react';
-import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,11 +12,20 @@ import {
     faTruckRampBox
 } from "@fortawesome/free-solid-svg-icons";
 import PropertyMap from "@/Components/PropertyMap.jsx";
-import { Link } from '@inertiajs/react';
+import {Link, router} from '@inertiajs/react';
+import Modal from '@/Components/Modal.jsx';
 
 export default function PropertyDetail({ property }) {
     const [visibleImages, setVisibleImages] = useState([]);
     const [openImage, setOpenImage] = useState(false);
+    const [isOpenModal, setIsOpenModal] =useState(false);
+    const [ message, setMessage] = useState('');
+
+    const openModal = () =>{
+        setIsOpenModal(true);
+    }
+
+
 
     useEffect(() => {
         const handleResize = () => {
@@ -30,8 +38,77 @@ export default function PropertyDetail({ property }) {
         return () => window.removeEventListener('resize', handleResize);
     }, [property.images]);
 
+    const handleSubmitInquiry = () => {
+        router.post(`/properties/${property.id}`, {
+            message: message
+        },
+            {
+                preserveScroll:true,
+                onSuccess: () => {
+                    setMessage(''),
+                        setIsOpenModal(false);
+                }
+            })
+    }
+
+
     return (
+
+
         <div>
+            <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
+                <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
+                    {/* Close Button */}
+                    <button
+                        onClick={() => setIsOpenModal(false)}
+                        className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 focus:outline-none"
+                        aria-label="Close modal"
+                    >
+                        &times;
+                    </button>
+
+                    {/* Agent Info */}
+                    <div className="flex items-center gap-4 mb-6">
+                        <img
+                            src={property?.seller?.avatar || '/default-avatar.png'}
+                            alt="Agent Avatar"
+                            className="w-14 h-14 rounded-full object-cover border border-gray-300"
+                        />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-800">{property?.seller?.name}</h3>
+                            <p className="text-sm text-gray-500">Licensed Property Agent</p>
+                        </div>
+                    </div>
+
+                    {/* Message Box */}
+                    <div className="mb-4">
+                        <label htmlFor="message" className="text-sm font-medium text-gray-700">
+                            Send a quick message
+                        </label>
+                        <textarea
+                            id="message"
+                            rows={4}
+                            maxLength={250} // Character limit
+                            placeholder="Hi, I'm interested in this property. Please contact me..."
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            className="mt-2 w-full rounded-md border border-gray-200 focus:ring-2 focus:ring-primary focus:outline-none p-3 text-sm text-gray-700 resize-none transition-shadow duration-200"
+                        />
+                        <p className="text-sm text-gray-500 mt-1">{`${message.length}/250`}</p> {/* Character count */}
+                    </div>
+
+                    {/* Send Button */}
+                    <div className="flex justify-end">
+                        <button
+                            onClick={handleSubmitInquiry}
+                            className="bg-primary text-white font-medium px-5 py-2 rounded-md hover:bg-primary/90 transition duration-200 shadow-sm"
+                        >
+                            Send Message
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             <div className="container mx-auto px-4 py-4 md:px-8 animate-fade-in">
                 <Link href="/" className="inline-flex items-center text-gray-600 hover:text-[#5C7934] transition-colors duration-200">
                     <ChevronLeft/>
@@ -209,7 +286,7 @@ export default function PropertyDetail({ property }) {
                                 <h3 className="text-xl font-bold mb-2">Interested in this property?</h3>
                                 <p>Contact our agent today to schedule a viewing.</p>
                             </div>
-                            <button className="bg-[#FFA500] hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200 flex items-center">
+                            <button className="bg-[#FFA500] hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200 flex items-center" onClick={() => setIsOpenModal(true)}>
                                 <i className="fas fa-phone-alt mr-3"></i> Contact Agent
                             </button>
                         </div>
