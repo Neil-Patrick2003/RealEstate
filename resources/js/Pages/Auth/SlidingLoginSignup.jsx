@@ -2,8 +2,8 @@
 import React, { useState } from "react";
 import SignupForm from "./SignupForm";
 import SigninForm from "./SigninForm";
-import log from "../../../assets/loginimage.png";
-import register from "../../../assets/signup.svg";
+import log from "../../../assets/real estate.png";
+import register from "../../../assets/real estate 2.png";
   import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "@inertiajs/react";
