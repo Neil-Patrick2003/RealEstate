@@ -14,12 +14,35 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import {useState} from "react";
+import Modal from "@/Components/Modal.jsx";
+import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
 dayjs.extend(relativeTime);
 
 export default function Inquiries({ inquiries }) {
+
+    const [openAddVisit, setOpenAddVisit] = useState(false);
+    const [selectedId, setSelectedId] = useState({});
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+
+
+
     return (
         <BuyerLayout>
             <div className="py-6 px-4">
+                <ScheduleVisitModal open={isModalOpen} setOpen={setIsModalOpen} property={selectedId} />
+                <Modal show={openAddVisit} onClose={() => setOpenAddVisit(false)}>
+                    <div className='p-6'>
+                        <p className="flex-center text-sm font-semibold text-primary flex items-center gap-2">
+                            <FontAwesomeIcon icon={faCalendarCheck} className="text-primary" />
+                            Schedule Visit
+                        </p>
+                        <div className='border-b mt-2 border-gray-200'></div>
+                    </div>
+                </Modal>
+
                 <h1 className="text-primary text-3xl font-bold mb-3">My Inquiries</h1>
                 <p className="text-gray-600 font-medium mb-6">
                     Keep track of all your property inquiries and agent communications.
@@ -36,7 +59,7 @@ export default function Inquiries({ inquiries }) {
                     inquiries.data.map((inquiry) => (
                         <div
                             key={inquiry.id}
-                            className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 hover:shadow-md transition-all"
+                            className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 hover:shadow-md transition-all"
                         >
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-6 p-6">
                                 {/* Property Image */}
@@ -126,7 +149,15 @@ export default function Inquiries({ inquiries }) {
                                     {/* Action Buttons */}
                                     <div className="flex flex-col gap-2">
                                         {inquiry.status === 'accepted' && (
-                                            <button className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition">
+                                            <button
+                                                className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition"
+                                                // onClick={() => setOpenAddVisit(true)}
+                                                onClick={() => {
+                                                    setIsModalOpen(true);
+                                                    setSelectedId(inquiry.property); // or inquiry.property, depending on what you need
+                                                }}
+
+                                            >
                                                 <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
                                                 Schedule Visit
                                             </button>

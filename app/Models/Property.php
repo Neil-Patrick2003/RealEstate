@@ -70,4 +70,11 @@ class Property extends Model
     public function favourites(){
         return $this->hasMany(Favourite::class);
     }
+
+    public function trippings()
+    {
+        return $this->hasMany(PropertyTripping::class);
+    }
+
+
 }

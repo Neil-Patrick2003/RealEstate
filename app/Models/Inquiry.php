@@ -32,5 +32,10 @@ class Inquiry extends Model
 
     }
 
+    public function trippings ()
+    {
+        return $this->hasMany(PropertyTripping::class, 'inquiry_id');
+    }
+
 
 }

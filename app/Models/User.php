@@ -81,4 +81,14 @@ class User extends Authenticatable
         return $this->hasMany(Favourite::class);
     }
 
+    public function agent_trippings(){
+        return $this->hasMany(PropertyTripping::class, 'agent_id');
+    }
+
+    public function buyer_trippings()
+    {
+      return $this->hasMany(PropertyTripping::class , 'buyer_id');
+    }
+
+
 }
