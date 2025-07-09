@@ -5,9 +5,23 @@ namespace App\Http\Controllers\Buyer;
 use App\Http\Controllers\Controller;
 use App\Models\PropertyTripping;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PropertyTrippingController extends Controller
 {
+
+
+    public function index(){
+
+        $trippings = PropertyTripping::with('property', 'agent')
+            ->where('buyer_id', auth()->id())
+            ->latest()
+            ->get();
+
+        return Inertia::render('Buyer/Trippins/Trippings' , [
+            'trippings' => $trippings
+        ]);
+    }
     public function store(Request $request){
 
 //        dd($request->toArray());

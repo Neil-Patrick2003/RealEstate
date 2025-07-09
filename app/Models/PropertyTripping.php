@@ -13,7 +13,7 @@ class PropertyTripping extends Model
     }
 
     public function agent(){
-        return $this->belongsTo('App\Models\User', 'agent_d');
+        return $this->belongsTo('App\Models\User', 'agent_id');
     }
 
     public function buyer(){
