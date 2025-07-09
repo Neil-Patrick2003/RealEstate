@@ -1,25 +1,59 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useState } from 'react';
-import { faCalendarAlt, faClock, faCommentDots, faEnvelope, faPhone } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Fragment, useEffect, useState } from 'react';
+import {router} from "@inertiajs/react";
 
-export default function ScheduleVisitModal({ open, setOpen, property }) {
+export default function ScheduleVisitModal({ open, setOpen, visitData }) {
     const [form, setForm] = useState({
         date: '',
         time: '',
-        contactMethod: 'phone',
         notes: '',
+        agentId: null,
+        inquiryId: null,
     });
+
+    useEffect(() => {
+        if (visitData) {
+            setForm({
+                date: '',
+                time: '',
+                notes: '',
+                agentId: visitData.agentId || null,
+                inquiryId: visitData.inquiryId || null,
+            });
+        }
+    }, [visitData]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = () => {
-        // Add your submit logic here (e.g., Inertia.post)
-        console.log('Submitting:', form);
-        setOpen(false);
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        router.post('/trippings', {
+            property_id: visitData?.property?.id,
+            agent_id: form.agentId,
+            inquiry_id: form.inquiryId,
+            date: form.date,
+            time: form.time,
+            notes: form.notes,
+        }, {
+            onSuccess: () => {
+                setOpen(false);
+            },
+            onError: (errors) => {
+                // Handle validation errors here if needed
+                console.log(errors);
+            },
+        });
+
+
     };
+
+
+    if (!visitData) return null;
+
+    const { property } = visitData;
 
     return (
         <Transition appear show={open} as={Fragment}>
@@ -65,14 +99,14 @@ export default function ScheduleVisitModal({ open, setOpen, property }) {
                                     <div>
                                         <h4 className="font-semibold text-gray-800">{property.title}</h4>
                                         <p className="text-sm text-gray-500">{property.address}</p>
-                                        <p className="text-sm text-primary font-semibold">₱ {property.price}</p>
+                                        <p className="text-sm text-primary font-semibold">₱ {property.price.toLocaleString()}</p>
                                     </div>
                                 </div>
 
                                 {/* Form */}
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">
+                                        <label className="block text-sm font-medium text-gray-700" htmlFor='date'>
                                             Preferred Date
                                         </label>
                                         <div className="mt-1 relative">
@@ -83,57 +117,27 @@ export default function ScheduleVisitModal({ open, setOpen, property }) {
                                                 onChange={handleChange}
                                                 className="w-full border-gray-300 rounded-md shadow-sm"
                                             />
-                                            <FontAwesomeIcon icon={faCalendarAlt} className="absolute right-3 top-3 text-gray-400" />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Time Slot</label>
-                                        <select
-                                            name="time"
-                                            value={form.time}
-                                            onChange={handleChange}
-                                            className="w-full border-gray-300 rounded-md shadow-sm"
-                                        >
-                                            <option value="">Select a time slot</option>
-                                            <option value="morning">Morning (9 AM - 12 PM)</option>
-                                            <option value="afternoon">Afternoon (1 PM - 4 PM)</option>
-                                            <option value="evening">Evening (5 PM - 7 PM)</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Preferred Contact Method
+                                        <label className="block text-sm font-medium text-gray-700" htmlFor='time'>
+                                            Preferred Time
                                         </label>
-                                        <div className="flex items-center gap-4 mt-1">
-                                            <label className="flex items-center gap-2 text-sm text-gray-700">
-                                                <input
-                                                    type="radio"
-                                                    name="contactMethod"
-                                                    value="phone"
-                                                    checked={form.contactMethod === 'phone'}
-                                                    onChange={handleChange}
-                                                />
-                                                <FontAwesomeIcon icon={faPhone} />
-                                                Phone
-                                            </label>
-                                            <label className="flex items-center gap-2 text-sm text-gray-700">
-                                                <input
-                                                    type="radio"
-                                                    name="contactMethod"
-                                                    value="email"
-                                                    checked={form.contactMethod === 'email'}
-                                                    onChange={handleChange}
-                                                />
-                                                <FontAwesomeIcon icon={faEnvelope} />
-                                                Email
-                                            </label>
+                                        <div className="mt-1 relative">
+                                            <input
+                                                type="time"
+                                                name="time"
+
+                                                value={form.time}
+                                                onChange={handleChange}
+                                                className="w-full border-gray-300 rounded-md shadow-sm"
+                                            />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Additional Notes</label>
+                                        <label className="block text-sm font-medium text-gray-700" htmlFor='notes'>Additional Notes</label>
                                         <textarea
                                             name="notes"
                                             rows={3}

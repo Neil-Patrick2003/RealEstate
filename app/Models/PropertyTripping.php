@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PropertyTripping extends Model
 {
-    protected $fillable = ['property_id','agent_d', 'buyer_id', 'inquiry_id', 'visit_date', 'visit_time', 'status', 'notes'];
+    protected $fillable = ['property_id','agent_id', 'buyer_id', 'inquiry_id', 'visit_date', 'visit_time', 'status', 'notes'];
 
     public function property(){
         return $this->belongsTo('App\Models\Property');

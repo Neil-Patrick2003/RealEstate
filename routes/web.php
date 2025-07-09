@@ -145,6 +145,9 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     //add favourite
     Route::post('/favourites', [\App\Http\Controllers\FavouriteController::class, 'store']);
 
+    //store tripping schedule
+    Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
+
 });
 
 

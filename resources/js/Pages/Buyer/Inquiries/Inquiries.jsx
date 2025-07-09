@@ -14,34 +14,33 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {useState} from "react";
+import { useState } from "react";
 import Modal from "@/Components/Modal.jsx";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
+
 dayjs.extend(relativeTime);
 
 export default function Inquiries({ inquiries }) {
-
     const [openAddVisit, setOpenAddVisit] = useState(false);
-    const [selectedId, setSelectedId] = useState({});
 
+    // State holds both property and agentId for scheduling visits
+    const [selectedId, setSelectedId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-
-
-
 
     return (
         <BuyerLayout>
             <div className="py-6 px-4">
-                <ScheduleVisitModal open={isModalOpen} setOpen={setIsModalOpen} property={selectedId} />
-                <Modal show={openAddVisit} onClose={() => setOpenAddVisit(false)}>
-                    <div className='p-6'>
-                        <p className="flex-center text-sm font-semibold text-primary flex items-center gap-2">
-                            <FontAwesomeIcon icon={faCalendarCheck} className="text-primary" />
-                            Schedule Visit
-                        </p>
-                        <div className='border-b mt-2 border-gray-200'></div>
-                    </div>
-                </Modal>
+                {/* Pass visitData which contains property and agentId */}
+                <ScheduleVisitModal open={isModalOpen} setOpen={setIsModalOpen} visitData={selectedId} />
+
+                <div className="p-6">
+                    <p className="flex-center text-sm font-semibold text-primary flex items-center gap-2">
+                        <FontAwesomeIcon icon={faCalendarCheck} className="text-primary" />
+                        Schedule Visit
+                    </p>
+                    <div className="border-b mt-2 border-gray-200"></div>
+                </div>
+
 
                 <h1 className="text-primary text-3xl font-bold mb-3">My Inquiries</h1>
                 <p className="text-gray-600 font-medium mb-6">
@@ -140,7 +139,7 @@ export default function Inquiries({ inquiries }) {
                                         </div>
                                     </div>
 
-                                    {/* Agent Contact Info - placeholder */}
+                                    {/* Agent Contact Info */}
                                     <div className="text-xs text-gray-500 mb-4 space-y-1">
                                         <p><FontAwesomeIcon icon={faEnvelope} className="mr-1" /> agent@email.com</p>
                                         <p><FontAwesomeIcon icon={faPhone} className="mr-1" /> +63 912 345 6789</p>
@@ -151,10 +150,13 @@ export default function Inquiries({ inquiries }) {
                                         {inquiry.status === 'accepted' && (
                                             <button
                                                 className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition"
-                                                // onClick={() => setOpenAddVisit(true)}
                                                 onClick={() => {
                                                     setIsModalOpen(true);
-                                                    setSelectedId(inquiry.property); // or inquiry.property, depending on what you need
+                                                    setSelectedId({
+                                                        property: inquiry.property,
+                                                        agentId: inquiry.agent.id,
+                                                        inquiryId: inquiry.id,
+                                                    });
                                                 }}
 
                                             >
@@ -163,7 +165,7 @@ export default function Inquiries({ inquiries }) {
                                             </button>
                                         )}
 
-                                        {/* Reply & Delete Buttons in Row */}
+                                        {/* Reply & Delete Buttons */}
                                         <div className="flex gap-x-2">
                                             <button className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium transition">
                                                 <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
@@ -175,7 +177,6 @@ export default function Inquiries({ inquiries }) {
                                             </button>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
