@@ -6,6 +6,7 @@ import Footer from './LandingPage/Footer';
 import backgroundImage from "../../assets/background.jpg";
 import { router } from "@inertiajs/react";
 import { debounce } from "lodash";
+import ToastHandler from "@/Components/ToastHandler.jsx";
 
 const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
     const [searchTerm, setSearchTerm] = useState(search || '');
@@ -54,6 +55,7 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
 
     return (
         <div className="relative overflow-x-hidden">
+            <ToastHandler/>
 
             {/* Hero Section with fullscreen background */}
             <div

@@ -135,7 +135,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Buyer/Dashboard');
     })->name('dashboard');
-    
+
     //add favourite
     Route::post('/favourites', [\App\Http\Controllers\FavouriteController::class, 'store']);
 

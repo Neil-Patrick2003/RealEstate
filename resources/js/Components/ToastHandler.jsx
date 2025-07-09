@@ -13,5 +13,5 @@ export default function ToastHandler() {
         if (flash.info) toast(flash.info);
     }, [flash]);
 
-    return <Toaster position="top-right" />;
+    return <Toaster position="bottom-right" />;
 }
