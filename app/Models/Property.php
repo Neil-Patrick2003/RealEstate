@@ -66,4 +66,8 @@ class Property extends Model
     {
         return $this->hasOne(PropertyListing::class);
     }
+
+    public function favourites(){
+        return $this->hasMany(Favourite::class);
+    }
 }

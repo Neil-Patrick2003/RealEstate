@@ -181,7 +181,7 @@ export default function BuyerLayout({ children }) {
               </div>
           </motion.header>
 
-        <div className='p-2 md:p-3 lg:p-4 xl:p-6 sl:p-8'>
+        <div className='py-20 px-4 md:px-8 lg:px-12 xl:px-16 sl:px-16'>
           {children}
         </div>
 

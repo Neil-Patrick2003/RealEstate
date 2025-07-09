@@ -16,7 +16,7 @@ Route::get('/', function (Request $request) {
 
     $properties = \App\Models\Property::where('status', 'Published')
         ->when($request->search, function ($q) use ($request) {
-            $q->where(function($query) use ($request) {
+            $q->where(function ($query) use ($request) {
                 $query->where('title', 'like', '%' . $request->search . '%')
                     ->orWhere('address', 'like', '%' . $request->search . '%');
             });
@@ -27,6 +27,14 @@ Route::get('/', function (Request $request) {
         ->latest()
         ->get();
 
+    // Get the user's favourited property IDs
+    $favouriteIds = auth()->check()
+        ? auth()->user()->favourites()->pluck('property_id')->toArray()
+        : [];
+
+
+
+
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -34,6 +42,7 @@ Route::get('/', function (Request $request) {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
         'properties' => $properties,
+        'favouriteIds' => $favouriteIds,
 
     ]);
 });
@@ -125,7 +134,11 @@ Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::
 Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Buyer/Dashboard');
-    });
+    })->name('dashboard');
+    
+    //add favourite
+    Route::post('/favourites', [\App\Http\Controllers\FavouriteController::class, 'store']);
+
 });
 
 
