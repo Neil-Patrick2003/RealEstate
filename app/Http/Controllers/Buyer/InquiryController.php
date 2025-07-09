@@ -7,12 +7,21 @@ use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Property;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class InquiryController extends Controller
 {
     public function index()
     {
+        $inquiries = Inquiry::where('buyer_id', auth()->id())
+            ->with('property', 'agent', 'messages')
+        ->latest()->paginate(10);
 
+//        dd($inquiries->toArray());
+
+        return Inertia::render('Buyer/Inquiries/Inquiries', [
+            'inquiries' => $inquiries,
+        ]);
     }
 
     public function store(Request $request, $id)
@@ -43,7 +52,6 @@ class InquiryController extends Controller
             'buyer_id' => auth()->id(),
             'agent_id' => $agent_id,
             'property_id' => $property->id,
-            'message' => $validated['message'],
             'status' => 'pending',
         ]);
 
@@ -52,7 +60,7 @@ class InquiryController extends Controller
             'sender_id' => auth()->id(),
             'receiver_id' => $agent_id,
             'property_id' => $property->id,
-            'message' => 'Inquiry created',
+            'message' => $validated['message'],
             'inquiry_id' => $inquiry->id,
         ]);
 

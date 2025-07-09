@@ -115,7 +115,9 @@ Route::post('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageControl
 
 
 Route::get('/agents/inquiries', [\App\Http\Controllers\Agent\InquiryController::class, 'index']);
-Route::patch('/agents/inquiries/{id}', [\App\Http\Controllers\Agent\InquiryController::class, 'update']);
+Route::patch('/agents/inquiries/{inquiry}/accept', [\App\Http\Controllers\Agent\InquiryController::class, 'accept']);
+Route::patch('/agents/inquiries/{inquiry}/reject', [\App\Http\Controllers\Agent\InquiryController::class, 'reject']);
+Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\InquiryController::class, 'cancel']); // Used for cancel
 
 
 
@@ -138,6 +140,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
 
     //sent inquiries
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
+    Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
 
     //add favourite
     Route::post('/favourites', [\App\Http\Controllers\FavouriteController::class, 'store']);

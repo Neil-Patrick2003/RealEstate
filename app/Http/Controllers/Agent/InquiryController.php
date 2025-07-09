@@ -14,7 +14,7 @@ class InquiryController extends Controller
     public function index(Request $request){
 
 
-        $inquiries = Inquiry::with('seller', 'property')
+        $inquiries = Inquiry::with('seller', 'agent', 'property', 'messages')
             ->where('agent_id', auth()->id())
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 return $q->where('status', '=', $request->status);
@@ -39,6 +39,7 @@ class InquiryController extends Controller
         $cancelledCount = Inquiry::where('agent_id', auth()->id())
             ->where('status', 'cancelled')
             ->count();
+
 
         return Inertia::render('Agent/Inquiry/Inquiries' , [
             'inquiries' => $inquiries,
@@ -95,13 +96,55 @@ class InquiryController extends Controller
 
     }
 
-    public function update(Request $request, $id){
-        $inquiry = Inquiry::findOrFail($id);
+//    public function update(Request $request, $id){
+//        $inquiry = Inquiry::findOrFail($id);
+//        $inquiry->update([
+//            'status' => "Cancelled"
+//        ]);
+//
+//        return redirect()->back()->with('success', 'Inquiry has been Cancelled.');
+//    }
+
+    // Accept inquiry (Buyer side)
+    public function accept(Inquiry $inquiry)
+    {
+        if ($inquiry->status !== 'pending') {
+            return back()->withErrors(['message' => 'Only pending inquiries can be accepted.']);
+        }
+
         $inquiry->update([
-            'status' => "Cancelled"
+            'status' => 'accepted',
         ]);
 
-        return redirect()->back()->with('success', 'Inquiry has been Cancelled.');
+        return back()->with('success', 'Inquiry accepted successfully.');
+    }
+
+    // Reject inquiry (Buyer side)
+    public function reject(Inquiry $inquiry)
+    {
+        if ($inquiry->status !== 'pending') {
+            return back()->withErrors(['message' => 'Only pending inquiries can be rejected.']);
+        }
+
+        $inquiry->update([
+            'status' => 'rejected',
+        ]);
+
+        return back()->with('success', 'Inquiry rejected successfully.');
+    }
+
+    // Cancel inquiry (Seller side)
+    public function cancel(Inquiry $inquiry)
+    {
+        if ($inquiry->status !== 'pending') {
+            return back()->withErrors(['message' => 'Only pending inquiries can be cancelled.']);
+        }
+
+        $inquiry->update([
+            'status' => 'cancelled',
+        ]);
+
+        return back()->with('success', 'Inquiry cancelled successfully.');
     }
 
 

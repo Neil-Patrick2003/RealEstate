@@ -57,7 +57,7 @@ export default function BuyerLayout({ children }) {
             transition={{ duration: 0.3 }}
             className="fixed top-0 left-0 z-50 w-64 h-full bg-white border"
           >
-            <Sidebar isOpen={true} setIsOpen={setIsMobileOpen} />
+            <BuyerSidebar isOpen={true} setIsOpen={setIsMobileOpen} />
             <button
               onClick={() => setIsMobileOpen(false)}
               className="absolute top-4 right-4 p-2"

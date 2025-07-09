@@ -27,5 +27,10 @@ class Inquiry extends Model
         return $this->belongsTo(Property::class, 'property_id');
     }
 
+    public function messages (){
+        return $this->hasOne(Message::class, 'inquiry_id');
+
+    }
+
 
 }
