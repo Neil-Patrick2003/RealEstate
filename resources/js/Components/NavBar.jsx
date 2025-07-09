@@ -59,7 +59,7 @@ const NavBar = () => {
   };
 
   return (
-    <header className="h-16 z-50 fixed top-0 left-0 right-0 bg-white shadow-lg">
+    <header className="h-16 z-[999] fixed top-0 left-0 right-0 bg-white shadow-lg">
       <nav className="flex justify-between items-center h-full max-w-8xl mx-auto px-4 text-sm">
         <Link href="/">
           <motion.div

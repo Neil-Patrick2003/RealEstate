@@ -32,7 +32,7 @@ export default function Inquiries({
                     <li><
                         button className="w-full text-left hover:text-primary"
                                 onClick={() => {
-                                router.visit(route('seller.messages', { selectedUserId: selectedId }));
+                                    router.visit(route('seller.messages', { selectedUserId: selectedId }));
                         }}>
                         Sent a Message
                     </button></li>

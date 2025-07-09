@@ -73,7 +73,7 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
             </div>
 
             {/* Filters and PropertyList - pulled up to peek */}
-            <div className="-mt-24 relative z-20  rounded-t-3xl shadow-lg px-8 py-6">
+            <div className="-mt-24 relative  rounded-t-3xl shadow-lg px-8 py-6">
 
 
                     <PropertyList properties={properties} />
