@@ -84,8 +84,6 @@ Route::middleware(['auth', ])->group(function () {
 
 });
 
-//buyer
-Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
 
 
@@ -119,7 +117,18 @@ Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationContr
     ->name('notifications.read');
 
 
-//buyer
+
+
+//------------------------------------------buyer---------------------------------------------------
+Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
+
+Route::middleware(['auth','role:Buyer' ])->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Buyer/Dashboard');
+    });
+});
+
+
 
 
 
