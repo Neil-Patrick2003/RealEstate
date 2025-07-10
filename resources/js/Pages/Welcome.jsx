@@ -54,12 +54,12 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
     };
 
     return (
-        <div className="relative overflow-x-hidden">
+        <div className="relative overflow-x-hidden bg-gray-100">
             <ToastHandler/>
 
             {/* Hero Section with fullscreen background */}
             <div
-                className="relative h-screen bg-cover bg-center bg-no-repeat"
+                className="relative h-screen bg-cover bg-center bg-no-repeat "
                 style={{ backgroundImage: `url(${backgroundImage})` }}
             >
                 <div className="relative z-10">
@@ -75,7 +75,7 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
             </div>
 
             {/* Filters and PropertyList - pulled up to peek */}
-            <div className="-mt-24 relative  rounded-t-3xl shadow-lg px-8 py-6">
+            <div className="relative mt-12  rounded-t-3xl shadow-lg px-8 py-6 bg-gray-100">
 
 
                     <PropertyList properties={properties} />
