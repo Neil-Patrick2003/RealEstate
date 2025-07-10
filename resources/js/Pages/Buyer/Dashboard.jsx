@@ -2,42 +2,41 @@ import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import { usePage, Link } from "@inertiajs/react";
 import PropertiesMap from "@/Components/PropertiesMap.jsx";
 
-export default function Dashboard({properties}) {
+export default function Dashboard({ properties }) {
     const auth = usePage().props?.auth?.user ?? null;
 
     return (
         <BuyerLayout>
-            <div className="py-6 px-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="py-10 px-4 sm:px-6 lg:px-8 space-y-12">
+                {/* Welcome & Quick Actions */}
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Welcome Card */}
-                    <div className="col-span-1 md:col-span-2 rounded-2xl bg-gradient-to-tl from-slate-900 via-slate-800 to-slate-700 p-8 text-white flex justify-between items-start">
-                        <div className="space-y-3">
-                            <h1 className="text-3xl font-bold">Welcome back 👋</h1>
-                            <p className="text-lg font-medium">{auth?.name}</p>
-                            <p className="text-sm font-mono text-slate-200 leading-relaxed">
-                                Explore a personalized experience designed to help you find the perfect lot.
-                                Browse listings, track saved properties, and manage inquiries — all in one place.
+                    <div className="md:col-span-2 bg-gradient-to-tl from-primary to-accent rounded-2xl p-8 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="space-y-4">
+                            <h1 className="text-3xl font-bold tracking-tight">Welcome back 👋</h1>
+                            <p className="text-xl font-medium">{auth?.name}</p>
+                            <p className="text-sm leading-relaxed text-slate-200">
+                                Explore a personalized experience to help you find the perfect lot.
+                                Track saved properties and manage your inquiries — all in one place.
                             </p>
-
                             <Link
                                 href="/"
-                                className="inline-block mt-3 px-4 py-2 bg-accent text-white rounded-lg text-sm font-semibold hover:bg-accent/90 transition"
+                                className="inline-block px-4 py-2 bg-secondary text-white rounded-md text-sm font-semibold hover:scale-105 transition-transform"
                             >
                                 Discover Now
                             </Link>
                         </div>
-
-                        {/* Optional Illustration or Icon */}
-                        <div className="hidden md:block">
-                            {/* Replace with actual image/icon if needed */}
-                            <img src="/images/lot-finder-icon.svg" alt="Lot Finder" className="w-24 h-24 opacity-80" />
-                        </div>
+                        <img
+                            src="/images/lot-finder-icon.svg"
+                            alt="Lot Finder"
+                            className="w-24 h-24 opacity-90 hidden md:block"
+                        />
                     </div>
 
-                    {/* Quick Access or Summary Card */}
-                    <div className="col-span-1 rounded-2xl bg-gradient-to-tl from-slate-900 via-slate-800 to-slate-700 p-6 text-white">
-                        <h2 className="text-lg font-semibold mb-2">Quick Actions</h2>
-                        <ul className="space-y-2 text-sm">
+                    {/* Quick Actions */}
+                    <div className="bg-gradient-to-tl from-primary to-accent rounded-2xl p-6 text-white">
+                        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+                        <ul className="space-y-3 text-sm">
                             <li>
                                 <Link href="/saved" className="hover:underline hover:text-accent">📌 Saved Lots</Link>
                             </li>
@@ -49,28 +48,84 @@ export default function Dashboard({properties}) {
                             </li>
                         </ul>
                     </div>
-                    <div className='col-span-1 md:col-span-3 p-8 rounded-2xl border border-gray-100  shadow-sm'>
-                        <div>
-                            <h4 className="sr-only">Status</h4>
-                            <p className="font-bold text-sm uppercase text-gray-500">Profile</p>
-                            <div aria-hidden="true" className="mt-6">
-                                <div className="overflow-hidden rounded-full bg-gray-200">
-                                    <div style={{ width: '37.5%' }} className="h-2 rounded-full bg-accent" />
-                                </div>
-                                <div className="mt-6 hidden grid-cols-4 text-sm font-medium text-gray-600 sm:grid">
-                                    <div className="text-accent">Personal Information</div>
-                                    <div className="text-center text-accent">Contacts</div>
-                                    <div className="text-center">Verify Email</div>
-                                    <div className="text-right">Verified</div>
-                                </div>
-                            </div>
+                </section>
+
+                {/* Profile Completion Progress */}
+                <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-600 uppercase">Profile Progress</h3>
+                    <div className="mt-4">
+                        <div className="overflow-hidden rounded-full bg-gray-200 h-2">
+                            <div
+                                className="h-2 bg-gradient-to-r from-lightaccent to-accent rounded-full"
+                                style={{ width: "37.5%" }}
+                            />
+                        </div>
+                        <div className="mt-6 hidden sm:grid grid-cols-4 text-sm font-medium text-gray-600">
+                            <div className="text-accent">Personal Info</div>
+                            <div className="text-center text-accent">Contacts</div>
+                            <div className="text-center">Email</div>
+                            <div className="text-right">Verified</div>
                         </div>
                     </div>
+                </section>
 
-                </div>
-                <div>
-                    <PropertiesMap properties={properties} />
-                </div>
+                {/* Featured Properties Carousel */}
+                <section className="space-y-4">
+                    <h2 className="text-xl font-semibold text-gray-800">Featured Properties</h2>
+                    <div className="overflow-x-auto flex space-x-6 snap-x snap-mandatory scroll-smooth pb-2">
+                        {properties.slice(0, 5).map((property) => (
+                            <div
+                                key={property.id}
+                                className="min-w-[75%] sm:min-w-[300px] md:min-w-[350px] max-w-sm bg-white rounded-xl shadow-md snap-start transition hover:shadow-lg hover:scale-[1.02] duration-300 relative"
+                            >
+                                {/* Property Image */}
+                                <div className="relative">
+                                    <img
+                                        src={`/storage/${property.image_url}`}
+                                        alt={property.title}
+                                        className="w-full h-48 object-cover rounded-t-xl"
+                                    />
+                                    {/* Bite Effect Button */}
+                                    <div className="absolute -bottom-4 right-4 z-10">
+                                        <button className="bg-secondary text-white p-2 rounded-full shadow-lg hover:bg-indigo-700 transition">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Property Info */}
+                                <div className="p-4 pt-6 space-y-1">
+                                    <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">
+                                        {property.title}
+                                    </h3>
+                                    <p className="text-sm text-gray-500">3 Bed · 2 Bath · 1,800 sqft</p>
+                                    <p className="text-xl font-bold text-green-600 mt-1">$321,900</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Map Section */}
+                <section>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Explore on Map</h2>
+                    <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                        <PropertiesMap properties={properties} />
+                    </div>
+                </section>
             </div>
         </BuyerLayout>
     );

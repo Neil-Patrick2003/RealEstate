@@ -138,9 +138,10 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
 
         $properties = \App\Models\Property::with('coordinate')
             ->where('status', 'Published')
+            ->latest()
             ->get();
 
-//        dd($properties->toArray());
+
 
         return Inertia::render('Buyer/Dashboard', [
             'properties' => $properties,
