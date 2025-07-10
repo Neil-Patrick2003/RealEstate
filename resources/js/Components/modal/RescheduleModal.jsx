@@ -1,60 +1,46 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useEffect, useState } from 'react';
-import { router } from "@inertiajs/react";
+import { Fragment, useEffect } from 'react';
+import { useForm } from "@inertiajs/react";
 
-export default function ScheduleVisitModal({ open, setOpen, visitData }) {
-
-    console.log(visitData);
-    const [form, setForm] = useState({
+export default function RescheduleModal({ open, setOpen, visitData }) {
+    const { data, setData, patch, processing, reset, errors } = useForm({
         date: '',
         time: '',
         notes: '',
-        agentId: null,
-        inquiryId: null,
+        // add other fields if needed here
     });
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
+    // When visitData changes or modal opens, populate the form data
     useEffect(() => {
         if (visitData) {
-            setForm({
-                date: '',
-                time: '',
-                notes: '',
-                agentId: visitData.agentId || null,
-                inquiryId: visitData.inquiryId || null,
+            setData({
+                date: visitData.visit_date || '',
+                time: visitData.visit_time ? visitData.visit_time.slice(0, 5) : '', // HH:mm
+                notes: visitData.notes || '',
             });
         }
-    }, [visitData]);
+    }, [visitData, setData]);
 
     const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        setData(e.target.name, e.target.value);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setIsSubmitting(true);
 
-        router.post('/trippings', {
-            property_id: visitData?.property?.id,
-            agent_id: form.agentId,
-            inquiry_id: form.inquiryId,
-            date: form.date,
-            time: form.time,
-            notes: form.notes,
-        }, {
+        // Assuming the route expects the visit ID for patch
+        patch(`/trippings/${visitData.id}`, {
             onSuccess: () => {
-                setIsSubmitting(false);
                 setOpen(false);
+                reset(); // reset form data if needed
             },
-            onError: (errors) => {
-                setIsSubmitting(false);
-                console.error(errors);
-            },
+            onError: () => {
+                // Errors handled via errors object
+            }
         });
     };
 
-    if (!visitData) return null;
+    if (!visitData?.property) return null;
     const { property } = visitData;
 
     return (
@@ -85,10 +71,10 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                         >
                             <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                                 <Dialog.Title className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                    🗓️ Schedule a Property Visit
+                                    🔁 Reschedule Property Visit
                                 </Dialog.Title>
                                 <p className="text-sm text-gray-500 mt-1 mb-4">
-                                    Choose your preferred date and time. Our agent will confirm your request.
+                                    Select a new date and time. Your agent will confirm the rescheduled appointment.
                                 </p>
 
                                 {/* Property Summary */}
@@ -97,6 +83,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                         src={`/storage/${property.image_url}`}
                                         alt={property.title}
                                         className="w-20 h-20 rounded-md object-cover border"
+                                        onError={(e) => (e.target.src = "/placeholder.png")}
                                     />
                                     <div className="flex-1">
                                         <h4 className="font-semibold text-gray-800 line-clamp-1">{property.title}</h4>
@@ -105,19 +92,22 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                     </div>
                                 </div>
 
-                                {/* Form Section */}
+                                {/* Form */}
                                 <form onSubmit={handleSubmit} className="space-y-4">
+                                    <input type="hidden" name="agent_id" value={data.agent_id || ''} />
+                                    <input type="hidden" name="inquiry_id" value={data.inquiry_id || ''} />
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">Preferred Date</label>
                                         <input
                                             type="date"
                                             name="date"
                                             min={new Date().toISOString().split("T")[0]}
-                                            value={form.date}
+                                            value={data.date}
                                             onChange={handleChange}
                                             required
-                                            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                                            className={`mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary ${errors.date ? 'border-red-500' : ''}`}
                                         />
+                                        {errors.date && <p className="text-red-600 text-sm mt-1">{errors.date}</p>}
                                     </div>
 
                                     <div>
@@ -125,11 +115,12 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                         <input
                                             type="time"
                                             name="time"
-                                            value={form.time}
+                                            value={data.time}
                                             onChange={handleChange}
                                             required
-                                            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                                            className={`mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary ${errors.time ? 'border-red-500' : ''}`}
                                         />
+                                        {errors.time && <p className="text-red-600 text-sm mt-1">{errors.time}</p>}
                                     </div>
 
                                     <div>
@@ -138,28 +129,28 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                             name="notes"
                                             rows={3}
                                             placeholder="Any specific requests or questions?"
-                                            value={form.notes}
+                                            value={data.notes}
                                             onChange={handleChange}
                                             className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
                                         />
                                     </div>
 
-                                    {/* Action Buttons */}
+                                    {/* Buttons */}
                                     <div className="mt-6 flex justify-end gap-3">
                                         <button
                                             type="button"
                                             className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-100 text-gray-700"
                                             onClick={() => setOpen(false)}
-                                            disabled={isSubmitting}
+                                            disabled={processing}
                                         >
                                             Cancel
                                         </button>
                                         <button
                                             type="submit"
                                             className="px-5 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition"
-                                            disabled={isSubmitting}
+                                            disabled={processing}
                                         >
-                                            {isSubmitting ? "Scheduling..." : "Confirm Schedule"}
+                                            {processing ? "Rescheduling..." : "Confirm New Schedule"}
                                         </button>
                                     </div>
                                 </form>

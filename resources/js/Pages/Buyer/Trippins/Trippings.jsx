@@ -1,150 +1,224 @@
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    faCalendarCheck,
-    faClock,
-    faLocationDot,
-    faHouseChimney,
-    faEnvelope,
-    faPhone,
-    faTrashAlt,
-    faPaperPlane,
-    faPesoSign,
-    faMapMarkerAlt,
-    faUserTie, faCommentDots,
+    faCalendarCheck, faClock, faLocationDot, faHouseChimney,
+    faEnvelope, faPhone, faTrashAlt, faPaperPlane,
+    faPesoSign, faCommentDots, faCalendarPlus, faRedo
 } from "@fortawesome/free-solid-svg-icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useState } from "react";
+import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
 
-// Extend Day.js with relativeTime
 dayjs.extend(relativeTime);
 
 export default function Trippings({ trippings }) {
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedVisit, setSelectedVisit] = useState(null);
+
+    const openScheduleModal = (trip, type) => {
+        setSelectedVisit(trip);
+
+        setModalOpen(true);
+    };
+
     return (
         <BuyerLayout>
-            <div className="px-4 py-6">
-                <h1 className="text-2xl font-bold text-primary mb-4">📅 Scheduled Trippings</h1>
+            <ScheduleVisitModal
+                open={modalOpen}
+                setOpen={setModalOpen}
+                visitData={selectedVisit}
+            />
+
+            <div className="mt-10 px-4 py-6 max-w-7xl mx-auto">
+                <h1 className="text-3xl font-bold text-primary mb-6 flex items-center gap-2">
+                    <FontAwesomeIcon icon={faCalendarCheck} />
+                    Scheduled Trippings
+                </h1>
 
                 {trippings.length === 0 ? (
-                    <p className="text-gray-500">No trippings scheduled yet.</p>
+                    <p className="text-gray-500 text-center py-16 text-lg">
+                        You don’t have any scheduled visits yet.
+                    </p>
                 ) : (
                     <div className="space-y-6">
-                        {trippings.map((tripping) => (
-                            <div
-                                key={tripping.id}
-                                className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 hover:shadow-md transition-all"
-                            >
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-6 p-6">
-                                    {/* Property Image */}
-                                    <div className="col-span-12 lg:col-span-3">
-                                        <div className="relative rounded-lg overflow-hidden h-48 shadow-sm">
-                                            <img
-                                                src={`/storage/${tripping.property.image_url}`}
-                                                onError={(e) => (e.target.src = "/placeholder.png")}
-                                                alt={tripping.property.title}
-                                                className="w-full h-full object-cover hover:scale-105 transition-transform"
-                                            />
-                                            <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                                                <FontAwesomeIcon icon={faPesoSign} />
-                                                {parseFloat(tripping.property.price).toLocaleString()}
+                        {trippings.map((trip) => {
+                            const isFuture = dayjs(trip.visit_date).diff(dayjs(), "day") >= 2;
+                            const isPast = dayjs(trip.visit_date).isBefore(dayjs(), "day");
+                            const statusColor =
+                                trip.status === "accepted"
+                                    ? "bg-green-100 text-green-700"
+                                    : trip.status === "rejected"
+                                        ? "bg-red-100 text-red-700"
+                                        : "bg-yellow-100 text-yellow-700";
+
+                            return (
+                                <div
+                                    key={trip.id}
+                                    className="bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition duration-200"
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 p-6">
+                                        {/* Image */}
+                                        <div className="col-span-12 lg:col-span-3">
+                                            <div className="relative rounded-md overflow-hidden h-48 shadow-sm">
+                                                <img
+                                                    src={`/storage/${trip.property.image_url}`}
+                                                    alt={trip.property.title}
+                                                    onError={(e) => (e.target.src = "/placeholder.png")}
+                                                    className="w-full h-full object-cover hover:scale-105 transition-transform"
+                                                />
+                                                <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                                                    <FontAwesomeIcon icon={faPesoSign} className="mr-1" />
+                                                    {parseFloat(trip.property.price).toLocaleString()}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Property Info */}
-                                    <div className="col-span-12 lg:col-span-6 flex flex-col justify-between">
-                                        <div>
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h3 className="text-xl font-semibold text-primary leading-tight">
-                                                    {tripping.property.title}
-                                                </h3>
-                                                <span
-                                                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                                                        tripping.status === 'accepted'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : tripping.status === 'rejected'
-                                                                ? 'bg-red-100 text-red-700'
-                                                                : 'bg-yellow-100 text-yellow-800'
-                                                    }`}
-                                                >
-                                                    <FontAwesomeIcon icon={faClock} className="mr-1" />
-                                                    {tripping.status}
-                                                </span>
-                                            </div>
+                                        {/* Details */}
+                                        <div className="col-span-12 lg:col-span-6 flex flex-col justify-between">
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between items-start">
+                                                    <h3 className="text-xl font-semibold text-primary">
+                                                        {trip.property.title}
+                                                    </h3>
+                                                    <span
+                                                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusColor}`}
+                                                    >
+                            <FontAwesomeIcon icon={faClock} className="mr-1" />
+                                                        {trip.status}
+                          </span>
+                                                </div>
+                                                <p className="text-gray-600 text-sm">
+                                                    <FontAwesomeIcon icon={faLocationDot} className="mr-1" />
+                                                    {trip.property.address}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    <FontAwesomeIcon
+                                                        icon={faHouseChimney}
+                                                        className="mr-1"
+                                                    />
+                                                    {trip.property.property_type} – {trip.property.sub_type}
+                                                </p>
 
-                                            <p className="text-gray-600 text-sm mb-1">
-                                                <FontAwesomeIcon icon={faLocationDot} className="mr-1" />
-                                                {tripping.property.address}
-                                            </p>
-
-                                            <p className="text-xs text-gray-500 mb-2">
-                                                <FontAwesomeIcon icon={faHouseChimney} className="mr-1" />
-                                                {tripping.property.property_type} – {tripping.property.sub_type}
-                                            </p>
-
-                                            <p className="text-sm text-gray-700 mb-2">
-                                                <FontAwesomeIcon icon={faCalendarCheck} className="mr-1 text-primary" />
-                                                Visit Date:{" "}
-                                                <strong>{dayjs(tripping.visit_date).format("MMMM D, YYYY")}</strong>
-                                            </p>
-
-                                            <p className="text-sm text-gray-700 mb-2">
-                                                <FontAwesomeIcon icon={faClock} className="mr-1 text-primary" />
-                                                Visit Time:{" "}
-                                                <strong>{dayjs(`1970-01-01T${tripping.visit_time}`).format("hh:mm A")}</strong>
-                                            </p>
-
-                                            {tripping.notes && (
-                                                <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                                                <div className="mt-3 space-y-2">
                                                     <p className="text-sm text-gray-700">
-                                                        <FontAwesomeIcon icon={faCommentDots} className="mr-2 text-primary" />
-                                                        <strong>Notes:</strong> {tripping.notes}
+                                                        <FontAwesomeIcon
+                                                            icon={faCalendarCheck}
+                                                            className="mr-2 text-primary"
+                                                        />
+                                                        Visit Date:{" "}
+                                                        <strong>
+                                                            {dayjs(trip.visit_date).format("MMMM D, YYYY")}
+                                                        </strong>
+                                                    </p>
+                                                    <p className="text-sm text-gray-700">
+                                                        <FontAwesomeIcon
+                                                            icon={faClock}
+                                                            className="mr-2 text-primary"
+                                                        />
+                                                        Time:{" "}
+                                                        <strong>
+                                                            {dayjs(
+                                                                `1970-01-01T${trip.visit_time}`
+                                                            ).format("hh:mm A")}
+                                                        </strong>
+                                                    </p>
+
+                                                    {trip.notes && (
+                                                        <div className="bg-gray-50 border border-gray-200 rounded-md p-3 text-sm text-gray-700">
+                                                            <FontAwesomeIcon
+                                                                icon={faCommentDots}
+                                                                className="mr-2 text-primary"
+                                                            />
+                                                            <strong>Notes:</strong> {trip.notes}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <p className="text-xs text-gray-400 mt-3">
+                                                    Scheduled {dayjs(trip.created_at).fromNow()}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Agent Info & Actions */}
+                                        <div className="col-span-12 lg:col-span-3 flex flex-col justify-between">
+                                            <div className="flex items-center mb-4">
+                                                <div className="w-10 h-10 rounded-full overflow-hidden border mr-3">
+                                                    <img
+                                                        src={
+                                                            trip.agent.photo_url ||
+                                                            "https://placehold.co/80x80"
+                                                        }
+                                                        alt={trip.agent.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-800">
+                                                        {trip.agent.name}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {trip.agent.email}
                                                     </p>
                                                 </div>
-                                            )}
-
-                                            <p className="text-xs text-gray-400 mt-2">
-                                                Sent {dayjs(tripping.created_at).fromNow()}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Agent Info & Actions */}
-                                    <div className="col-span-12 lg:col-span-3 flex flex-col justify-between">
-                                        <div className="flex items-center mb-4">
-                                            <div className="w-10 h-10 rounded-full overflow-hidden mr-3 border">
-                                                <img
-                                                    src={tripping.agent.photo_url || "https://placehold.co/80x80"}
-                                                    alt={tripping.agent.name}
-                                                    className="w-full h-full object-cover"
-                                                />
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-800">{tripping.agent.name}</p>
-                                                <p className="text-xs text-gray-500">{tripping.agent.email}</p>
+
+                                            <div className="text-xs text-gray-500 space-y-1 mb-4">
+                                                {trip.agent.contact_number && (
+                                                    <p>
+                                                        <FontAwesomeIcon
+                                                            icon={faPhone}
+                                                            className="mr-1"
+                                                        />{" "}
+                                                        {trip.agent.contact_number}
+                                                    </p>
+                                                )}
                                             </div>
-                                        </div>
 
-                                        <div className="text-xs text-gray-500 mb-4 space-y-1">
-                                            {tripping.agent.contact_number && (
-                                                <p><FontAwesomeIcon icon={faPhone} className="mr-1" /> {tripping.agent.contact_number}</p>
-                                            )}
-                                        </div>
+                                            <div className="flex flex-col gap-2">
+                                                <button className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium transition">
+                                                    <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
+                                                    Message
+                                                </button>
 
-                                        <div className="flex gap-x-2">
-                                            <button className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium transition">
-                                                <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
-                                                Message
-                                            </button>
-                                            <button className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-md text-sm font-medium transition">
-                                                <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
-                                                Cancel
-                                            </button>
+                                                {isFuture && (
+                                                    <button
+                                                        onClick={() =>
+                                                            openScheduleModal(trip, "reschedule")
+                                                        }
+                                                        className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition"
+                                                    >
+                                                        <FontAwesomeIcon
+                                                            icon={faCalendarPlus}
+                                                            className="mr-2"
+                                                        />
+                                                        Reschedule Visit
+                                                    </button>
+                                                )}
+
+                                                {isPast && (
+                                                    <button
+                                                        onClick={() =>
+                                                            openScheduleModal(trip, "reschedule")
+                                                        }
+                                                        className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition"
+                                                    >
+                                                        <FontAwesomeIcon icon={faRedo} className="mr-2" />
+                                                        Missed? Reschedule
+                                                    </button>
+                                                )}
+
+                                                <button className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition">
+                                                    <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
+                                                    Cancel
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
