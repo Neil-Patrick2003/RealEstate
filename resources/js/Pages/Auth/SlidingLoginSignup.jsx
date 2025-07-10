@@ -2,8 +2,13 @@
 import React, { useState } from "react";
 import SignupForm from "./SignupForm";
 import SigninForm from "./SigninForm";
+<<<<<<< HEAD
+import log from "../../../assets/real estate.png";
+import register from "../../../assets/real estate 2.png";
+=======
 import log from "../../../assets/loginimage.png";
 import register from "../../../assets/signup.svg";
+>>>>>>> origin/rams
   import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "@inertiajs/react";
