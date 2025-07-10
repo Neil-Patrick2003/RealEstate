@@ -141,10 +141,21 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
             ->latest()
             ->get();
 
+        $inquiries = \App\Models\Inquiry::with('property', 'agent:id,name,email')
+            ->where('buyer_id', auth()->id())
+            ->latest() // defaults to 'created_at' in descending order
+            ->take(10) // limit to 10 results
+            ->get();
+
+
+
+
+
 
 
         return Inertia::render('Buyer/Dashboard', [
             'properties' => $properties,
+            'inquiries' => $inquiries,
         ]);
     })->name('dashboard');
 

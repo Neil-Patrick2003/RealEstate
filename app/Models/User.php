@@ -90,5 +90,10 @@ class User extends Authenticatable
       return $this->hasMany(PropertyTripping::class , 'buyer_id');
     }
 
+    public function inquiriesAsBuyer()
+    {
+        return $this->hasMany(Inquiry::class, 'buyer_id');
+    }
+
 
 }

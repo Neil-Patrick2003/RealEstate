@@ -1,10 +1,22 @@
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import { usePage, Link } from "@inertiajs/react";
 import PropertiesMap from "@/Components/PropertiesMap.jsx";
+import dayjs from "dayjs";
+import React from "react";
+import Progress from "@/Components/Progress.jsx";
 
-export default function Dashboard({ properties }) {
+
+const statusStyles = {
+    accepted: 'bg-green-100 text-green-700 ring-green-200',
+    rejected: 'bg-red-100 text-red-700 ring-red-200',
+    pending: 'bg-yellow-100 text-yellow-700 ring-yellow-200',
+    cancelled: 'bg-gray-100 text-gray-700 ring-gray-200',
+    default: 'bg-orange-100 text-orange-700 ring-orange-200'
+};
+
+export default function Dashboard({ properties, inquiries }) {
     const auth = usePage().props?.auth?.user ?? null;
-
+    const progressInquiry = inquiries.find(i => i.status === 'accepted');
     return (
         <BuyerLayout>
             <div className="py-10 px-4 sm:px-6 lg:px-8 space-y-12">
@@ -125,6 +137,96 @@ export default function Dashboard({ properties }) {
                     <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
                         <PropertiesMap properties={properties} />
                     </div>
+                </section>
+
+                {/*recent inquiry*/}
+                <section>
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+                        <div className='col-span-1 md:col-span-2'>
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Explore on Map</h2>
+
+                            <div className="overflow-x-auto bg-white shadow-sm rounded-b-lg">
+                                <table className="min-w-full text-sm text-left text-gray-700">
+                                    <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
+                                    <tr>
+                                        <th className="p-3 text-center"><input type="checkbox" className="rounded border-gray-400" /></th>
+                                        <th className="p-3">Property</th>
+                                        <th className="p-3">Agent</th>
+                                        <th className="p-3">Status</th>
+                                        <th className="p-3">Date Inquired</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-dashed">
+                                    {inquiries?.length > 0 ? (
+                                        inquiries.map((inquiry) => {
+                                            const statusClass = statusStyles[inquiry.status] || statusStyles.default;
+                                            const isPending = inquiry.status.toLowerCase() === 'pending';
+                                            const isCancelled = inquiry.status.toLowerCase() === 'cancelled';
+
+                                            return (
+                                                <tr key={inquiry.id} className="hover:bg-gray-50 flex flex-col md:table-row w-full">
+                                                    <td className="p-3 text-center hidden md:table-cell">
+                                                        <input type="checkbox" className="rounded border-gray-400" />
+                                                    </td>
+                                                    <td className="p-3 md:table-cell">
+                                                        <div className="flex items-center gap-3">
+                                                            <img
+                                                                src={`/storage/${inquiry.property.image_url}`}
+                                                                onError={(e) => e.target.src = '/placeholder.png'}
+                                                                alt={inquiry.property.title}
+                                                                className="w-14 h-14 object-cover rounded-md"
+                                                            />
+                                                            <div className="flex flex-col">
+                                                                <p className="font-semibold text-gray-800">{inquiry.property.title}</p>
+                                                                <p className="text-xs text-gray-500">
+                                                                    {inquiry.property.property_type} | {inquiry.property.sub_type}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-3 whitespace-nowrap md:table-cell">
+                                                        <p className="flex flex-col cursor-pointer hover:underline text-primary">
+                                                            {inquiry?.agent?.name ?? inquiry?.agent?.name ?? 'Unknown User'}
+                                                            <span>{inquiry?.agent?.email ?? inquiry?.agent?.email ?? 'Unknown'}</span>
+                                                        </p>
+                                                    </td>
+
+                                                    <td className="p-3 md:table-cell">
+                                                        <span className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}>
+                                                            {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-3 md:table-cell">
+                                                        {dayjs(inquiry.created_at).format('MMMM D, YYYY')}
+                                                    </td>
+
+
+                                                </tr>
+                                            );
+                                        })
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="7" className="text-center py-6 text-gray-400">
+                                                No inquiries found.
+                                            </td>
+                                        </tr>
+                                    )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">In Progress Inquiry</h2>
+                            <div className='border border-gray-100 p-4'>
+                                <img src={`/storage/${progressInquiry.property.image_url}`} alt={progressInquiry.property.title} className='rounded-xl h-48 w-full object-cover'/>
+                                <p>{progressInquiry.property.title}</p>
+                                <Progress inquiryStatus={progressInquiry.status} />
+
+                            </div>
+                        </div>
+                    </div>
+
+
                 </section>
             </div>
         </BuyerLayout>
