@@ -1,7 +1,8 @@
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import { usePage, Link } from "@inertiajs/react";
+import PropertiesMap from "@/Components/PropertiesMap.jsx";
 
-export default function Dashboard() {
+export default function Dashboard({properties}) {
     const auth = usePage().props?.auth?.user ?? null;
 
     return (
@@ -65,6 +66,10 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+
+                </div>
+                <div>
+                    <PropertiesMap properties={properties} />
                 </div>
             </div>
         </BuyerLayout>

@@ -135,21 +135,32 @@ Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::
 
 Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Buyer/Dashboard');
+
+        $properties = \App\Models\Property::with('coordinate')
+            ->where('status', 'Published')
+            ->get();
+
+//        dd($properties->toArray());
+
+        return Inertia::render('Buyer/Dashboard', [
+            'properties' => $properties,
+        ]);
     })->name('dashboard');
 
     //sent inquiries
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
 
-    //add favourite
-    Route::post('/favourites', [\App\Http\Controllers\FavouriteController::class, 'store']);
 
 
     //triping
     Route::get('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'index']);
-
     Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
+
+    //favourites
+    Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
+    Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
+
 
 });
 

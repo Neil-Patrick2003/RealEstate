@@ -9,7 +9,7 @@ export default defineConfig({
             refresh: true,
         }),
         react(),
-        
+
     ],
     build: {
         outDir: 'public/build',  // Ensure it's written to the public directory
