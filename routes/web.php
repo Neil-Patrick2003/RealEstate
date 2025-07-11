@@ -12,8 +12,6 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function (Request $request) {
-
-
     $properties = \App\Models\Property::where('status', 'Published')
         ->when($request->search, function ($q) use ($request) {
             $q->where(function ($query) use ($request) {
@@ -31,10 +29,6 @@ Route::get('/', function (Request $request) {
     $favouriteIds = auth()->check()
         ? auth()->user()->favourites()->pluck('property_id')->toArray()
         : [];
-
-
-
-
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -185,7 +179,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-
     //posting property
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
@@ -195,6 +188,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/post-property', [PropertyController::class, 'store'])->name('post-property');
 
     Route::get('/all-agents', [\App\Http\Controllers\Agent\AgentController::class, 'loadAgents'])->name('get-all-agents');
+});
+
+
+Route::get('/maps', function (Request $request) {
+
+    $properties = \App\Models\Property::where('status', 'Published')->get();
+
+//    dd($properties->toArray());
+    return Inertia::render('Buyer/Properties/AllProperties', [
+        'properties' => $properties,
+    ]);
 });
 
 require __DIR__.'/auth.php';

@@ -1,9 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const PropertiesMap = ({ properties }) => {
+function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const toRad = (deg) => deg * (Math.PI / 180);
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+const MapView = ({ properties }) => {
     const [currentPos, setCurrentPos] = useState(null);
+    const [filteredProps, setFilteredProps] = useState([]);
 
     useEffect(() => {
         if (!navigator.geolocation) {
@@ -15,6 +29,23 @@ const PropertiesMap = ({ properties }) => {
             () => alert('Unable to get location')
         );
     }, []);
+
+    useEffect(() => {
+        if (!currentPos) return;
+
+        const filtered = properties.filter((property) => {
+            const marker = property.coordinate.find((c) => c.type === 'marker');
+            if (!marker) return false;
+
+            const lat = parseFloat(marker.coordinates.lat ?? marker.coordinates[1]);
+            const lng = parseFloat(marker.coordinates.lng ?? marker.coordinates[0]);
+
+            const dist = getDistanceFromLatLonInMeters(currentPos[0], currentPos[1], lat, lng);
+            return dist <= 500000;
+        });
+
+        setFilteredProps(filtered);
+    }, [currentPos, properties]);
 
     if (!currentPos) {
         return (
@@ -31,8 +62,8 @@ const PropertiesMap = ({ properties }) => {
                 <div className="flex items-center gap-3 text-base md:text-lg font-semibold">
                     <span>Properties Nearby</span>
                     <span className="bg-[#E0B52B] text-primary rounded-full px-3 py-1 text-sm font-bold min-w-[40px] text-center shadow">
-            {properties.length}
-          </span>
+                        {filteredProps.length}
+                    </span>
                 </div>
                 <span className="text-sm md:text-base font-medium text-white/90">Explore more</span>
             </div>
@@ -50,17 +81,20 @@ const PropertiesMap = ({ properties }) => {
                 />
 
                 {/* User Location */}
+                <Circle
+                    center={currentPos}
+                    radius={500}
+                    pathOptions={{ color: '#5C7934', fillOpacity: 0.1 }}
+                />
                 <Marker position={currentPos}>
                     <Popup>
                         <div className="text-sm font-medium">📍 You are here</div>
                     </Popup>
                 </Marker>
 
-                {/* All Properties */}
-                {properties.map((property) => {
+                {/* Nearby Properties */}
+                {filteredProps.map((property) => {
                     const marker = property.coordinate.find((c) => c.type === 'marker');
-                    if (!marker) return null;
-
                     const lat = parseFloat(marker.coordinates.lat ?? marker.coordinates[1]);
                     const lng = parseFloat(marker.coordinates.lng ?? marker.coordinates[0]);
 
@@ -72,7 +106,6 @@ const PropertiesMap = ({ properties }) => {
                                         src={`/storage/${property.image_url}`}
                                         alt={property.title}
                                         className="w-full h-[100px] object-cover rounded mb-2"
-                                        onError={(e) => (e.target.src = '/placeholder.png')}
                                     />
                                     <h3 className="font-semibold mb-1">{property.title}</h3>
                                     <p className="text-green-700 font-bold">₱{parseFloat(property.price).toLocaleString()}</p>
@@ -93,4 +126,4 @@ const PropertiesMap = ({ properties }) => {
     );
 };
 
-export default PropertiesMap;
+export default MapView;
