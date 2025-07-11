@@ -7,8 +7,11 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useState } from "react";
+import {useCallback, useEffect, useState} from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
+import { router } from "@inertiajs/react";
+import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
+import {startsWith} from "lodash";
 
 dayjs.extend(relativeTime);
 
@@ -24,18 +27,57 @@ const getStatusBadge = (status) => {
     }
 };
 
-export default function Inquiries({ inquiries }) {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedId, setSelectedId] = useState(null);
+export default function Inquiries({ inquiries, status = '',  allCount, pendingCount, scheduledCount, cancelledCount, closeCount, rejectedCount }) {
+    const [isAddVisitModal, setIsAddVisitModal] = useState(false);
+    const [selectedVisitData, setSelectedVisitData] = useState(null);
+
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [cancelId, setCancelId] = useState(null);
+    const [ selectedStatus, setSelectedStatus] = useState('All' | status);
+
+
+    const handleCancelInquiry = () => {
+        if (!cancelId) return;
+
+        router.patch(`/inquiries/${cancelId}/cancel`, {}, {
+            onSuccess: () => {
+                console.log("Inquiry cancelled successfully.");
+                setIsCancelModalOpen(false);
+                setCancelId(null);
+            },
+            onError: (errors) => {
+                console.error("Failed to cancel inquiry", errors);
+            }
+        });
+    };
+
+
+
+
+
+
 
     return (
         <BuyerLayout>
             <div className="py-6 px-4">
-                {/* Visit Modal */}
-                <ScheduleVisitModal
-                    open={isModalOpen}
-                    setOpen={setIsModalOpen}
-                    visitData={selectedId}
+                {/* Schedule Visit Modal */}
+                {isAddVisitModal && (
+                    <ScheduleVisitModal
+                        open={isAddVisitModal}
+                        setOpen={setIsAddVisitModal}
+                        visitData={selectedVisitData}
+                    />
+                )}
+
+                {/* Confirm Cancel Dialog */}
+                <ConfirmDialog
+                    onConfirm={handleCancelInquiry}
+                    confirmText="Confirm"
+                    open={isCancelModalOpen}
+                    setOpen={setIsCancelModalOpen}
+                    title="Cancel Inquiry"
+                    description="Are you sure you want to cancel this inquiry?"
+                    cancelText="Cancel"
                 />
 
                 {/* Header */}
@@ -46,14 +88,9 @@ export default function Inquiries({ inquiries }) {
                     </p>
                 </div>
 
-
-
                 {/* Filters */}
                 <div className="flex justify-between items-center mb-5">
-                    <BuyerInquiriesFilterTab />
-                    <p className="text-sm text-gray-500 italic">
-                        Filter by status, date or agent
-                    </p>
+                    <BuyerInquiriesFilterTab setSelectedStatus={setSelectedStatus} count={[ allCount, pendingCount, scheduledCount, cancelledCount, closeCount, rejectedCount]} />
                 </div>
 
                 {/* Inquiry List */}
@@ -156,12 +193,12 @@ export default function Inquiries({ inquiries }) {
                                                     type="button"
                                                     className="w-full px-4 py-2 border border-secondary hover:bg-primary-dark text-secondary rounded-md font-medium transition"
                                                     onClick={() => {
-                                                        setIsModalOpen(true);
-                                                        setSelectedId({
+                                                        setSelectedVisitData({
                                                             property: inquiry.property,
                                                             agentId: agent.id,
                                                             inquiryId: inquiry.id,
                                                         });
+                                                        setIsAddVisitModal(true);
                                                     }}
                                                 >
                                                     <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
@@ -177,13 +214,25 @@ export default function Inquiries({ inquiries }) {
                                                     <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
                                                     Reply
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    className="w-full px-4 py-2 border bg-red-500 hover:bg-red-400 text-white rounded-md text-sm font-medium transition"
-                                                >
-                                                    <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
-                                                    Delete
-                                                </button>
+                                                {inquiry.status.startsWith('Cancelled') ? (
+                                                    <div className="w-full py-2 border rounded-md">
+                                                        <p className='text-center'>Cancelled</p>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        className="w-full px-4 py-2 border bg-red-500 hover:bg-red-400 text-white rounded-md text-sm font-medium transition"
+                                                        onClick={() => {
+                                                            setCancelId(inquiry.id);
+                                                            setIsCancelModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
+                                                        Cancel
+                                                    </button>
+                                                )}
+
+
                                             </div>
                                         </div>
                                     </div>

@@ -9,18 +9,30 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useState } from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
+import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 
 dayjs.extend(relativeTime);
 
 export default function Trippings({ trippings }) {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedVisit, setSelectedVisit] = useState(null);
+    const [openCancelModal, setOpenCancelModal] = useState(false);
 
+
+    // open schedule tripping
     const openScheduleModal = (trip, type) => {
         setSelectedVisit(trip);
 
         setModalOpen(true);
     };
+
+
+
+    const handleCancelVisit = () => {
+        console.log(selectedVisit)
+    }
+
+
 
     return (
         <BuyerLayout>
@@ -29,6 +41,15 @@ export default function Trippings({ trippings }) {
                 setOpen={setModalOpen}
                 visitData={selectedVisit}
             />
+
+            <ConfirmDialog
+                onConfirm={handleCancelVisit}
+                setOpen={() => setOpenCancelModal(true)}
+                open={openCancelModal}
+                title='Cancel Visit Schedule'
+                description='Do you want to cancel this visit, this action cannot be undone'
+                confirmText='Yes, Confirm'
+                />
 
             <div className="mt-10 px-4 py-6 max-w-7xl mx-auto">
                 <h1 className="text-3xl font-bold text-primary mb-6 flex items-center gap-2">
@@ -209,8 +230,12 @@ export default function Trippings({ trippings }) {
                                                     </button>
                                                 )}
 
-                                                <button className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition">
+                                                <button className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition"
+                                                    onClick={  () => { setOpenCancelModal(true);
+                                                                             selectedVisit(trip.id)}}
+                                                >
                                                     <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
+
                                                     Cancel
                                                 </button>
                                             </div>
