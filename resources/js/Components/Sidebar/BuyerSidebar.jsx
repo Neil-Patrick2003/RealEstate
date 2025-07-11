@@ -15,42 +15,15 @@ import {
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ');
 }
+
 const menus = [
-    {
-        name: "Dashboard",
-        Icon: faHouse,
-        path: "/dashboard",
-    },
-    {
-        name: "Message",
-        Icon: faEnvelope,
-        path: "/messages",
-
-    },
-    {
-        name: "Inquiries",
-        Icon: faEnvelope,
-        path: "/inquiries",
-
-    },
-
-    {
-        name: "Tripping",
-        Icon: faCalendar,
-        path: "/trippings",
-    },
-    {
-        name: "Favourite",
-        Icon: faChartSimple,
-        path: "/favourites",
-    },
-    {
-        name: "Transactions",
-        Icon: faChartSimple,
-        path: "/transactions",
-    },
+    { name: "Dashboard", Icon: faHouse, path: "/dashboard" },
+    { name: "Messages", Icon: faEnvelope, path: "/messages" },
+    { name: "Inquiries", Icon: faEnvelope, path: "/inquiries" },
+    { name: "Tripping", Icon: faCalendar, path: "/trippings" },
+    { name: "Favourites", Icon: faChartSimple, path: "/favourites" },
+    { name: "Transactions", Icon: faChartSimple, path: "/transactions" },
 ];
-
 
 const Sidebar_animation = {
     open: {
@@ -58,7 +31,7 @@ const Sidebar_animation = {
         transition: { duration: 0.3, ease: 'easeInOut' },
     },
     closed: {
-        width: '6rem',
+        width: '5rem',
         transition: { duration: 0.3, ease: 'easeInOut' },
     },
 };
@@ -85,7 +58,7 @@ const SellerSidebar = ({ isOpen, setIsOpen }) => {
     return (
         <div className="flex">
             <motion.div
-                className="bg-white border-r border-gray-100 h-screen z-[999] overflow-hidden md:relative fixed"
+                className="bg-white border-r border-gray-100 h-screen z-[999] overflow-hidden md:relative fixed shadow-sm"
                 variants={Sidebar_animation}
                 animate={isOpen ? 'open' : 'closed'}
                 initial={false}
@@ -93,45 +66,41 @@ const SellerSidebar = ({ isOpen, setIsOpen }) => {
                 {/* Logo */}
                 <div
                     className={classNames(
-                        'flex items-center py-3.5 border-slate-200',
-                        isOpen ? 'px-2 justify-start gap-3' : 'px-6 justify-center'
+                        'flex items-center border-b border-gray-200 py-4',
+                        isOpen ? 'px-4 gap-3 justify-start' : 'px-4 justify-center'
                     )}
                 >
-                    <Link href="/">
-                        <img src={logo} width={40} alt="Logo" />
+                    <Link href="/" className="flex items-center space-x-2">
+                        <img src={logo} width={40} alt="MJVI Realty" />
+                        {isOpen && <span className="text-lg font-bold text-green-700">MJVI Realty</span>}
                     </Link>
-                    {isOpen && (
-                        <span className="text-xl font-semibold text-green-700">MJVI Realty</span>
-                    )}
                 </div>
 
                 {/* Section Title */}
                 {isOpen && (
-                    <p className="pl-6 text-xs font-bold text-gray-500 uppercase">Navigation</p>
+                    <p className="pl-5 pt-4 text-xs font-bold text-gray-400 uppercase tracking-wide">
+                        Navigation
+                    </p>
                 )}
 
-                {/* Menu */}
-                <ul className="px-4 py-5 flex flex-col gap-1 text-sm font-medium overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 md:h-[88%] h-[90%]">
+                {/* Menu List */}
+                <ul className="px-3 pt-4 pb-8 space-y-1 text-sm font-medium overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 h-[calc(100vh-120px)]">
                     {menus.map(({ name, Icon, path, subMenu }, i) => {
                         const isClicked = clicked === i;
                         const hasSubMenu = subMenu?.length > 0;
-
-                        // Highlight menu if current URL matches parent or any of its submenus
-                        const isActiveParent =
-                            url.startsWith(path) || subMenu?.some((item) => url.startsWith(item.path));
+                        const isActive = url.startsWith(path) || subMenu?.some((item) => url.startsWith(item.path));
 
                         return (
                             <React.Fragment key={name}>
                                 <li className="relative">
-                                    {/* Main Link or Toggle Button */}
                                     {path && !hasSubMenu ? (
                                         <Link
                                             href={path}
                                             className={classNames(
-                                                isActiveParent
+                                                isActive
                                                     ? 'bg-green-100 text-green-700'
-                                                    : 'text-gray-500 hover:bg-green-50 hover:text-green-700',
-                                                isOpen ? 'px-4' : 'px-6',
+                                                    : 'text-gray-600 hover:bg-green-50 hover:text-green-700',
+                                                isOpen ? 'px-4' : 'px-5',
                                                 'flex items-center gap-3 py-3 rounded-lg transition-all'
                                             )}
                                         >
@@ -142,17 +111,17 @@ const SellerSidebar = ({ isOpen, setIsOpen }) => {
                                         <button
                                             onClick={() => setClicked(isClicked ? null : i)}
                                             className={classNames(
-                                                isActiveParent
+                                                isActive
                                                     ? 'bg-green-100 text-green-700'
-                                                    : 'text-gray-500 hover:bg-green-50 hover:text-green-700',
-                                                isOpen ? 'px-2' : 'px-6',
+                                                    : 'text-gray-600 hover:bg-green-50 hover:text-green-700',
+                                                isOpen ? 'px-4' : 'px-5',
                                                 'w-full flex items-center justify-between py-3 rounded-lg transition-all'
                                             )}
                                         >
-                      <span className="flex items-center gap-3">
-                        <FontAwesomeIcon icon={Icon} className="w-5 h-5" />
-                          {isOpen && <span>{name}</span>}
-                      </span>
+                                            <span className="flex items-center gap-3">
+                                                <FontAwesomeIcon icon={Icon} className="w-5 h-5" />
+                                                {isOpen && <span>{name}</span>}
+                                            </span>
                                             {isOpen && hasSubMenu && (
                                                 <ChevronDown
                                                     className={`transition-transform ${isClicked ? 'rotate-180' : ''}`}
@@ -169,7 +138,7 @@ const SellerSidebar = ({ isOpen, setIsOpen }) => {
                                         variants={subMenuDrawer}
                                         initial="exit"
                                         animate={isClicked ? 'enter' : 'exit'}
-                                        className="pl-10 text-gray-500 text-sm font-normal"
+                                        className="ml-9 pl-3 pr-1 border-l border-gray-200 text-sm text-gray-500 space-y-1"
                                     >
                                         {subMenu.map(({ name: subName, Icon: SubIcon, path: subPath }) => (
                                             <li key={subName}>
@@ -177,9 +146,9 @@ const SellerSidebar = ({ isOpen, setIsOpen }) => {
                                                     href={subPath}
                                                     className={classNames(
                                                         url.startsWith(subPath)
-                                                            ? 'text-green-600 bg-green-50'
-                                                            : 'hover:text-green-600 hover:bg-gray-50',
-                                                        'flex items-center gap-2 py-2 px-3 rounded-md transition-all'
+                                                            ? 'text-green-700 bg-green-50'
+                                                            : 'hover:text-green-700 hover:bg-gray-50',
+                                                        'flex items-center gap-2 py-2 px-3 rounded-md transition'
                                                     )}
                                                 >
                                                     {SubIcon && <FontAwesomeIcon icon={SubIcon} className="w-4 h-4" />}

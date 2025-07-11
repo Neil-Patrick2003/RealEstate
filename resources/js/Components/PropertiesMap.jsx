@@ -41,56 +41,34 @@ const PropertiesMap = ({ properties }) => {
             const lng = parseFloat(marker.coordinates.lng ?? marker.coordinates[0]);
 
             const dist = getDistanceFromLatLonInMeters(currentPos[0], currentPos[1], lat, lng);
-            return dist <= 50000000;
+            return dist <= 500000;
         });
 
         setFilteredProps(filtered);
     }, [currentPos, properties]);
 
-    if (!currentPos) return <p style={{ textAlign: 'center', marginTop: '2rem' }}>Loading your location...</p>;
+    if (!currentPos) {
+        return (
+            <div className="text-center text-gray-600 mt-8 text-sm">
+                📍 Locating you...
+            </div>
+        );
+    }
 
     return (
-        <div
-            style={{
-                maxWidth: 1000,
-                margin: '2rem auto',
-                borderRadius: 12,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                overflow: 'hidden',
-                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-                backgroundColor: '#fff',
-            }}
-        >
-            <header
-                style={{
-                    backgroundColor: '#0055a5',
-                    color: 'white',
-                    padding: '1rem 1.5rem',
-                    fontSize: '1.3rem',
-                    fontWeight: '600',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}
-            >
-                <span>Properties Nearby</span>
-                <span
-                    style={{
-                        backgroundColor: '#ffd700',
-                        color: '#0055a5',
-                        borderRadius: '9999px',
-                        padding: '0.3rem 0.9rem',
-                        fontWeight: '700',
-                        fontSize: '1rem',
-                        minWidth: 40,
-                        textAlign: 'center',
-                        boxShadow: '0 0 5px #ffd700',
-                    }}
-                >
-                    {filteredProps.length}
-                </span>
-            </header>
+        <div className="bg-white rounded-2xl shadow-md overflow-hidden max-w-full">
+            {/* Header */}
+            <div className="bg-gradient-to-tl from-primary to-accent text-white px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3 text-base md:text-lg font-semibold">
+                    <span>Properties Nearby</span>
+                    <span className="bg-[#E0B52B] text-primary rounded-full px-3 py-1 text-sm font-bold min-w-[40px] text-center shadow">
+                        {filteredProps.length}
+                    </span>
+                </div>
+                <span className="text-sm md:text-base font-medium text-white/90">Explore more</span>
+            </div>
 
+            {/* Map */}
             <MapContainer
                 center={currentPos}
                 zoom={16}
@@ -102,14 +80,19 @@ const PropertiesMap = ({ properties }) => {
                     attribution="&copy; OpenStreetMap contributors"
                 />
 
-                <Circle center={currentPos} radius={50000000} pathOptions={{ color: '#0055a5', fillOpacity: 0.1 }} />
-
+                {/* User Location */}
+                <Circle
+                    center={currentPos}
+                    radius={500}
+                    pathOptions={{ color: '#5C7934', fillOpacity: 0.1 }}
+                />
                 <Marker position={currentPos}>
                     <Popup>
-                        <strong>Your Location</strong>
+                        <div className="text-sm font-medium">📍 You are here</div>
                     </Popup>
                 </Marker>
 
+                {/* Nearby Properties */}
                 {filteredProps.map((property) => {
                     const marker = property.coordinate.find((c) => c.type === 'marker');
                     const lat = parseFloat(marker.coordinates.lat ?? marker.coordinates[1]);
@@ -118,39 +101,18 @@ const PropertiesMap = ({ properties }) => {
                     return (
                         <Marker key={property.id} position={[lat, lng]}>
                             <Popup>
-                                <div style={{
-                                    fontSize: '0.95rem',
-                                    lineHeight: '1.3',
-                                    maxWidth: '220px',
-                                    overflowWrap: 'break-word'
-                                }}>
+                                <div className="max-w-[220px] text-sm leading-relaxed">
                                     <img
                                         src={`/storage/${property.image_url}`}
                                         alt={property.title}
-                                        style={{
-                                            width: '100%',
-                                            height: 'auto',
-                                            maxHeight: '120px',
-                                            objectFit: 'cover',
-                                            borderRadius: '6px',
-                                            marginBottom: '0.5rem',
-                                        }}
+                                        className="w-full h-[100px] object-cover rounded mb-2"
                                     />
-                                    <strong>{property.title}</strong><br />
-                                    <span>₱{parseFloat(property.price).toLocaleString()}</span><br />
-                                    <small style={{ color: '#555' }}>{property.address}</small><br />
+                                    <h3 className="font-semibold mb-1">{property.title}</h3>
+                                    <p className="text-green-700 font-bold">₱{parseFloat(property.price).toLocaleString()}</p>
+                                    <p className="text-gray-500 text-xs">{property.address}</p>
                                     <a
                                         href={`/property/${property.id}`}
-                                        style={{
-                                            display: 'inline-block',
-                                            marginTop: '0.5rem',
-                                            backgroundColor: '#0055a5',
-                                            color: 'white',
-                                            padding: '0.4rem 0.8rem',
-                                            fontSize: '0.85rem',
-                                            borderRadius: 4,
-                                            textDecoration: 'none',
-                                        }}
+                                        className="inline-block mt-2 bg-primary text-white px-3 py-1 rounded text-xs font-medium hover:bg-accent transition"
                                     >
                                         View Details
                                     </a>
