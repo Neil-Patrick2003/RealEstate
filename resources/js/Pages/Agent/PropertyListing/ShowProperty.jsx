@@ -174,7 +174,7 @@ export default function ShowProperty({ propertyListing }) {
                     </div>
                 </section>
 
-                {/* Seller Info & Map */}
+                {/* Seller Info & MapView */}
                 <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <aside className="flex flex-col gap-6">
                         <div className="border rounded-xl px-4 py-6 bg-white shadow-sm">

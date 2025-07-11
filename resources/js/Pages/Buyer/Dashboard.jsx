@@ -94,7 +94,7 @@ export default function Dashboard({ properties, inquiries }) {
                     </div>
                 </section>
 
-                {/* Map */}
+                {/* MapView */}
                 <section>
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">Explore on Map</h2>
                     <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
