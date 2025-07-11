@@ -188,7 +188,7 @@ export default function Inquiries({ inquiries, status = '',  allCount, pendingCo
                                         </div>
 
                                         <div className="flex flex-col gap-2">
-                                            {inquiry.status === 'accepted' && (
+                                            {inquiry.status === 'accepted' ? (
                                                 <button
                                                     type="button"
                                                     className="w-full px-4 py-2 border border-secondary hover:bg-primary-dark text-secondary rounded-md font-medium transition"
@@ -204,6 +204,14 @@ export default function Inquiries({ inquiries, status = '',  allCount, pendingCo
                                                     <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
                                                     Schedule Visit
                                                 </button>
+                                            ) : (
+                                                <div
+
+                                                    className="w-full flex-center justify-center px-4 py-2 border border-secondary hover:bg-primary-dark text-secondary rounded-md font-medium transition"
+                                                >
+                                                    <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
+                                                    Scheduled!
+                                                </div>
                                             )}
 
                                             <div className="flex gap-x-2">
