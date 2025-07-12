@@ -41,7 +41,9 @@ Route::get('/', function (Request $request) {
     ]);
 });
 
-
+Route::get('/contact', function () {
+    return Inertia::render('Headers/ContactPage');
+});
 
 //all auth user
 Route::middleware(['auth'])->group(function () {

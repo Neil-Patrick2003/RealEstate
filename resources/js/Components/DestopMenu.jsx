@@ -1,6 +1,8 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import {motion} from 'framer-motion';
+import { Link } from "@inertiajs/react";
+
 
 export default function DesktopMenu({menu}) {
 
@@ -36,11 +38,16 @@ export default function DesktopMenu({menu}) {
     const hasSubMenu = menu.subMenu?.length > 0;
     return (
         <motion.ul className="group/link" onHoverStart={toggleHoverMenu} onHoverEnd={toggleHoverMenu}>
-            <span className="flex-center gap-1 cursor-pointer px-3 py-1 rounded-xl hover:bg-lightaccent">
-                {menu.name}
+            <span>
+                <Link 
+                 className="flex-center gap-1 cursor-pointer px-3 py-1 rounded-xl hover:bg-lightaccent"
+                href={menu.url}>
+                    {menu.name}
                 {hasSubMenu && (
                     <ChevronDown className="mt-[0.6px] group-hover/link:rotate-180 duration-200" />
                 )}
+                </Link>
+                
             </span>
             {hasSubMenu && (
                 <motion.div className="sub-menu"

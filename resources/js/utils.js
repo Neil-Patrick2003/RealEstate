@@ -147,5 +147,6 @@ export const Menus = [
   },
   {
     name: "Contact",
+    url: "/contact"
   },
 ];

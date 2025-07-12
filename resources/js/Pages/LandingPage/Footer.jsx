@@ -164,7 +164,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-16 border-t border-white/60 pt-8 sm:mt-20 lg:mt-24">
-          <p className="text-sm/6 text-gray-400">&copy; MJVI Realty. All rights reserved.</p>
+          <p className="text-sm/6 text-gray-100">&copy; MJVI Realty. All rights reserved.</p>
         </div>
       </div>
     </footer>
