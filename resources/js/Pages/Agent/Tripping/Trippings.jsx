@@ -39,8 +39,8 @@ export default function Trippings({ trippings }) {
 
     return (
         <AgentLayout>
-            <div className="px-4 py-6 space-y-6">
-                {/* Accept Modal */}
+            <div className="px-4 py-6 space-y-6  mx-auto">
+                {/* Modals */}
                 <ConfirmDialog
                     onConfirm={handleAccept}
                     confirmText="Accept"
@@ -52,7 +52,6 @@ export default function Trippings({ trippings }) {
                     description="Are you sure you want to accept this visit?"
                 />
 
-                {/* Decline Modal */}
                 <ConfirmDialog
                     onConfirm={handleDecline}
                     confirmText="Decline"
@@ -64,68 +63,70 @@ export default function Trippings({ trippings }) {
                     description="Are you sure you want to decline this visit?"
                 />
 
-                <h1 className="text-primary text-xl font-bold">Property Visit Schedule</h1>
+                {/* Header */}
+                <h1 className="text-2xl font-semibold text-primary">Property Visit Schedule</h1>
 
                 {/* Calendar Section */}
-                <div className="bg-white shadow rounded-lg p-4">
+                <div className="bg-white shadow-sm rounded-xl p-5 border border-gray-100">
                     <MyCalendar trippings={trippings} />
                 </div>
 
+                {/* Management Section */}
+                <h2 className="text-2xl font-semibold text-gray-800">Manage Scheduled Visits</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Trippings Table */}
-                    <div className="col-span-2 overflow-x-auto bg-white shadow rounded-lg">
-                        <table className="min-w-full text-sm text-gray-700">
-                            <thead className="bg-gray-100 text-xs text-gray-500 uppercase hidden md:table-header-group">
-                            <tr>
-                                <th className="p-3 text-center">
-                                    <input type="checkbox" className="rounded border-gray-400" />
-                                </th>
-                                <th className="p-3">Property</th>
-                                <th className="p-3">Buyer</th>
-                                <th className="p-3">Status</th>
-                                <th className="p-3">Visit Date</th>
-                                <th className="p-3 text-right">Actions</th>
+                    <div className="md:col-span-2 bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
+                        <table className="w-full text-sm text-gray-700">
+                            <thead className="bg-gray-50 hidden md:table-header-group">
+                            <tr className="text-left text-xs text-gray-500 uppercase">
+                                <th className="p-4">#</th>
+                                <th className="p-4">Property</th>
+                                <th className="p-4">Buyer</th>
+                                <th className="p-4">Status</th>
+                                <th className="p-4">Visit Date</th>
+                                <th className="p-4 text-right">Actions</th>
                             </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-gray-100">
                             {trippings.length > 0 ? (
-                                trippings.map(trip => {
+                                trippings.map((trip, index) => {
                                     const isPending = trip.status.toLowerCase() === 'pending';
 
                                     return (
-                                        <tr
-                                            key={trip.id}
-                                            className="hover:bg-gray-50 flex flex-col md:table-row"
-                                        >
-                                            <td className="p-3 text-center hidden md:table-cell">
-                                                <input type="checkbox" className="rounded border-gray-400" />
-                                            </td>
-                                            <td className="p-3">
-                                                <div className="flex items-center gap-3">
-                                                    <img
-                                                        src={`/storage/${trip.property.image_url}`}
-                                                        alt={trip.property.title}
-                                                        onError={(e) => (e.target.src = "/placeholder.png")}
-                                                        className="w-14 h-14 rounded-md object-cover"
-                                                    />
-                                                    <div>
-                                                        <p className="font-medium">{trip.property.title}</p>
-                                                        <p className="text-xs text-gray-500">{trip.property.address}</p>
-                                                    </div>
+                                        <tr key={trip.id} className="hover:bg-gray-50 flex flex-col md:table-row">
+                                            <td className="p-4 md:text-center hidden md:table-cell">{index + 1}</td>
+
+                                            {/* Property */}
+                                            <td className="p-4 flex items-center gap-3">
+                                                <img
+                                                    src={`/storage/${trip.property.image_url}`}
+                                                    onError={(e) => (e.target.src = "/placeholder.png")}
+                                                    alt={trip.property.title}
+                                                    className="w-12 h-12 rounded object-cover"
+                                                />
+                                                <div>
+                                                    <div className="font-medium">{trip.property.title}</div>
+                                                    <div className="text-xs text-gray-500">{trip.property.address}</div>
                                                 </div>
                                             </td>
-                                            <td className="p-3">
-                                                <p className="text-primary hover:underline cursor-pointer">
-                                                    {trip.buyer?.name}
-                                                </p>
-                                                <p className="text-xs">{trip.buyer?.email}</p>
+
+                                            {/* Buyer */}
+                                            <td className="p-4">
+                                                <div className="text-primary font-medium">{trip.buyer?.name}</div>
+                                                <div className="text-xs text-gray-500">{trip.buyer?.email}</div>
                                             </td>
-                                            <td className="p-3 capitalize">{trip.status}</td>
-                                            <td className="p-3 whitespace-nowrap">
-                                                {dayjs(trip.visit_date).format("MMMM D, YYYY")}
+
+                                            {/* Status */}
+                                            <td className="p-4 capitalize text-sm">{trip.status}</td>
+
+                                            {/* Visit Date */}
+                                            <td className="p-4 whitespace-nowrap">
+                                                {dayjs(trip.visit_date).format("MMM D, YYYY")}
                                             </td>
-                                            <td className="p-3 text-right space-x-2">
+
+                                            {/* Actions */}
+                                            <td className="p-4 text-right space-x-2">
                                                 {isPending ? (
                                                     <>
                                                         <button
@@ -133,7 +134,7 @@ export default function Trippings({ trippings }) {
                                                                 setSelectedTrippingId(trip.id);
                                                                 setOpenAcceptModal(true);
                                                             }}
-                                                            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark focus:outline-none"
+                                                            className="bg-primary text-white px-3 py-1.5 rounded-md hover:bg-green-600 text-sm"
                                                         >
                                                             Accept
                                                         </button>
@@ -142,17 +143,17 @@ export default function Trippings({ trippings }) {
                                                                 setSelectedTrippingId(trip.id);
                                                                 setOpenDeclineModal(true);
                                                             }}
-                                                            className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-dark focus:outline-none"
+                                                            className="bg-secondary text-white px-3 py-1.5 rounded-md hover:bg-red-600 text-sm"
                                                         >
                                                             Decline
                                                         </button>
                                                     </>
                                                 ) : trip.status === 'accepted' ? (
-                                                    <button className="px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary hover:text-white">
+                                                    <button className="border border-primary text-primary px-3 py-1.5 rounded-md hover:bg-primary hover:text-white text-sm">
                                                         View
                                                     </button>
                                                 ) : (
-                                                    <span className="capitalize text-gray-500">{trip.status}</span>
+                                                    <span className="text-gray-500 capitalize text-sm">{trip.status}</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -170,14 +171,13 @@ export default function Trippings({ trippings }) {
                     </div>
 
                     {/* Upcoming Visits Sidebar */}
-                    <div className="bg-white shadow rounded-lg p-4">
-                        <h2 className="text-lg font-semibold text-primary mb-4">Upcoming Visits</h2>
-
+                    <div className="bg-white shadow-sm rounded-xl p-5 border border-gray-100">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Upcoming Visits</h3>
                         {incomingTrippings.length > 0 ? (
-                            incomingTrippings.map((trip) => (
-                                <div key={trip.id} className="mb-4 border-b pb-3 last:border-0 last:pb-0">
+                            incomingTrippings.map(trip => (
+                                <div key={trip.id} className="mb-4 last:mb-0">
                                     <p className="text-sm text-gray-500">{dayjs(trip.visit_date).fromNow()}</p>
-                                    <p className="font-medium">{dayjs(trip.visit_date).format("MMMM D, YYYY")}</p>
+                                    <p className="font-medium text-gray-800">{dayjs(trip.visit_date).format("MMMM D, YYYY")}</p>
                                     <p className="text-xs text-gray-600 truncate">{trip.property.title}</p>
                                 </div>
                             ))

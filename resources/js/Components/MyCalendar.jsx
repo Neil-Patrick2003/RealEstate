@@ -23,6 +23,7 @@ const MyCalendar = ({ trippings }) => {
 
     return (
         <div style={{ padding: '1rem' }}>
+            <p className=' text-center mb-6 text-primary font-bold'>My Calendar</p>
             <Calendar
                 localizer={localizer}
                 events={myEventsList}
