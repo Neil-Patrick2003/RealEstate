@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as SolidHeart } from '@fortawesome/free-solid-svg-icons';
@@ -8,6 +8,10 @@ import { Link } from '@inertiajs/react';
 const PropertyList = ({ properties, favouriteIds = [] }) => {
     const [favourites, setFavourites] = useState(new Set(favouriteIds));
     const [loading, setLoading] = useState(null);
+
+    useEffect(() => {
+        setFavourites(new Set(favouriteIds));
+    }, [favouriteIds]);
 
     const toggleFavourite = (propertyId) => {
         setLoading(propertyId);

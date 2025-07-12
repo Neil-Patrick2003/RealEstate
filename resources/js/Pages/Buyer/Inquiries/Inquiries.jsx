@@ -1,61 +1,79 @@
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import BuyerInquiriesFilterTab from "@/Components/tabs/BuyerInquiriesFilterTab.jsx";
 import {
-    faLocationDot, faClock, faPaperPlane, faTrashAlt,
-    faCalendarCheck, faHouseChimney, faPesoSign, faEnvelope, faPhone
+    faLocationDot,
+    faClock,
+    faPaperPlane,
+    faTrashAlt,
+    faCalendarCheck,
+    faHouseChimney,
+    faPesoSign,
+    faEnvelope,
+    faPhone,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {useCallback, useEffect, useState} from "react";
+import { useState } from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
 import { router } from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
-import {startsWith} from "lodash";
 
 dayjs.extend(relativeTime);
 
 // Utility to return a badge class based on status
 const getStatusBadge = (status) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
         case "accepted":
             return "bg-green-100 text-green-800";
         case "rejected":
             return "bg-red-100 text-red-700";
+        case "cancelled":
+            return "bg-gray-100 text-gray-700";
         default:
-            return "bg-yellow-100 text-yellow-800";
+            return "bg-yellow-100 text-yellow-800"; // pending or others
     }
 };
 
-export default function Inquiries({ inquiries, status = '',  allCount, pendingCount, scheduledCount, cancelledCount, closeCount, rejectedCount }) {
+export default function Inquiries({
+                                      inquiries,
+                                      status = "",
+                                      allCount,
+                                      pendingCount,
+                                      scheduledCount,
+                                      cancelledCount,
+                                      closeCount,
+                                      rejectedCount,
+                                  }) {
     const [isAddVisitModal, setIsAddVisitModal] = useState(false);
     const [selectedVisitData, setSelectedVisitData] = useState(null);
 
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [cancelId, setCancelId] = useState(null);
-    const [ selectedStatus, setSelectedStatus] = useState('All' | status);
 
+    // Initialize selectedStatus properly; default to 'All' or passed prop (case insensitive)
+    const [selectedStatus, setSelectedStatus] = useState(
+        status && status.trim() !== "" ? status : "All"
+    );
 
     const handleCancelInquiry = () => {
         if (!cancelId) return;
 
-        router.patch(`/inquiries/${cancelId}/cancel`, {}, {
-            onSuccess: () => {
-                console.log("Inquiry cancelled successfully.");
-                setIsCancelModalOpen(false);
-                setCancelId(null);
-            },
-            onError: (errors) => {
-                console.error("Failed to cancel inquiry", errors);
+        router.patch(
+            `/inquiries/${cancelId}/cancel`,
+            {},
+            {
+                onSuccess: () => {
+                    console.log("Inquiry cancelled successfully.");
+                    setIsCancelModalOpen(false);
+                    setCancelId(null);
+                },
+                onError: (errors) => {
+                    console.error("Failed to cancel inquiry", errors);
+                },
             }
-        });
+        );
     };
-
-
-
-
-
-
 
     return (
         <BuyerLayout>
@@ -90,7 +108,18 @@ export default function Inquiries({ inquiries, status = '',  allCount, pendingCo
 
                 {/* Filters */}
                 <div className="flex justify-between items-center mb-5">
-                    <BuyerInquiriesFilterTab setSelectedStatus={setSelectedStatus} count={[ allCount, pendingCount, scheduledCount, cancelledCount, closeCount, rejectedCount]} />
+                    <BuyerInquiriesFilterTab
+                        setSelectedStatus={setSelectedStatus}
+                        count={[
+                            allCount,
+                            pendingCount,
+                            scheduledCount,
+                            cancelledCount,
+                            closeCount,
+                            rejectedCount,
+                        ]}
+                        selectedStatus={selectedStatus}
+                    />
                 </div>
 
                 {/* Inquiry List */}
@@ -102,20 +131,23 @@ export default function Inquiries({ inquiries, status = '',  allCount, pendingCo
                         const agent = inquiry.agent ?? {};
                         const message = inquiry.messages?.message;
 
+                        const statusLower = inquiry.status.toLowerCase();
+                        const isAccepted = statusLower === "accepted";
+                        const isCancelled = statusLower === "cancelled";
+
                         return (
                             <div
                                 key={inquiry.id}
                                 className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 hover:shadow-md transition-all"
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-6 p-6">
-
                                     {/* Property Image */}
                                     <div className="col-span-12 lg:col-span-3">
                                         <div className="relative rounded-lg overflow-hidden h-48 shadow-sm">
                                             <img
                                                 src={`/storage/${property.image_url}`}
                                                 onError={(e) => (e.target.src = "/placeholder.png")}
-                                                alt={property.title}
+                                                alt={property.title || "Property Image"}
                                                 className="w-full h-full object-cover hover:scale-105 transition-transform"
                                             />
                                             <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
@@ -133,11 +165,13 @@ export default function Inquiries({ inquiries, status = '',  allCount, pendingCo
                                                     {property.title ?? "Unknown Property"}
                                                 </h3>
                                                 <span
-                                                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(inquiry.status)}`}
+                                                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(
+                                                        inquiry.status
+                                                    )}`}
                                                 >
-                                                    <FontAwesomeIcon icon={faClock} className="mr-1" />
+                          <FontAwesomeIcon icon={faClock} className="mr-1" />
                                                     {inquiry.status}
-                                                </span>
+                        </span>
                                             </div>
 
                                             <p className="text-gray-600 text-sm mb-1">
@@ -183,48 +217,72 @@ export default function Inquiries({ inquiries, status = '',  allCount, pendingCo
                                         </div>
 
                                         <div className="text-xs text-gray-500 mb-4 space-y-1">
-                                            <p><FontAwesomeIcon icon={faEnvelope} className="mr-1" /> {agent.email ?? "N/A"}</p>
-                                            <p><FontAwesomeIcon icon={faPhone} className="mr-1" /> +63 912 345 6789</p>
+                                            <p>
+                                                <FontAwesomeIcon icon={faEnvelope} className="mr-1" />{" "}
+                                                {agent.email ?? "N/A"}
+                                            </p>
+                                            <p>
+                                                <FontAwesomeIcon icon={faPhone} className="mr-1" /> +63 912 345 6789
+                                            </p>
                                         </div>
 
                                         <div className="flex flex-col gap-2">
-                                            {inquiry.status === 'accepted' ? (
-                                                <button
-                                                    type="button"
-                                                    className="w-full px-4 py-2 border border-secondary hover:bg-primary-dark text-secondary rounded-md font-medium transition"
-                                                    onClick={() => {
-                                                        setSelectedVisitData({
-                                                            property: inquiry.property,
-                                                            agentId: agent.id,
-                                                            inquiryId: inquiry.id,
-                                                        });
-                                                        setIsAddVisitModal(true);
-                                                    }}
+                                            {/* Schedule Visit Button or Scheduled label */}
+                                            {isAccepted ? (
+                                                <>
+                                                    {!inquiry.visit_scheduled ? (
+                                                        <button
+                                                            type="button"
+                                                            className="w-full px-4 py-2 border border-secondary hover:bg-primary-dark text-secondary rounded-md font-medium transition"
+                                                            onClick={() => {
+                                                                setSelectedVisitData({
+                                                                    property: inquiry.property,
+                                                                    agentId: agent.id,
+                                                                    inquiryId: inquiry.id,
+                                                                });
+                                                                setIsAddVisitModal(true);
+                                                            }}
+                                                        >
+                                                            <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
+                                                            Schedule Visit
+                                                        </button>
+                                                    ) : (
+                                                        <div
+                                                            className="w-full flex-center justify-center px-4 py-2 border border-secondary bg-green-100 text-green-800 rounded-md font-medium transition"
+                                                            aria-label="Visit Scheduled"
+                                                        >
+                                                            <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
+                                                            Scheduled!
+                                                        </div>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <div
+                                                    className="w-full flex-center justify-center px-4 py-2 border border-gray-300 text-gray-400 rounded-md font-medium transition"
+                                                    aria-label="Cannot schedule visit"
                                                 >
                                                     <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
                                                     Schedule Visit
-                                                </button>
-                                            ) : (
-                                                <div
-
-                                                    className="w-full flex-center justify-center px-4 py-2 border border-secondary hover:bg-primary-dark text-secondary rounded-md font-medium transition"
-                                                >
-                                                    <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                    Scheduled!
                                                 </div>
                                             )}
 
+                                            {/* Reply and Cancel Buttons */}
                                             <div className="flex gap-x-2">
                                                 <button
                                                     type="button"
                                                     className="w-full px-4 py-2 bg-primary hover:bg-accent text-white rounded-md text-sm font-medium transition"
+                                                    onClick={() => {
+                                                        // Add your reply logic here, e.g., open message modal or redirect
+                                                        alert("Reply functionality not implemented.");
+                                                    }}
                                                 >
                                                     <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
                                                     Reply
                                                 </button>
-                                                {inquiry.status.startsWith('Cancelled') ? (
-                                                    <div className="w-full py-2 border rounded-md">
-                                                        <p className='text-center'>Cancelled</p>
+
+                                                {isCancelled ? (
+                                                    <div className="w-full py-2 border rounded-md bg-gray-100 text-center text-gray-500 font-medium">
+                                                        Cancelled
                                                     </div>
                                                 ) : (
                                                     <button
@@ -239,8 +297,6 @@ export default function Inquiries({ inquiries, status = '',  allCount, pendingCo
                                                         Cancel
                                                     </button>
                                                 )}
-
-
                                             </div>
                                         </div>
                                     </div>

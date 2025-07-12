@@ -55,7 +55,7 @@ const ListProperty = ({ agents = [] }) => {
     const [selectedAgentIds, setSelectedAgentIds] = useState([]);
 
     const [loading, setLoading] = useState(false);
-    const [allowMultiple, setAllowMultiple] = useState(false);
+    const [allowMultiple, setAllowMultiple] = useState(true);
 
   const handleSubmit = (e) => {
     e.preventDefault();

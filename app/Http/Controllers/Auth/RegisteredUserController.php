@@ -41,6 +41,7 @@ class RegisteredUserController extends Controller
             'role' => 'required|in:Seller,Buyer,Agent',
         ]);
 
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,

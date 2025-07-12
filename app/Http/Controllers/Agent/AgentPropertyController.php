@@ -16,12 +16,20 @@ class AgentPropertyController extends Controller
             'seller_id', 'total_rooms', 'bedrooms', 'bathrooms'
         )
             ->where('status', '=', 'Unassigned') // Only properties with status 'pending'
-            ->with(['seller:id,name,email'])   // Eager load seller with limited fields
+            ->with(['seller:id,name,contact_number,email,photo_url'])   // Eager load seller with limited fields
             ->get();
 
         return Inertia::render('Agent/Properties/SellerPostProperty', [
             'properties' => $properties
         ]);
+    }
 
+    public function show(Property $property)
+    {
+        $property = $property->with(['seller:id,name,contact_number,email,photo_url', 'images', 'coordinate'])->find($property->id);
+
+        return Inertia::render('Agent/Properties/PropertyDetails', [
+            'property' => $property
+        ]);
     }
 }
