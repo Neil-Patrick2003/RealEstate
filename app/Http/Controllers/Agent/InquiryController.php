@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Property;
+use App\Models\PropertyTripping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -137,9 +138,14 @@ class InquiryController extends Controller
             return back()->withErrors(['message' => 'Only pending inquiries can be cancelled.']);
         }
 
-        $inquiry->update([
-            'status' => 'cancelled',
-        ]);
+        $inquiry->update(['status' => 'cancelled']);
+
+        // Update related PropertyTripping if exists
+        $propertyTripping = PropertyTripping::find($inquiry->id);
+
+        if ($propertyTripping) {
+            $propertyTripping->update(['status' => 'Cancelled']);
+        }
 
         return back()->with('success', 'Inquiry cancelled successfully.');
     }

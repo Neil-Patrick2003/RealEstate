@@ -1,16 +1,26 @@
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    faCalendarCheck, faClock, faLocationDot, faHouseChimney,
-    faEnvelope, faPhone, faTrashAlt, faPaperPlane,
-    faPesoSign, faCommentDots, faCalendarPlus, faRedo, faExpand
+    faCalendarCheck,
+    faClock,
+    faLocationDot,
+    faHouseChimney,
+    faEnvelope,
+    faPhone,
+    faTrashAlt,
+    faPaperPlane,
+    faPesoSign,
+    faCommentDots,
+    faCalendarPlus,
+    faRedo,
+    faExpand,
 } from "@fortawesome/free-solid-svg-icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useState } from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
-import { Link } from '@inertiajs/react';
+import { Link } from "@inertiajs/react";
 
 dayjs.extend(relativeTime);
 
@@ -19,22 +29,33 @@ export default function Trippings({ trippings }) {
     const [selectedVisit, setSelectedVisit] = useState(null);
     const [openCancelModal, setOpenCancelModal] = useState(false);
 
-
-
-    // open schedule tripping
-    const openScheduleModal = (trip, type) => {
+    // Open schedule/reschedule modal
+    const openScheduleModal = (trip) => {
         setSelectedVisit(trip);
-
         setModalOpen(true);
     };
 
-
-
+    // Handle cancel visit confirmation
     const handleCancelVisit = () => {
-        console.log(selectedVisit)
-    }
+        console.log("Cancelling visit:", selectedVisit);
+        // TODO: Add your API call here to cancel the visit on the server
 
+        setOpenCancelModal(false);
+        setSelectedVisit(null);
+    };
 
+    const getStatusColor = (status) => {
+        switch (status.toLowerCase()) {
+            case "accepted":
+                return "bg-green-100 text-green-700";
+            case "rejected":
+                return "bg-red-100 text-red-700";
+            case "cancelled":
+                return "bg-gray-200 text-gray-700";
+            default:
+                return "bg-yellow-100 text-yellow-700";
+        }
+    };
 
     return (
         <BuyerLayout>
@@ -46,12 +67,12 @@ export default function Trippings({ trippings }) {
 
             <ConfirmDialog
                 onConfirm={handleCancelVisit}
-                setOpen={() => setOpenCancelModal(true)}
+                setOpen={setOpenCancelModal}
                 open={openCancelModal}
-                title='Cancel Visit Schedule'
-                description='Do you want to cancel this visit, this action cannot be undone'
-                confirmText='Yes, Confirm'
-                />
+                title="Cancel Visit Schedule"
+                description="Do you want to cancel this visit? This action cannot be undone."
+                confirmText="Yes, Confirm"
+            />
 
             <div className="mt-10 px-4 py-6 max-w-7xl mx-auto">
                 <h1 className="text-3xl font-bold text-primary mb-6 flex items-center gap-2">
@@ -66,16 +87,11 @@ export default function Trippings({ trippings }) {
                 ) : (
                     <div className="space-y-6">
                         {trippings.map((trip) => {
-
                             const isFuture = dayjs(trip.visit_date).diff(dayjs(), "day") >= 2;
-                            const isToday = dayjs(trip.visit_date).isSame(dayjs(), 'day');
+                            const isToday = dayjs(trip.visit_date).isSame(dayjs(), "day");
                             const isPast = dayjs(trip.visit_date).isBefore(dayjs(), "day");
-                            const statusColor =
-                                trip.status === "accepted"
-                                    ? "bg-green-100 text-green-700"
-                                    : trip.status === "rejected"
-                                        ? "bg-red-100 text-red-700"
-                                        : "bg-yellow-100 text-yellow-700";
+
+                            const statusColor = getStatusColor(trip.status);
 
                             return (
                                 <div
@@ -109,19 +125,16 @@ export default function Trippings({ trippings }) {
                                                     <span
                                                         className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusColor}`}
                                                     >
-                                                    <FontAwesomeIcon icon={faClock} className="mr-1" />
-                                                                                {trip.status}
-                                                  </span>
+                            <FontAwesomeIcon icon={faClock} className="mr-1" />
+                                                        {trip.status}
+                          </span>
                                                 </div>
                                                 <p className="text-gray-600 text-sm">
                                                     <FontAwesomeIcon icon={faLocationDot} className="mr-1" />
                                                     {trip.property.address}
                                                 </p>
                                                 <p className="text-xs text-gray-500">
-                                                    <FontAwesomeIcon
-                                                        icon={faHouseChimney}
-                                                        className="mr-1"
-                                                    />
+                                                    <FontAwesomeIcon icon={faHouseChimney} className="mr-1" />
                                                     {trip.property.property_type} – {trip.property.sub_type}
                                                 </p>
 
@@ -143,9 +156,7 @@ export default function Trippings({ trippings }) {
                                                         />
                                                         Time:{" "}
                                                         <strong>
-                                                            {dayjs(
-                                                                `1970-01-01T${trip.visit_time}`
-                                                            ).format("hh:mm A")}
+                                                            {dayjs(`1970-01-01T${trip.visit_time}`).format("hh:mm A")}
                                                         </strong>
                                                     </p>
 
@@ -171,10 +182,7 @@ export default function Trippings({ trippings }) {
                                             <div className="flex items-center mb-4">
                                                 <div className="w-10 h-10 rounded-full overflow-hidden border mr-3">
                                                     <img
-                                                        src={
-                                                            trip.agent.photo_url ||
-                                                            "https://placehold.co/80x80"
-                                                        }
+                                                        src={trip.agent.photo_url || "https://placehold.co/80x80"}
                                                         alt={trip.agent.name}
                                                         className="w-full h-full object-cover"
                                                     />
@@ -183,19 +191,14 @@ export default function Trippings({ trippings }) {
                                                     <p className="text-sm font-medium text-gray-800">
                                                         {trip.agent.name}
                                                     </p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {trip.agent.email}
-                                                    </p>
+                                                    <p className="text-xs text-gray-500">{trip.agent.email}</p>
                                                 </div>
                                             </div>
 
                                             <div className="text-xs text-gray-500 space-y-1 mb-4">
                                                 {trip.agent.contact_number && (
                                                     <p>
-                                                        <FontAwesomeIcon
-                                                            icon={faPhone}
-                                                            className="mr-1"
-                                                        />{" "}
+                                                        <FontAwesomeIcon icon={faPhone} className="mr-1" />{" "}
                                                         {trip.agent.contact_number}
                                                     </p>
                                                 )}
@@ -207,38 +210,35 @@ export default function Trippings({ trippings }) {
                                                     Message
                                                 </button>
 
-
+                                                {trip.status === "accepted" && (
+                                                    <button className="w-full px-4 py-2 border bg-secondary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition">
+                                                        <FontAwesomeIcon icon={faExpand} className="mr-2" />
+                                                        View
+                                                    </button>
+                                                )}
 
                                                 {isToday && (
-                                                    <div>
-                                                        <button
-                                                            className="w-full px-4 py-2 border bg-secondary hover:bg-primary-dark text-white  rounded-md text-sm font-medium transition"
-                                                        >
-                                                            <span><FontAwesomeIcon icon={faExpand} className='mr-2'/></span>
-                                                            View</button>
+                                                    <>
+                                                        <button className="w-full px-4 py-2 border bg-secondary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition">
+                                                            <FontAwesomeIcon icon={faExpand} className="mr-2" />
+                                                            View
+                                                        </button>
+
                                                         {isFuture && (
                                                             <button
-                                                                onClick={() =>
-                                                                    openScheduleModal(trip, "reschedule")
-                                                                }
+                                                                onClick={() => openScheduleModal(trip, "reschedule")}
                                                                 className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition"
                                                             >
-                                                                <FontAwesomeIcon
-                                                                    icon={faCalendarPlus}
-                                                                    className="mr-2"
-                                                                />
+                                                                <FontAwesomeIcon icon={faCalendarPlus} className="mr-2" />
                                                                 Reschedule Visit
                                                             </button>
                                                         )}
-                                                    </div>
-
+                                                    </>
                                                 )}
 
                                                 {isPast && (
                                                     <button
-                                                        onClick={() =>
-                                                            openScheduleModal(trip, "reschedule")
-                                                        }
+                                                        onClick={() => openScheduleModal(trip, "reschedule")}
                                                         className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition"
                                                     >
                                                         <FontAwesomeIcon icon={faRedo} className="mr-2" />
@@ -246,12 +246,14 @@ export default function Trippings({ trippings }) {
                                                     </button>
                                                 )}
 
-                                                <button className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition"
-                                                    onClick={  () => { setOpenCancelModal(true);
-                                                                             selectedVisit(trip.id)}}
+                                                <button
+                                                    className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition"
+                                                    onClick={() => {
+                                                        setSelectedVisit(trip);
+                                                        setOpenCancelModal(true);
+                                                    }}
                                                 >
                                                     <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
-
                                                     Cancel
                                                 </button>
                                             </div>

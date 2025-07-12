@@ -33,6 +33,7 @@ class InquiryController extends Controller
             ->count();
         $rejectCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Rejected')->count();
 
+
         return Inertia::render('Buyer/Inquiries/Inquiries', [
             'inquiries' => $inquiries,
             'allCount' => $allCount,
@@ -93,18 +94,17 @@ class InquiryController extends Controller
     //find inquiry
         $inquiry = Inquiry::findOrFail($id);
 
-
         //check if inquiry
 
-        $existingTripping = PropertyTripping::where('property_id', $inquiry->property_id)
-            ->where('agent_id', $inquiry->agent_id)
-            ->first();
+        $existingTripping = PropertyTripping::where('inquiry_id', $inquiry->id)->first();
+
+
 
         if ($existingTripping) {
-            $existingTripping->status = 'cancelled';
+            $existingTripping->update([
+                'status' => 'Cancelled',
+            ]);
         }
-
-
 
         $inquiry->update([
             'status' => 'Cancelled by Buyer',

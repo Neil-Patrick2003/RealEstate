@@ -21,7 +21,6 @@ import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 
 dayjs.extend(relativeTime);
 
-// Utility to return a badge class based on status
 const getStatusBadge = (status) => {
     switch (status.toLowerCase()) {
         case "accepted":
@@ -29,6 +28,7 @@ const getStatusBadge = (status) => {
         case "rejected":
             return "bg-red-100 text-red-700";
         case "cancelled":
+        case "cancelled by buyer":
             return "bg-gray-100 text-gray-700";
         default:
             return "bg-yellow-100 text-yellow-800"; // pending or others
@@ -51,7 +51,6 @@ export default function Inquiries({
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [cancelId, setCancelId] = useState(null);
 
-    // Initialize selectedStatus properly; default to 'All' or passed prop (case insensitive)
     const [selectedStatus, setSelectedStatus] = useState(
         status && status.trim() !== "" ? status : "All"
     );
@@ -78,7 +77,6 @@ export default function Inquiries({
     return (
         <BuyerLayout>
             <div className="py-6 px-4">
-                {/* Schedule Visit Modal */}
                 {isAddVisitModal && (
                     <ScheduleVisitModal
                         open={isAddVisitModal}
@@ -87,7 +85,6 @@ export default function Inquiries({
                     />
                 )}
 
-                {/* Confirm Cancel Dialog */}
                 <ConfirmDialog
                     onConfirm={handleCancelInquiry}
                     confirmText="Confirm"
@@ -98,7 +95,6 @@ export default function Inquiries({
                     cancelText="Cancel"
                 />
 
-                {/* Header */}
                 <div className="p-6">
                     <h1 className="text-3xl font-bold text-primary mb-3">My Inquiries</h1>
                     <p className="text-gray-600 font-medium mb-6">
@@ -106,7 +102,6 @@ export default function Inquiries({
                     </p>
                 </div>
 
-                {/* Filters */}
                 <div className="flex justify-between items-center mb-5">
                     <BuyerInquiriesFilterTab
                         setSelectedStatus={setSelectedStatus}
@@ -114,15 +109,15 @@ export default function Inquiries({
                             allCount,
                             pendingCount,
                             scheduledCount,
-                            cancelledCount,
+
                             closeCount,
+                            cancelledCount,
                             rejectedCount,
                         ]}
                         selectedStatus={selectedStatus}
                     />
                 </div>
 
-                {/* Inquiry List */}
                 {inquiries.data.length === 0 ? (
                     <p className="text-center text-gray-500 py-12">No inquiries yet.</p>
                 ) : (
@@ -133,7 +128,11 @@ export default function Inquiries({
 
                         const statusLower = inquiry.status.toLowerCase();
                         const isAccepted = statusLower === "accepted";
-                        const isCancelled = statusLower === "cancelled";
+                        const isCancelled =
+                            statusLower === "cancelled" || statusLower === "cancelled by buyer";
+
+                        // Disable scheduling if not accepted or cancelled
+                        const canScheduleVisit = isAccepted && !isCancelled;
 
                         return (
                             <div
@@ -169,9 +168,9 @@ export default function Inquiries({
                                                         inquiry.status
                                                     )}`}
                                                 >
-                          <FontAwesomeIcon icon={faClock} className="mr-1" />
+                                                    <FontAwesomeIcon icon={faClock} className="mr-1" />
                                                     {inquiry.status}
-                        </span>
+                                                </span>
                                             </div>
 
                                             <p className="text-gray-600 text-sm mb-1">
@@ -228,34 +227,32 @@ export default function Inquiries({
 
                                         <div className="flex flex-col gap-2">
                                             {/* Schedule Visit Button or Scheduled label */}
-                                            {isAccepted ? (
-                                                <>
-                                                    {!inquiry.visit_scheduled ? (
-                                                        <button
-                                                            type="button"
-                                                            className="w-full px-4 py-2 border border-secondary hover:bg-primary-dark text-secondary rounded-md font-medium transition"
-                                                            onClick={() => {
-                                                                setSelectedVisitData({
-                                                                    property: inquiry.property,
-                                                                    agentId: agent.id,
-                                                                    inquiryId: inquiry.id,
-                                                                });
-                                                                setIsAddVisitModal(true);
-                                                            }}
-                                                        >
-                                                            <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                            Schedule Visit
-                                                        </button>
-                                                    ) : (
-                                                        <div
-                                                            className="w-full flex-center justify-center px-4 py-2 border border-secondary bg-green-100 text-green-800 rounded-md font-medium transition"
-                                                            aria-label="Visit Scheduled"
-                                                        >
-                                                            <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                            Scheduled!
-                                                        </div>
-                                                    )}
-                                                </>
+                                            {canScheduleVisit ? (
+                                                !inquiry.visit_scheduled ? (
+                                                    <button
+                                                        type="button"
+                                                        className="w-full px-4 py-2 border border-secondary hover:bg-primary-dark text-secondary rounded-md font-medium transition"
+                                                        onClick={() => {
+                                                            setSelectedVisitData({
+                                                                property: inquiry.property,
+                                                                agentId: agent.id,
+                                                                inquiryId: inquiry.id,
+                                                            });
+                                                            setIsAddVisitModal(true);
+                                                        }}
+                                                    >
+                                                        <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
+                                                        Schedule Visit
+                                                    </button>
+                                                ) : (
+                                                    <div
+                                                        className="w-full flex-center justify-center px-4 py-2 border border-secondary bg-green-100 text-green-800 rounded-md font-medium transition"
+                                                        aria-label="Visit Scheduled"
+                                                    >
+                                                        <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
+                                                        Scheduled!
+                                                    </div>
+                                                )
                                             ) : (
                                                 <div
                                                     className="w-full flex-center justify-center px-4 py-2 border border-gray-300 text-gray-400 rounded-md font-medium transition"
@@ -270,11 +267,17 @@ export default function Inquiries({
                                             <div className="flex gap-x-2">
                                                 <button
                                                     type="button"
-                                                    className="w-full px-4 py-2 bg-primary hover:bg-accent text-white rounded-md text-sm font-medium transition"
+                                                    className={`w-full px-4 py-2 text-white rounded-md text-sm font-medium transition ${
+                                                        isCancelled
+                                                            ? "bg-gray-400 cursor-not-allowed"
+                                                            : "bg-primary hover:bg-accent"
+                                                    }`}
                                                     onClick={() => {
-                                                        // Add your reply logic here, e.g., open message modal or redirect
-                                                        alert("Reply functionality not implemented.");
+                                                        if (!isCancelled) {
+                                                            alert("Reply functionality not implemented.");
+                                                        }
                                                     }}
+                                                    disabled={isCancelled}
                                                 >
                                                     <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
                                                     Reply

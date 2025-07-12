@@ -155,21 +155,31 @@ export default function Dashboard({ properties, inquiries }) {
                         </div>
 
                         {/* In Progress Inquiry Progress */}
-                        {progressInquiry && (
+                        {progressInquiry ? (
                             <div>
                                 <h2 className="text-xl font-semibold text-gray-800 mb-4">In Progress Inquiry</h2>
-                                <div className='border border-gray-100 p-4 rounded-xl shadow-sm bg-white'>
+                                <div className="border border-gray-100 p-4 rounded-xl shadow-sm bg-white">
                                     <img
                                         src={`/storage/${progressInquiry.property.image_url}`}
                                         alt={progressInquiry.property.title}
-                                        className='rounded-xl h-48 w-full object-cover mb-2'
+                                        className="rounded-xl h-48 w-full object-cover mb-2"
                                     />
                                     <p className="text-lg font-semibold">{progressInquiry.property.title}</p>
                                     <Progress inquiryStatus={progressInquiry.status} />
-
                                 </div>
                             </div>
+                        ) : (
+                            // Fallback UI when no progressInquiry available
+                            <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
+                                <p className="text-gray-500 font-medium">No ongoing inquiries found.</p>
+                                <img
+                                    src="/placeholder-estate.png"  // Your fallback image, replace with your own
+                                    alt="No inquiry"
+                                    className="mx-auto mt-4 h-32 object-contain"
+                                />
+                            </div>
                         )}
+
                     </div>
                 </section>
             </div>
