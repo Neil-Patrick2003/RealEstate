@@ -107,6 +107,11 @@ Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\Inquiry
 
 
 Route::get('/agents/trippings', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'index']);
+Route::patch('/agents/trippings/{id}/accept', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'accept']);
+    Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'decline']);
+
+
+
 
 
 
