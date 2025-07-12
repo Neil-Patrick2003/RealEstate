@@ -55,11 +55,8 @@ class Inquiry extends Model
         } else {
             return $query->where('status', $status);
         }
-
-
-
-
     }
+
 
 
 }

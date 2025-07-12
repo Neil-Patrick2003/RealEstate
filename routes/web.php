@@ -57,13 +57,11 @@ Route::middleware(['auth', ])->group(function () {
         return Inertia::render('Dashboard');
     })->name('seller.dashboard');
 
-
     Route::get('/seller/properties', [PropertyController::class, 'index'])->name('my-properties');
     Route::get('/seller/properties/{property}', [ PropertyController::class, 'show']);
     Route::get('/seller/properties/{property}/edit', [ PropertyController::class, 'edit']);
     Route::patch('/seller/properties/{proeprty}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
     Route::delete('/seller/properties/{id}', [ PropertyController::class, 'destroy']);
-
 
     Route::delete('/seller/properties/{property}/edit/{id}', [ PropertyImageController::class, 'destroy'])->name('seller.properties.destroy');
     Route::post('/seller/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
@@ -81,10 +79,6 @@ Route::middleware(['auth', ])->group(function () {
     //transaction
     Route::get('/seller/sales', [TransactionController::class, 'index']);
 
-
-
-
-
 });
 
 
@@ -96,8 +90,6 @@ Route::get('/agents/properties', [\App\Http\Controllers\Agent\AgentPropertyContr
 Route::get('/agents/my-listings', [\App\Http\Controllers\Agent\PropertyListingController::class, 'index'])->name('agents.my-listings');
 Route::get('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'show']);
 Route::patch('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'update']);
-
-
 
 //sent inquiry
 Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent\InquiryController::class, 'store'])->middleware('auth')->name('agent.sent-inquiry');
@@ -114,14 +106,14 @@ Route::patch('/agents/inquiries/{inquiry}/reject', [\App\Http\Controllers\Agent\
 Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\InquiryController::class, 'cancel']); // Used for cancel
 
 
+Route::get('/agents/trippings', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'index']);
+
 
 
 
 Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])
     ->middleware('auth')
     ->name('notifications.read');
-
-
 
 
 //------------------------------------------buyer---------------------------------------------------
@@ -140,12 +132,6 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
             ->latest() // defaults to 'created_at' in descending order
             ->take(10) // limit to 10 results
             ->get();
-
-
-
-
-
-
 
         return Inertia::render('Buyer/Dashboard', [
             'properties' => $properties,

@@ -110,7 +110,7 @@ class InquiryController extends Controller
     {
 
         $inquiry->update([
-            'status' => 'accepted',
+            'status' => 'Accepted',
         ]);
 
         return back()->with('success', 'Inquiry accepted successfully.');
