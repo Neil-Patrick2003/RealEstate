@@ -3,24 +3,38 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faCalendarCheck, faClock, faLocationDot, faHouseChimney,
     faEnvelope, faPhone, faTrashAlt, faPaperPlane,
-    faPesoSign, faCommentDots, faCalendarPlus, faRedo
+    faPesoSign, faCommentDots, faCalendarPlus, faRedo, faExpand
 } from "@fortawesome/free-solid-svg-icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useState } from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
+import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
+import { Link } from '@inertiajs/react';
 
 dayjs.extend(relativeTime);
 
 export default function Trippings({ trippings }) {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedVisit, setSelectedVisit] = useState(null);
+    const [openCancelModal, setOpenCancelModal] = useState(false);
 
+
+
+    // open schedule tripping
     const openScheduleModal = (trip, type) => {
         setSelectedVisit(trip);
 
         setModalOpen(true);
     };
+
+
+
+    const handleCancelVisit = () => {
+        console.log(selectedVisit)
+    }
+
+
 
     return (
         <BuyerLayout>
@@ -29,6 +43,15 @@ export default function Trippings({ trippings }) {
                 setOpen={setModalOpen}
                 visitData={selectedVisit}
             />
+
+            <ConfirmDialog
+                onConfirm={handleCancelVisit}
+                setOpen={() => setOpenCancelModal(true)}
+                open={openCancelModal}
+                title='Cancel Visit Schedule'
+                description='Do you want to cancel this visit, this action cannot be undone'
+                confirmText='Yes, Confirm'
+                />
 
             <div className="mt-10 px-4 py-6 max-w-7xl mx-auto">
                 <h1 className="text-3xl font-bold text-primary mb-6 flex items-center gap-2">
@@ -43,7 +66,9 @@ export default function Trippings({ trippings }) {
                 ) : (
                     <div className="space-y-6">
                         {trippings.map((trip) => {
+
                             const isFuture = dayjs(trip.visit_date).diff(dayjs(), "day") >= 2;
+                            const isToday = dayjs(trip.visit_date).isSame(dayjs(), 'day');
                             const isPast = dayjs(trip.visit_date).isBefore(dayjs(), "day");
                             const statusColor =
                                 trip.status === "accepted"
@@ -84,9 +109,9 @@ export default function Trippings({ trippings }) {
                                                     <span
                                                         className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusColor}`}
                                                     >
-                            <FontAwesomeIcon icon={faClock} className="mr-1" />
-                                                        {trip.status}
-                          </span>
+                                                    <FontAwesomeIcon icon={faClock} className="mr-1" />
+                                                                                {trip.status}
+                                                  </span>
                                                 </div>
                                                 <p className="text-gray-600 text-sm">
                                                     <FontAwesomeIcon icon={faLocationDot} className="mr-1" />
@@ -177,24 +202,36 @@ export default function Trippings({ trippings }) {
                                             </div>
 
                                             <div className="flex flex-col gap-2">
-                                                <button className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium transition">
+                                                <button className="w-full px-4 py-2 bg-primary hover:bg-accent text-white rounded-md text-sm font-medium transition">
                                                     <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
                                                     Message
                                                 </button>
 
-                                                {isFuture && (
-                                                    <button
-                                                        onClick={() =>
-                                                            openScheduleModal(trip, "reschedule")
-                                                        }
-                                                        className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition"
-                                                    >
-                                                        <FontAwesomeIcon
-                                                            icon={faCalendarPlus}
-                                                            className="mr-2"
-                                                        />
-                                                        Reschedule Visit
-                                                    </button>
+
+
+                                                {isToday && (
+                                                    <div>
+                                                        <button
+                                                            className="w-full px-4 py-2 border bg-secondary hover:bg-primary-dark text-white  rounded-md text-sm font-medium transition"
+                                                        >
+                                                            <span><FontAwesomeIcon icon={faExpand} className='mr-2'/></span>
+                                                            View</button>
+                                                        {isFuture && (
+                                                            <button
+                                                                onClick={() =>
+                                                                    openScheduleModal(trip, "reschedule")
+                                                                }
+                                                                className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition"
+                                                            >
+                                                                <FontAwesomeIcon
+                                                                    icon={faCalendarPlus}
+                                                                    className="mr-2"
+                                                                />
+                                                                Reschedule Visit
+                                                            </button>
+                                                        )}
+                                                    </div>
+
                                                 )}
 
                                                 {isPast && (
@@ -209,8 +246,12 @@ export default function Trippings({ trippings }) {
                                                     </button>
                                                 )}
 
-                                                <button className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition">
+                                                <button className="w-full px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md text-sm font-medium transition"
+                                                    onClick={  () => { setOpenCancelModal(true);
+                                                                             selectedVisit(trip.id)}}
+                                                >
                                                     <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
+
                                                     Cancel
                                                 </button>
                                             </div>

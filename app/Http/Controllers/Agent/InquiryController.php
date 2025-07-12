@@ -108,9 +108,6 @@ class InquiryController extends Controller
     // Accept inquiry (Buyer side)
     public function accept(Inquiry $inquiry)
     {
-        if ($inquiry->status !== 'pending') {
-            return back()->withErrors(['message' => 'Only pending inquiries can be accepted.']);
-        }
 
         $inquiry->update([
             'status' => 'accepted',

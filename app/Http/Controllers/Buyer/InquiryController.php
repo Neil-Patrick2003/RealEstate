@@ -3,24 +3,44 @@
 namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Seller\TrippingController;
 use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Property;
+use App\Models\PropertyTripping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InquiryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $inquiries = Inquiry::where('buyer_id', auth()->id())
             ->with('property', 'agent', 'messages')
+            ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
+                return $q->status($request->status);
+            })
         ->latest()->paginate(10);
 
-//        dd($inquiries->toArray());
+        $allCount = Inquiry::where('buyer_id', auth()->id())->count();
+        $pendingCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Pending')->count();
+        $scheduledCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Follow-Up Scheduled')->count();
+        $cancelledCount = Inquiry::where('buyer_id', auth()->id())
+            ->where('status', 'like', '%Cancelled%')
+            ->count();
+        $closeCount = Inquiry::where('buyer_id', auth()->id())
+            ->where('status', 'like', '%Close%')
+            ->count();
+        $rejectCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Rejected')->count();
 
         return Inertia::render('Buyer/Inquiries/Inquiries', [
             'inquiries' => $inquiries,
+            'allCount' => $allCount,
+            'pendingCount' => $pendingCount,
+            'scheduledCount' => $scheduledCount,
+            'cancelledCount' => $cancelledCount,
+            'closeCount' => $closeCount,
+            'rejectCount' => $rejectCount,
         ]);
     }
 
@@ -65,5 +85,31 @@ class InquiryController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Inquiry submitted successfully.');
+    }
+
+    public  function cancel($id){
+
+
+    //find inquiry
+        $inquiry = Inquiry::findOrFail($id);
+
+
+        //check if inquiry
+
+        $existingTripping = PropertyTripping::where('property_id', $inquiry->property_id)
+            ->where('agent_id', $inquiry->agent_id)
+            ->first();
+
+        if ($existingTripping) {
+            $existingTripping->status = 'cancelled';
+        }
+
+
+
+        $inquiry->update([
+            'status' => 'Cancelled by Buyer',
+        ]);
+
+        return redirect()->back()->with('success', 'Inquiry cancelled successfully.');
     }
 }

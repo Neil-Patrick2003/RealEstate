@@ -84,7 +84,6 @@ export default function AgentInquiriesFilterTab({ count, selectedStatus, setSele
                     style={underlineStyle}
                 />
             </div>
-
         </div>
     );
 }

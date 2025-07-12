@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Inquiry;
 use App\Models\PropertyTripping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,8 +25,8 @@ class PropertyTrippingController extends Controller
     }
     public function store(Request $request){
 
-//        dd($request->toArray());
 
+        //validate
         $validated = request()->validate([
             'property_id' => 'required',
             'agent_id' => 'required',
@@ -35,6 +36,7 @@ class PropertyTrippingController extends Controller
             'notes' => 'nullable|max:255',
         ]);
 
+        //create tripping
         PropertyTripping::create([
             'property_id' => $validated['property_id'],
             'agent_id' => $validated['agent_id'],
@@ -45,6 +47,17 @@ class PropertyTrippingController extends Controller
             'status' => 'pending',
             'notes' => $validated['notes'],
         ]);
+
+        //update inquiry status into Follow-Up Scheduled
+
+        $inquiry = Inquiry::findOrFail($validated['inquiry_id']);
+
+        $inquiry->update([
+            'status' => 'Follow-Up Scheduled'
+        ]);
+
+
+
 
         return redirect()->back()->with('success', 'Schedule tripping successfully.' );
     }

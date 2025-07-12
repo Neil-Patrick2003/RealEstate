@@ -157,7 +157,9 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
 
     //sent inquiries
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
+
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
+    Route::patch('/inquiries/{id}/cancel', [\App\Http\Controllers\Buyer\InquiryController::class, 'cancel']);
 
 
 

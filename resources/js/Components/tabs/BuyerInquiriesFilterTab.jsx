@@ -4,14 +4,15 @@ import { router } from '@inertiajs/react';
 
 const tabs = [
     { name: 'All', color: 'black' },
-    { name: 'Pending', color: 'blue' },
-    { name: 'Accepted', color: 'green' },
+    { name: 'Pending', color: 'orange' },
+    { name: 'Scheduled', color: 'green' },
+    { name: 'Close', color: 'blue' },
+    { name: 'Cancelled', color: 'yello' },
     { name: 'Rejected', color: 'red' },
-    { name: 'Cancelled', color: 'orange' },
 
 ];
 
-export default function BuyerInquiriesFilterTab({ count, selectedStatus, setSelectedStatus, page, selectedItemsPerPage }) {
+export default function BuyerInquiriesFilterTab({ count, selectedStatus, setSelectedStatus }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const tabsRef = useRef([]);
     const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
@@ -31,9 +32,13 @@ export default function BuyerInquiriesFilterTab({ count, selectedStatus, setSele
     const getBadgeClass = (name, isActive) => {
         const colorMap = {
             All: isActive ? 'bg-black text-white' : 'bg-black text-white',
-            Pending: isActive ? 'bg-secondary text-white' : 'bg-orange-100 text-orange-800',
-            Accepted: isActive ? 'bg-green-400 text-white' : 'bg-green-100 text-green-800',
+            Pending: isActive ? 'bg-orange-400 text-white' : 'bg-orange-100 text-orange-800',
+            Scheduled: isActive ? 'bg-green-400 text-white' : 'bg-green-100 text-green-800',
+            Close: isActive ? 'bg-blue-400 text-white' : 'bg-red-100 text-red-800',
+            Cancelled: isActive ? 'bg-yellow-400 text-white' : 'bg-red-100 text-red-800',
             Rejected: isActive ? 'bg-red-400 text-white' : 'bg-red-100 text-red-800',
+
+
         };
         return colorMap[name] || 'bg-gray-100 text-gray-800';
     };
@@ -42,10 +47,8 @@ export default function BuyerInquiriesFilterTab({ count, selectedStatus, setSele
         setSelectedIndex(idx);
         setSelectedStatus(name);
 
-        router.get('/agents/inquiries', {
+        router.get('/inquiries', {
 
-            items_per_page: selectedItemsPerPage,
-            page: 1,
             status: name,
         }, {
             preserveState: true,
@@ -84,7 +87,6 @@ export default function BuyerInquiriesFilterTab({ count, selectedStatus, setSele
                     style={underlineStyle}
                 />
             </div>
-
         </div>
     );
 }
