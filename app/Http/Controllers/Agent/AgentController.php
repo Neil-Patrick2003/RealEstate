@@ -14,15 +14,16 @@ class AgentController extends Controller
 
         $user = auth()->user();
 
-
-
         $properties = PropertyListing::where('agent_id', $user->id)->get();
 
+        $totalListing = $properties->count();
 
-//        dd($properties->toArray());
 
 
-        return Inertia::render('Agent/AgentDashboard');
+        return Inertia::render('Agent/AgentDashboard', [
+            'properties' => $properties,
+            'totalListing' => $totalListing
+        ]);
     }
 
     public function loadAgents() {
