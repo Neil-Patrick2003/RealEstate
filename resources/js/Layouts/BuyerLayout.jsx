@@ -5,6 +5,7 @@ import { usePage } from '@inertiajs/react';
 import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
 import BuyerSidebar from "@/Components/Sidebar/BuyerSidebar.jsx";
+import ToastHandler from "@/Components/ToastHandler.jsx";
 
 export default function BuyerLayout({ children }) {
   const auth = usePage().props.auth.user;
@@ -182,6 +183,7 @@ export default function BuyerLayout({ children }) {
           </motion.header>
 
         <div className='py-8 px-4 md:px-8 lg:px-12 xl:px-16 sl:px-16'>
+            <ToastHandler />
           {children}
         </div>
 

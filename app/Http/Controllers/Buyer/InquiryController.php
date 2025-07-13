@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Seller\TrippingController;
+use App\Models\ChatChannel;
 use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Property;
 use App\Models\PropertyTripping;
+use App\Models\User;
+use App\Notifications\NewInquiry;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -16,7 +19,7 @@ class InquiryController extends Controller
     public function index(Request $request)
     {
         $inquiries = Inquiry::where('buyer_id', auth()->id())
-            ->with('property', 'agent', 'messages')
+            ->with('property', 'agent', 'messages', 'trippings')
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 return $q->status($request->status);
             })
@@ -32,6 +35,7 @@ class InquiryController extends Controller
             ->where('status', 'like', '%Close%')
             ->count();
         $rejectCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Rejected')->count();
+
 
         return Inertia::render('Buyer/Inquiries/Inquiries', [
             'inquiries' => $inquiries,
@@ -65,8 +69,9 @@ class InquiryController extends Controller
         }
 
         //create inquiry
-
         $agent_id = $property->property_listing->agent_id;
+
+        $agent = User::findOrFail($agent_id);
 
         $inquiry = Inquiry::create([
             'buyer_id' => auth()->id(),
@@ -75,13 +80,20 @@ class InquiryController extends Controller
             'status' => 'pending',
         ]);
 
-        //create message
-        Message::create([
+        $agent->notify(new NewInquiry($inquiry));
+
+        $channel = ChatChannel::create([
+            'subject_id' => $property->id,
+            'subject_type' => get_class($property),
+            'title' => 'Inquiry',
+        ]);
+
+        $channel->members()->attach(auth()->id());
+        $channel->members()->attach($agent_id);
+
+        $channel->messages()->create([
+            'content' => $validated['message'],
             'sender_id' => auth()->id(),
-            'receiver_id' => $agent_id,
-            'property_id' => $property->id,
-            'message' => $validated['message'],
-            'inquiry_id' => $inquiry->id,
         ]);
 
         return redirect()->back()->with('success', 'Inquiry submitted successfully.');
@@ -93,18 +105,17 @@ class InquiryController extends Controller
     //find inquiry
         $inquiry = Inquiry::findOrFail($id);
 
-
         //check if inquiry
 
-        $existingTripping = PropertyTripping::where('property_id', $inquiry->property_id)
-            ->where('agent_id', $inquiry->agent_id)
-            ->first();
+        $existingTripping = PropertyTripping::where('inquiry_id', $inquiry->id)->first();
+
+
 
         if ($existingTripping) {
-            $existingTripping->status = 'cancelled';
+            $existingTripping->update([
+                'status' => 'Cancelled',
+            ]);
         }
-
-
 
         $inquiry->update([
             'status' => 'Cancelled by Buyer',

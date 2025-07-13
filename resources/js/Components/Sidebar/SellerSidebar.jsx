@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import logo from '../../../assets/framer_logo.png';
@@ -9,7 +9,7 @@ import {
     faMapLocationDot,
     faEnvelope,
     faCalendar,
-    faChartSimple,
+    faChartSimple, faMessage,
 } from '@fortawesome/free-solid-svg-icons';
 
 function classNames(...classes) {
@@ -28,26 +28,16 @@ const menus = [
         path: '/seller/properties',
     },
     {
-        name: 'Enquiries',
-        Icon: faEnvelope,
-        subMenu: [
-            {
-                name: 'Messages',
-                Icon: faEnvelope,
-                path: '/seller/messages',
-            },
-            {
-                name: 'Inquiries',
-                Icon: faEnvelope,
-                path: '/seller/inquiries',
-            },
-        ],
+        name: 'Messages',
+        Icon: faMessage,
+        path: '/seller/chat',
     },
     {
-        name: 'Tripping',
-        Icon: faCalendar,
-        path: '/seller/trippings',
+        name: 'Inquiries',
+        Icon: faEnvelope,
+        path: '/seller/inquiries',
     },
+
     {
         name: 'Sales',
         Icon: faChartSimple,
@@ -152,10 +142,10 @@ const SellerSidebar = ({ isOpen, setIsOpen }) => {
                                                 'w-full flex items-center justify-between py-3 rounded-lg transition-all'
                                             )}
                                         >
-                      <span className="flex items-center gap-3">
-                        <FontAwesomeIcon icon={Icon} className="w-5 h-5" />
-                          {isOpen && <span>{name}</span>}
-                      </span>
+                                          <span className="flex items-center gap-3">
+                                            <FontAwesomeIcon icon={Icon} className="w-5 h-5" />
+                                              {isOpen && <span>{name}</span>}
+                                          </span>
                                             {isOpen && hasSubMenu && (
                                                 <ChevronDown
                                                     className={`transition-transform ${isClicked ? 'rotate-180' : ''}`}

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Seller\ChannelController;
+use App\Http\Controllers\Seller\ChatController;
 use App\Http\Controllers\Seller\MessageController;
 use App\Http\Controllers\Seller\PropertyController;
 use App\Http\Controllers\Seller\PropertyImageController;
@@ -29,6 +31,7 @@ Route::get('/', function (Request $request) {
     $favouriteIds = auth()->check()
         ? auth()->user()->favourites()->pluck('property_id')->toArray()
         : [];
+
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -130,24 +133,24 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
-// only seller  addd it ----->>>>'role:Seller'<<<<-------
 Route::middleware(['auth', ])->group(function () {
     Route::get('/seller/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('seller.dashboard');
 
-
     Route::get('/seller/properties', [PropertyController::class, 'index'])->name('my-properties');
     Route::get('/seller/properties/{property}', [ PropertyController::class, 'show']);
     Route::get('/seller/properties/{property}/edit', [ PropertyController::class, 'edit']);
-    Route::patch('/seller/properties/{proeprty}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
+    Route::patch('/seller/properties/{property}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
     Route::delete('/seller/properties/{id}', [ PropertyController::class, 'destroy']);
-
 
     Route::delete('/seller/properties/{property}/edit/{id}', [ PropertyImageController::class, 'destroy'])->name('seller.properties.destroy');
     Route::post('/seller/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
 
     //message
+    Route::get('/seller/chat', [ChatController::class, 'index'])->name('seller.chat.index');
+    Route::get('/seller/chat/channels/{channel}', [ChannelController::class, 'show'])->name('seller.chat.channels.show');
+    Route::post('/chat/channels/{channel}/messages', [\App\Http\Controllers\Chat\MessageController::class, 'store'])->name('chat.channels.messages.store');
     Route::get('/seller/messages', [MessageController::class, 'index'])->name('seller.messages');
     Route::post('/seller/messages/{receiver}/sent_message', [MessageController::class, 'send']);
 
@@ -160,10 +163,6 @@ Route::middleware(['auth', ])->group(function () {
     //transaction
     Route::get('/seller/sales', [TransactionController::class, 'index']);
 
-
-
-
-
 });
 
 
@@ -172,16 +171,15 @@ Route::middleware(['auth', ])->group(function () {
 //for agent
 Route::get('/agents/dashboard', [\App\Http\Controllers\Agent\AgentController::class, 'index'])->name('agent.dashboard');
 Route::get('/agents/properties', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'index'])->name('agent.properties');
+Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent\InquiryController::class, 'store'])->middleware('auth')->name('agent.sent-inquiry');
+Route::get('/agents/properties/{property}', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'show']);
+
 Route::get('/agents/my-listings', [\App\Http\Controllers\Agent\PropertyListingController::class, 'index'])->name('agents.my-listings');
 Route::get('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'show']);
 Route::patch('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'update']);
 
-
-
-//sent inquiry
-Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent\InquiryController::class, 'store'])->middleware('auth')->name('agent.sent-inquiry');
-
-
+Route::get('/agents/chat', [\App\Http\Controllers\Agent\ChatController::class, 'index'])->name('agents.chat.index');
+Route::get('/agents/chat/channels/{channel}', [\App\Http\Controllers\Agent\ChannelController::class, 'show'])->name('agents.chat.channels.show');
 Route::get('/agents/messages', [\App\Http\Controllers\Agent\MessageController::class, 'index']);
 Route::get('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageController::class, 'show']);
 Route::post('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageController::class, 'store']);
@@ -193,14 +191,19 @@ Route::patch('/agents/inquiries/{inquiry}/reject', [\App\Http\Controllers\Agent\
 Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\InquiryController::class, 'cancel']); // Used for cancel
 
 
+Route::get('/agents/trippings', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'index']);
+Route::patch('/agents/trippings/{id}/accept', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'accept']);
+    Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'decline']);
+
+
+
+
 
 
 
 Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])
     ->middleware('auth')
     ->name('notifications.read');
-
-
 
 
 //------------------------------------------buyer---------------------------------------------------
@@ -219,12 +222,6 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
             ->latest() // defaults to 'created_at' in descending order
             ->take(10) // limit to 10 results
             ->get();
-
-
-
-
-
-
 
         return Inertia::render('Buyer/Dashboard', [
             'properties' => $properties,
@@ -247,6 +244,9 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     //favourites
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
     Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
+
+    Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
+
 
 
 });

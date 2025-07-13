@@ -14,6 +14,7 @@ import {
 import PropertyMap from "@/Components/PropertyMap.jsx";
 import {Link, router} from '@inertiajs/react';
 import Modal from '@/Components/Modal.jsx';
+import ToastHandler from "@/Components/ToastHandler.jsx";
 
 export default function PropertyDetail({ property }) {
     const [visibleImages, setVisibleImages] = useState([]);
@@ -56,6 +57,7 @@ export default function PropertyDetail({ property }) {
 
 
         <div>
+            <ToastHandler/>
             <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
                 <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
                     {/* Close Button */}

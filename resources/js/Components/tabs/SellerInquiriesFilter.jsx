@@ -4,9 +4,9 @@ import { router } from '@inertiajs/react';
 
 const tabs = [
     { name: 'All', color: 'black' },
-    { name: 'Pending', color: 'blue' },
     { name: 'Accepted', color: 'green' },
     { name: 'Rejected', color: 'red' },
+    { name: 'Pending', color: 'blue' },
     { name: 'Cancelled', color: 'orange' },
 
 ];
@@ -34,6 +34,8 @@ export default function SellerInquiriesFilterTab({ count, selectedStatus, setSel
             Pending: isActive ? 'bg-secondary text-white' : 'bg-orange-100 text-orange-800',
             Accepted: isActive ? 'bg-green-400 text-white' : 'bg-green-100 text-green-800',
             Rejected: isActive ? 'bg-red-400 text-white' : 'bg-red-100 text-red-800',
+            Cancelled: isActive ? 'bg-orange-400 text-white' : 'bg-orange-100 text-orange-800',
+
         };
         return colorMap[name] || 'bg-gray-100 text-gray-800';
     };
@@ -42,7 +44,7 @@ export default function SellerInquiriesFilterTab({ count, selectedStatus, setSel
         setSelectedIndex(idx);
         setSelectedStatus(name);
 
-        router.get('/inquiries', {
+        router.get('/seller/inquiries', {
 
             items_per_page: selectedItemsPerPage,
             page: 1,
@@ -54,8 +56,7 @@ export default function SellerInquiriesFilterTab({ count, selectedStatus, setSel
     };
 
     return (
-        <div className="relative border-b border-gray-300 px-4 pt-1">
-            <div className="relative flex justify-start space-x-1">
+            <div className="relative flex border-b justify-start space-x-1">
                 {tabs.map((tab, idx) => {
                     const isActive = tab.name === selectedStatus;
                     return (
@@ -70,10 +71,11 @@ export default function SellerInquiriesFilterTab({ count, selectedStatus, setSel
                             {tab.name}
                             {count?.[idx] !== undefined && (
                                 <span className={`text-xs font-semibold px-3 py-1 rounded-md ${getBadgeClass(tab.name, isActive)}`}>
-                  {count[idx]}
-                </span>
+        {count[idx]}
+      </span>
                             )}
                         </button>
+
                     );
                 })}
 
@@ -85,6 +87,5 @@ export default function SellerInquiriesFilterTab({ count, selectedStatus, setSel
                 />
             </div>
 
-        </div>
     );
 }

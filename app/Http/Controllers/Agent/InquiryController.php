@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChatChannel;
 use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Property;
+use App\Models\PropertyTripping;
+use App\Notifications\NewInquiry;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InquiryController extends Controller
 {
     public function index(Request $request){
-
-
         $inquiries = Inquiry::with('seller', 'agent', 'property', 'messages')
             ->where('agent_id', auth()->id())
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
@@ -79,12 +80,20 @@ class InquiryController extends Controller
             'status' => 'Pending',
         ]);
 
-        Message::create([
+        $seller->notify(new NewInquiry($inquiry));
+
+        $channel = ChatChannel::create([
+            'subject_id' => $property->id,
+            'subject_type' => get_class($property),
+            'title' => 'Inquiry',
+        ]);
+
+        $channel->members()->attach(auth()->id());
+        $channel->members()->attach($seller->id);
+
+        $channel->messages()->create([
+            'content' => $message,
             'sender_id' => auth()->id(),
-            'receiver_id' => $seller->id,
-            'property_id' => $property->id,
-            'message' => $message,
-            'inquiry_id' => $inquiry->id,
         ]);
 
         return redirect()->route('agent.properties')->with('success', 'Inquiry submitted successfully.');
@@ -110,7 +119,7 @@ class InquiryController extends Controller
     {
 
         $inquiry->update([
-            'status' => 'accepted',
+            'status' => 'Accepted',
         ]);
 
         return back()->with('success', 'Inquiry accepted successfully.');
@@ -137,9 +146,14 @@ class InquiryController extends Controller
             return back()->withErrors(['message' => 'Only pending inquiries can be cancelled.']);
         }
 
-        $inquiry->update([
-            'status' => 'cancelled',
-        ]);
+        $inquiry->update(['status' => 'cancelled']);
+
+        // Update related PropertyTripping if exists
+        $propertyTripping = PropertyTripping::find($inquiry->id);
+
+        if ($propertyTripping) {
+            $propertyTripping->update(['status' => 'Cancelled']);
+        }
 
         return back()->with('success', 'Inquiry cancelled successfully.');
     }

@@ -1,92 +1,96 @@
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
-import { useForm } from "@inertiajs/react"; // or react-router-dom if you're not using Inertia
+import { useForm, Link } from "@inertiajs/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBath, faBed, faDoorClosed, faShareNodes } from "@fortawesome/free-solid-svg-icons";
+import { faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
-// import { Link } from "@inertiajs/react"; // Uncomment if you want to use links
 
+
+// Imports remain the same
 export default function SellerPostProperty({ properties }) {
     const imageUrl = '/storage/';
-    const fallbackImage = '/placeholder.png';
+    const fallback = '/placeholder.png';
+    const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function getAreaDisplay(property) {
+        if (property.property_type === 'land') {
+            return `${property.lot_area ?? 'N/A'} sqm`;
+        }
+        return `${property.floor_area ?? 'N/A'} sqm`;
+    }
+
 
     const SendInquiryButton = ({ property }) => {
         const { post, processing } = useForm({ property_id: property.id });
-
-        const handleClick = () => {
-            if (!processing) {
-                post(`/agents/properties/${property.id}/sent-inquiry`, {
-                    preserveScroll: true,
-                    only: ['flash'],
-                });
-            }
-        };
-
         return (
             <button
-                onClick={handleClick}
+                onClick={() => !processing && post(`/agents/properties/${property.id}/sent-inquiry`, { preserveScroll: true, only: ['flash'] })}
                 disabled={processing}
-                className={`bg-primary text-white text-sm font-medium px-4 py-2 rounded-md w-full transition ${
-                    processing ? "opacity-60 cursor-not-allowed" : "hover:bg-primary-dark"
-                }`}
+                className={`bg-primary text-white font-medium px-4 py-2 rounded-md w-full transition ${processing ? 'opacity-60 cursor-not-allowed' : 'hover:bg-primary-dark'}`}
             >
-                {processing ? "Sending..." : "Send Inquiry"}
+                {processing ? 'Sending...' : 'Send Inquiry'}
             </button>
         );
     };
 
     const PropertyCard = ({ property }) => {
-        const [imageError, setImageError] = useState(false);
+        const [imgErr, setImgErr] = useState(false);
 
         return (
-            <article className="border rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col">
-                <img
-                    src={
-                        !imageError && property.image_url
-                            ? `${imageUrl}${property.image_url}`
-                            : fallbackImage
-                    }
-                    alt={property.title || "Property image"}
-                    onError={() => setImageError(true)}
-                    className="object-cover rounded-t-xl w-full h-[40vh]"
-                    loading="lazy"
-                />
-
-                <div className="flex flex-col p-4 gap-4 flex-grow">
-                    <div className="flex justify-between items-center text-2xl font-bold text-primary">
-                        <span>₱ {property.price.toLocaleString()}</span>
+            <article className="group bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transform hover:scale-105 transition duration-200 flex flex-col">
+                <div className="relative">
+                    <img
+                        src={!imgErr && property.image_url ? `${imageUrl}${property.image_url}` : fallback}
+                        alt={property.title}
+                        onError={() => setImgErr(true)}
+                        className="w-full h-64 object-cover rounded-t-lg"
+                        loading="lazy"
+                    />
+                    {property.status && (
+                        <span className="absolute top-3 left-3 bg-primary/80 text-white text-xs uppercase px-2 py-1 rounded">
+              {property.status}
+            </span>
+                    )}
+                    <button className="absolute top-3 right-3 bg-white/75 p-2 rounded-full opacity-0 group-hover:opacity-100 transition">
                         <FontAwesomeIcon icon={faShareNodes} />
+                    </button>
+                </div>
+
+                <div className="flex flex-col p-4 space-y-2 flex-grow">
+                    <h3 className="text-lg font-semibold text-gray-900 truncate">{property.title}</h3>
+                    <p className="text-sm text-gray-500 truncate">{property.location}</p>
+                    <p className="text-xl font-bold text-primary flex justify-between">
+                        {formatter.format(property.price)}
+                        <span>{getAreaDisplay(property)}</span>
+                    </p>
+
+                    <p className="text-sm text-gray-600 truncate">
+                        {property.property_type}{property.sub_type ? ` / ${property.sub_type}` : ''}
+                    </p>
+                    <div className="text-sm text-gray-700 space-y-1 my-2">
+                        <div className="flex items-center gap-3 py-2">
+                            {property.seller?.photo_url && (
+                                <img
+                                    src={`${imageUrl}${property.seller.photo_url}`}
+                                    alt={property.seller.name}
+                                    className="rounded-full h-10 w-10 object-cover border-2 border-gray-200"
+                                />
+                            )}
+                            <div className="text-sm text-gray-700">
+                                <p className="font-medium">{property.seller?.name || '—'}</p>
+                                <p className="text-gray-500">Seller</p>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <h2
-                        className="text-md font-semibold truncate max-w-full overflow-hidden whitespace-nowrap"
-                        title={property.title}
-                    >
-                        {property.title}
-                    </h2>
-
-                    <div className="grid grid-cols-3 text-gray-400">
-                        <div className="flex gap-2 text-sm">
-                            <FontAwesomeIcon icon={faDoorClosed} />
-                            <span>{property.total_rooms}</span>
-                        </div>
-                        <div className="flex gap-2 text-sm">
-                            <FontAwesomeIcon icon={faBed} />
-                            <span>{property.bedrooms}</span>
-                        </div>
-                        <div className="flex gap-2 text-sm">
-                            <FontAwesomeIcon icon={faBath} />
-                            <span>{property.bathrooms}</span>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 mt-auto">
-                        {/* Replace with Link or router.visit if needed */}
-                        <button
-                            type="button"
-                            className="border border-primary text-primary w-full py-2 rounded-md text-sm hover:bg-primary hover:text-white hover:shadow-md transition"
+                    <div className="mt-auto flex flex-col space-y-2">
+                        <Link
+                            href={`/agents/properties/${property.id}`}
+                            aria-label={`View details for ${property.title}`}
+                            className="inline-block w-full text-center py-2 border border-primary text-primary rounded-md text-sm hover:bg-primary hover:text-white hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                         >
                             View Details
-                        </button>
+                        </Link>
 
                         <SendInquiryButton property={property} />
                     </div>
@@ -97,18 +101,17 @@ export default function SellerPostProperty({ properties }) {
 
     return (
         <AgentLayout>
-            <div className="mb-6">
-                <h1 className="text-xl font-bold text-gray-900">All Properties</h1>
+            <div className="mb-6 px-4">
+                <h1 className="text-2xl font-bold text-gray-900">All Properties</h1>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
-                {properties.length > 0 ? (
-                    properties.map((property) => (
-                        <PropertyCard key={property.id} property={property} />
-                    ))
-                ) : (
-                    <p className="text-gray-500 col-span-full text-center">No properties available.</p>
-                )}
+            <div className="px-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-6">
+                    {properties.length ? (
+                        properties.map(p => <PropertyCard key={p.id} property={p} />)
+                    ) : (
+                        <p className="text-gray-500 col-span-full text-center">No properties available.</p>
+                    )}
+                </div>
             </div>
         </AgentLayout>
     );
