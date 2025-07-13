@@ -526,12 +526,12 @@
                         loading={false}
                     />
 
-                    <div className="p-6">
+                    <div className="mb-4">
                         <h1 className="text-3xl font-bold text-primary mb-3">My Inquiries</h1>
                         <p className="text-gray-600 font-medium mb-6">
                             Keep track of all your property inquiries and agent communications.
                         </p>
-                        <div className='flex border-b'>
+                        <div className='flex justify-between border-b'>
                             <SellerInquiriesFilterTab page={page} count={[allCount, acceptedCount, rejectedCount, pendingCount, cancelledCount]} setSelectedStatus={setSelectedStatus} selectedStatus={selectedStatus} selectedItemsPerPage={selectedItemsPerPage} />
 
                             {/* Example Search/Input UI (Optional) */}
@@ -540,7 +540,7 @@
                                 placeholder="Search for agent names..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="mb-4 p-2 border rounded w-full max-w-sm"
+                                className=" mb-2 p-2 border border-gray-300 rounded-md w-full max-w-sm"
                             />
                         </div>
 
