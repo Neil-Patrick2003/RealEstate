@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Seller\TrippingController;
+use App\Models\ChatChannel;
 use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Property;
 use App\Models\PropertyTripping;
+use App\Models\User;
+use App\Notifications\NewInquiry;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -66,8 +69,9 @@ class InquiryController extends Controller
         }
 
         //create inquiry
-
         $agent_id = $property->property_listing->agent_id;
+
+        $agent = User::findOrFail($agent_id);
 
         $inquiry = Inquiry::create([
             'buyer_id' => auth()->id(),
@@ -76,13 +80,20 @@ class InquiryController extends Controller
             'status' => 'pending',
         ]);
 
-        //create message
-        Message::create([
+        $agent->notify(new NewInquiry($inquiry));
+
+        $channel = ChatChannel::create([
+            'subject_id' => $property->id,
+            'subject_type' => get_class($property),
+            'title' => 'Inquiry',
+        ]);
+
+        $channel->members()->attach(auth()->id());
+        $channel->members()->attach($agent_id);
+
+        $channel->messages()->create([
+            'content' => $validated['message'],
             'sender_id' => auth()->id(),
-            'receiver_id' => $agent_id,
-            'property_id' => $property->id,
-            'message' => $validated['message'],
-            'inquiry_id' => $inquiry->id,
         ]);
 
         return redirect()->back()->with('success', 'Inquiry submitted successfully.');
