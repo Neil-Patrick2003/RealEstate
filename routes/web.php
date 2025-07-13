@@ -168,9 +168,18 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
 
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
 
-
-
 });
+
+
+
+//---------------------------------broker----------------------------
+Route::get('/broker/dashboard', [\App\Http\Controllers\Broker\BrokerController::class, 'index'])->name('broker.dashboard');
+Route::get('/broker/agents', [\App\Http\Controllers\Broker\AgentController::class, 'index'])->name('broker.agents');
+Route::get('/broker/properties', [\App\Http\Controllers\Broker\PropertyController::class, 'index'])->name('broker.properties');
+Route::patch('/broker/properties/{propertyListing}/publish', [\App\Http\Controllers\Broker\PropertyController::class, 'publish']);
+Route::patch('/broker/properties/{propertyListing}/unpublish', [\App\Http\Controllers\Broker\PropertyController::class, 'unpublish']);
+Route::get('/broker/properties/{propertyListing}', [\App\Http\Controllers\Broker\PropertyController::class, 'show']);
+
 
 
 

@@ -228,7 +228,9 @@
                                             <td className="p-3">{property.property_type}, {property.sub_type}</td>
                                             <td className="p-3">
                                                 <div className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] md:max-w-[250px]">
-                                                    {property.description}
+                                                    <div>
+                                                        {property.description.replace(/<[^>]+>/g, '').slice(0, 100)}...
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="p-3 whitespace-nowrap">₱ {Number(property.price).toLocaleString()}</td>
