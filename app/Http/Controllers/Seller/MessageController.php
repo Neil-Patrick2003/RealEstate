@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChatChannel;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -16,8 +17,6 @@ class MessageController extends Controller
         $authUser = Auth::user();
 
         $users = User::where('id', '!=', $authUser->id)->get(['id', 'name']);
-
-
 
         $messages = Message::with([
             'inquiry.property:id,title,image_url,property_type,sub_type,price,address',

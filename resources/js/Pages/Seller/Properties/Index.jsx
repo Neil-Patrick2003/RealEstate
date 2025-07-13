@@ -42,7 +42,6 @@
         // Helper function to fetch properties with current filters
         const fetchProperties = useCallback((searchValue = searchTerm, statusValue = selectedStatus, itemsPerPageValue = selectedItemsPerPage, pageValue = page) => {
             if (!router) return; // protect against undefined
-
             try {
                 router.get(
                     '/seller/properties',
