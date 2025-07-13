@@ -2,7 +2,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
-import AdminLayout from '@/Layouts/User'
+import AdminLayout from '@/Layouts/AdminLayout.jsx'
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react'
 
@@ -32,7 +32,7 @@ const index = () => {
         post('/')
     }
 
-    const property_type = 
+    const property_type =
     [
         {
             name: "Apartment",
@@ -87,9 +87,9 @@ const index = () => {
     ];
 
     const [selectedType, setSelectedType] = useState(null);
-    
-    return ( 
-    
+
+    return (
+
 
     <AdminLayout>
         <h1 className='font-bold text-lg md:text-xl lg:text-2xl '>Property type</h1>
