@@ -10,16 +10,13 @@ import FlashMessage from "@/Components/FlashMessage.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import SellerSidebar from "@/Components/Sidebar/SellerSidebar.jsx";
-
-
-
+import ToastHandler from "@/Components/ToastHandler.jsx";
 
 export default function AuthenticatedLayout({ children }) {
     const auth = usePage().props?.auth?.user ?? null;
 
 
     const [isOpen, setIsOpen] = useState(() => {
-    const saved = localStorage.getItem('sidebar-isOpen');
   });
 
 
@@ -191,7 +188,7 @@ export default function AuthenticatedLayout({ children }) {
         </motion.header>
 
         <div className="p-4 sm:px-6 md:px-8 mt-2">
-            <FlashMessage/>
+            <ToastHandler/>
           <Breadcrumb />
           {children}
         </div>

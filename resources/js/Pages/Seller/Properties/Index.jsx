@@ -142,7 +142,7 @@
                     loading={false}
                 />
 
-                <div className="max-w-9xl mx-auto space-y-6 p-4 md:p-0">
+                <div className="px-6 mx-auto space-y-6 ">
                     {/* Page Heading */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
@@ -213,11 +213,11 @@
                                                 <input  id={property.id} type="checkbox"  className="rounded border-gray-400" />
                                             </td>
                                             <td className="p-3">
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center py-2 gap-3">
                                                     <img
                                                         src={property.image_url ? `${imageUrl}${property.image_url}` : '/fallback-image.png'}
                                                         alt={property.title}
-                                                        className="w-12 h-12 md:w-14 md:h-14 object-cover rounded-md"
+                                                        className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-md"
                                                         onError={(e) => (e.currentTarget.src = '/fallback-image.png')}
                                                     />
                                                     <div>
@@ -232,11 +232,11 @@
                                                     {property.description}
                                                 </div>
                                             </td>
-                                            <td className="p-3 whitespace-nowrap">₱ {property.price}</td>
+                                            <td className="p-3 whitespace-nowrap">₱ {Number(property.price).toLocaleString()}</td>
                                             <td className="p-3">
-                            <span className={`inline-block font-semibold px-3 py-1 rounded-md text-xs ${getStatusClasses(property.status)}`}>
-                              {property.status}
-                            </span>
+                                                <span className={`inline-block font-semibold px-3 py-1 rounded-md text-xs ${getStatusClasses(property.status)}`}>
+                                                  {property.status}
+                                                </span>
                                             </td>
                                             <td className="p-3 whitespace-nowrap">
                                                 {property.property_type === 'land' ? property.lot : property.floor_area} m²

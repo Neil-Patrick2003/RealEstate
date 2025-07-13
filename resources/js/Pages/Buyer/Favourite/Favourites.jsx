@@ -2,7 +2,7 @@ import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHeart as SolidHeart} from "@fortawesome/free-solid-svg-icons";
 import {faHeart as RegularHeart} from "@fortawesome/free-regular-svg-icons";
-import {Link, router} from "@inertiajs/react";
+import {Head, Link, router} from "@inertiajs/react";
 import React, {useState} from "react";
 
 export default function Favourites({properties, favouriteIds = []}){
@@ -38,7 +38,9 @@ export default function Favourites({properties, favouriteIds = []}){
 
     const isFavourite = (id) => favourites.has(id);
     return (
+
         <BuyerLayout>
+            <Head title="Favourites" />
             <div className='mt-12'>
                 <p className='text-primary font-bold text-lg md:text-xl'>My Favourites</p>
                 <div className=' mt-6'>

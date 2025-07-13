@@ -152,10 +152,10 @@ const SellerSidebar = ({ isOpen, setIsOpen }) => {
                                                 'w-full flex items-center justify-between py-3 rounded-lg transition-all'
                                             )}
                                         >
-                      <span className="flex items-center gap-3">
-                        <FontAwesomeIcon icon={Icon} className="w-5 h-5" />
-                          {isOpen && <span>{name}</span>}
-                      </span>
+                                          <span className="flex items-center gap-3">
+                                            <FontAwesomeIcon icon={Icon} className="w-5 h-5" />
+                                              {isOpen && <span>{name}</span>}
+                                          </span>
                                             {isOpen && hasSubMenu && (
                                                 <ChevronDown
                                                     className={`transition-transform ${isClicked ? 'rotate-180' : ''}`}

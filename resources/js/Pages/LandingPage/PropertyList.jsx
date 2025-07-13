@@ -8,10 +8,7 @@ import { Link } from '@inertiajs/react';
 const PropertyList = ({ properties, favouriteIds = [] }) => {
     const [favourites, setFavourites] = useState(new Set(favouriteIds));
     const [loading, setLoading] = useState(null);
-
-    useEffect(() => {
-        setFavourites(new Set(favouriteIds));
-    }, [favouriteIds]);
+/**/
 
     const toggleFavourite = (propertyId) => {
         setLoading(propertyId);

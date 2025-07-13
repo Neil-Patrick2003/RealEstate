@@ -195,7 +195,7 @@ const EditProperty = ({ property }) => {
 
   // breadcrumbPages
   const breadcrumbPages = [
-    { name: 'Properties', href: '/properties', current: false },
+    { name: 'Properties', href: '/seller/properties', current: false },
     { name: `${property.title}`, href: `/properties/${property.id}/edit`, current: true },
 
   ];

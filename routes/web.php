@@ -30,6 +30,7 @@ Route::get('/', function (Request $request) {
         ? auth()->user()->favourites()->pluck('property_id')->toArray()
         : [];
 
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -87,13 +88,12 @@ Route::middleware(['auth', ])->group(function () {
 //for agent
 Route::get('/agents/dashboard', [\App\Http\Controllers\Agent\AgentController::class, 'index'])->name('agent.dashboard');
 Route::get('/agents/properties', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'index'])->name('agent.properties');
+Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent\InquiryController::class, 'store'])->middleware('auth')->name('agent.sent-inquiry');
+Route::get('/agents/properties/{property}', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'show']);
+
 Route::get('/agents/my-listings', [\App\Http\Controllers\Agent\PropertyListingController::class, 'index'])->name('agents.my-listings');
 Route::get('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'show']);
 Route::patch('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'update']);
-
-//sent inquiry
-Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent\InquiryController::class, 'store'])->middleware('auth')->name('agent.sent-inquiry');
-
 
 Route::get('/agents/messages', [\App\Http\Controllers\Agent\MessageController::class, 'index']);
 Route::get('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageController::class, 'show']);
@@ -159,6 +159,9 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     //favourites
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
     Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
+
+    Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
+
 
 
 });

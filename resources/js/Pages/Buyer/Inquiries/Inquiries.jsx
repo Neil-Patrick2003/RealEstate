@@ -16,7 +16,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useState } from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
-import { router } from "@inertiajs/react";
+import {Head, router} from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 
 dayjs.extend(relativeTime);
@@ -76,6 +76,7 @@ export default function Inquiries({
 
     return (
         <BuyerLayout>
+            <Head title="Inquiries" />
             <div className="py-6 px-4">
                 {isAddVisitModal && (
                     <ScheduleVisitModal
@@ -228,10 +229,10 @@ export default function Inquiries({
                                         <div className="flex flex-col gap-2">
                                             {/* Schedule Visit Button or Scheduled label */}
                                             {canScheduleVisit ? (
-                                                !inquiry.visit_scheduled ? (
+                                                !inquiry.trippings ? (
                                                     <button
                                                         type="button"
-                                                        className="w-full px-4 py-2 border border-secondary hover:bg-primary-dark text-secondary rounded-md font-medium transition"
+                                                        className="w-full px-4 py-2 border border-secondary hover:bg-primary     text-secondary rounded-md font-medium transition"
                                                         onClick={() => {
                                                             setSelectedVisitData({
                                                                 property: inquiry.property,

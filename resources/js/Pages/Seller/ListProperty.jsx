@@ -17,6 +17,7 @@ import MapWithDraw from '@/Components/MapWithDraw';
 import { Accordion, AccordionDetails, AccordionSummary, Typography } from '@mui/material';
 import Collapsable from '@/Components/collapsable/collapsable';
 import Toggle from '@/Components/Toggle';
+import ToastHandler from "@/Components/ToastHandler.jsx";
 
 
 const ListProperty = ({ agents = [] }) => {
@@ -186,13 +187,7 @@ const ListProperty = ({ agents = [] }) => {
       }
     };
 
-
     const [isOpenNotice, setIsOpenNotice] = useState(true);
-
-
-    //load agents
-
-
 
     const handleLoadAgent = () => {
         router.get('/all-agents', {}, {
@@ -200,6 +195,8 @@ const ListProperty = ({ agents = [] }) => {
             only: ['agents'],
             onSuccess: (page) => {
                 setLocalAgents(page.props.agents);
+                reset();
+                setPreview(null);
             },
         });
     };
@@ -231,9 +228,11 @@ const ListProperty = ({ agents = [] }) => {
   return (
 
     <div className=" pt-20 bg-gray-100 min-h-screen">
-      {/*<Modal show={isOpenNotice}  onClose={() => setIsOpenNotice(false)} maxWidth='xl' closeable={false}>*/}
-      {/*  <ListingRequirements closeModal={() => setIsOpenNotice(false)} />*/}
-      {/*</Modal>*/}
+      <Modal show={isOpenNotice}  onClose={() => setIsOpenNotice(false)} maxWidth='xl' closeable={false}>
+        <ListingRequirements closeModal={() => setIsOpenNotice(false)} />
+      </Modal>
+
+        <ToastHandler />
 
       <NavBar />
       <div className="max-w-5xl mx-auto">

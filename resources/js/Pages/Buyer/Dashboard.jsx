@@ -1,5 +1,5 @@
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
-import { usePage, Link } from "@inertiajs/react";
+import {usePage, Link, Head} from "@inertiajs/react";
 import PropertiesMap from "@/Components/PropertiesMap.jsx";
 import dayjs from "dayjs";
 import React from "react";
@@ -21,6 +21,7 @@ export default function Dashboard({ properties, inquiries }) {
 
     return (
         <BuyerLayout>
+            <Head title="Dashboard" />
             <div className="py-10 px-4 sm:px-6 lg:px-8 space-y-12">
                 {/* Welcome Card */}
                 <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
