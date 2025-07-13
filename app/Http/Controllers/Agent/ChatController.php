@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatChannel;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ChatController extends Controller
 {
@@ -20,6 +21,9 @@ class ChatController extends Controller
             return redirect(route('agents.chat.channels.show', $channel->id));
         }
 
-        dd($channels->toArray());
+        return Inertia::render('Seller/Chat/Chat', [
+            'channels' => [],
+            'channel' => $channel
+        ]);
     }
 }
