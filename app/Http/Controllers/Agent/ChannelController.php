@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Seller;
+namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChatChannel;

@@ -1,4 +1,4 @@
-import {useMemo} from "react";
+import {useMemo, useEffect, useState, useRef} from "react";
 import {usePage} from "@inertiajs/react";
 import ChatMessage from './ChatMessage.jsx'
 import ChannelSubject from './ChannelSubject.jsx'
@@ -6,12 +6,31 @@ import ChatInput from './ChatInput.jsx'
 
 const ChannelView = ({ channel }) => {
     const {user} = usePage().props.auth
+    const [messages, setMessages] = useState(channel.messages)
+    const messageEndRef = useRef(null);
 
     const title = useMemo(() => {
         return channel.members.filter(member => member.id !== user.id)
             .map(member => member.name)
             .join(',');
     }, [user, channel.members]);
+
+    useEffect(() => {
+        Echo.channel(`chat.channels.${channel.id}.new_message`).listen(
+            'ChatChannelNewMessage',
+            (data) => {
+                setMessages([...messages, data.message])
+            }
+        );
+
+        return () => {
+            Echo.leaveChannel(`chat.channels.${channel.id}.new_message}`);
+        };
+    }, [channel.id, messages]);
+
+    useEffect(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
     return <div className="flex flex-col h-full">
         <div className="border-b px-2 py-4">
@@ -24,7 +43,9 @@ const ChannelView = ({ channel }) => {
             </div>
 
             <div>
-                {channel.messages.map(message => <ChatMessage key={`channel-${channel.id}-${message.id}`} message={message}/>)}
+                {messages.map(message => <ChatMessage key={`channel-${channel.id}-${message.id}`} message={message}/>)}
+
+                <div ref={messageEndRef} />
             </div>
         </div>
 

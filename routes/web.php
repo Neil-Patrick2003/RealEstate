@@ -71,7 +71,7 @@ Route::middleware(['auth', ])->group(function () {
     //message
     Route::get('/seller/chat', [ChatController::class, 'index'])->name('seller.chat.index');
     Route::get('/seller/chat/channels/{channel}', [ChannelController::class, 'show'])->name('seller.chat.channels.show');
-    Route::post('/seller/chat/channels/{channel}/messages', [\App\Http\Controllers\Chat\MessageController::class, 'store'])->name('chat.channels.messages.store');
+    Route::post('/chat/channels/{channel}/messages', [\App\Http\Controllers\Chat\MessageController::class, 'store'])->name('chat.channels.messages.store');
     Route::get('/seller/messages', [MessageController::class, 'index'])->name('seller.messages');
     Route::post('/seller/messages/{receiver}/sent_message', [MessageController::class, 'send']);
 
@@ -99,6 +99,8 @@ Route::get('/agents/my-listings', [\App\Http\Controllers\Agent\PropertyListingCo
 Route::get('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'show']);
 Route::patch('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'update']);
 
+Route::get('/agents/chat', [\App\Http\Controllers\Agent\ChatController::class, 'index'])->name('agents.chat.index');
+Route::get('/agents/chat/channels/{channel}', [\App\Http\Controllers\Agent\ChannelController::class, 'show'])->name('agents.chat.channels.show');
 Route::get('/agents/messages', [\App\Http\Controllers\Agent\MessageController::class, 'index']);
 Route::get('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageController::class, 'show']);
 Route::post('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageController::class, 'store']);

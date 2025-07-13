@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Seller;
+namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChatChannel;
@@ -20,6 +20,6 @@ class ChatController extends Controller
             return redirect(route('agents.chat.channels.show', $channel->id));
         }
 
-        dd($channel->toArray());
+        dd($channels->toArray());
     }
 }
