@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Seller\ChannelController;
+use App\Http\Controllers\Seller\ChatController;
 use App\Http\Controllers\Seller\MessageController;
 use App\Http\Controllers\Seller\PropertyController;
 use App\Http\Controllers\Seller\PropertyImageController;
@@ -67,6 +69,9 @@ Route::middleware(['auth', ])->group(function () {
     Route::post('/seller/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
 
     //message
+    Route::get('/seller/chat', [ChatController::class, 'index'])->name('seller.chat.index');
+    Route::get('/seller/chat/channels/{channel}', [ChannelController::class, 'show'])->name('seller.chat.channels.show');
+    Route::post('/seller/chat/channels/{channel}/messages', [\App\Http\Controllers\Chat\MessageController::class, 'store'])->name('chat.channels.messages.store');
     Route::get('/seller/messages', [MessageController::class, 'index'])->name('seller.messages');
     Route::post('/seller/messages/{receiver}/sent_message', [MessageController::class, 'send']);
 
