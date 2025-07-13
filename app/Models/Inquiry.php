@@ -9,20 +9,20 @@ class Inquiry extends Model
 {
     protected $fillable = ['agent_id',  'buyer_id',  'seller_id',  'property_id', 'status'];
 
-    public function seller ()
+    public function seller (): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id');
     }
 
-    public function buyer(){
+    public function buyer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
         return $this->belongsTo(User::class, 'buyer_id');
     }
 
-    public function agent(){
+    public function agent(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
         return $this->belongsTo(User::class, 'agent_id');
     }
-
-
 
     public function property (){
         return $this->belongsTo(Property::class, 'property_id');

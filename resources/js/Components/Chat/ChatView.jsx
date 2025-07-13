@@ -8,7 +8,12 @@ const ChatView = ({channels = [], channel = null}) => {
         </div>
 
         <div className="w-3/4 h-full">
-            {channel ? <ChannelView channel={channel}/> : <div></div>}
+            {channel ?
+                <ChannelView channel={channel}/> :
+                <div className="flex justify-center items-center h-full">
+                    No Messages to display.
+                </div>
+            }
         </div>
     </div>
 }

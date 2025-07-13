@@ -45,7 +45,7 @@ const menus = [
             {
                 name: "Seller Inquiries",
                 Icon: faEnvelope,
-                path: "/agents/messages",
+                path: "/agents/chat",
             },
             {
                 name: "Buyer Inquiries",

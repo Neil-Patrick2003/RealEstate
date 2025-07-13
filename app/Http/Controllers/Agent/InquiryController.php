@@ -8,6 +8,7 @@ use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Property;
 use App\Models\PropertyTripping;
+use App\Notifications\NewInquiry;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -78,6 +79,8 @@ class InquiryController extends Controller
             'message' => $message,
             'status' => 'Pending',
         ]);
+
+        $seller->notify(new NewInquiry($inquiry));
 
         $channel = ChatChannel::create([
             'subject_id' => $property->id,

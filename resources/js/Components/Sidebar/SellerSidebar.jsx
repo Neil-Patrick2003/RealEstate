@@ -30,7 +30,7 @@ const menus = [
     {
         name: 'Messages',
         Icon: faMessage,
-        path: '/seller/messages',
+        path: '/seller/chat',
     },
     {
         name: 'Inquiries',
