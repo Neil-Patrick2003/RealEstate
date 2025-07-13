@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/Components/SIdebar/sidebar';
+// import Sidebar from '@/Components/SIdebar/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlignLeft, Bell, Languages, LogOut, Moon, X } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
@@ -18,7 +18,7 @@ export default function AdminLayout({ children }) {
     localStorage.setItem('sidebar-isOpen', JSON.stringify(isOpen));
   }, [isOpen]);
 
-  
+
   const [isMobileOpen, setIsMobileOpen] = useState(false); // for mobile
 
   const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
@@ -43,7 +43,7 @@ export default function AdminLayout({ children }) {
       {/* Sidebar for Desktop */}
       {!isMobile && (
         <div className="hidden md:block">
-          <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
+          {/*<Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />*/}
         </div>
       )}
 
@@ -57,7 +57,7 @@ export default function AdminLayout({ children }) {
             transition={{ duration: 0.3 }}
             className="fixed top-0 left-0 z-50 w-64 h-full bg-white border"
           >
-            <Sidebar isOpen={true} setIsOpen={setIsMobileOpen} />
+            {/*<Sidebar isOpen={true} setIsOpen={setIsMobileOpen} />*/}
             <button
               onClick={() => setIsMobileOpen(false)}
               className="absolute top-4 right-4 p-2"
@@ -171,7 +171,7 @@ export default function AdminLayout({ children }) {
         <div className='p-2 md:p-3 lg:p-4 xl:p-6 sl:p-8'>
           {children}
         </div>
-        
+
       </main>
     </div>
   );
