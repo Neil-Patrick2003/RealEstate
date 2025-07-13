@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import logo from '../../../assets/framer_logo.png';
@@ -9,7 +9,7 @@ import {
     faMapLocationDot,
     faEnvelope,
     faCalendar,
-    faChartSimple,
+    faChartSimple, faMessage,
 } from '@fortawesome/free-solid-svg-icons';
 
 function classNames(...classes) {
@@ -28,26 +28,16 @@ const menus = [
         path: '/seller/properties',
     },
     {
-        name: 'Enquiries',
-        Icon: faEnvelope,
-        subMenu: [
-            {
-                name: 'Messages',
-                Icon: faEnvelope,
-                path: '/seller/messages',
-            },
-            {
-                name: 'Inquiries',
-                Icon: faEnvelope,
-                path: '/seller/inquiries',
-            },
-        ],
+        name: 'Messages',
+        Icon: faMessage,
+        path: '/seller/messages',
     },
     {
-        name: 'Tripping',
-        Icon: faCalendar,
-        path: '/seller/trippings',
+        name: 'Inquiries',
+        Icon: faEnvelope,
+        path: '/seller/inquiries',
     },
+
     {
         name: 'Sales',
         Icon: faChartSimple,

@@ -14,10 +14,9 @@ import {
     faMoon,
 } from '@fortawesome/free-solid-svg-icons';
 
-export default function AuthenticatedLayout({ children }) {
+export default function AgentLayout({ children }) {
     const { auth } = usePage().props;
 
-    console.log(auth);
     const { notifications = [], user } = auth;
 
     const [isOpen, setIsOpen] = useState(() => {
@@ -45,7 +44,6 @@ export default function AuthenticatedLayout({ children }) {
 
     const markAsRead = (id) =>
         router.post(`/notifications/${id}/read`, {}, { preserveScroll: true });
-
     return (
         <div className="h-screen flex overflow-hidden relative">
             {/* Sidebar */}

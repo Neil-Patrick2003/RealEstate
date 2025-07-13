@@ -309,26 +309,26 @@ const Inquiries = ({
                                                 {/* If pending, show Accept and Reject */}
                                                 {inquiry.status.toLowerCase() === 'pending' && (
                                                     <span className="flex gap-2 w-full">
-                            <button
-                                type="button"
-                                className="flex-1 px-4 py-2 bg-primary hover:bg-accent text-white rounded-md text-sm font-medium transition"
-                                onClick={() => handleOpenAcceptDialog(inquiry.id)}
-                                aria-label={`Accept inquiry ${inquiry.id}`}
-                            >
-                              <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                              Accept
-                            </button>
-                            <button
-                                type="button"
-                                className="flex-1 px-4 py-2 border border-secondary hover:bg-secondary text-secondary hover:text-white rounded-md text-sm font-medium transition"
-                                onClick={() => handleOpenRejectDialog(inquiry.id)}
-                                aria-label={`Reject inquiry ${inquiry.id}`}
-                            >
-                              <FontAwesomeIcon icon={faXmark} className="mr-2" />
-                              Reject
-                            </button>
-                          </span>
-                                                )}
+                                                <button
+                                                    type="button"
+                                                    className="flex-1 px-4 py-2 bg-primary hover:bg-accent text-white rounded-md text-sm font-medium transition"
+                                                    onClick={() => handleOpenAcceptDialog(inquiry.id)}
+                                                    aria-label={`Accept inquiry ${inquiry.id}`}
+                                                >
+                                                  <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                                                  Accept
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="flex-1 px-4 py-2 border border-secondary hover:bg-secondary text-secondary hover:text-white rounded-md text-sm font-medium transition"
+                                                    onClick={() => handleOpenRejectDialog(inquiry.id)}
+                                                    aria-label={`Reject inquiry ${inquiry.id}`}
+                                                >
+                                                  <FontAwesomeIcon icon={faXmark} className="mr-2" />
+                                                  Reject
+                                                </button>
+                                              </span>
+                                                                    )}
 
                                                 {/* If accepted, show View */}
                                                 {inquiry.status.toLowerCase() === 'accepted' && (

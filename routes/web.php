@@ -52,7 +52,6 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
-// only seller  addd it ----->>>>'role:Seller'<<<<-------
 Route::middleware(['auth', ])->group(function () {
     Route::get('/seller/dashboard', function () {
         return Inertia::render('Dashboard');
