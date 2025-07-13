@@ -90,7 +90,7 @@ const SignupForm = ({buttonClasses, buttonForGFT}) => {
 
               />
             </div>
-            <InputError message={errors.signup_email} className="mt-2" />
+            <InputError message={errors.email} className="mt-2" />
 
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -118,7 +118,7 @@ const SignupForm = ({buttonClasses, buttonForGFT}) => {
                 onChange={(e) => setData('password', e.target.value)}
               />
             </div>
-            <InputError message={errors.signup_password} className="mt-2" />
+            <InputError message={errors.password} className="mt-2" />
 
 
             <div className="relative">
