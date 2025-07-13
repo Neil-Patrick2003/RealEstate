@@ -17,10 +17,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useState } from "react";
+import React, { useState } from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
-import { Link } from "@inertiajs/react";
+import {Head, Link} from "@inertiajs/react";
 
 dayjs.extend(relativeTime);
 
@@ -56,6 +56,8 @@ export default function Trippings({ trippings }) {
 
     return (
         <BuyerLayout>
+            <Head title="Tripping" />
+
             {/* Modals */}
             <ScheduleVisitModal
                 open={modalOpen}
