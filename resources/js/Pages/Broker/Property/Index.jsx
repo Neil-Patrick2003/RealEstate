@@ -27,13 +27,11 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
     const [selectedSort, setSelectedSort] = useState("latest");
     const [searchTerm, setSearchTerm] = useState(search || "");
 
-    // Sync initial search
-    useEffect(() => { if (search) setSearchTerm(search); }, [search]);
-
-    // Debounced filter query
     const debouncedFilter = useRef(debounce(params => {
         router.get("/broker/properties", params, { preserveState: true, replace: true });
     }, 500)).current;
+
+    useEffect(() => { if (search) setSearchTerm(search); }, [search]);
     useEffect(() => () => debouncedFilter.cancel(), []);
 
     const handleFiltersChange = newFilters => {
@@ -79,27 +77,24 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
 
     return (
         <BrokerLayout>
-            {/* Publish confirmation */}
+            {/* Confirm Modals */}
             <ConfirmDialog {...{ open: openPublishModal, setOpen: setOpenPublishModal, title: "Confirm Publish", description: "Are you sure you want to publish this property?", confirmText: "Publish", cancelText: "Cancel", onConfirm: handlePublished, loading }} />
-            {/* Unpublish confirmation */}
             <ConfirmDialog {...{ open: openUnpublishModal, setOpen: setOpenUnpublishModal, title: "Confirm Unpublish", description: "Are you sure you want to unpublish this property?", confirmText: "Unpublish", cancelText: "Cancel", onConfirm: handleUnpublished, loading }} />
 
-            <h1 className="text-primary text-xl font-bold mb-6">Properties</h1>
+            <h1 className="text-primary text-xl font-bold mb-4  ">Properties</h1>
 
-            {/* Tabs */}
-            <div className="rounded-t-xl shadow-sm">
+            {/* Tab Filters */}
+            <div className="rounded-t-xl border border-gray-100 shadow-sm ">
                 <BrokerPropertyTabFilter
                     selectedItemsPerPage={selectedItemsPerPage}
                     selectedStatus={selectedStatus}
                     setSelectedStatus={setSelectedStatus}
                     page={page}
                     count={[allCount, publishedCount, assignedCount, unpublishedCount]}
-
                 />
 
-                {/* Filter Row */}
+                {/* Filters */}
                 <div className="p-6 flex flex-wrap md:flex-row gap-4 justify-between relative z-30">
-                    {/* Search */}
                     <div className="relative w-full md:w-1/4">
                         <input
                             value={searchTerm}
@@ -110,28 +105,29 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
                         />
                         <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                     </div>
-                    {/* Sort */}
-                    <select className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto" value={selectedSort} onChange={handleSortChange}>
-                        <option value="latest">Latest</option>
-                        <option value="oldest">Oldest</option>
-                    </select>
-                    {/* Items Per Page */}
-                    <select className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto" value={selectedItemsPerPage} onChange={handleItemsPerPageChange}>
-                        <option value="5">5 per page</option>
-                        <option value="10">10 per page</option>
-                        <option value="20">20 per page</option>
-                        <option value="50">50 per page</option>
-                    </select>
+                    <div className='flex gap-2'>
+                        <select className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto" value={selectedSort} onChange={handleSortChange}>
+                            <option value="latest">Latest</option>
+                            <option value="oldest">Oldest</option>
+                        </select>
+                        <select className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto" value={selectedItemsPerPage} onChange={handleItemsPerPageChange}>
+                            <option value="5">5 per page</option>
+                            <option value="10">10 per page</option>
+                            <option value="20">20 per page</option>
+                            <option value="50">50 per page</option>
+                        </select>
+                    </div>
+
                 </div>
             </div>
 
             {/* Properties Table */}
-            <div className="overflow-x-auto bg-white scrollbar-thumb-gray-300 scrollbar-track-transparent max-h-[60vh]">
+            <div className="overflow-x-auto bg-white border border-gray-100 scrollbar-thumb-gray-300 shadow-sm  scrollbar-track-transparent max-h-[56vh] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
+                    <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group sticky top-0 z-20 shadow-sm">
                     <tr>
                         <th className="p-3 text-center"><input type="checkbox" /></th>
-                        <th className="p-3">Image</th>
+                        <th className="p-3">Property</th>
                         <th className="p-3">Seller</th>
                         <th className="p-3">Agent(s)</th>
                         <th className="p-3">Type</th>
@@ -148,13 +144,16 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
                         return (
                             <tr key={property.id} className="flex flex-col md:table-row hover:bg-gray-50">
                                 <td className="p-3 text-center hidden md:table-cell"><input type="checkbox" /></td>
-                                <td className="p-3 md:table-cell flex items-center gap-3">
-                                    <img src={`${imageUrl}${property.property.image_url}`} alt="" className="w-14 h-14 object-cover rounded-md" />
-                                    <div>
-                                        <p className="font-semibold">{property.property.title}</p>
-                                        <p className="text-xs text-gray-500">{property.property.property_type} | {property.property.sub_type}</p>
+                                <td className="p-3 md:table-cell">
+                                    <div className="flex items-center gap-3">
+                                        <img src={`${imageUrl}${property.property.image_url}`} alt="" className="w-14 h-14 object-cover rounded-md" />
+                                        <div>
+                                            <p className="font-semibold">{property.property.title}</p>
+                                            <p className="text-xs text-gray-500">{property.property.property_type} | {property.property.sub_type}</p>
+                                        </div>
                                     </div>
                                 </td>
+
                                 <td className="p-3 md:table-cell">
                                     <div className="font-bold text-primary hover:underline">{property.seller.name}</div>
                                     <div className="text-xs text-gray-500">{property.seller.email}</div>
@@ -174,20 +173,38 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
                                             {property.status}
                                         </span>
                                 </td>
-                                <td className="p-3 text-right md:table-cell space-x-2">
-                                    {property.status === "Published" ? (
-                                        <button className="border px-4 py-2 bg-secondary w-36 rounded-md text-white text-sm" onClick={() => { setSelectedPropertyId(property.id); setOpenUnpublishModal(true); }}>
-                                            Unpublish
-                                        </button>
-                                    ) : (
-                                        <button className="border px-4 py-2 bg-primary w-36 rounded-md text-white text-sm" onClick={() => { setSelectedPropertyId(property.id); setOpenPublishModal(true); }}>
-                                            Publish
-                                        </button>
-                                    )}
-                                    <Link href={`/broker/properties/${property.id}`} className="border border-primary px-4 py-2 w-36 text-center rounded-md text-primary text-sm">
-                                        View
-                                    </Link>
+                                <td className="p-3 text-right md:table-cell">
+                                    <div className="flex flex-col md:flex-row md:justify-end md:space-x-2 space-y-2 md:space-y-0">
+                                        {property.status === "Published" ? (
+                                            <button
+                                                className="border px-4 py-2 bg-secondary w-full md:w-24 rounded-md text-white text-sm"
+                                                onClick={() => {
+                                                    setSelectedPropertyId(property.id);
+                                                    setOpenUnpublishModal(true);
+                                                }}
+                                            >
+                                                Unpublish
+                                            </button>
+                                        ) : (
+                                            <button
+                                                className="border px-4 py-2 bg-primary w-full md:w-24 rounded-md text-white text-sm"
+                                                onClick={() => {
+                                                    setSelectedPropertyId(property.id);
+                                                    setOpenPublishModal(true);
+                                                }}
+                                            >
+                                                Publish
+                                            </button>
+                                        )}
+                                        <Link
+                                            href={`/broker/properties/${property.id}`}
+                                            className="border border-primary px-4 py-2 w-full md:w-24 text-center rounded-md text-primary text-sm"
+                                        >
+                                            View
+                                        </Link>
+                                    </div>
                                 </td>
+
                             </tr>
                         );
                     }) : (
@@ -200,7 +217,7 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
             </div>
 
             {/* Pagination */}
-            <div className="flex flex-wrap gap-2 justify-end p-4 border-t border-dashed">
+            <div className="flex flex-wrap gap-2 justify-center items-center     p-4 border border-gray-100  shadow-sm rounded-b-xl">
                 {properties?.links.map((link, i) => (
                     link.url ? (
                         <Link
@@ -213,12 +230,7 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
                         <span key={i} className="px-4 py-2 text-sm text-slate-400 bg-white border rounded-md cursor-not-allowed" dangerouslySetInnerHTML={{ __html: link.label }} />
                     )
                 ))}
-                <select className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto ml-auto" value={selectedItemsPerPage} onChange={handleItemsPerPageChange}>
-                    <option value="5">5 per page</option>
-                    <option value="10">10 per page</option>
-                    <option value="20">20 per page</option>
-                    <option value="50">50 per page</option>
-                </select>
+
             </div>
         </BrokerLayout>
     );

@@ -103,7 +103,7 @@ export default function Index({ agents, search = '', page = 1, sort = 'asc', per
             <EditAgentModal openEditAgent={openEditAgent} agent={selectedAgent} setOpenEditAgent={setOpenEditAgent} />
 
             <div className="px-2 py-2">
-                <h1 className="text-2xl font-bold mb-2 flex justify-between">
+                <h1 className="text-2xl text-primary font-bold mb-2 flex justify-between">
                     My Handle Agents
                     <button onClick={() => setOpenAddAgent(true)} className="bg-primary text-white px-4 py-2 text-sm rounded-md">
                         Add Agent
@@ -113,8 +113,8 @@ export default function Index({ agents, search = '', page = 1, sort = 'asc', per
                     View and manage the agents who handle property listings for sellers.
                 </p>
 
-                <div className="border border-gray-100 rounded-xl">
-                    <div className="p-6 flex flex-wrap md:flex-row gap-4">
+                <div className="border border-gray-100 shadow-sm rounded-xl">
+                    <div className="p-6 flex justify-between gap-4">
                         <div className="relative w-full md:w-1/4">
                             <input
                                 id='search'
@@ -126,29 +126,32 @@ export default function Index({ agents, search = '', page = 1, sort = 'asc', per
                             />
                             <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                         </div>
+                        <div className='flex gap-2'>
+                            <select
+                                id='sort'
+                                value={selectedSort}
+                                onChange={(e) => handleSortChange(e.target.value)}
+                                className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto"
+                            >
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
 
-                        <select
-                            id='sort'
-                            value={selectedSort}
-                            onChange={(e) => handleSortChange(e.target.value)}
-                            className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto"
-                        >
-                            <option value="asc">Ascending</option>
-                            <option value="desc">Descending</option>
-                        </select>
+                            <select
+                                id='page_item'
 
-                        <select
-                            id='page_item'
+                                value={itemsPerPage}
+                                onChange={(e) => handlePerPageChange(e.target.value)}
+                                className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto"
+                            >
+                                <option value="5">5 per page</option>
+                                <option value="10">10 per page</option>
+                                <option value="20">20 per page</option>
+                                <option value="50">50 per page</option>
+                            </select>
+                        </div>
 
-                            value={itemsPerPage}
-                            onChange={(e) => handlePerPageChange(e.target.value)}
-                            className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto"
-                        >
-                            <option value="5">5 per page</option>
-                            <option value="10">10 per page</option>
-                            <option value="20">20 per page</option>
-                            <option value="50">50 per page</option>
-                        </select>
+
                     </div>
 
                     <div className="overflow-auto h-[56vh] bg-white relative">

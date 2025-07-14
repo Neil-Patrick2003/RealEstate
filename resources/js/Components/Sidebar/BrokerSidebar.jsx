@@ -16,9 +16,11 @@ function classNames(...classes) {
     return classes.filter(Boolean).join(' ');
 }
 
+
+
 const menus = [
     { name: "Dashboard", Icon: faHouse, path: "/broker/dashboard" },
-    { name: "Properties", Icon: faMessage, path: "/broker/properties" },
+    { name: "Properties", Icon: faMapLocationDot, path: "/broker/properties" },
     { name: "Agents", Icon: faMessage, path: "/broker/agents" },
     { name: "Inquiries", Icon: faEnvelope, path: "/broker/inquiries" },
     { name: "Tripping", Icon: faCalendar, path: "/broker/trippings" },
