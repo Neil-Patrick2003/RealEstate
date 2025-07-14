@@ -17,7 +17,7 @@ class PropertyTrippingController extends Controller
         $trippings = PropertyTripping::with('property', 'agent')
             ->where('buyer_id', auth()->id())
             ->latest()
-            ->get();
+            ->paginate(10);
 
         return Inertia::render('Buyer/Trippins/Trippings' , [
             'trippings' => $trippings

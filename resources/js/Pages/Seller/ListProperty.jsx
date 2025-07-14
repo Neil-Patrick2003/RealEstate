@@ -251,7 +251,7 @@ const ListProperty = ({ agents = [] }) => {
           <div className="flex items-center px-8 py-4">
               <Link
                   href="/"   // replace with your actual back URL
-                  onClick={() => setIsOpenNotice(false)} 
+                  onClick={() => setIsOpenNotice(false)}
                   className="flex items-center space-x-2 text-gray-600 text-sm cursor-pointer font-semibold"
               >
                   <FontAwesomeIcon icon={faArrowLeft} />

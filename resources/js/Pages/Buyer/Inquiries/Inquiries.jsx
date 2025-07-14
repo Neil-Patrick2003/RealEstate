@@ -14,9 +14,9 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useState } from "react";
+import React, { useState } from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
-import {Head, router} from "@inertiajs/react";
+import {Head, Link, router} from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 
 dayjs.extend(relativeTime);
@@ -40,9 +40,8 @@ export default function Inquiries({
                                       status = "",
                                       allCount,
                                       pendingCount,
-                                      scheduledCount,
+                                      acceptedCount,
                                       cancelledCount,
-                                      closeCount,
                                       rejectedCount,
                                   }) {
     const [isAddVisitModal, setIsAddVisitModal] = useState(false);
@@ -109,9 +108,7 @@ export default function Inquiries({
                         count={[
                             allCount,
                             pendingCount,
-                            scheduledCount,
-
-                            closeCount,
+                            acceptedCount,
                             cancelledCount,
                             rejectedCount,
                         ]}
@@ -346,6 +343,29 @@ export default function Inquiries({
                         );
                     })
                 )}
+
+
+                    <div className="flex flex-wrap gap-2 justify-end" aria-label="Pagination navigation">
+                        {inquiries.links.map((link, i) => {
+                            return link.url ? (
+                                <Link
+                                    key={i}
+                                    className={`px-3 md:px-4 py-2 text-sm md:text-base rounded-md border transition ${
+                                        link.active ? 'bg-primary text-white font-semibold' : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    aria-current={link.active ? 'page' : undefined}
+                                />
+                            ) : (
+                                <span
+                                    key={i}
+                                    className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 bg-white border rounded-md cursor-not-allowed"
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    aria-disabled="true"
+                                />
+                            );
+                        })}
+                    </div>
             </div>
         </BuyerLayout>
     );

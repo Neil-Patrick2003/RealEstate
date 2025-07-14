@@ -27,12 +27,9 @@ class InquiryController extends Controller
 
         $allCount = Inquiry::where('buyer_id', auth()->id())->count();
         $pendingCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Pending')->count();
-        $scheduledCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Follow-Up Scheduled')->count();
+        $acceptedCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Accepted')->count();
         $cancelledCount = Inquiry::where('buyer_id', auth()->id())
             ->where('status', 'like', '%Cancelled%')
-            ->count();
-        $closeCount = Inquiry::where('buyer_id', auth()->id())
-            ->where('status', 'like', '%Close%')
             ->count();
         $rejectCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Rejected')->count();
 
@@ -41,9 +38,8 @@ class InquiryController extends Controller
             'inquiries' => $inquiries,
             'allCount' => $allCount,
             'pendingCount' => $pendingCount,
-            'scheduledCount' => $scheduledCount,
             'cancelledCount' => $cancelledCount,
-            'closeCount' => $closeCount,
+            'acceptedCount' => $acceptedCount,
             'rejectCount' => $rejectCount,
         ]);
     }

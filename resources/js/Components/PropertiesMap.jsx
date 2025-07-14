@@ -43,6 +43,7 @@ const PropertiesMap = ({ properties }) => {
                 zoom={16}
                 style={{ height: 550, width: '100%' }}
                 scrollWheelZoom={true}
+                className='z-0'
             >
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

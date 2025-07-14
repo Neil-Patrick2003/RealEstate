@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 
 import "./custom.slider.css";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faArrowLeft, faArrowRight} from "@fortawesome/free-solid-svg-icons";
 
 function CustomCarousel({ children }) {
     const [activeIndex, setActiveIndex] = useState(0);
@@ -53,60 +55,42 @@ function CustomCarousel({ children }) {
     };
 
     return (
-        <div
-            className="container__slider"
-            onMouseEnter={AutoPlayStop}
-            onMouseLeave={AutoPlayStart}
-        >
-            {children.map((item, index) => {
-                return (
-                    <div
-                        className={"slider__item slider__item-active-" + (activeIndex + 1)}
-                        key={index}
-                    >
-                        {item}
-                    </div>
-                );
-            })}
-
-            <div className="container__slider__links">
-                {children.map((item, index) => {
-                    return (
-                        <button
-                            key={index}
-                            className={
-                                activeIndex === index
-                                    ? "container__slider__links-small container__slider__links-small-active"
-                                    : "container__slider__links-small"
-                            }
-                            onClick={(e) => {
-                                e.preventDefault();
-                                setActiveIndex(index);
-                            }}
-                        ></button>
-                    );
-                })}
+        <div className="container__slider">
+            {/* Top-right nav buttons */}
+            <div className="container__slider__buttons">
+                <button onClick={(e) => { e.preventDefault(); slidePrev(); }}><FontAwesomeIcon icon={faArrowLeft} /></button>
+                <button onClick={(e) => { e.preventDefault(); slideNext(); }}><FontAwesomeIcon icon={faArrowRight} /></button>
             </div>
 
-            <button
-                className="slider__btn-next"
-                onClick={(e) => {
-                    e.preventDefault();
-                    slideNext();
-                }}
-            >
-                {">"}
-            </button>
-            <button
-                className="slider__btn-prev"
-                onClick={(e) => {
-                    e.preventDefault();
-                    slidePrev();
-                }}
-            >
-                {"<"}
-            </button>
+            {/* Top-left indicators */}
+            <div className="container__slider__links">
+                {children.map((_, index) => (
+                    <button
+                        key={index}
+                        className={
+                            activeIndex === index
+                                ? "container__slider__links-small container__slider__links-small-active"
+                                : "container__slider__links-small"
+                        }
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setActiveIndex(index);
+                        }}
+                    ></button>
+                ))}
+            </div>
+
+            {/* Slide Items */}
+            {children.map((item, index) => (
+                <div
+                    className={`slider__item slider__item-active-${activeIndex + 1}`}
+                    key={index}
+                >
+                    {item}
+                </div>
+            ))}
         </div>
+
     );
 }
 

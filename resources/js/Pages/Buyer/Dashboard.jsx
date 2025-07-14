@@ -5,6 +5,10 @@ import dayjs from "dayjs";
 import React from "react";
 import Progress from "@/Components/Progress.jsx";
 import PropertyCard from "@/Components/Property/PropertyCard.jsx";
+import CustomCarousel from "@/Components/Slider/custom.slider.jsx";
+import ProfileProgress from "@/Components/ProfileProgress.jsx";
+
+import logo from '../../../assets/real estate.png';
 
 const statusStyles = {
     accepted: 'bg-green-100 text-green-700 ring-green-200',
@@ -37,33 +41,40 @@ export default function Dashboard({ properties, inquiries }) {
                                 Discover Now
                             </Link>
                         </div>
-                        <img src="/images/lot-finder-icon.svg" alt="Lot Finder" className="w-24 h-24 hidden md:block" />
+                        <img src={logo} alt="Lot Finder" className="w-80 h-64 hidden md:block" />
                     </div>
 
-                    <div className="bg-gradient-to-tl from-primary to-accent rounded-2xl p-6 text-white">
-                        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-                        <ul className="space-y-3 text-sm">
-                            <li><Link href="/saved" className="hover:underline hover:text-accent">📌 Saved Lots</Link></li>
-                            <li><Link href="/inquiries" className="hover:underline hover:text-accent">📬 My Inquiries</Link></li>
-                            <li><Link href="/profile" className="hover:underline hover:text-accent">👤 Manage Profile</Link></li>
-                        </ul>
-                    </div>
-                </section>
+                    <div className="relative overflow-hidden">
+                        {/* Background image with fade overlay */}
+                        <div className="absolute inset-0 z-0">
+                            <div
+                                className="w-full h-full bg-cover bg-center"
+                                style={{
+                                    backgroundImage: "url('/images/slider-bg.jpg')", // Replace with your image path
+                                    filter: "brightness(0.5)", // darkens the image
+                                }}
+                            />
+                        </div>
 
-                {/* Profile Completion */}
-                <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                    <h3 className="text-sm font-semibold text-gray-600 uppercase">Profile Progress</h3>
-                    <div className="mt-4">
-                        <div className="overflow-hidden rounded-full bg-gray-200 h-2">
-                            <div className="h-2 bg-gradient-to-r from-lightaccent to-accent rounded-full" style={{ width: "37.5%" }} />
-                        </div>
-                        <div className="mt-6 hidden sm:grid grid-cols-4 text-sm font-medium text-gray-600">
-                            <div className="text-accent">Personal Info</div>
-                            <div className="text-center text-accent">Contacts</div>
-                            <div className="text-center">Email</div>
-                            <div className="text-right">Verified</div>
+                        {/* Foreground: Your custom carousel */}
+                        <div className="relative z-10">
+                            <CustomCarousel>
+                                <div className="bg-white bg-opacity-90 rounded-xl shadow-md h-80 flex flex-col justify-center items-center text-center p-6">
+                                    <h2 className="text-2xl font-bold text-primary mb-2">Find Your Dream Home</h2>
+                                    <p className="text-gray-600">Browse hundreds of properties across the country.</p>
+                                </div>
+                                <div className="bg-white bg-opacity-90 rounded-xl shadow-md h-80 flex flex-col justify-center items-center text-center p-6">
+                                    <h2 className="text-2xl font-bold text-primary mb-2">Verified Listings Only</h2>
+                                    <p className="text-gray-600">We make sure every property is checked and trusted.</p>
+                                </div>
+                                <div className="bg-white bg-opacity-90 rounded-xl shadow-md h-80 flex flex-col justify-center items-center text-center p-6">
+                                    <h2 className="text-2xl font-bold text-primary mb-2">Connect With Local Agents</h2>
+                                    <p className="text-gray-600">Get expert advice directly from certified professionals.</p>
+                                </div>
+                            </CustomCarousel>
                         </div>
                     </div>
+
                 </section>
 
                 {/* Featured Properties */}
@@ -87,8 +98,8 @@ export default function Dashboard({ properties, inquiries }) {
                 {/* Inquiry Section */}
                 <section>
                     <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-                        <div className='col-span-1 md:col-span-2'>
-                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Inquiries</h2>
+                        <div className='col-span-1 md:col-span-2 border rounded-2xl'>
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4 px-6 pt-4">Recent Inquiries</h2>
                             <div className="overflow-x-auto bg-white shadow-sm rounded-b-lg">
                                 <table className="min-w-full text-sm text-left text-gray-700">
                                     <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
@@ -171,14 +182,7 @@ export default function Dashboard({ properties, inquiries }) {
                             </div>
                         ) : (
                             // Fallback UI when no progressInquiry available
-                            <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
-                                <p className="text-gray-500 font-medium">No ongoing inquiries found.</p>
-                                <img
-                                    src="/placeholder-estate.png"  // Your fallback image, replace with your own
-                                    alt="No inquiry"
-                                    className="mx-auto mt-4 h-32 object-contain"
-                                />
-                            </div>
+                            <ProfileProgress user={auth} />
                         )}
 
                     </div>
