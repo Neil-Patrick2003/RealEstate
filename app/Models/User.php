@@ -26,6 +26,7 @@ class User extends Authenticatable
         'address',
         'bio',
         'photo_url',
+        'broker_id'
 
     ];
 

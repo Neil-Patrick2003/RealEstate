@@ -15,6 +15,11 @@ export default {
             fontFamily: {
                 inter: ["Inter", ...defaultTheme.fontFamily.sans],
             },
+            extend: {
+                animation: {
+                    'spin-slow': 'spin 4s linear infinite',
+                },
+            },
            colors: {
                 text: '#1C252E',           // clean dark text
                 background: '#fbfbfe',     // off-white background
