@@ -48,17 +48,6 @@ class PropertyTrippingController extends Controller
             'notes' => $validated['notes'],
         ]);
 
-        //update inquiry status into Follow-Up Scheduled
-
-        $inquiry = Inquiry::findOrFail($validated['inquiry_id']);
-
-        $inquiry->update([
-            'status' => 'Follow-Up Scheduled'
-        ]);
-
-
-
-
         return redirect()->back()->with('success', 'Schedule tripping successfully.' );
     }
 }
