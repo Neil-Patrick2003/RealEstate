@@ -9,27 +9,28 @@ use Inertia\Inertia;
 
 class AgentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+        $sort = $request->input('sort', 'asc');
+        $perPage = $request->input('perPage', 10);
+
         $agents = User::withCount([
-            'listing as assigned_listings_count' => function ($query) {
-                $query->where('status', 'Assigned');
-            },
-            'listing as published_listings_count' => function ($query) {
-                $query->where('status', 'Published');
-            },
-            'listing as sold_listings_count' => function ($query) {
-                $query->where('status', 'Sold');
-            }
+            'listing as assigned_listings_count' => fn ($q) => $q->where('status', 'Assigned'),
+            'listing as published_listings_count' => fn ($q) => $q->where('status', 'Published'),
+            'listing as sold_listings_count' => fn ($q) => $q->where('status', 'Sold'),
         ])
             ->where('broker_id', auth()->id())
-            ->latest()
-            ->paginate(10);
+            ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
+            ->orderBy('name', $sort)
+            ->paginate($perPage)
+            ->withQueryString();
 
-        return Inertia::render('Broker/Agent/Index', [
-            'agents' => $agents,
-        ]);
+        return Inertia::render('Broker/Agent/Index', compact('agents', 'search', 'sort', 'perPage'));
     }
+
+
+
 
     public function show($id){
         $user = User::findOrFail($id);
