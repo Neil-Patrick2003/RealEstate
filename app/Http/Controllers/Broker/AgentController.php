@@ -11,23 +11,36 @@ class AgentController extends Controller
 {
     public function index()
     {
-
-        $agents = User::where('broker_id', auth()->id())->latest()->paginate(10);
+        $agents = User::withCount([
+            'listing as assigned_listings_count' => function ($query) {
+                $query->where('status', 'Assigned');
+            },
+            'listing as published_listings_count' => function ($query) {
+                $query->where('status', 'Published');
+            },
+            'listing as sold_listings_count' => function ($query) {
+                $query->where('status', 'Sold');
+            }
+        ])
+            ->where('broker_id', auth()->id())
+            ->latest()
+            ->paginate(10);
 
         return Inertia::render('Broker/Agent/Index', [
             'agents' => $agents,
         ]);
     }
 
-    public function create(){
+    public function show($id){
+        $user = User::findOrFail($id);
 
+        return Inertia::render('Broker/Agent/Show', [
+            'user' => $user,
+        ]);
     }
 
     public function  store(Request $request)
     {
-
-
-
         $data = $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
@@ -42,8 +55,6 @@ class AgentController extends Controller
             $filename = time() . '_' . preg_replace('/\s+/', '_', pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
             $propertyImageUrl = $file->storeAs('images', $filename, 'public');
         }
-
-
 
         User::create([
             'name' => $request->name,
@@ -80,6 +91,16 @@ class AgentController extends Controller
 
         return back()->with('success', 'Agent updated successfully.');
     }
+
+    public function destroy($id){
+
+
+        $user = User::find($id);
+        $user->delete();
+
+        return redirect()->back()->with('success', 'Agent deleted successfully.');
+    }
+
 
 
 

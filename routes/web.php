@@ -170,13 +170,14 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
 
 });
 
-
-
 //---------------------------------broker----------------------------
 Route::get('/broker/dashboard', [\App\Http\Controllers\Broker\BrokerController::class, 'index'])->name('broker.dashboard');
 Route::get('/broker/agents', [\App\Http\Controllers\Broker\AgentController::class, 'index'])->name('broker.agents');
+Route::get('/broker/agents/{id}', [\App\Http\Controllers\Broker\AgentController::class, 'show']);
 Route::post('/broker/agents/create', [\App\Http\Controllers\Broker\AgentController::class, 'store']);
 Route::patch('/broker/agents/update/{agent}', [\App\Http\Controllers\Broker\AgentController::class, 'update']);
+Route::delete('/broker/agents/{id}/delete', [\App\Http\Controllers\Broker\AgentController::class, 'destroy']);
+
 
 
 Route::get('/broker/properties', [\App\Http\Controllers\Broker\PropertyController::class, 'index'])->name('broker.properties');
