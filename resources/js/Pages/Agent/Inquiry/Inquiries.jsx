@@ -36,6 +36,8 @@ const Inquiries = ({
                        sellerInquiryCount
                    }) => {
 
+    console.log(inquiries);
+
 
     const [selectedStatus, setSelectedStatus] = useState('All');
     const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
@@ -302,7 +304,13 @@ const Inquiries = ({
                                                 />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-gray-800">{agent.name ?? 'Unknown Agent'}</p>
+                                                <p className="text-sm font-medium text-gray-800">
+                                                    {inquiry?.seller ? (
+                                                        <>{inquiry?.seller?.name}</>
+                                                    ) : (
+                                                        <>{inquiry?.buyer?.name}</>
+                                                    )}
+                                                </p>
                                                 <p className="text-xs text-gray-500">4.8 ⭐ (76 reviews)</p>
                                             </div>
                                         </div>

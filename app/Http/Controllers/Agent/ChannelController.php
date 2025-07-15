@@ -19,7 +19,7 @@ class ChannelController extends Controller
             ->orderBy('last_activity_at', 'desc')
             ->get();
 
-        return Inertia::render('Seller/Chat/Chat', [
+        return Inertia::render('Agent/Chat/Chat', [
             'channels' => $channels,
             'channel' => $channel
         ]);

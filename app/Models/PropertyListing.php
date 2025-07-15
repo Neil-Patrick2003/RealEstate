@@ -23,4 +23,6 @@ class PropertyListing extends Model
     public function deal(){
         return $this->hasMany(Deal::class);
     }
+
+
 }

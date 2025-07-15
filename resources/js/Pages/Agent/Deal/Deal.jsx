@@ -64,21 +64,6 @@ export default function Deal({ property_listing,  }) {
         });
     };
 
-    const handleAccept = () => {
-        if (!selectedDeal) return;
-
-
-        router.put(`/agents/deal/${selectedDeal.id}/accept`, {}, {
-            onSuccess: () => {
-                setSelectedDeal(null);
-                setOpenAcceptModal(false);
-            },
-            onError: (errors) => {
-                console.error('Error accepting deal:', errors);
-            }
-        });
-    };
-
 
     const onStatusChange = (deal, status) => {
         setSelectedDeal(deal);    // Save which deal is being updated
@@ -112,10 +97,11 @@ export default function Deal({ property_listing,  }) {
 
 
 
+
     return (
         <AgentLayout>
             <Head title="Deal" />
-            <ConfirmDialog open={openAcceptModal} onConfirm={handleAccept} confirmText={'Accept'} cancelText={'Cancel'}  setOpen={setOpenAcceptModal} title={'Accept Offer amount'} description={'Are you sure you want to accept this offer amount?'} />
+            <ConfirmDialog open={openAcceptModal} onConfirm={handleConfirmUpdate} confirmText={'Accept'} cancelText={'Cancel'}  setOpen={setOpenAcceptModal} title={'Accept Offer amount'} description={'Are you sure you want to accept this offer amount?'} />
             <ConfirmDialog
                 open={confirmModalOpen}
                 setOpen={setConfirmModalOpen}
@@ -228,7 +214,8 @@ export default function Deal({ property_listing,  }) {
                                                                             <button
                                                                                 onClick={() => {
                                                                                     setSelectedDeal(deal);
-                                                                                    setOpenAcceptModal(true);
+                                                                                    setOpenAcceptModal(true)
+                                                                                    setNewStatus('Accepted');
                                                                                 }}
                                                                                 className="text-primary border border-primary px-4 py-2 rounded-md hover:text-accent"
                                                                             >
