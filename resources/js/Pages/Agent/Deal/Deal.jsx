@@ -120,7 +120,7 @@ export default function Deal({ property_listing,  }) {
                 listings.map((listing) => {
 
                     return (
-                        <>
+                        <div className='mb-4'>
                             <InquiriesCollapsable
                                 key={listing.id}
                                 header={
@@ -265,7 +265,7 @@ export default function Deal({ property_listing,  }) {
                                     </table>
                                 </div>
                             </InquiriesCollapsable>
-                        </>
+                        </div>
                     )
 
                 })
