@@ -19,4 +19,8 @@ class PropertyListing extends Model
     public function seller(){
         return $this->belongsTo(User::class, 'seller_id');
     }
+
+    public function deal(){
+        return $this->hasMany(Deal::class);
+    }
 }

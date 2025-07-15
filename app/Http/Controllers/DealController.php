@@ -8,6 +8,23 @@ use Illuminate\Http\Request;
 
 class DealController extends Controller
 {
+    public function index(){
+
+        $deals = Deal::with([
+            'property_listing.property:id,title,price,image_url,address',
+            'property_listing.agent:id,name',
+            'property_listing.seller:id,name',
+        ])
+            ->where('buyer_id', auth()->id())
+            ->latest()
+            ->get();
+
+
+        return inertia('Buyer/Deal/Deal', [
+            'deals' => $deals,
+        ]);
+    }
+
     public function store(Request $request, PropertyListing $propertyListing)
     {
         $request->validate([
@@ -29,7 +46,7 @@ class DealController extends Controller
     public function update(Request $request, PropertyListing $propertyListing, Deal $deal)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:1|max:999999.99',
         ]);
 
         $deal->update([
@@ -39,5 +56,26 @@ class DealController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Deal updated successfully');
+    }
+
+    public function accept(Request $request, $id)
+    {
+        $deal = Deal::find($id);
+
+        $deal->update([
+            'status' => 'Accepted',
+        ]);
+
+        return redirect()->back()->with('success', 'Offer accepted, now you can proceed to finalize the paperwork.');
+    }
+
+    public function handleUpdate(Request $request, $id, $status){
+        $deal = Deal::find($id);
+
+        $deal->update([
+            'status' => $status,
+        ]);
+
+        return redirect()->back()->with('success', "Deal {$status} successfully");
     }
 }

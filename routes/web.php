@@ -110,12 +110,20 @@ Route::post('/agents/messages/{id}', [\App\Http\Controllers\Agent\MessageControl
 Route::get('/agents/inquiries', [\App\Http\Controllers\Agent\InquiryController::class, 'index']);
 Route::patch('/agents/inquiries/{inquiry}/accept', [\App\Http\Controllers\Agent\InquiryController::class, 'accept']);
 Route::patch('/agents/inquiries/{inquiry}/reject', [\App\Http\Controllers\Agent\InquiryController::class, 'reject']);
-Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\InquiryController::class, 'cancel']); // Used for cancel
+Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\InquiryController::class, 'cancel']);
+
+Route::get('/agents/deal', [\App\Http\Controllers\Agent\DealController::class, 'index']);
+Route::put('/agents/deal/{deal}', [\App\Http\Controllers\Agent\DealController::class, 'update'])->name('agents.deals.update');
+Route::put('/agents/deal/{id}/accept', [DealController::class, 'accept']);
+Route::put('/agents/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
+
+
+
 
 
 Route::get('/agents/trippings', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'index']);
 Route::patch('/agents/trippings/{id}/accept', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'accept']);
-    Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'decline']);
+Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'decline']);
 
 
 
@@ -136,10 +144,10 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/property-listings/{propertyListing}/deals/{deal}', [DealController::class, 'update'])->name('property-listings.deals.update');
 });
 
+
 Route::middleware(['auth','role:Buyer' ])->group(function () {
 
     Route::get('/dashboard', function () {
-
         $properties = \App\Models\Property::with('coordinate')
             ->where('status', 'Published')
             ->latest()
@@ -166,8 +174,6 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/chat', [\App\Http\Controllers\Buyer\ChatController::class, 'index'])->name('buyer.chat.index');
     Route::get('/chat/channels/{channel}', [\App\Http\Controllers\Buyer\ChannelController::class, 'show'])->name('buyer.chat.channels.show');
 
-
-
     //triping
     Route::get('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'index']);
     Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
@@ -176,9 +182,26 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
     Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
 
+    Route::put('/deal/{id}/accept', [DealController::class, 'accept']);
+
+
+    Route::get('/deals', [DealController::class, 'index']);
+    Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
+
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
 
 });
+
+
+
+
+
+
+
+
+
+
+
 
 //---------------------------------broker----------------------------
 Route::get('/broker/dashboard', [\App\Http\Controllers\Broker\BrokerController::class, 'index'])->name('broker.dashboard');
