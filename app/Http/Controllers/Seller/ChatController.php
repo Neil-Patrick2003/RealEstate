@@ -18,7 +18,7 @@ class ChatController extends Controller
             ->first();
 
         if ($channel) {
-            return redirect(route('agents.chat.channels.show', $channel->id));
+            return redirect(route('seller.chat.channels.show', $channel->id));
         }
 
         return Inertia::render('Seller/Chat/Chat', [
