@@ -17,8 +17,8 @@ const ChatMessage = ({ message }) => {
         <div
             className={`max-w-[70%] p-3 ${
                 isSentByMe
-                    ? 'bg-blue-500 text-white rounded-tl-3xl rounded-tr-3xl rounded-bl-3xl'
-                    : 'bg-blue-500 text-white rounded-tl-3xl rounded-tr-3xl rounded-br-3xl'
+                    ? 'bg-accent text-white rounded-tl-3xl rounded-tr-3xl rounded-bl-3xl'
+                    : 'bg-primary text-white rounded-tl-3xl rounded-tr-3xl rounded-br-3xl'
             }`}
         >
             <p className="break-words">{message.content}</p>

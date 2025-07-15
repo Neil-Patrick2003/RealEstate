@@ -44,7 +44,6 @@ const ChannelView = ({ channel }) => {
 
             <div>
                 {messages.map(message => <ChatMessage key={`channel-${channel.id}-${message.id}`} message={message}/>)}
-
                 <div ref={messageEndRef} />
             </div>
         </div>

@@ -13,18 +13,30 @@ const ChatInput = ({ channel }) => {
             .then(() => setContent(''))
     }
 
-    return <div className="flex px-4 py-4 gap-x-2">
-        <textarea
-            rows={3}
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            className={`w-full p-2 rounded-lg resize-none focus:outline-none bg-gray-100 text-gray-900 placeholder-gray-500`}
-        />
+    return (
+        <div className="flex items-end gap-3 p-4 border-t bg-white">
+    <textarea
+        rows={2}
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Type your message..."
+        className="w-full p-3 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary focus:outline-none bg-gray-50 text-gray-900 placeholder-gray-400 resize-none transition-shadow"
+    />
 
-        <button disabled={! content} onClick={onSend}>
-            <FontAwesomeIcon icon={faPaperPlane} className="text-gray-500" />
-        </button>
-    </div>
+            <button
+                onClick={onSend}
+                disabled={!content.trim()}
+                className={`px-3 py-2  rounded-full transition-colors ${
+                    content.trim()
+                        ? 'bg-primary text-white hover:bg-primary-dark'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+            >
+                <FontAwesomeIcon icon={faPaperPlane} className="h-4 w-4" />
+            </button>
+        </div>
+    );
+
 }
 
 export default ChatInput;
