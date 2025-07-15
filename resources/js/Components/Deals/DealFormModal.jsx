@@ -21,8 +21,6 @@ const DealFormModal = ({ property, isOpen, setIsOpen, initialValue }) => {
             })
     }
 
-    console.log(property)
-
     return <Modal show={isOpen} onClose={() => setIsOpen(false)} maxWidth="2xl">
         <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
             {/* Close Button */}

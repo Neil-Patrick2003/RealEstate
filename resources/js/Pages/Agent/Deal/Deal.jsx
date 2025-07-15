@@ -94,10 +94,6 @@ export default function Deal({ property_listing,  }) {
     };
 
 
-
-
-
-
     return (
         <AgentLayout>
             <Head title="Deal" />

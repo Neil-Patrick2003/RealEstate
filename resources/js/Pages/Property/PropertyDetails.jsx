@@ -20,18 +20,23 @@ import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
 import NavBar from "@/Components/NavBar.jsx";
 import ImageModal from "@/Components/modal/ImageModal.jsx";
 
-export default function PropertyDetail({ property, deal }) {
+export default function PropertyDetail({ property, deal, inquiry }) {
     const [visibleImages, setVisibleImages] = useState([]);
     const [openImage, setOpenImage] = useState(false);
     const [isOpenModal, setIsOpenModal] =useState(false);
     const [isOpenDealForm, setIsOpenDealForm] = useState(false)
     const [ message, setMessage] = useState('');
 
+
+    console.log(inquiry);
+
+
+
+
     const openModal = () =>{
         setIsOpenModal(true);
     }
 
-    console.log(property)
 
 
     useEffect(() => {
@@ -118,10 +123,28 @@ export default function PropertyDetail({ property, deal }) {
 
 
             <div className="container flex flex-col gap-6 mx-auto px-4 pb-12 md:px-8 max-w-7xl">
-                <Link href="/" className="inline-flex items-center text-gray-600 hover:text-[#5C7934] transition-colors duration-200">
-                    <ChevronLeft/>
-                    Back to Listings
-                </Link>
+                <div className='flex-center-between'>
+                    <Link href="/" className="inline-flex items-center text-gray-600 hover:text-[#5C7934] transition-colors duration-200">
+                        <ChevronLeft/>
+                        Back to Listings
+                    </Link>
+                    <div>
+                        {
+                            inquiry ? (
+                                <>
+                                    {
+                                        property?.property_listing && <PrimaryButton onClick={() => setIsOpenDealForm(true)}>
+                                            {deal ? 'View My Offer': 'Make Offer'}
+                                        </PrimaryButton>
+                                    }
+                                </>
+                            ) : <></>
+                        }
+                    </div>
+
+                </div>
+
+
 
                 {/*images*/}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 animate-fade-in delay-100">
@@ -179,11 +202,11 @@ export default function PropertyDetail({ property, deal }) {
                                     })}</p>
                                 </div>
 
-                                {
-                                    property?.property_listing && <PrimaryButton onClick={() => setIsOpenDealForm(true)}>
-                                        {deal ? 'View My Offer': 'Make Offer'}
-                                    </PrimaryButton>
-                                }
+
+
+
+
+
 
                             </div>
                         </div>
