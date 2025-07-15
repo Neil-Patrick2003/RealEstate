@@ -156,6 +156,9 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
     Route::patch('/inquiries/{id}/cancel', [\App\Http\Controllers\Buyer\InquiryController::class, 'cancel']);
 
+    Route::get('/chat', [\App\Http\Controllers\Buyer\ChatController::class, 'index'])->name('buyer.chat.index');
+    Route::get('/chat/channels/{channel}', [\App\Http\Controllers\Buyer\ChannelController::class, 'show'])->name('buyer.chat.channels.show');
+
 
 
     //triping

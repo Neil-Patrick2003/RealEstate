@@ -18,7 +18,7 @@ function classNames(...classes) {
 
 const menus = [
     { name: "Dashboard", Icon: faHouse, path: "/dashboard" },
-    { name: "Messages", Icon: faMessage, path: "/messages" },
+    { name: "Messages", Icon: faMessage, path: "/chat" },
     { name: "Inquiries", Icon: faEnvelope, path: "/inquiries" },
     { name: "Tripping", Icon: faCalendar, path: "/trippings" },
     { name: "Favourites", Icon: faStar, path: "/favourites" },
