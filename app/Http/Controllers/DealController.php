@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Deal;
+use App\Models\Inquiry;
 use App\Models\PropertyListing;
 use Illuminate\Http\Request;
 
@@ -18,6 +19,8 @@ class DealController extends Controller
             ->where('buyer_id', auth()->id())
             ->latest()
             ->get();
+
+
 
 
         return inertia('Buyer/Deal/Deal', [
@@ -66,15 +69,33 @@ class DealController extends Controller
             'status' => 'Accepted',
         ]);
 
+
+
         return redirect()->back()->with('success', 'Offer accepted, now you can proceed to finalize the paperwork.');
     }
 
     public function handleUpdate(Request $request, $id, $status){
         $deal = Deal::find($id);
 
+
         $deal->update([
             'status' => $status,
         ]);
+
+
+        if ($status === 'Sold') {
+            $propertyListing = PropertyListing::find($deal->property_listing_id);
+
+            $propertyListing->update([
+                'Sold'
+            ]);
+
+
+
+
+
+
+        }
 
         return redirect()->back()->with('success', "Deal {$status} successfully");
     }

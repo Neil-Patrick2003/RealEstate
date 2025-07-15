@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {faCheck, faPen} from "@fortawesome/free-solid-svg-icons";
 import Modal from "@/Components/Modal.jsx";
-import {router, useForm, usePage} from "@inertiajs/react";
+import {router, useForm, usePage, Link} from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
+import dayjs from "dayjs";
 
 export default function DealsPage({ deals }){
     const { auth } = usePage().props;
@@ -19,10 +20,9 @@ export default function DealsPage({ deals }){
 
 
     const statusStyles = {
-        accepted: "bg-green-100 text-green-700 ring-green-200",
-        rejected: "bg-red-100 text-red-700 ring-red-200",
-        pending: "bg-yellow-100 text-yellow-700 ring-yellow-200",
-        cancelled: "bg-gray-100 text-gray-700 ring-gray-200",
+        Accepted: "bg-green-100 text-green-700 ring-green-200",
+        Cancelled: "bg-red-100 text-red-700 ring-red-200",
+        Pending: "bg-yellow-100 text-yellow-700 ring-yellow-200",
         default: "bg-orange-100 text-orange-700 ring-orange-200",
     };
 
@@ -104,7 +104,7 @@ export default function DealsPage({ deals }){
                 </form>
             </Modal>
 
-            <div className="mt-20 border rounded-2xl">
+            <div className="mt-20 border h-[82vh] rounded-2xl">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4 px-6 pt-4">My Deals</h2>
                 <div className="overflow-x-auto bg-white shadow-sm rounded-b-lg">
                     <table className="min-w-full text-sm text-left text-gray-700">
@@ -176,11 +176,18 @@ export default function DealsPage({ deals }){
                                             <span
                                                 className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}
                                             >
-                                              {deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}
+                                                {deal.status === 'Accepted' ? (
+                                                    <span>Accepted - Proceeding with paperwork</span>
+                                                ) : (
+                                                    <span>{deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}</span>
+                                                )}
+
                                             </span>
                                         </td>
                                         <td className="p-3 md:table-cell">
-                                            {deal?.last}
+                                            {deal.amount_last_updated_at
+                                                ? dayjs(deal.amount_last_updated_at).format("MMM D, YYYY h:mm A")
+                                                : "—"}
                                         </td>
                                         <td className="p-3 md:table-cell">
                                             {deal.status === 'Pending' ? (
@@ -225,6 +232,7 @@ export default function DealsPage({ deals }){
                         </tbody>
                     </table>
                 </div>
+
             </div>
         </BuyerLayout>
     );
