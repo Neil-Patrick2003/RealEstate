@@ -1,7 +1,7 @@
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
 import InquiriesCollapsable from "@/Components/collapsable/InquiriesClosable.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {faCheck, faPen} from "@fortawesome/free-solid-svg-icons";
+import {faCheck, faPen, faXmark} from "@fortawesome/free-solid-svg-icons";
 import React, { useState } from "react";
 import dayjs from "dayjs";
 import {router, useForm, usePage, Link, Head} from "@inertiajs/react";
@@ -211,18 +211,31 @@ export default function Deal({ property_listing,  }) {
                                                                     </button>
                                                                     {deal.amount_last_updated_by &&
                                                                         deal.amount_last_updated_by !== authUserId && (
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    setSelectedDeal(deal);
-                                                                                    setOpenAcceptModal(true)
-                                                                                    setNewStatus('Accepted');
-                                                                                }}
-                                                                                className="text-primary border border-primary px-4 py-2 rounded-md hover:text-accent"
-                                                                            >
-                                                                                <FontAwesomeIcon icon={faCheck}
-                                                                                                 className='mr-2'/>
-                                                                                Accept
-                                                                            </button>
+                                                                            <>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedDeal(deal);
+                                                                                        setOpenAcceptModal(true)
+                                                                                        setNewStatus('Accepted');
+                                                                                    }}
+                                                                                    className="text-primary border mr-2 border-primary px-4 py-2 rounded-md hover:text-accent"
+                                                                                >
+                                                                                    <FontAwesomeIcon icon={faCheck}
+                                                                                                     className='mr-2'/>
+                                                                                    Accept
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedDeal(deal);
+                                                                                        setOpenAcceptModal(true)
+                                                                                        setNewStatus('Rejected');
+                                                                                    }}
+                                                                                    className="text-red-600 border  border-red-600 px-4 py-2 rounded-md hover:text-red-800"
+                                                                                >
+                                                                                    <FontAwesomeIcon icon={faXmark} className='mr-2'/>
+                                                                                    Reject
+                                                                                </button>
+                                                                            </>
                                                                         )}
                                                                 </>
 

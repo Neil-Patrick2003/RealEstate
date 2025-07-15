@@ -114,7 +114,7 @@ Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\Inquiry
 
 Route::get('/agents/deal', [\App\Http\Controllers\Agent\DealController::class, 'index']);
 Route::put('/agents/deal/{deal}', [\App\Http\Controllers\Agent\DealController::class, 'update'])->name('agents.deals.update');
-Route::put('/agents/deal/{id}/accept', [DealController::class, 'accept']);
+//Route::put('/agents/deal/{id}/$', [DealController::class, 'accept']);
 Route::put('/agents/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
 
 
@@ -182,7 +182,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
     Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
 
-    Route::put('/deal/{id}/accept', [DealController::class, 'accept']);
+    Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
 
 
     Route::get('/deals', [DealController::class, 'index']);

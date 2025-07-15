@@ -1,7 +1,7 @@
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {faCheck, faPen} from "@fortawesome/free-solid-svg-icons";
+import {faCheck, faPen, faXmark} from "@fortawesome/free-solid-svg-icons";
 import Modal from "@/Components/Modal.jsx";
 import {router, useForm, usePage, Link} from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
@@ -15,6 +15,7 @@ export default function DealsPage({ deals }){
     })
 
     const [selectedDeal, setSelectedDeal] = useState(null);
+    const  [selectedStatus, setSelectedStatus] = useState(null);
     const [openUpdateModal, setOpenUpdateModal] = useState(false);
     const [openAcceptModal, setOpenAcceptModal] = useState(false);
 
@@ -49,10 +50,10 @@ export default function DealsPage({ deals }){
         })
     };
 
-    const handleAccept = () => {
-        if (!selectedDeal) return;
+    const handleUpdateStatus = () => {
+        if (!selectedDeal|| !setSelectedStatus) return;
 
-        router.put(`/deal/${selectedDeal.id}/accept`, {}, {
+        router.put(`/deal/${selectedDeal.id}/${selectedStatus}`, {}, {
             onSuccess: () => {
                 setSelectedDeal(null);
                 setOpenAcceptModal(false);
@@ -65,7 +66,7 @@ export default function DealsPage({ deals }){
 
     return (
         <BuyerLayout>
-            <ConfirmDialog open={openAcceptModal} onConfirm={handleAccept} confirmText={'Accept'} cancelText={'Cancel'}  setOpen={setOpenAcceptModal} title={'Accept Offer amount'} description={'Are you sure you want to accept this offer amount?'} />
+            <ConfirmDialog open={openAcceptModal} onConfirm={handleUpdateStatus} confirmText={'Accept'} cancelText={'Cancel'}  setOpen={setOpenAcceptModal} title={'Accept Offer amount'} description={'Are you sure you want to accept this offer amount?'} />
             <Modal show={openUpdateModal} onClose={closeModal} closeable maxWidth="sm">
                 <form onSubmit={submit} className="p-6">
                     <h3 className="text-lg font-semibold mb-4">Update Offer Amount</h3>
@@ -201,13 +202,25 @@ export default function DealsPage({ deals }){
                                                     </button>
                                                     {deal.amount_last_updated_by &&
                                                         deal.amount_last_updated_by !== authUserId && (
-                                                            <button
-                                                                onClick={() => { setSelectedDeal(deal); setOpenAcceptModal(true);}}
-                                                                className="text-primary border border-primary px-4 py-2 rounded-md hover:text-accent"
-                                                            >
-                                                                <FontAwesomeIcon icon={faCheck} className='mr-2' />
-                                                                Accept
-                                                            </button>
+                                                            <>
+                                                                <button
+                                                                    onClick={() => { setSelectedDeal(deal); setOpenAcceptModal(true); setSelectedStatus('Accepted')}}
+                                                                    className="text-primary border mr-2 border-primary px-4 py-2 rounded-md hover:text-accent"
+                                                                >
+                                                                    <FontAwesomeIcon icon={faCheck} className='mr-2' />
+                                                                    Accept
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => { setSelectedDeal(deal); setOpenAcceptModal(true); setSelectedStatus('Rejected')}}
+                                                                    className="text-red-600 border  border-red-600 px-4 py-2 rounded-md hover:text-red-800"
+                                                                >
+                                                                    <FontAwesomeIcon icon={faXmark} className='mr-2' />
+                                                                    Reject
+                                                                </button>
+                                                            </>
+
+
+
                                                         )}
                                                 </>
 

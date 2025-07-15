@@ -101,7 +101,14 @@ class DealController extends Controller
             }
 
         } elseif ($status === 'Sold') {
+            foreach ($inquiries as $inquiry) {
+                if ($inquiry->buyer_id === $deal->buyer_id) {
+                    $inquiry->update(['status' => 'Closed with Deal']);
+                }
+            }
+
             $propertyListing->update(['status' => 'Sold']);
+
             $propertyListing->property->update(['status' => 'Sold']);
 
             return redirect()->back()->with('success', 'Property officially sold!');
