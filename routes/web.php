@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DealController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Seller\ChannelController;
 use App\Http\Controllers\Seller\ChatController;
@@ -130,7 +131,13 @@ Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationContr
 //------------------------------------------buyer---------------------------------------------------
 Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
+Route::middleware(['auth'])->group(function () {
+    Route::post('/property-listings/{propertyListing}/deals', [DealController::class, 'store'])->name('property-listings.deals.store');
+    Route::put('/property-listings/{propertyListing}/deals/{deal}', [DealController::class, 'update'])->name('property-listings.deals.update');
+});
+
 Route::middleware(['auth','role:Buyer' ])->group(function () {
+
     Route::get('/dashboard', function () {
 
         $properties = \App\Models\Property::with('coordinate')
