@@ -15,13 +15,14 @@ const ChatInput = ({ channel }) => {
 
     return (
         <div className="flex items-end gap-3 p-4 border-t bg-white">
-    <textarea
-        rows={2}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="Type your message..."
-        className="w-full p-3 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary focus:outline-none bg-gray-50 text-gray-900 placeholder-gray-400 resize-none transition-shadow"
-    />
+            <textarea
+                id='message'
+                rows={2}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Type your message..."
+                className="w-full p-3 rounded-lg border border-gray-300 focus:ring-1 focus:ring-primary focus:outline-none bg-gray-50 text-gray-900 placeholder-gray-400 resize-none transition-shadow"
+            />
 
             <button
                 onClick={onSend}
