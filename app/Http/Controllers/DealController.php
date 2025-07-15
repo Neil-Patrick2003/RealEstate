@@ -70,52 +70,45 @@ class DealController extends Controller
             return redirect()->back()->with('error', 'Deal not found');
         }
 
-        // Update deal
-        $deal->update([
-            'status' => $status,
-        ]);
+        // Update deal status
+        $deal->update(['status' => $status]);
 
-        // Find related property listing
+        // Find property listing
         $propertyListing = PropertyListing::find($deal->property_listing_id);
         if (!$propertyListing) {
             return redirect()->back()->with('error', 'Property listing not found');
         }
 
-        //if Accept
+        // Get inquiries related to the property
+        $inquiries = Inquiry::where('property_id', $propertyListing->property_id)
+            ->whereNotNull('buyer_id')
+            ->get();
+
         if ($status === 'Accepted') {
-            $inquiries = Inquiry::where('property_id', $propertyListing->property_id)
-                ->whereNotNull('buyer_id')
-                ->get();
-
-//            dd($inquiries->toArray());
             foreach ($inquiries as $inquiry) {
-
                 if ($inquiry->buyer_id === $deal->buyer_id) {
-                    $inquiry->update([
-                        'status' => 'Under Negotiation'
-                    ]);
+                    $inquiry->update(['status' => 'Under Negotiation']);
                 } else {
-                    $inquiry->update([
-                        'status' => 'Declined'
-                    ]);
+                    $inquiry->update(['status' => 'Declined']);
                 }
             }
 
-        }
+        } elseif ($status === 'Rejected' || $status === 'Cancelled') {
+            foreach ($inquiries as $inquiry) {
+                if ($inquiry->buyer_id === $deal->buyer_id) {
+                    $inquiry->update(['status' => 'Closed No Deal']);
+                }
+            }
 
-        if ($status === 'Sold') {
-            $propertyListing->update([
-                'status' => 'Sold'
-            ]);
-
-            $propertyListing->property->update([
-                'status' => 'Sold'
-            ]);
+        } elseif ($status === 'Sold') {
+            $propertyListing->update(['status' => 'Sold']);
+            $propertyListing->property->update(['status' => 'Sold']);
 
             return redirect()->back()->with('success', 'Property officially sold!');
         }
 
         return redirect()->back()->with('success', "Deal {$status} successfully.");
     }
+
 
 }
