@@ -85,7 +85,7 @@ export default function Trippings({ trippings }) {
                     </p>
                 ) : (
                     <div className="space-y-6">
-                        {trippings.map((trip) => {
+                        {trippings.data.map((trip) => {
                             const now = dayjs();
                             const tripDate = dayjs(trip.visit_date);
                             const isFuture = tripDate.isAfter(now, "day");
@@ -96,7 +96,7 @@ export default function Trippings({ trippings }) {
                             return (
                                 <div
                                     key={trip.id}
-                                    className="bg-white rounded-xl shadow-md border hover:shadow-lg transition duration-200"
+                                    className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition duration-200"
                                 >
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 p-6">
                                         {/* Property Image */}
@@ -242,6 +242,28 @@ export default function Trippings({ trippings }) {
                         })}
                     </div>
                 )}
+
+                <div className="flex flex-wrap gap-2 mt-4 justify-end" aria-label="Pagination navigation">
+                    {trippings.links.map((link, i) => {
+                        return link.url ? (
+                            <Link
+                                key={i}
+                                className={`px-3 md:px-4 py-2 text-sm md:text-base rounded-md border transition ${
+                                    link.active ? 'bg-primary text-white font-semibold' : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                aria-current={link.active ? 'page' : undefined}
+                            />
+                        ) : (
+                            <span
+                                key={i}
+                                className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 bg-white border rounded-md cursor-not-allowed"
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                aria-disabled="true"
+                            />
+                        );
+                    })}
+                </div>
             </div>
         </BuyerLayout>
     );

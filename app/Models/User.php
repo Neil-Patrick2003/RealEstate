@@ -26,6 +26,7 @@ class User extends Authenticatable
         'address',
         'bio',
         'photo_url',
+        'broker_id'
 
     ];
 
@@ -74,7 +75,7 @@ class User extends Authenticatable
     }
 
     public function listing(){
-        return $this->hasMany(PropertyListing::class);
+        return $this->hasMany(PropertyListing::class, 'agent_id');
     }
 
     public function favourites(){

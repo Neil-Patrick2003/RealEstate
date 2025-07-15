@@ -16,13 +16,16 @@ function classNames(...classes) {
     return classes.filter(Boolean).join(' ');
 }
 
+
+
 const menus = [
-    { name: "Dashboard", Icon: faHouse, path: "/dashboard" },
-    { name: "Messages", Icon: faMessage, path: "/chat" },
-    { name: "Inquiries", Icon: faEnvelope, path: "/inquiries" },
-    { name: "Tripping", Icon: faCalendar, path: "/trippings" },
-    { name: "Favourites", Icon: faStar, path: "/favourites" },
-    { name: "Transactions", Icon: faChartSimple, path: "/transactions" },
+    { name: "Dashboard", Icon: faHouse, path: "/broker/dashboard" },
+    { name: "Properties", Icon: faMapLocationDot, path: "/broker/properties" },
+    { name: "Agents", Icon: faMessage, path: "/broker/agents" },
+    { name: "Inquiries", Icon: faEnvelope, path: "/broker/inquiries" },
+    { name: "Tripping", Icon: faCalendar, path: "/broker/trippings" },
+    { name: "Favourites", Icon: faStar, path: "/broker/favourites" },
+    { name: "Transactions", Icon: faChartSimple, path: "/broker/transactions" },
 ];
 
 const Sidebar_animation = {
@@ -51,7 +54,7 @@ const subMenuDrawer = {
     },
 };
 
-const SellerSidebar = ({ isOpen, setIsOpen }) => {
+const BrokerSlider = ({ isOpen, setIsOpen }) => {
     const [clicked, setClicked] = useState(null);
     const { url } = usePage();
 
@@ -167,4 +170,4 @@ const SellerSidebar = ({ isOpen, setIsOpen }) => {
     );
 };
 
-export default SellerSidebar;
+export default BrokerSlider;

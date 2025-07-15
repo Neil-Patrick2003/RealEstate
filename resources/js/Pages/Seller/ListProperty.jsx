@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import {router, useForm, usePage} from '@inertiajs/react';
+import React, {useEffect, useState} from 'react';
+import {router, useForm, Link, usePage} from '@inertiajs/react';
 import {
 
   Trash2,
@@ -18,6 +18,8 @@ import { Accordion, AccordionDetails, AccordionSummary, Typography } from '@mui/
 import Collapsable from '@/Components/collapsable/collapsable';
 import Toggle from '@/Components/Toggle';
 import ToastHandler from "@/Components/ToastHandler.jsx";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faArrowLeft} from "@fortawesome/free-solid-svg-icons";
 
 
 const ListProperty = ({ agents = [] }) => {
@@ -68,6 +70,7 @@ const ListProperty = ({ agents = [] }) => {
         setFeatureInput('');
         setData('boundary', null);
         setData('pin', null);
+        setIsOpenNotice(false); // Also saved in localStorage
       },
       forceFormData: true, // important for file uploads
     });
@@ -187,7 +190,17 @@ const ListProperty = ({ agents = [] }) => {
       }
     };
 
-    const [isOpenNotice, setIsOpenNotice] = useState(true);
+
+    const [isOpenNotice, setIsOpenNotice] = useState(() => {
+        // Check localStorage first
+        const stored = localStorage.getItem('isOpenNotice');
+        return stored === null ? true : stored === 'true';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('isOpenNotice', isOpenNotice);
+    }, [isOpenNotice]);
+
 
     const handleLoadAgent = () => {
         router.get('/all-agents', {}, {
@@ -195,8 +208,7 @@ const ListProperty = ({ agents = [] }) => {
             only: ['agents'],
             onSuccess: (page) => {
                 setLocalAgents(page.props.agents);
-                reset();
-                setPreview(null);
+                setIsOpenNotice(false);
             },
         });
     };
@@ -236,7 +248,20 @@ const ListProperty = ({ agents = [] }) => {
 
       <NavBar />
       <div className="max-w-5xl mx-auto">
-        <form onSubmit={handleSubmit}>
+          <div className="flex items-center px-8 py-4">
+              <Link
+                  href="/"   // replace with your actual back URL
+                  onClick={() => setIsOpenNotice(false)}
+                  className="flex items-center space-x-2 text-gray-600 text-sm cursor-pointer font-semibold"
+              >
+                  <FontAwesomeIcon icon={faArrowLeft} />
+                  <span>Back</span>
+              </Link>
+              <p className="ml-4 text-primary text-lg font-bold">Post Property</p>
+          </div>
+
+
+          <form onSubmit={handleSubmit}>
           <div className="">
             <section className="space-y-6 p-4 md:p-6 rounded-2xl">
               <Collapsable

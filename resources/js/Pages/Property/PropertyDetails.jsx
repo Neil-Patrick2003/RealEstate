@@ -15,17 +15,21 @@ import PropertyMap from "@/Components/PropertyMap.jsx";
 import {Link, router} from '@inertiajs/react';
 import Modal from '@/Components/Modal.jsx';
 import ToastHandler from "@/Components/ToastHandler.jsx";
+import PrimaryButton from "@/Components/PrimaryButton.jsx";
+import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
 
-export default function PropertyDetail({ property }) {
+export default function PropertyDetail({ property, deal }) {
     const [visibleImages, setVisibleImages] = useState([]);
     const [openImage, setOpenImage] = useState(false);
     const [isOpenModal, setIsOpenModal] =useState(false);
+    const [isOpenDealForm, setIsOpenDealForm] = useState(false)
     const [ message, setMessage] = useState('');
 
     const openModal = () =>{
         setIsOpenModal(true);
     }
 
+    console.log(property)
 
 
     useEffect(() => {
@@ -58,6 +62,9 @@ export default function PropertyDetail({ property }) {
 
         <div>
             <ToastHandler/>
+
+            <DealFormModal isOpen={isOpenDealForm} setIsOpen={setIsOpenDealForm} property={property} initialValue={deal}/>
+
             <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
                 <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
                     {/* Close Button */}
@@ -187,9 +194,19 @@ export default function PropertyDetail({ property }) {
                                     <span className="font-medium">{property.property_type} • {property.sub_type}</span>
                                 </div>
                             </div>
-                            <div className="bg-[#5C7934]/10 px-6 py-3 rounded-lg">
-                                <p className="text-gray-600 text-sm font-medium">Price</p>
-                                <p className="text-2xl font-bold text-[#5C7934]">₱ {property.price}</p>
+
+                            <div>
+                                <div className="bg-[#5C7934]/10 px-6 py-3 rounded-lg">
+                                    <p className="text-gray-600 text-sm font-medium">Price</p>
+                                    <p className="text-2xl font-bold text-[#5C7934]">₱ {property.price}</p>
+                                </div>
+
+                                {
+                                    property?.property_listing && <PrimaryButton onClick={() => setIsOpenDealForm(true)}>
+                                        {deal ? 'View My Offer': 'Make Offer'}
+                                    </PrimaryButton>
+                                }
+
                             </div>
                         </div>
 

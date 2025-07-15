@@ -18,6 +18,7 @@ import {
     faTrashAlt,
     faXmark,
 } from '@fortawesome/free-solid-svg-icons';
+import { Link } from '@inertiajs/react';
 
 dayjs.extend(relativeTime);
 
@@ -30,9 +31,13 @@ const Inquiries = ({
                        cancelledCount,
                        page = 1,
                        itemsPerPage = 10,
-                       status = 'All',
+                       status = '',
+                       buyerInquiryCount,
+                       sellerInquiryCount
                    }) => {
-    const [selectedStatus, setSelectedStatus] = useState(status);
+
+
+    const [selectedStatus, setSelectedStatus] = useState('All');
     const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
 
     const [selectedId, setSelectedId] = useState(null);
@@ -43,6 +48,8 @@ const Inquiries = ({
 
     // Loading states for patch requests (optional)
     const [loading, setLoading] = useState(false);
+
+    const [selectedType, setSelectedType] = useState('my');
 
     // Normalize status string for comparisons
     const normalizedStatus = selectedStatus.toLowerCase();
@@ -129,10 +136,12 @@ const Inquiries = ({
 
     // Helper to get inquiry type label
     const getInquiryType = (inquiry) => {
-        if (inquiry.buyer_id && inquiry.agent_id && !inquiry.seller_id) return 'Buyer Request';
-        if (inquiry.agent_id && inquiry.property_id) return 'Agent Request';
+        if (inquiry.buyer_id  && !inquiry.seller_id) return 'Buyer Request';
+        if (inquiry.agent_id && inquiry.property_id) return 'My Request';
         return 'Unknown Type';
     };
+
+
 
     // Helper for status badge classes
     const getStatusBadge = (status) => {
@@ -149,6 +158,8 @@ const Inquiries = ({
                 return 'bg-orange-100 text-orange-700';
         }
     };
+
+
 
     return (
         <AgentLayout>
@@ -195,9 +206,10 @@ const Inquiries = ({
                 {/* Filter Tabs */}
                 <div className="rounded-t-xl shadow-sm overflow-x-auto">
                     <AgentInquiriesFilterTab
-                        count={[inquiriesCount, pendingCount, acceptedCount, rejectedCount, cancelledCount]}
+                        count={[inquiriesCount, sellerInquiryCount, buyerInquiryCount,]}
                         selectedStatus={selectedStatus}
-                        setSelectedStatus={setSelectedStatus}
+                        selectedType={selectedType}
+                        setSelectedType={setSelectedType}
                         page={page}
                         selectedItemsPerPage={selectedItemsPerPage}
                     />
@@ -217,9 +229,9 @@ const Inquiries = ({
                                 className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 hover:shadow-md transition-all"
                             >
                                 <div>
-                  <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
-                    {getInquiryType(inquiry)}
-                  </span>
+                                  <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+                                    {getInquiryType(inquiry)}
+                                  </span>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-6 p-6">
                                     {/* Property Image */}
@@ -250,9 +262,9 @@ const Inquiries = ({
                                                         inquiry.status
                                                     )}`}
                                                 >
-                          <FontAwesomeIcon icon={faClock} className="mr-1" />
-                                                    {inquiry.status}
-                        </span>
+                                                  <FontAwesomeIcon icon={faClock} className="mr-1" />
+                                                                            {inquiry.status}
+                                                </span>
                                             </div>
 
                                             <p className="text-gray-600 text-sm mb-1">
@@ -306,54 +318,84 @@ const Inquiries = ({
 
                                         <div className="flex flex-col gap-2">
                                             <div className="flex gap-x-2">
-                                                {/* If pending, show Accept and Reject */}
-                                                {inquiry.status.toLowerCase() === 'pending' && (
-                                                    <span className="flex gap-2 w-full">
-                                                <button
-                                                    type="button"
-                                                    className="flex-1 px-4 py-2 bg-primary hover:bg-accent text-white rounded-md text-sm font-medium transition"
-                                                    onClick={() => handleOpenAcceptDialog(inquiry.id)}
-                                                    aria-label={`Accept inquiry ${inquiry.id}`}
-                                                >
-                                                  <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                                                  Accept
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="flex-1 px-4 py-2 border border-secondary hover:bg-secondary text-secondary hover:text-white rounded-md text-sm font-medium transition"
-                                                    onClick={() => handleOpenRejectDialog(inquiry.id)}
-                                                    aria-label={`Reject inquiry ${inquiry.id}`}
-                                                >
-                                                  <FontAwesomeIcon icon={faXmark} className="mr-2" />
-                                                  Reject
-                                                </button>
-                                              </span>
-                                                                    )}
+                                                {/* If it's the agent's own inquiry ("My Inquiry"), just show the status */}
+                                                {inquiry.seller_id && (
+                                                    <>
+                                                        {inquiry.status === 'Accepted' ? (
+                                                            <Link href={`/agents/my-listings/${inquiry.property.id}`}
+                                                                className="flex-1 border bg-secondary py-2 rounded-md flex justify-center items-center text-white "
 
-                                                {/* If accepted, show View */}
-                                                {inquiry.status.toLowerCase() === 'accepted' && (
-                                                    <button
-                                                        type="button"
-                                                        className="flex-1 px-4 py-2 bg-primary hover:bg-accent text-white rounded-md font-medium transition"
-                                                        aria-label={`View accepted inquiry ${inquiry.id}`}
-                                                    >
-                                                        <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                                                        View
-                                                    </button>
+                                                                aria-label={`Inquiry status is ${inquiry.status}`}
+                                                            >
+                                                                View in My Listing
+                                                            </Link>
+                                                        ) : (
+                                                            <button
+                                                                className="flex-1 border border-secondary py-2 rounded-md flex justify-center items-center cursor-not-allowed text-secondary bg-gray-50"
+                                                                disabled
+                                                                aria-label={`Inquiry status is ${inquiry.status}`}
+                                                            >
+                                                                {inquiry.status}
+                                                            </button>
+                                                        ) }
+                                                    </>
+
                                                 )}
 
-                                                {/* For other statuses, disabled button showing status */}
-                                                {inquiry.status.toLowerCase() !== 'pending' &&
-                                                    inquiry.status.toLowerCase() !== 'accepted' && (
-                                                        <button
-                                                            className="flex-1 border border-secondary py-2 rounded-md flex justify-center items-center cursor-not-allowed text-secondary bg-gray-50"
-                                                            disabled
-                                                            aria-label={`Inquiry status is ${inquiry.status}`}
-                                                        >
-                                                            {inquiry.status}
-                                                        </button>
-                                                    )}
+                                                {/* If it's a buyer inquiry */}
+                                                {!inquiry.seller_id && (
+                                                    <>
+                                                        {/* If pending, show Accept and Reject */}
+                                                        {inquiry.status.toLowerCase() === 'pending' && (
+                                                            <span className="flex gap-2 w-full">
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex-1 px-4 py-2 bg-primary hover:bg-accent text-white rounded-md text-sm font-medium transition"
+                                                                    onClick={() => handleOpenAcceptDialog(inquiry.id)}
+                                                                    aria-label={`Accept inquiry ${inquiry.id}`}
+                                                                >
+                                                                    <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                                                                    Accept
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex-1 px-4 py-2 border border-secondary hover:bg-secondary text-secondary hover:text-white rounded-md text-sm font-medium transition"
+                                                                    onClick={() => handleOpenRejectDialog(inquiry.id)}
+                                                                    aria-label={`Reject inquiry ${inquiry.id}`}
+                                                                >
+                                                                    <FontAwesomeIcon icon={faXmark} className="mr-2" />
+                                                                    Reject
+                                                                </button>
+                                                            </span>
+                                                        )}
+
+                                                        {/* If accepted, show View */}
+                                                        {inquiry.status.toLowerCase() === 'accepted' && (
+                                                            <button
+                                                                type="button"
+                                                                className="flex-1 px-4 py-2 bg-primary hover:bg-accent text-white rounded-md font-medium transition"
+                                                                aria-label={`View accepted inquiry ${inquiry.id}`}
+                                                            >
+                                                                <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                                                                View
+                                                            </button>
+                                                        )}
+
+                                                        {/* Other statuses - disabled button */}
+                                                        {inquiry.status.toLowerCase() !== 'pending' &&
+                                                            inquiry.status.toLowerCase() !== 'accepted' && (
+                                                                <button
+                                                                    className="flex-1 border border-secondary py-2 rounded-md flex justify-center items-center cursor-not-allowed text-secondary bg-gray-50"
+                                                                    disabled
+                                                                    aria-label={`Inquiry status is ${inquiry.status}`}
+                                                                >
+                                                                    {inquiry.status}
+                                                                </button>
+                                                            )}
+                                                    </>
+                                                )}
                                             </div>
+
                                         </div>
                                     </div>
                                 </div>

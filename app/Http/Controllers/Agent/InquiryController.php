@@ -15,13 +15,25 @@ use Inertia\Inertia;
 class InquiryController extends Controller
 {
     public function index(Request $request){
+
         $inquiries = Inquiry::with('seller', 'agent', 'property', 'messages')
             ->where('agent_id', auth()->id())
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
-                return $q->where('status', '=', $request->status);
+                $q->where('status', $request->status);
             })
-            ->orderByDesc('created_at') // ✅ sort before paginate
+            ->when($request->filled('type') && $request->type === 'my', function ($q) {
+                $q->whereNotNull('seller_id');
+            })
+            ->when($request->filled('type') && $request->type === 'buyer', function ($q) {
+                $q->whereNotNull('buyer_id');
+            })
+            ->orderByDesc('created_at')
             ->paginate($request->get('items_per_page', 10));
+
+
+
+        $buyerInquiryCount = Inquiry::whereNotNull('buyer_id')->count();
+        $sellerInquiryCount = Inquiry::whereNotNull('seller_id')->count();
 
         $inquiryCount = Inquiry::where('agent_id', auth()->id())->count();
 
@@ -41,7 +53,6 @@ class InquiryController extends Controller
             ->where('status', 'cancelled')
             ->count();
 
-
         return Inertia::render('Agent/Inquiry/Inquiries' , [
             'inquiries' => $inquiries,
             'inquiryCount' => $inquiryCount,
@@ -49,6 +60,8 @@ class InquiryController extends Controller
             'acceptedCount' => $acceptedCount,
             'pendingCount' => $pendingCount,
             'cancelledCount' => $cancelledCount,
+            'buyerInquiryCount' => $buyerInquiryCount,
+            'sellerInquiryCount' => $sellerInquiryCount,
         ]);
     }
 

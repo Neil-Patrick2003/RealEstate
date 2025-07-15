@@ -113,7 +113,7 @@ export default function Properties({
 
     return (
         <AgentLayout>
-            <div className="px-2 py-4">
+            <div className="px-2 py-2   ">
                 <h1 className="text-2xl font-bold mb-4">My Property Listings</h1>
                 <p className="text-gray-700 mb-6 text-sm  md:text-medium font-sans">
                     This is the agent dashboard page where you can view and manage the property listings you handle for sellers. Keep track of active, pending, or sold properties easily from here.
@@ -228,12 +228,15 @@ export default function Properties({
                                                         alt={property.property.title}
                                                         className="w-14 h-14 object-cover rounded-md"
                                                     />
-                                                    <div className="flex flex-col">
-                                                        <p className="font-semibold text-gray-800">{property.property.title}</p>
-                                                        <p className="text-xs text-gray-500">
+                                                    <div className="flex max-w-[10rem] flex-col">
+                                                        <p className="font-semibold truncate text-gray-800" title={property.property.title}>
+                                                            {property.property.title}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 truncate" title={`${property.property.property_type} | ${property.property.sub_type}`}>
                                                             {property.property.property_type} | {property.property.sub_type}
                                                         </p>
                                                     </div>
+
                                                 </div>
                                             </td>
                                             <td className="p-3 whitespace-nowrap md:table-cell">

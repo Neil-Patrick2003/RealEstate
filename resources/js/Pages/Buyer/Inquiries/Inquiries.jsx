@@ -14,9 +14,9 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useState } from "react";
+import React, { useState } from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
-import {Head, router} from "@inertiajs/react";
+import {Head, Link, router} from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 
 dayjs.extend(relativeTime);
@@ -40,9 +40,8 @@ export default function Inquiries({
                                       status = "",
                                       allCount,
                                       pendingCount,
-                                      scheduledCount,
+                                      acceptedCount,
                                       cancelledCount,
-                                      closeCount,
                                       rejectedCount,
                                   }) {
     const [isAddVisitModal, setIsAddVisitModal] = useState(false);
@@ -109,9 +108,7 @@ export default function Inquiries({
                         count={[
                             allCount,
                             pendingCount,
-                            scheduledCount,
-
-                            closeCount,
+                            acceptedCount,
                             cancelledCount,
                             rejectedCount,
                         ]}
@@ -134,6 +131,9 @@ export default function Inquiries({
 
                         // Disable scheduling if not accepted or cancelled
                         const canScheduleVisit = isAccepted && !isCancelled;
+
+
+                        console.log(inquiry);
 
                         return (
                             <div
@@ -227,9 +227,16 @@ export default function Inquiries({
                                         </div>
 
                                         <div className="flex flex-col gap-2">
-                                            {/* Schedule Visit Button or Scheduled label */}
-                                            {canScheduleVisit ? (
-                                                !inquiry.trippings ? (
+                                            {isAccepted ? (
+                                                inquiry.trippings?.length > 0 ? (
+                                                    <div
+                                                        className="w-full flex-center justify-center px-4 py-2 border border-secondary bg-green-100 text-green-800 rounded-md font-medium transition"
+                                                        aria-label="Visit Scheduled"
+                                                    >
+                                                        <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
+                                                        Scheduled!
+                                                    </div>
+                                                ) : (
                                                     <button
                                                         type="button"
                                                         className="w-full px-4 py-2 border border-secondary hover:bg-primary     text-secondary rounded-md font-medium transition"
@@ -241,28 +248,55 @@ export default function Inquiries({
                                                             });
                                                             setIsAddVisitModal(true);
                                                         }}
-                                                    >
-                                                        <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                        Schedule Visit
-                                                    </button>
-                                                ) : (
-                                                    <div
-                                                        className="w-full flex-center justify-center px-4 py-2 border border-secondary bg-green-100 text-green-800 rounded-md font-medium transition"
-                                                        aria-label="Visit Scheduled"
-                                                    >
-                                                        <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                        Scheduled!
-                                                    </div>
+                                                    >Schedule Visit</button>
                                                 )
                                             ) : (
                                                 <div
-                                                    className="w-full flex-center justify-center px-4 py-2 border border-gray-300 text-gray-400 rounded-md font-medium transition"
-                                                    aria-label="Cannot schedule visit"
+                                                    className="w-full flex-center justify-center px-4 py-2 border border-secondary bg-green-100 text-green-800 rounded-md font-medium transition"
+                                                    aria-label="Visit Scheduled"
                                                 >
                                                     <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                    Schedule Visit
+                                                    {inquiry.status}
                                                 </div>
                                             )}
+
+
+                                            {/*/!* Schedule Visit Button or Scheduled label *!/*/}
+                                            {/*{isAccepted ? (*/}
+                                            {/*    !inquiry.trippings ? (*/}
+                                            {/*        <button*/}
+                                            {/*            type="button"*/}
+                                            {/*            className="w-full px-4 py-2 border border-secondary hover:bg-primary     text-secondary rounded-md font-medium transition"*/}
+                                            {/*            onClick={() => {*/}
+                                            {/*                setSelectedVisitData({*/}
+                                            {/*                    property: inquiry.property,*/}
+                                            {/*                    agentId: agent.id,*/}
+                                            {/*                    inquiryId: inquiry.id,*/}
+                                            {/*                });*/}
+                                            {/*                setIsAddVisitModal(true);*/}
+                                            {/*            }}*/}
+                                            {/*        >*/}
+                                            {/*            <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />*/}
+                                            {/*            Schedule Visit*/}
+                                            {/*        </button>*/}
+                                            {/*    ) : (*/}
+                                            {/*        <div*/}
+                                            {/*            className="w-full flex-center justify-center px-4 py-2 border border-secondary bg-green-100 text-green-800 rounded-md font-medium transition"*/}
+                                            {/*            aria-label="Visit Scheduled"*/}
+                                            {/*        >*/}
+                                            {/*            <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />*/}
+                                            {/*            Scheduled!*/}
+                                            {/*        </div>*/}
+                                            {/*    )*/}
+                                            {/*) : (*/}
+                                            {/*    <div*/}
+                                            {/*        className="w-full flex-center justify-center px-4 py-2 border border-gray-300 text-gray-400 rounded-md font-medium transition"*/}
+                                            {/*        aria-label="Cannot schedule visit"*/}
+                                            {/*    >*/}
+                                            {/*        <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />*/}
+                                            {/*        Schedule Visit*/}
+                                            {/*    </div>*/}
+                                            {/*)}*/}
 
                                             {/* Reply and Cancel Buttons */}
                                             <div className="flex gap-x-2">
@@ -309,6 +343,29 @@ export default function Inquiries({
                         );
                     })
                 )}
+
+
+                    <div className="flex flex-wrap gap-2 justify-end" aria-label="Pagination navigation">
+                        {inquiries.links.map((link, i) => {
+                            return link.url ? (
+                                <Link
+                                    key={i}
+                                    className={`px-3 md:px-4 py-2 text-sm md:text-base rounded-md border transition ${
+                                        link.active ? 'bg-primary text-white font-semibold' : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    aria-current={link.active ? 'page' : undefined}
+                                />
+                            ) : (
+                                <span
+                                    key={i}
+                                    className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 bg-white border rounded-md cursor-not-allowed"
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    aria-disabled="true"
+                                />
+                            );
+                        })}
+                    </div>
             </div>
         </BuyerLayout>
     );

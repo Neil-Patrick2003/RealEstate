@@ -2,6 +2,7 @@ import {usePage} from '@inertiajs/react';
 import {useMemo} from 'react';
 import { format } from 'date-fns';
 const ChatMessage = ({ message }) => {
+
     const {user} = usePage().props.auth
 
     const isSentByMe = useMemo(
@@ -9,28 +10,40 @@ const ChatMessage = ({ message }) => {
             [message, user]
     );
 
-    return <div
-        className={`flex ${
-            isSentByMe ? 'justify-end' : 'justify-start'
-        } mb-4 items-end`}
-    >
-        <div
-            className={`max-w-[70%] p-3 ${
-                isSentByMe
-                    ? 'bg-blue-500 text-white rounded-tl-3xl rounded-tr-3xl rounded-bl-3xl'
-                    : 'bg-blue-500 text-white rounded-tl-3xl rounded-tr-3xl rounded-br-3xl'
-            }`}
-        >
-            <p className="break-words">{message.content}</p>
-            {message.created_at && (
-                <div
-                    className={`text-xs mt-1`}
-                >
-                    {format(message.created_at, 'h:mm a')}
-                </div>
+    return (
+        <div className={`flex items-end mb-4 px-4 ${isSentByMe ? 'justify-end' : 'justify-start'}`}>
+
+            {!isSentByMe &&  (
+                    <div className="w-8 h-8 rounded-full bg-secondary text-white font-semibold flex items-center justify-center mr-2 shadow-sm text-sm uppercase">
+                        {message.sender?.name?.charAt(0) || '?'}
+                    </div>
             )}
+
+
+            <div className="relative max-w-[75%]">
+                <div
+                    className={`px-4 py-3 text-sm leading-relaxed break-words shadow-md
+          ${isSentByMe
+                        ? 'bg-accent text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl'
+                        : 'bg-gray-100 text-gray-900 rounded-tl-2xl rounded-tr-2xl rounded-br-2xl'
+                    }`}
+                >
+                    <p>{message.content}</p>
+
+                    {message.created_at && (
+                        <div
+                            className={`text-[10px] mt-1 ${
+                                isSentByMe ? 'text-white/70 text-right' : 'text-gray-500 text-right'
+                            }`}
+                        >
+                            {format(message.created_at, 'h:mm a')}
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
-    </div>
+    );
+
 }
 
 export default ChatMessage

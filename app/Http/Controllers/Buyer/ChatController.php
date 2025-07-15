@@ -1,11 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Seller;
+namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChatChannel;
-use Illuminate\Container\Attributes\Auth;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ChatController extends Controller
@@ -18,10 +16,10 @@ class ChatController extends Controller
             ->first();
 
         if ($channel) {
-            return redirect(route('seller.chat.channels.show', $channel->id));
+            return redirect(route('buyer.chat.channels.show', $channel->id));
         }
 
-        return Inertia::render('Seller/Chat/Chat', [
+        return Inertia::render('Buyer/Chat/Chat', [
             'channels' => [],
             'channel' => $channel
         ]);

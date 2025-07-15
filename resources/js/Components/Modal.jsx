@@ -19,6 +19,7 @@ export default function Modal({
     lg: 'sm:max-w-lg',
     xl: 'sm:max-w-xl',
     '2xl': 'sm:max-w-2xl',
+      '4xl': 'sm:max-w-4xl',
   }[maxWidth];
 
   // This handles ESC key close or programmatic close

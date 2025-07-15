@@ -35,7 +35,7 @@ export default function ListingRequirements({ closeModal }) {
   const maxSteps = steps.length;
 
   React.useEffect(() => {
-    setCountdown(5);
+    setCountdown(3);
     if (activeStep === maxSteps) return;
 
     const timer = setInterval(() => {
@@ -164,7 +164,7 @@ export default function ListingRequirements({ closeModal }) {
           )
         }
         backButton={
-          activeStep === 0 ? (  
+          activeStep === 0 ? (
             <Link
               href="/"
               className="text-red-600 text-sm font-semibold"

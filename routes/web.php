@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DealController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Seller\ChannelController;
 use App\Http\Controllers\Seller\ChatController;
@@ -209,7 +210,13 @@ Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationContr
 //------------------------------------------buyer---------------------------------------------------
 Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
+Route::middleware(['auth'])->group(function () {
+    Route::post('/property-listings/{propertyListing}/deals', [DealController::class, 'store'])->name('property-listings.deals.store');
+    Route::put('/property-listings/{propertyListing}/deals/{deal}', [DealController::class, 'update'])->name('property-listings.deals.update');
+});
+
 Route::middleware(['auth','role:Buyer' ])->group(function () {
+
     Route::get('/dashboard', function () {
 
         $properties = \App\Models\Property::with('coordinate')
@@ -235,6 +242,9 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
     Route::patch('/inquiries/{id}/cancel', [\App\Http\Controllers\Buyer\InquiryController::class, 'cancel']);
 
+    Route::get('/chat', [\App\Http\Controllers\Buyer\ChatController::class, 'index'])->name('buyer.chat.index');
+    Route::get('/chat/channels/{channel}', [\App\Http\Controllers\Buyer\ChannelController::class, 'show'])->name('buyer.chat.channels.show');
+
 
 
     //triping
@@ -247,9 +257,24 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
 
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
 
-
-
 });
+
+//---------------------------------broker----------------------------
+Route::get('/broker/dashboard', [\App\Http\Controllers\Broker\BrokerController::class, 'index'])->name('broker.dashboard');
+Route::get('/broker/agents', [\App\Http\Controllers\Broker\AgentController::class, 'index'])->name('broker.agents');
+Route::get('/broker/agents/{id}', [\App\Http\Controllers\Broker\AgentController::class, 'show']);
+Route::post('/broker/agents/create', [\App\Http\Controllers\Broker\AgentController::class, 'store']);
+Route::patch('/broker/agents/update/{agent}', [\App\Http\Controllers\Broker\AgentController::class, 'update']);
+Route::delete('/broker/agents/{id}/delete', [\App\Http\Controllers\Broker\AgentController::class, 'destroy']);
+
+
+
+Route::get('/broker/properties', [\App\Http\Controllers\Broker\PropertyController::class, 'index'])->name('broker.properties');
+Route::patch('/broker/properties/{propertyListing}/publish', [\App\Http\Controllers\Broker\PropertyController::class, 'publish']);
+Route::patch('/broker/properties/{propertyListing}/unpublish', [\App\Http\Controllers\Broker\PropertyController::class, 'unpublish']);
+Route::get('/broker/properties/{propertyListing}', [\App\Http\Controllers\Broker\PropertyController::class, 'show']);
+
+
 
 
 

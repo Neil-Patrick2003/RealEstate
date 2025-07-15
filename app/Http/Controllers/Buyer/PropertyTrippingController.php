@@ -17,7 +17,7 @@ class PropertyTrippingController extends Controller
         $trippings = PropertyTripping::with('property', 'agent')
             ->where('buyer_id', auth()->id())
             ->latest()
-            ->get();
+            ->paginate(10);
 
         return Inertia::render('Buyer/Trippins/Trippings' , [
             'trippings' => $trippings
@@ -47,17 +47,6 @@ class PropertyTrippingController extends Controller
             'status' => 'pending',
             'notes' => $validated['notes'],
         ]);
-
-        //update inquiry status into Follow-Up Scheduled
-
-        $inquiry = Inquiry::findOrFail($validated['inquiry_id']);
-
-        $inquiry->update([
-            'status' => 'Follow-Up Scheduled'
-        ]);
-
-
-
 
         return redirect()->back()->with('success', 'Schedule tripping successfully.' );
     }

@@ -5,8 +5,7 @@ import { router } from '@inertiajs/react';
 const tabs = [
     { name: 'All', color: 'black' },
     { name: 'Pending', color: 'orange' },
-    { name: 'Scheduled', color: 'green' },
-    { name: 'Close', color: 'blue' },
+    { name: 'Accepted', color: 'green' },
     { name: 'Cancelled', color: 'yello' },
     { name: 'Rejected', color: 'red' },
 
@@ -33,8 +32,7 @@ export default function BuyerInquiriesFilterTab({ count, selectedStatus, setSele
         const colorMap = {
             All: isActive ? 'bg-black text-white' : 'bg-black text-white',
             Pending: isActive ? 'bg-orange-400 text-white' : 'bg-orange-100 text-orange-800',
-            Scheduled: isActive ? 'bg-green-400 text-white' : 'bg-green-100 text-green-800',
-            Close: isActive ? 'bg-blue-400 text-white' : 'bg-red-100 text-red-800',
+            Accepted: isActive ? 'bg-green-400 text-white' : 'bg-green-100 text-green-800',
             Cancelled: isActive ? 'bg-yellow-400 text-white' : 'bg-red-100 text-red-800',
             Rejected: isActive ? 'bg-red-400 text-white' : 'bg-red-100 text-red-800',
 
