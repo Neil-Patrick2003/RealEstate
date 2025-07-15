@@ -3,7 +3,6 @@ import {useMemo} from 'react';
 import { format } from 'date-fns';
 const ChatMessage = ({ message }) => {
 
-    console.log(message);
     const {user} = usePage().props.auth
 
     const isSentByMe = useMemo(
@@ -14,19 +13,10 @@ const ChatMessage = ({ message }) => {
     return (
         <div className={`flex items-end mb-4 px-4 ${isSentByMe ? 'justify-end' : 'justify-start'}`}>
 
-            {!isSentByMe && (
-                message.sender?.photo_url ? (
-                    <img
-                        src={`/storage/${message.sender.photo_url}`}
-                        alt={message.sender.name}
-                        className="w-8 h-8 rounded-full mr-2 self-end shadow-sm object-cover"
-                        onError={(e) => (e.target.style.display = 'none')}
-                    />
-                ) : (
+            {!isSentByMe &&  (
                     <div className="w-8 h-8 rounded-full bg-secondary text-white font-semibold flex items-center justify-center mr-2 shadow-sm text-sm uppercase">
                         {message.sender?.name?.charAt(0) || '?'}
                     </div>
-                )
             )}
 
 

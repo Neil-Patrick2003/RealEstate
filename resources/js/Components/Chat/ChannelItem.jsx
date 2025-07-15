@@ -12,11 +12,21 @@ const ChannelItem = ({ channel, isActive = false}) => {
     }, [user, channel.members]);
 
     return <Link
-            className={`px-2 py-4 cursor-pointer w-full flex ${isActive ? 'bg-green-100': 'bg-transparent'}`}
-            href={`${url.includes('agents') ? '/agents': '/seller'}/chat/channels/${channel.id}`}
+            href={`${url.includes('agents') ? '/agents' : '/seller'}/chat/channels/${channel.id}`}
+            className={`group flex items-center w-full px-4 py-3 rounded-lg transition-all duration-200
+            ${isActive ? 'bg-green-100 text-primary' : 'hover:bg-gray-100 text-gray-700'}
+        `}
         >
+        <span
+                className="w-10 h-10 rounded-full bg-secondary text-white font-semibold flex items-center justify-center mr-3 shadow-sm text-sm uppercase"
+            >
+            {title?.charAt(0) || '?'}
+        </span>
+
+        <div className="flex-1 truncate font-medium text-sm group-hover:text-primary">
             {title}
-        </Link>
+        </div>
+    </Link>
 }
 
 export default ChannelItem

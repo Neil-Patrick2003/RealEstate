@@ -2,7 +2,7 @@ import ChannelItem from './ChannelItem.jsx'
 import ChannelView from './ChannelView.jsx'
 
 const ChatView = ({channels = [], channel = null}) => {
-    return <div className="flex h-[calc(100vh-120px)] border rounded-2xl">
+    return <div className="flex h-[calc(100vh-120px)] border border-gray-100 shadow rounded-2xl">
         <div className="mt-2 w-1/4 border-r">
             {channels.map(item => <ChannelItem key={item.id} channel={item} isActive={channel?.id === item.id}/>)}
         </div>

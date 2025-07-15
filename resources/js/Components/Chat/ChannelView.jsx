@@ -32,8 +32,10 @@ const ChannelView = ({ channel }) => {
         messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+
+
     return <div className="flex flex-col h-full">
-        <div className="border-b px-2 py-4">
+        <div className="border-b  rounded-tr-xl  text-primary font-semibold  px-6 py-8">
             {title}
         </div>
 
