@@ -77,4 +77,5 @@ class Property extends Model
     }
 
 
+
 }

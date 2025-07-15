@@ -12,13 +12,14 @@ class PropertyController extends Controller
     public function show(Property $property )
     {
         $deal = null;
-        $property->load('images', 'features', 'coordinate', 'seller', 'property_listing');
+        $property->load('images', 'features', 'coordinate', 'seller', 'property_listing.agent', );
 
         if ($property->property_listing) {
             $deal = Deal::where('property_listing_id', $property->property_listing->id)
                 ->where('buyer_id', auth()->user()->id)
                 ->first();
         }
+
 
         return Inertia::render('Property/PropertyDetails', [
             'property' => $property,

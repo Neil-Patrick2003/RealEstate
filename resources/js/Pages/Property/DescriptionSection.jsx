@@ -40,7 +40,10 @@ export default function DescriptionSection({
                     </div>
                     <div className="bg-[#5C7934]/10 px-6 py-3 rounded-lg">
                         <p className="text-gray-600 text-sm font-medium">Price</p>
-                        <p className="text-2xl font-bold text-[#5C7934]">₱ {price}</p>
+                        <p className="text-2xl font-bold text-[#5C7934]">{Number(price).toLocaleString('en-PH', {
+                            style: 'currency',
+                            currency: 'PHP',
+                        })}</p>
                     </div>
                 </div>
 
