@@ -30,9 +30,14 @@ class BuyerController extends Controller
             })
             ->get();
 
+        $propertiesWithMap = Property::where('status', 'Published')
+            ->with('coordinate')
+            ->get();
+
 
         return Inertia::render('Buyer/Properties/Properties', [
             'properties' => $properties,
+            'propertiesWithMap' => $propertiesWithMap,
         ]);
 
 
