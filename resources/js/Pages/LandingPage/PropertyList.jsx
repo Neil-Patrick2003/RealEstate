@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { router } from '@inertiajs/react';
+import { router, Link } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as SolidHeart } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as RegularHeart } from '@fortawesome/free-regular-svg-icons';
-import { Link } from '@inertiajs/react';
 
 const PropertyList = ({ properties, favouriteIds = [] }) => {
     const [favourites, setFavourites] = useState(new Set(favouriteIds));
@@ -38,9 +37,14 @@ const PropertyList = ({ properties, favouriteIds = [] }) => {
     const isFavourite = (id) => favourites.has(id);
 
     return (
-        <div className="px-4 md:px-8 lg:px-32 py-6">
-            <h1 className="text-white text-2xl font-bold mb-4">All Properties</h1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="px-4  h-screen md:px-8 lg:px-32 py-6">
+            <h1 className="text-gray-00 text-xl font-bold mb-4 flex-center-between">
+                Recent Properties
+                <Link href='/all-properties'>
+                    <span className=' text-gray-500 text-sm'>See All</span>
+                </Link>
+            </h1>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mt-8 lg:grid-cols-4 gap-6">
                 {properties.map((property) => (
                     <div
                         key={property.id}

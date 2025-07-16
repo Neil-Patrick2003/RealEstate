@@ -24,7 +24,7 @@ const menus = [
     { name: "Tripping", Icon: faCalendar, path: "/trippings" },
     { name: "Favourites", Icon: faStar, path: "/favourites" },
     { name: "Deal", Icon: faHandshakeAngle, path: "/deals" },
-    { name: "Transactions", Icon: faChartSimple, path: "/transactions" },
+    // { name: "Transactions", Icon: faChartSimple, path: "/transactions" },
 ];
 
 const Sidebar_animation = {

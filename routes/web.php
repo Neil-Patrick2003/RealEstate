@@ -165,6 +165,9 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
         ]);
     })->name('dashboard');
 
+
+    Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
+
     //sent inquiries
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
 
@@ -243,7 +246,8 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/maps', function (Request $request) {
 
-    $properties = \App\Models\Property::where('status', 'Published')->get();
+    $properties = \App\Models\Property::with('coordinate')
+    ->where('status', 'Published')->get();
 
 //    dd($properties->toArray());
     return Inertia::render('Buyer/Properties/AllProperties', [

@@ -5,7 +5,7 @@ export default function PropertyCard({property}){
     return(
         <Link href={`/properties/${property.id}`}>
             <div key={property.id} className="min-w-[75%] sm:min-w-[300px] md:min-w-[350px] max-w-[350px] bg-white rounded-xl shadow-md snap-start hover:shadow-lg hover:scale-[1.02] transition relative">
-                <div className="relative">
+                <div className="flex">
                     <img
                         src={`/storage/${property.image_url}`}
                         alt={property.title}
@@ -21,6 +21,7 @@ export default function PropertyCard({property}){
                 </div>
                 <div className="p-4 pt-6 space-y-1">
                     <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">{property.title}</h3>
+                    <p className="text-sm text-gray-500 text-sm">{property.property_type}</p>
                     <p className="text-sm text-gray-500">3 Bed · 2 Bath · 1,800 sqft</p>
                     <p className="text-xl font-bold text-green-600 mt-1">$321,900</p>
                 </div>

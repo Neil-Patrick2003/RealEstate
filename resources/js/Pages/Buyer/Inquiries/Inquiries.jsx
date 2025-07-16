@@ -300,23 +300,19 @@ export default function Inquiries({
 
                                             {/* Reply and Cancel Buttons */}
                                             <div className="flex gap-x-2">
-                                                <button
-                                                    type="button"
-                                                    className={`w-full px-4 py-2 text-white rounded-md text-sm font-medium transition ${
+                                                <Link href={`/properties/${property.id}`}
+
+                                                    className={`w-full text-center px-4 py-2 text-white rounded-md text-sm font-medium transition ${
                                                         isCancelled
                                                             ? "bg-gray-400 cursor-not-allowed"
                                                             : "bg-primary hover:bg-accent"
                                                     }`}
-                                                    onClick={() => {
-                                                        if (!isCancelled) {
-                                                            alert("Reply functionality not implemented.");
-                                                        }
-                                                    }}
+
                                                     disabled={isCancelled}
                                                 >
                                                     <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
-                                                    Reply
-                                                </button>
+                                                    View
+                                                </Link>
 
                                                 {isCancelled ? (
                                                     <div className="w-full py-2 border rounded-md bg-gray-100 text-center text-gray-500 font-medium">

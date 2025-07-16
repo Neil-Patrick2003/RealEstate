@@ -240,7 +240,7 @@
                                                 </span>
                                             </td>
                                             <td className="p-3 whitespace-nowrap">
-                                                {property.property_type === 'land' ? property.lot : property.floor_area} m²
+                                                {property.property_type === 'Land' ? property.lot_area : property.floor_area} m²
                                             </td>
                                             <td className="p-3 text-right">
                                                 <Dropdown>
