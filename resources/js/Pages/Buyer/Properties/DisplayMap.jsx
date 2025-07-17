@@ -13,18 +13,20 @@ import L from 'leaflet';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Fix default Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconUrl,
     shadowUrl: iconShadow,
 });
 
+
+
+
 const FitBounds = ({ bounds }) => {
     const map = useMap();
 
     useEffect(() => {
-        if (bounds && bounds.length > 0) {
+        if (bounds.length > 0) {
             const leafletBounds = L.latLngBounds(bounds);
             map.fitBounds(leafletBounds, { padding: [50, 50] });
         }
@@ -37,6 +39,20 @@ const MapView = ({ properties = [], onMarkerClick }) => {
     const [currentPos, setCurrentPos] = useState(null);
     const mapRef = useRef(null);
     const [allBounds, setAllBounds] = useState([]);
+
+    const getPolygonColor = (type) => {
+        switch (type?.toLowerCase()) {
+            case 'land':
+                return '#A8D5BA'; // soft green
+            case 'house':
+                return '#FFD59E'; // soft orange
+            case 'condo':
+                return '#CDB4DB'; // soft purple
+            default:
+                return '#AEDFF7'; // soft blue
+        }
+    };
+
 
     useEffect(() => {
         if (navigator.geolocation) {
@@ -63,16 +79,19 @@ const MapView = ({ properties = [], onMarkerClick }) => {
                 if (c.type === 'marker') {
                     const lat = parseFloat(c.coordinates.lat ?? c.coordinates[1]);
                     const lng = parseFloat(c.coordinates.lng ?? c.coordinates[0]);
-                    bounds.push([lat, lng]);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        bounds.push([lat, lng]);
+                    }
                 }
 
                 if (c.type === 'polygon') {
-                    const rings = c.geometry?.coordinates?.[0];
+                    const rings = c.coordinates?.geometry?.coordinates?.[0];
                     if (Array.isArray(rings)) {
-                        const latlngs = rings.map((coord) => [
-                            parseFloat(coord[1]),
-                            parseFloat(coord[0]),
-                        ]);
+                        const latlngs = rings.map(([lng, lat]) => {
+                            if (isNaN(lat) || isNaN(lng)) return null;
+                            return [lat, lng];
+                        }).filter(Boolean);
+
                         bounds.push(...latlngs);
                     }
                 }
@@ -88,15 +107,17 @@ const MapView = ({ properties = [], onMarkerClick }) => {
         return <div className="text-center mt-6 text-gray-600">📍 Locating you...</div>;
     }
 
+
+
     return (
-        <div className=" w-full">
+        <div className="w-full">
             <MapContainer
                 center={currentPos}
                 zoom={14}
-                scrollWheelZoom={false}    // disable scroll wheel zoom
-                doubleClickZoom={false}    // disable zoom on double click
-                zoomControl={false}        // hide zoom control (+/- buttons)
-                dragging={true}            // keep dragging enabled (optional)
+                scrollWheelZoom={true}
+                doubleClickZoom={false}
+                zoomControl={true}
+                dragging={true}
                 style={{ height: '30vh', width: '100%' }}
                 whenCreated={(mapInstance) => {
                     mapRef.current = mapInstance;
@@ -109,19 +130,16 @@ const MapView = ({ properties = [], onMarkerClick }) => {
 
                 <FitBounds bounds={allBounds} />
 
-                {/* Current location marker */}
                 <Marker position={currentPos}>
                     <Popup>You are here 📍</Popup>
                 </Marker>
 
-
-
                 {properties.map((property) =>
                     property.coordinate.map((c, index) => {
-
                         if (c.type === 'marker') {
                             const lat = parseFloat(c.coordinates.lat ?? c.coordinates[1]);
                             const lng = parseFloat(c.coordinates.lng ?? c.coordinates[0]);
+                            if (isNaN(lat) || isNaN(lng)) return null;
 
                             return (
                                 <Marker
@@ -131,33 +149,39 @@ const MapView = ({ properties = [], onMarkerClick }) => {
                                         click: () => onMarkerClick?.(property),
                                     }}
                                 >
-                                    <Popup>{property.name || 'Property Marker'}</Popup>
+                                    <Popup>{property.title || 'Property Marker'}</Popup>
                                 </Marker>
                             );
                         }
 
                         if (c.type === 'polygon') {
-                            const rings = c.geometry?.coordinates?.[0];
+                            const rings = c.coordinates?.geometry?.coordinates?.[0];
                             if (!Array.isArray(rings)) return null;
 
-                            const latlngs = rings.map((coord) => [
-                                parseFloat(coord[1]), // lat
-                                parseFloat(coord[0]), // lng
-                            ]);
+                            const latlngs = rings.map(([lng, lat]) => {
+                                if (isNaN(lat) || isNaN(lng)) return null;
+                                return [lat, lng];
+                            }).filter(Boolean);
 
                             return (
                                 <Polygon
                                     key={`${property.id}-polygon-${index}`}
                                     positions={latlngs}
-                                    pathOptions={{ color: 'blue', fillOpacity: 0.3 }}
+                                    pathOptions={{
+                                        color: getPolygonColor(property.property_type),
+                                        fillColor: getPolygonColor(property.property_type),
+                                        fillOpacity: 0.3,
+                                    }}
                                 >
-                                    <Popup>{property.name || 'Property Area'}</Popup>
+                                    <Popup>{property.title}</Popup>
                                 </Polygon>
+
                             );
                         }
+
+                        return null;
                     })
                 )}
-
             </MapContainer>
         </div>
     );
