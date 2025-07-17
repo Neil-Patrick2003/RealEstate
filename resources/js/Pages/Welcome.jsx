@@ -73,6 +73,7 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
                     />
                 </div>
             </div>
+<<<<<<< HEAD
 
             {/* Filters and PropertyList - pulled up to peek */}
             <div className="relative mt-12  rounded-t-3xl shadow-lg px-8 py-6 bg-gray-100">
@@ -81,7 +82,13 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
                     <PropertyList properties={properties} />
 
 
+=======
+            <div clas>
+                <PropertyList properties={properties} />
+>>>>>>> f8ac07a239b9057814424fcccc20ff674d890fa8
             </div>
+
+
 
             {/* Footer */}
             <Footer />

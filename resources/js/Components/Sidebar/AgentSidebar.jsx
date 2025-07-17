@@ -9,7 +9,7 @@ import {
     faMapLocationDot,
     faEnvelope,
     faCalendar,
-    faChartSimple,
+    faChartSimple, faHandshakeAngle,
 } from '@fortawesome/free-solid-svg-icons';
 
 function classNames(...classes) {
@@ -58,6 +58,10 @@ const menus = [
         name: "Tripping",
         Icon: faCalendar,
         path: "/agents/trippings",
+    },{
+        name: "Deal",
+        Icon: faHandshakeAngle,
+        path: "/agents/deal",
     },
     {
         name: "Sales",

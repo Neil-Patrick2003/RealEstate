@@ -17,19 +17,26 @@ import Modal from '@/Components/Modal.jsx';
 import ToastHandler from "@/Components/ToastHandler.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
+import NavBar from "@/Components/NavBar.jsx";
+import ImageModal from "@/Components/modal/ImageModal.jsx";
 
-export default function PropertyDetail({ property, deal }) {
+export default function PropertyDetail({ property, deal, inquiry }) {
     const [visibleImages, setVisibleImages] = useState([]);
     const [openImage, setOpenImage] = useState(false);
     const [isOpenModal, setIsOpenModal] =useState(false);
     const [isOpenDealForm, setIsOpenDealForm] = useState(false)
     const [ message, setMessage] = useState('');
 
+
+    console.log(inquiry);
+
+
+
+
     const openModal = () =>{
         setIsOpenModal(true);
     }
 
-    console.log(property)
 
 
     useEffect(() => {
@@ -55,14 +62,10 @@ export default function PropertyDetail({ property, deal }) {
                 }
             })
     }
-
-
     return (
-
-
-        <div>
+        <div className='mt-20'>
+            <NavBar/>
             <ToastHandler/>
-
             <DealFormModal isOpen={isOpenDealForm} setIsOpen={setIsOpenDealForm} property={property} initialValue={deal}/>
 
             <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
@@ -118,27 +121,39 @@ export default function PropertyDetail({ property, deal }) {
                 </div>
             </Modal>
 
-            <div className="container mx-auto px-4 py-4 md:px-8 animate-fade-in">
-                <Link href="/" className="inline-flex items-center text-gray-600 hover:text-[#5C7934] transition-colors duration-200">
-                    <ChevronLeft/>
-                    Back to Listings
-                </Link>
-            </div>
 
-            <div className="container mx-auto px-4 pb-12 md:px-8 max-w-7xl">
+            <div className="container flex flex-col gap-6 mx-auto px-4 pb-12 md:px-8 max-w-7xl">
+                <div className='flex-center-between'>
+                    <Link href="/" className="inline-flex items-center text-gray-600 hover:text-[#5C7934] transition-colors duration-200">
+                        <ChevronLeft/>
+                        Back to Listings
+                    </Link>
+                    <div>
+                        {
+                            inquiry ? (
+                                <>
+                                    {
+                                        property?.property_listing && <PrimaryButton onClick={() => setIsOpenDealForm(true)}>
+                                            {deal ? 'View My Offer': 'Make Offer'}
+                                        </PrimaryButton>
+                                    }
+                                </>
+                            ) : <></>
+                        }
+                    </div>
+
+                </div>
+
+
 
                 {/*images*/}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 animate-fade-in delay-100">
                     <div className="md:col-span-2 h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-lg image-container relative">
                         <img src={`/storage/${property.image_url}`} alt="Modern two-story house with large windows, green lawn, and wooden accents in a suburban neighborhood" className="w-full h-full object-cover"/>
-                            <div className="image-overlay">
-                                <h3 className="text-xl font-semibold">Premium Sustainable Living</h3>
-                            </div>
-
+                        <div className="image-overlay">
+                            <h3 className="text-xl font-semibold">Premium Sustainable Living</h3>
+                        </div>
                     </div>
-
-
-                    {/*thumbnaiks*/}
 
                     <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
                         {visibleImages.map((image, index) => {
@@ -160,30 +175,13 @@ export default function PropertyDetail({ property, deal }) {
                                         </div>
                                     )}
                                 </div>
-                                // <div
-                                //     key={image.id}
-                                //     className="relative w-36 h-28 md:h-[30vh] md:w-full rounded-xl overflow-hidden border hover:shadow cursor-pointer group"
-                                //     onClick={() => isLast && isDesktop && property.images.length > 2 && setOpenImage(true)}
-                                // >
-                                //     <img
-                                //         src={`/storage/${image.image_url}`}
-                                //         alt={`Gallery ${image.id}`}
-                                //         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                //     />
-                                //
-                                //     {isLast && isDesktop && property.images.length > 2 && (
-                                //         <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center text-white font-semibold text-sm md:text-base backdrop-blur-sm group-hover:bg-opacity-50">
-                                //             +{moreCount} more
-                                //         </div>
-                                //     )}
-                                // </div>
                             );
                         })}
                     </div>
                 </div>
 
                {/*Property Details Section*/}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-fade-in delay-200">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden animate-fade-in delay-200">
                     <div className="p-6 md:p-8">
 
                         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
@@ -198,14 +196,17 @@ export default function PropertyDetail({ property, deal }) {
                             <div>
                                 <div className="bg-[#5C7934]/10 px-6 py-3 rounded-lg">
                                     <p className="text-gray-600 text-sm font-medium">Price</p>
-                                    <p className="text-2xl font-bold text-[#5C7934]">₱ {property.price}</p>
+                                    <p className="text-2xl font-bold text-[#5C7934]">{Number(property.price).toLocaleString('en-PH', {
+                                        style: 'currency',
+                                        currency: 'PHP',
+                                    })}</p>
                                 </div>
 
-                                {
-                                    property?.property_listing && <PrimaryButton onClick={() => setIsOpenDealForm(true)}>
-                                        {deal ? 'View My Offer': 'Make Offer'}
-                                    </PrimaryButton>
-                                }
+
+
+
+
+
 
                             </div>
                         </div>
@@ -304,6 +305,26 @@ export default function PropertyDetail({ property, deal }) {
                             <div className="text-white mb-4 md:mb-0">
                                 <h3 className="text-xl font-bold mb-2">Interested in this property?</h3>
                                 <p>Contact our agent today to schedule a viewing.</p>
+                                <div className='flex-center gap-2 mt-6'>
+                                    {property?.property_listing?.agent?.image_url ? (
+                                        <img
+                                            src={`/storage/${property.property_listing.agent.image_url}`}
+                                            alt={property.property_listing.agent.name}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-white font-semibold uppercase">
+                                            {property?.property_listing?.agent?.name
+                                                ? property.property_listing.agent.name.charAt(0)
+                                                : 'A'}
+                                        </div>
+                                    )}
+                                    <p className='flex flex-col hover:underline'>{property.property_listing?.agent.name}
+                                        <span className='text-sm'>{property.property_listing?.agent.email}</span>
+                                    </p>
+
+                                </div>
+
                             </div>
                             <button className="bg-[#FFA500] hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200 flex items-center" onClick={() => setIsOpenModal(true)}>
                                 <i className="fas fa-phone-alt mr-3"></i> Contact Agent
@@ -455,6 +476,7 @@ export default function PropertyDetail({ property, deal }) {
                 </div>
             </div>
 
+
             <footer className="bg-[#5C7934] text-white py-8 mt-16">
                 <div className="container mx-auto px-4 md:px-8">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -519,6 +541,19 @@ export default function PropertyDetail({ property, deal }) {
                     </div>
                 </div>
             </footer>
+
+            <ImageModal show={openImage} onClose={() => setOpenImage(false)}>
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {property.images.map((img) => (
+                        <img
+                            key={img.id}
+                            src={`/storage/${img.image_url}`}
+                            alt={`Image ${img.id}`}
+                            className="w-full h-48 object-cover rounded-lg shadow"
+                        />
+                    ))}
+                </div>
+            </ImageModal>
 
 
 
