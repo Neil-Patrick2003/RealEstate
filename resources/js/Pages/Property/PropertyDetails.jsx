@@ -28,7 +28,6 @@ export default function PropertyDetail({ property, deal, inquiry }) {
     const [ message, setMessage] = useState('');
 
 
-    console.log(inquiry);
 
 
 
@@ -132,11 +131,16 @@ export default function PropertyDetail({ property, deal, inquiry }) {
                         {
                             inquiry ? (
                                 <>
-                                    {
-                                        property?.property_listing && <PrimaryButton onClick={() => setIsOpenDealForm(true)}>
-                                            {deal ? 'View My Offer': 'Make Offer'}
-                                        </PrimaryButton>
-                                    }
+                                    {inquiry?.status === 'Accepted' && (
+                                        <>
+                                            {
+                                                property?.property_listing && <PrimaryButton onClick={() => setIsOpenDealForm(true)}>
+                                                    {deal ? 'View My Offer': 'Make Offer'}
+                                                </PrimaryButton>
+                                            }
+                                        </>
+                                    )}
+
                                 </>
                             ) : <></>
                         }

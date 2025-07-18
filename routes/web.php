@@ -9,6 +9,7 @@ use App\Http\Controllers\Seller\PropertyController;
 use App\Http\Controllers\Seller\PropertyImageController;
 use App\Http\Controllers\Seller\TransactionController;
 use App\Http\Controllers\Seller\TrippingController;
+use App\Models\PropertyListing;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -244,15 +245,7 @@ Route::middleware('auth')->group(function () {
 });
 
 
-Route::get('/maps', function (Request $request) {
-
-    $properties = \App\Models\Property::with('coordinate')
-    ->where('status', 'Published')->get();
-
-//    dd($properties->toArray());
-    return Inertia::render('Buyer/Properties/AllProperties', [
-        'properties' => $properties,
-    ]);
-});
+Route::get('/maps', [\App\Http\Controllers\Property\PropertyController::class, 'map']);
+Route::get('/maps/property/{id}', [\App\Http\Controllers\Property\PropertyController::class, 'map_show']);
 
 require __DIR__.'/auth.php';

@@ -27,6 +27,7 @@ import { Link } from '@inertiajs/react';
                     bathrooms={property.property.bathrooms}
                     car_slots={property.property.car_slots}
                     description={property.property.description}
+                    total_rooms={property.total_rooms}
                     features={property.property.features}
                 />
                 <div className="grid md:grid-cols-2 gap-6 ">

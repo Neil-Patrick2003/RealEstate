@@ -17,6 +17,7 @@ export default function PropertyDetails({property}){
                     lot_area={property.lot_area}
                     floor_area={property.floor_area}
                     bedrooms={property.bedrooms}
+                    total_rooms={property.total_rooms}
                     bathrooms={property.bathrooms}
                     car_slots={property.car_slots}
                     description={property.description}

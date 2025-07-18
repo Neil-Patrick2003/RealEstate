@@ -1,136 +1,181 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useEffect, useRef } from "react";
+import {
+    MapContainer,
+    TileLayer,
+    Marker,
+    Popup,
+    ZoomControl,
+    useMap,
+    Polygon,
+} from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import "leaflet-control-geocoder/dist/Control.Geocoder.css";
+import "leaflet-control-geocoder";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
-const MapView = ({ properties, onMarkerClick }) => {
-    const [currentPos, setCurrentPos] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const mapRef = useRef(null);
+// Custom house icon
+const houseIcon = new L.Icon({
+    iconUrl: "/icon/house.png",
+    iconSize: [60, 90],
+    iconAnchor: [30, 65], // horizontally center, bottom aligned
+    popupAnchor: [0, -70],
+    shadowUrl: iconShadow,
+    shadowSize: [50, 50],
+});
 
-    console.log(properties);
+const landIcon = new L.Icon({
+    iconUrl: "/icon/land.png",
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
+    popupAnchor: [0, -30],
+});
+
+const DEFAULT_CENTER = [13.41, 122.56];
+
+function GeocoderControl() {
+    const map = useMap();
+
     useEffect(() => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    setCurrentPos([latitude, longitude]);
-                },
-                (err) => {
-                    console.error('Geolocation error:', err);
-                    alert('Unable to access your location.');
+        if (!map) return;
+
+        const geocoder = L.Control.Geocoder.nominatim();
+        const control = L.Control.geocoder({
+            query: '',
+            placeholder: 'Search location...',
+            defaultMarkGeocode: true,
+            geocoder,
+        }).addTo(map);
+
+        control.on("markgeocode", function (e) {
+            const bbox = e.geocode.bbox;
+            const bounds = L.latLngBounds(bbox);
+            map.fitBounds(bounds);
+        });
+
+        return () => map.removeControl(control);
+    }, [map]);
+
+    return null;
+}
+
+function FitBoundsControl({ property_listing }) {
+    const map = useMap();
+
+    useEffect(() => {
+        const bounds = L.latLngBounds([]);
+
+        property_listing.forEach((property) => {
+            property.property.coordinate.forEach((c) => {
+                if (c.type === "marker") {
+                    const lat = parseFloat(c.coordinates.lat ?? c.coordinates[1]);
+                    const lng = parseFloat(c.coordinates.lng ?? c.coordinates[0]);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        bounds.extend([lat, lng]);
+                    }
                 }
-            );
-        } else {
-            alert('Geolocation not supported by your browser.');
-        }
-    }, []);
 
-    const handleSearch = async () => {
-        if (!searchTerm) return;
-
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}`
-            );
-            const data = await response.json();
-
-            if (data.length > 0) {
-                const { lat, lon } = data[0];
-                const newCoords = [parseFloat(lat), parseFloat(lon)];
-                if (mapRef.current) {
-                    mapRef.current.setView(newCoords, 14);
+                if (c.type === "polygon") {
+                    const polygon = c.coordinates?.geometry?.coordinates?.[0];
+                    if (Array.isArray(polygon)) {
+                        polygon.forEach(([lng, lat]) => {
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                bounds.extend([lat, lng]);
+                            }
+                        });
+                    }
                 }
-            } else {
-                alert('Location not found.');
-            }
-        } catch (error) {
-            console.error('Search failed:', error);
-            alert('Error fetching location.');
+            });
+        });
+
+        if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50] });
         }
+    }, [map, property_listing]);
+
+    return null;
+}
+
+export default function MapView({ property_listing = [], onMarkerClick }) {
+    const getPolygonColor = (type) => {
+        return type === "land" ? "#28a745" : "#007bff";
     };
 
-    if (!currentPos) {
-        return <div className="text-center mt-6 text-gray-600">📍 Locating you...</div>;
-    }
-
     return (
-        <div className="relative h-full w-full">
-            <MapContainer
-                center={currentPos}
-                zoom={14}
-                scrollWheelZoom
-                style={{ height: '100%', width: '100%' }}
-                whenCreated={(mapInstance) => {
-                    mapRef.current = mapInstance;
-                }}
-            >
-                <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap contributors"
-                />
+        <MapContainer
+            center={DEFAULT_CENTER}
+            zoom={6}
+            scrollWheelZoom={true}
+            style={{ height: "93vh", width: "100%" }}
+            zoomControl={false}
+        >
+            <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+            />
 
-                <Marker position={currentPos}>
-                    <Popup>You are here 📍</Popup>
-                </Marker>
+            <ZoomControl position="topright" />
+            <GeocoderControl />
+            <FitBoundsControl property_listing={property_listing} />
 
-                {/* Render Markers and Polygons */}
-                {properties.map((property) =>
-                    property.coordinate.map((c, index) => {
-                        if (c.type === 'marker') {
-                            const lat = parseFloat(c.coordinates.lat ?? c.coordinates[1]);
-                            const lng = parseFloat(c.coordinates.lng ?? c.coordinates[0]);
+            {property_listing.map((property) =>
+                property.property.coordinate.map((c, index) => {
+                    if (c.type === "marker") {
+                        const lat = parseFloat(c.coordinates.lat ?? c.coordinates[1]);
+                        const lng = parseFloat(c.coordinates.lng ?? c.coordinates[0]);
+                        if (isNaN(lat) || isNaN(lng)) return null;
 
-                            return (
-                                <Marker
-                                    key={`${property.id}-marker-${index}`}
-                                    position={[lat, lng]}
-                                    eventHandlers={{
-                                        click: () => onMarkerClick && onMarkerClick(property),
-                                    }}
-                                />
-                            );
-                        }
+                        const icon =
+                            property.property_type?.toLowerCase() === "land"
+                                ? landIcon
+                                : houseIcon;
 
-                        return null;
-                    })
-                )}
-            </MapContainer>
+                        return (
+                            <Marker
+                                key={`${property.id}-marker-${index}`}
+                                position={[lat, lng]}
+                                icon={icon}
+                                eventHandlers={{
+                                    click: () => onMarkerClick?.(property),
+                                }}
+                            >
+                                <Popup>{property.title || "Property"}</Popup>
+                            </Marker>
+                        );
+                    }
 
-            {/* Top Overlay Search + Filters */}
-            <div className="absolute top-0 left-0 right-0 z-[1000] p-4 bg-white/90 backdrop-blur shadow-md">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 text-base md:text-lg font-semibold text-primary">
-                        <span>All Properties</span>
-                        <span className="bg-yellow-400 text-primary rounded-full px-3 py-1 text-sm font-bold min-w-[40px] text-center">
-                            {properties.length}
-                        </span>
-                    </div>
+                    if (c.type === "polygon") {
+                        const polygon = c.coordinates?.geometry?.coordinates?.[0];
+                        if (!Array.isArray(polygon)) return null;
 
-                    <div className="flex gap-2 w-full md:w-auto">
-                        <input
-                            type="text"
-                            placeholder="Search location..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="text-black px-3 py-2 rounded border border-gray-300 w-full md:w-80"
-                        />
-                        <button
-                            onClick={handleSearch}
-                            className="bg-primary text-white px-4 py-2 rounded font-semibold shadow hover:bg-accent transition"
-                        >
-                            Search
-                        </button>
+                        const latlngs = polygon
+                            .map(([lng, lat]) => {
+                                const parsedLat = parseFloat(lat);
+                                const parsedLng = parseFloat(lng);
+                                return !isNaN(parsedLat) && !isNaN(parsedLng)
+                                    ? [parsedLat, parsedLng]
+                                    : null;
+                            })
+                            .filter(Boolean);
 
-                        <select className="py-2 px-3 rounded-md border border-gray-300 bg-white text-black">
-                            <option>All</option>
-                            <option>House</option>
-                            <option>Land</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        return (
+                            <Polygon
+                                key={`${property.id}-polygon-${index}`}
+                                positions={latlngs}
+                                pathOptions={{
+                                    color: getPolygonColor(property.property_type),
+                                    fillColor: getPolygonColor(property.property_type),
+                                    fillOpacity: 0.4,
+                                }}
+                            >
+                                <Popup>{property.title || "Property Area"}</Popup>
+                            </Polygon>
+                        );
+                    }
+
+                    return null;
+                })
+            )}
+        </MapContainer>
     );
-};
-
-export default MapView;
+}

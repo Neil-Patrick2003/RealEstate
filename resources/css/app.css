@@ -102,3 +102,8 @@ body{
 .leaflet-control-zoom {
     z-index: 1000 ;
 }
+
+.leaflet-bottom.leaflet-left {
+    bottom: 80px;
+    left: 10px;
+}

@@ -105,6 +105,7 @@ const ShowProperty = ({ property }) => {
                     property_type={property.property_type}
                     features={property.features}
                     car_slots={property.car_slots}
+                    total_rooms={property.total_rooms}
                     floor_area={property.floor_area}
                     lot_area={property.lot_area}
                     price={property.price}

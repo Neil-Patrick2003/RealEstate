@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import ImageModal from "@/Components/modal/ImageModal.jsx";
 
 export default function ImageGallery({ images, image_url }) {
     const [visible, setVisible] = useState([]);
+    const [openImage, setOpenImage] = useState(false);
 
-    console.log(image_url)
+
 
     useEffect(() => {
         const resize = () => {
@@ -44,29 +46,27 @@ export default function ImageGallery({ images, image_url }) {
                             </div>
                             {isLast && isDesktop && images.length > 2 && (
                                 <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center text-white font-semibold text-sm md:text-base backdrop-blur-sm group-hover:bg-opacity-50">
-                                    +{moreCount} more
+                                    <button onClick={() => setOpenImage(true)}>+{moreCount} more</button>
                                 </div>
                             )}
                         </div>
-                        // <div
-                        //     key={image.id}
-                        //     className="relative w-36 h-28 md:h-[30vh] md:w-full rounded-xl overflow-hidden border hover:shadow cursor-pointer group"
-                        //     onClick={() => isLast && isDesktop && property.images.length > 2 && setOpenImage(true)}
-                        // >
-                        //     <img
-                        //         src={`/storage/${image.image_url}`}
-                        //         alt={`Gallery ${image.id}`}
-                        //         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        //     />
-                        //
-                        //     {isLast && isDesktop && property.images.length > 2 && (
-                        //         <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center text-white font-semibold text-sm md:text-base backdrop-blur-sm group-hover:bg-opacity-50">
-                        //             +{moreCount} more
-                        //         </div>
-                        //     )}
-                        // </div>
                     );
                 })}
+
+
+                <ImageModal show={openImage} onClose={() => setOpenImage(false)}>
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {images.map((img) => (
+                            <img
+                                key={img.id}
+                                src={`/storage/${img.image_url}`}
+                                alt={`Image ${img.id}`}
+                                className="w-full h-48 object-cover rounded-lg shadow"
+                            />
+                        ))}
+                    </div>
+                </ImageModal>
+
             </div>
         </div>
     );

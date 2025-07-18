@@ -5,7 +5,7 @@ import {
     faRulerCombined,
     faBed,
     faBath,
-    faCar, faBuilding
+    faCar, faBuilding, faDoorClosed
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function DescriptionSection({
@@ -20,7 +20,8 @@ export default function DescriptionSection({
                                                bathrooms = "—",
                                                car_slots = "—",
                                                description = "",
-                                               features = []
+                                               features = [],
+                                                total_rooms = "-"
                                            }) {
     const area = property_type === "Land" ? lot_area : floor_area;
 
@@ -63,6 +64,7 @@ export default function DescriptionSection({
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-gray-50 p-6 rounded-xl text-center">
                     <Stat icon={faRulerCombined} name="Area" value={`${area} sqm`} />
+                    <Stat icon={faDoorClosed} name="Bedrooms" value={total_rooms} />
                     <Stat icon={faBed} name="Bedrooms" value={bedrooms} />
                     <Stat icon={faBath} name="Bathrooms" value={bathrooms} />
                     <Stat icon={faCar} name="Garage" value={car_slots} />
