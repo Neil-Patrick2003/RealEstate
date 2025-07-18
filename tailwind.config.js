@@ -29,6 +29,9 @@ export default {
                 lightaccent: '#d8fac7',    // light sage green
                 sidebar: '#F5F7F4',        // very light green-gray
                 topbar: '#5C7934',         // same as primary
+                Amber: '#FFBF00',           //good yellow orange
+                Blacky: '#131313',          // goods na black
+                
             }
         },
 

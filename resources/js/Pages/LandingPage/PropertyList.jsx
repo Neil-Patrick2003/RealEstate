@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { router, Link } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as SolidHeart } from '@fortawesome/free-solid-svg-icons';
@@ -7,7 +7,6 @@ import { faHeart as RegularHeart } from '@fortawesome/free-regular-svg-icons';
 const PropertyList = ({ properties, favouriteIds = [] }) => {
     const [favourites, setFavourites] = useState(new Set(favouriteIds));
     const [loading, setLoading] = useState(null);
-/**/
 
     const toggleFavourite = (propertyId) => {
         setLoading(propertyId);
@@ -37,14 +36,15 @@ const PropertyList = ({ properties, favouriteIds = [] }) => {
     const isFavourite = (id) => favourites.has(id);
 
     return (
-        <div className="px-4  h-screen md:px-8 lg:px-32 py-6">
-            <h1 className="text-gray-00 text-xl font-bold mb-4 flex-center-between">
+        <div className="px-4 md:px-8 lg:px-32 py-6">
+            <h1 className="text-black text-2xl font-bold mb-4 flex justify-between items-center">
                 Recent Properties
-                <Link href='/all-properties'>
-                    <span className=' text-gray-500 text-sm'>See All</span>
+                <Link href="/all-properties">
+                    <span className="text-gray-500 text-sm">See All</span>
                 </Link>
             </h1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mt-8 lg:grid-cols-4 gap-6">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
                 {properties.map((property) => (
                     <div
                         key={property.id}
@@ -57,7 +57,7 @@ const PropertyList = ({ properties, favouriteIds = [] }) => {
                                 className="w-full h-full object-cover"
                             />
 
-                            <div className="absolute top-4 right-4 bg-green-700 text-white px-2 py-1 rounded-full text-xs font-medium">
+                            <div className="absolute top-4 right-4 bg-Amber text-black px-2 py-1 rounded-full text-xs font-bold">
                                 {property.isPresell ? 'Pre-sell' : 'For Sale'}
                             </div>
 
@@ -78,15 +78,13 @@ const PropertyList = ({ properties, favouriteIds = [] }) => {
                             <p className="text-gray-600 text-sm mb-2">{property.address}</p>
 
                             <div className="flex justify-between items-center text-sm text-gray-700 mb-3">
-                                <div>
-                                    🛏 3 | 🛁 2
-                                </div>
-                                <div className="font-bold text-green-800">₱ {Number(property.price).toLocaleString()}</div>
+                                <div>🛏 3 | 🛁 2</div>
+                                <div className="font-bold text-black">₱ {Number(property.price).toLocaleString()}</div>
                             </div>
 
                             <Link
                                 href={`/properties/${property.id}`}
-                                className="block text-center bg-green-700 hover:bg-green-800 text-white rounded-md py-2 font-medium transition"
+                                className="block text-center bg-primary hover:bg-primary/90 text-white rounded-md py-2 font-medium transition"
                             >
                                 View Property
                             </Link>

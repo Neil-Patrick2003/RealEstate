@@ -12,12 +12,10 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
     const [searchTerm, setSearchTerm] = useState(search || '');
     const [selectedType, setSelectedType] = useState(initialType);
 
-    // Sync searchTerm if props.search changes
     useEffect(() => {
         if (search) setSearchTerm(search);
     }, [search]);
 
-    // Fetch properties with current filters
     const fetchProperties = (searchValue = searchTerm, typeValue = selectedType) => {
         router.get(
             '/',
@@ -26,7 +24,6 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
         );
     };
 
-    // Debounced fetch on search input change
     const debouncedSearch = useCallback(
         debounce((value) => {
             fetchProperties(value, selectedType);
@@ -34,30 +31,26 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
         [selectedType]
     );
 
-    // Cleanup debounce on unmount
     useEffect(() => {
         return () => debouncedSearch.cancel();
     }, [debouncedSearch]);
 
-    // Handle search input change
     const handleSearchTermChange = (e) => {
         const value = e.target.value;
         setSearchTerm(value);
         debouncedSearch(value);
     };
 
-    // Handle property type change (immediate fetch)
     const handleTypeChange = (type) => {
         setSelectedType(type);
         fetchProperties(searchTerm, type);
-
     };
 
     return (
-        <div className="relative overflow-x-hidden">
-            <ToastHandler/>
+        <div className="relative overflow-x-hidden bg-gray-100">
+            <ToastHandler />
 
-            {/* Hero Section with fullscreen background */}
+            {/* Hero Section */}
             <div
                 className="relative h-screen bg-cover bg-center bg-no-repeat"
                 style={{ backgroundImage: `url(${backgroundImage})` }}
@@ -73,15 +66,14 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
                     />
                 </div>
             </div>
-            <div clas>
+
+            {/* Filters and PropertyList */}
+            <div className="relative mt-12 rounded-t-3xl shadow-lg px-8 py-6 bg-gray-100">
                 <PropertyList properties={properties} />
             </div>
 
-
-
             {/* Footer */}
             <Footer />
-
         </div>
     );
 };
