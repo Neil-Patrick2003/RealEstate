@@ -9,6 +9,8 @@ const ApexChart = ({ categories = [], series = [] }) => {
             type: 'area',
             toolbar: { show: false }
         },
+        colors: ['#5C7934', '#719440', '#d8fac7'], // 💡 Set 3 colors here
+
         dataLabels: { enabled: false },
         stroke: { curve: 'smooth' },
         xaxis: {

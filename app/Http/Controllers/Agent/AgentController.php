@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
 use App\Models\Property;
 use App\Models\PropertyListing;
+use App\Models\PropertyTripping;
 use App\Models\User;
 use Carbon\Carbon;
 use Inertia\Inertia;
@@ -78,11 +79,30 @@ class AgentController extends Controller
         ];
 
 
+        $incoming_tripping = PropertyTripping::where(
+            'visit_date', '=', now()
+        )
+        ->count();
+
+
+        $recent_inquiries = Inquiry::with('property', 'messages', 'buyer' )
+            ->where('agent_id', auth()->id())
+            ->where('status', 'Pending')
+            ->whereNotNull('buyer_id')
+            ->latest()
+            ->take(10)
+            ->get();
+
+
+
+
         return Inertia::render('Agent/AgentDashboard', [
             'properties' => $properties,
             'totalListing' => $totalListing,
             'inquiries' => $inquiries,
-            'chartData' => $chartData, // Pass formatted data here
+            'chartData' => $chartData,
+            'incoming_tripping' => $incoming_tripping,
+            'recent_inquiries' => $recent_inquiries
         ]);
     }
 
