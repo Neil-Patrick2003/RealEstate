@@ -98,41 +98,11 @@ Route::get('/markplace', function () {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //all auth user
 Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
     })->name('post-property');
-
 });
 
 Route::middleware(['auth', ])->group(function () {
@@ -247,11 +217,10 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
 
 
     Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
-
     //sent inquiries
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
-
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
+    Route::get('/inquiries/{property}', [\App\Http\Controllers\Buyer\InquiryController::class, 'show']);
     Route::patch('/inquiries/{id}/cancel', [\App\Http\Controllers\Buyer\InquiryController::class, 'cancel']);
 
     Route::get('/chat', [\App\Http\Controllers\Buyer\ChatController::class, 'index'])->name('buyer.chat.index');

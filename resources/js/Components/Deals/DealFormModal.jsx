@@ -1,6 +1,7 @@
 import Modal from "@/Components/Modal.jsx";
 import React from "react";
 import {useForm} from "@inertiajs/react";
+import InputError from "@/Components/InputError.jsx";
 
 const DealFormModal = ({ property, isOpen, setIsOpen, initialValue }) => {
     const {data, setData, post, errors, put } = useForm({
@@ -40,6 +41,8 @@ const DealFormModal = ({ property, isOpen, setIsOpen, initialValue }) => {
 
                     <input value={data.amount} onChange={(e) => setData('amount', e.target.value)} type={"number"} required className="mt-2 w-full rounded-md border border-gray-200 focus:ring-2 focus:ring-primary focus:outline-none p-3 text-sm text-gray-700 resize-none transition-shadow duration-200"/>
                 </div>
+                <InputError message={errors.amount} className="mt-2" />
+
 
                 <div className="flex justify-end">
                     <button

@@ -133,7 +133,6 @@ export default function Inquiries({
                         const canScheduleVisit = isAccepted && !isCancelled;
 
 
-                        console.log(inquiry);
 
                         return (
                             <div
@@ -300,7 +299,7 @@ export default function Inquiries({
 
                                             {/* Reply and Cancel Buttons */}
                                             <div className="flex gap-x-2">
-                                                <Link href={`/properties/${property.id}`}
+                                                <Link href={`/inquiries/${property.id}`}
 
                                                     className={`w-full text-center px-4 py-2 text-white rounded-md text-sm font-medium transition ${
                                                         isCancelled

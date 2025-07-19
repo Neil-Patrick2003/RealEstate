@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 
 export default function AgentDashboard({ properties, inquiries, chartData, incoming_tripping, recent_inquiries }) {
     const totalListings = properties.length;
-    const pendingCount = inquiries.filter(i => i.status === 'Pending').length;
+    const pendingCount = inquiries.filter(i => i.status === 'p  ending').length;
     const availableCount = properties.filter(p => p.status === 'Published').length;
     const soldCount = properties.filter(p => p.status === 'Sold').length;
     const assignedCount = properties.filter(p => p.status === 'Assigned').length;
@@ -42,7 +42,7 @@ export default function AgentDashboard({ properties, inquiries, chartData, incom
     const statusStyles = {
         Accepted: "bg-green-100 text-green-700 ring-green-200",
         Cancelled: "bg-red-100 text-red-700 ring-red-200",
-        Pending: "bg-yellow-100 text-yellow-700 ring-yellow-200",
+        pending: "bg-yellow-100 text-yellow-700 ring-yellow-200",
         default: "bg-orange-100 text-orange-700 ring-orange-200",
     };
 

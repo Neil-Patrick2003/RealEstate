@@ -25,8 +25,6 @@ export default function DescriptionSection({
                                            }) {
     const area = property_type === "Land" ? lot_area : floor_area;
 
-    console.log(lot_area);
-
     return (
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in delay-200">
             <div className="p-6 md:p-8 space-y-6">
