@@ -8,12 +8,19 @@ class Deal extends Model
 {
     protected $guarded = [];
 
-    public function property_listing(){
+    public function property_listing(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
         return $this->belongsTo(PropertyListing::class);
     }
 
-    public function buyer(){
+    public function buyer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
         return $this->belongsTo(User::class);
+    }
+
+    public function feedback(): \Illuminate\Database\Eloquent\Relations\HasOne|Deal
+    {
+        return $this->hasOne(Feedback::class);
     }
 
 }

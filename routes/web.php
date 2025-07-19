@@ -241,6 +241,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
 
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
+    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class,'store']);
 
 });
 

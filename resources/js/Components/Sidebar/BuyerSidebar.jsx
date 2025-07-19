@@ -24,7 +24,7 @@ const menus = [
     { name: "Tripping", Icon: faCalendar, path: "/trippings" },
     { name: "Favourites", Icon: faStar, path: "/favourites" },
     { name: "Deal", Icon: faHandshakeAngle, path: "/deals" },
-    // { name: "Transactions", Icon: faChartSimple, path: "/transactions" },
+    { name: "Transactions", Icon: faChartSimple, path: "/transactions" },
 ];
 
 const Sidebar_animation = {
@@ -53,7 +53,7 @@ const subMenuDrawer = {
     },
 };
 
-const SellerSidebar = ({ isOpen, setIsOpen }) => {
+const BuyerSidebar = ({ isOpen, setIsOpen }) => {
     const [clicked, setClicked] = useState(null);
     const { url } = usePage();
 
@@ -169,4 +169,4 @@ const SellerSidebar = ({ isOpen, setIsOpen }) => {
     );
 };
 
-export default SellerSidebar;
+export default BuyerSidebar;

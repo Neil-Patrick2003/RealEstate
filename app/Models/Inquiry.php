@@ -57,6 +57,9 @@ class Inquiry extends Model
         }
     }
 
-
+    public function feedback()
+    {
+        return $this->hasOne(Feedback::class);
+    }
 
 }
