@@ -107,7 +107,10 @@ class DealController extends Controller
                 }
             }
 
-            $propertyListing->update(['status' => 'Sold']);
+            $propertyListing->update([
+                'status' => 'Sold',
+                'sold_at' => now()
+            ]);
 
             $propertyListing->property->update(['status' => 'Sold']);
 
