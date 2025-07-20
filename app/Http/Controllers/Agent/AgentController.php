@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Models\Feedback;
 use App\Models\Inquiry;
 use App\Models\Property;
 use App\Models\PropertyListing;
@@ -94,6 +95,13 @@ class AgentController extends Controller
             ->get();
 
 
+        $feedbacks = Feedback::with('sender')
+        ->where('agent_id', auth()->id())
+            ->latest()
+            ->take(5)
+            ->get();
+
+
 
 
         return Inertia::render('Agent/AgentDashboard', [
@@ -102,7 +110,8 @@ class AgentController extends Controller
             'inquiries' => $inquiries,
             'chartData' => $chartData,
             'incoming_tripping' => $incoming_tripping,
-            'recent_inquiries' => $recent_inquiries
+            'recent_inquiries' => $recent_inquiries,
+            'feedbacks' => $feedbacks
         ]);
     }
 

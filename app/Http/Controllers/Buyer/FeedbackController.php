@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Buyer;
 
+use App\Http\Controllers\Controller;
 use App\Models\Feedback;
 use App\Models\FeedbackCharacteristic;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class FeedbackController extends Controller
             'professionalism' => $data['ratings']['professionalism'],
             'knowledge' => $data['ratings']['knowledge'],
             'comments' => $data['comments'] ?? null,
+            'sender_id' => auth()->id(),
         ]);
 
         foreach ($data['characteristics'] as $char) {

@@ -6,7 +6,7 @@ import ColumnChart from "@/Components/Charts/ColumnChart.jsx";
 import RecentFeedbacks from "@/Components/RecentFeedbacks.jsx";
 import dayjs from "dayjs";
 
-export default function AgentDashboard({ properties, inquiries, chartData, incoming_tripping, recent_inquiries }) {
+export default function AgentDashboard({ properties, inquiries, chartData, incoming_tripping, recent_inquiries, feedbacks }) {
     const totalListings = properties.length;
     const pendingCount = inquiries.filter(i => i.status === 'p  ending').length;
     const availableCount = properties.filter(p => p.status === 'Published').length;
@@ -200,7 +200,7 @@ export default function AgentDashboard({ properties, inquiries, chartData, incom
                 {/* Feedback - 1 column */}
                 <div className="bg-white shadow rounded-xl p-6">
                     <h2 className="text-lg font-semibold mb-4">Feedback</h2>
-                    <RecentFeedbacks />
+                    <RecentFeedbacks feedbacks={feedbacks} />
                 </div>
             </div>
 

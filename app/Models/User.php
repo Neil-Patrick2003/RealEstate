@@ -97,5 +97,10 @@ class User extends Authenticatable
         return $this->hasMany(Inquiry::class, 'buyer_id');
     }
 
+    public function feedback()
+    {
+        return $this->hasMany(Feedback::class, 'sender_id');
+    }
+
 
 }

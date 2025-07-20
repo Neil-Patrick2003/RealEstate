@@ -9,7 +9,6 @@ use App\Http\Controllers\Seller\PropertyController;
 use App\Http\Controllers\Seller\PropertyImageController;
 use App\Http\Controllers\Seller\TransactionController;
 use App\Http\Controllers\Seller\TrippingController;
-use App\Models\PropertyListing;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -167,7 +166,7 @@ Route::put('/agents/deal/{deal}', [\App\Http\Controllers\Agent\DealController::c
 //Route::put('/agents/deal/{id}/$', [DealController::class, 'accept']);
 Route::put('/agents/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
 
-
+Route::get('/agents/transaction', [\App\Http\Controllers\Agent\TransactionController::class, 'index']);
 
 
 
@@ -241,7 +240,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
 
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
-    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class,'store']);
+    Route::post('/feedback', [\App\Http\Controllers\Buyer\FeedbackController::class,'store']);
 
 });
 

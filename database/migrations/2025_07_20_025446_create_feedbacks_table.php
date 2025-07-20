@@ -20,11 +20,13 @@
                 $table->tinyInteger('professionalism')->unsigned()->comment('Rating 1-5');
                 $table->tinyInteger('knowledge')->unsigned()->comment('Rating 1-5');
                 $table->text('comments')->nullable();
+                $table->unsignedBigInteger('sender_id');
                 $table->timestamps();
 
                 // Explicit foreign keys
                 $table->foreign('deal_id')->references('id')->on('deals')->onDelete('cascade');
                 $table->foreign('agent_id')->references('id')->on('users')->onDelete('cascade');
+                $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
             });
 
             Schema::create('feedback_characteristics', function (Blueprint $table) {
@@ -50,7 +52,10 @@
             Schema::table('feedbacks', function (Blueprint $table) {
                 $table->dropForeign(['deal_id']);
                 $table->dropForeign(['agent_id']);
+                $table->dropForeign(['sender_id']);
+
             });
             Schema::dropIfExists('feedbacks');
+
         }
     };

@@ -22,9 +22,9 @@ class Feedback extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function deal(): BelongsTo
+    public function sender()
     {
-        return $this->belongsTo(Deal::class);
+        return $this->belongsTo(User::class, 'sender_id');
     }
 
 }

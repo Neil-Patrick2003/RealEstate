@@ -64,14 +64,9 @@ const menus = [
         path: "/agents/deal",
     },
     {
-        name: "Sales",
-        Icon: faChartSimple,
-        path: "/agents/my-sales",
-    },
-    {
         name: "Transactions",
         Icon: faChartSimple,
-        path: "/agents/my-sales",
+        path: "/agents/transaction",
     },
 ];
 
