@@ -168,12 +168,11 @@ Route::put('/agents/deal/{id}/{status}', [DealController::class, 'handleUpdate']
 
 Route::get('/agents/transaction', [\App\Http\Controllers\Agent\TransactionController::class, 'index']);
 
-
-
 Route::get('/agents/trippings', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'index']);
 Route::patch('/agents/trippings/{id}/accept', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'accept']);
 Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'decline']);
 
+Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::class, 'feedback']);
 
 
 

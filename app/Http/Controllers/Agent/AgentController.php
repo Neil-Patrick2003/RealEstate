@@ -123,7 +123,19 @@ class AgentController extends Controller
             'agents' => $agents
         ]);
 
+    }
 
+    public function feedback()
+    {
+        $feedbacks = Feedback::with('characteristics', 'sender')
+            ->latest()
+            ->get();
+
+
+
+        return Inertia::render('Agent/Feedback/Feedback', [
+            'feedbacks' => $feedbacks,
+        ]);
     }
 
 

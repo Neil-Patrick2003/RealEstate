@@ -9,7 +9,7 @@ import {
     faMapLocationDot,
     faEnvelope,
     faCalendar,
-    faChartSimple, faHandshakeAngle,
+    faChartSimple, faHandshakeAngle, faComment, faMessage,
 } from '@fortawesome/free-solid-svg-icons';
 
 function classNames(...classes) {
@@ -23,7 +23,7 @@ const menus = [
     },
     {
         name: "Properties",
-        Icon: faEnvelope,
+        Icon: faMapLocationDot,
         subMenu: [
             {
                 name: "Properties",
@@ -43,12 +43,12 @@ const menus = [
         Icon: faEnvelope,
         subMenu: [
             {
-                name: "Seller Inquiries",
-                Icon: faEnvelope,
+                name: "Message",
+                Icon: faMessage,
                 path: "/agents/chat",
             },
             {
-                name: "Buyer Inquiries",
+                name: "Inquiries",
                 Icon: faEnvelope,
                 path: "/agents/inquiries",
             },
@@ -67,6 +67,10 @@ const menus = [
         name: "Transactions",
         Icon: faChartSimple,
         path: "/agents/transaction",
+    },{
+        name: "Feedback",
+        Icon: faComment,
+        path: "/agents/feedback",
     },
 ];
 
