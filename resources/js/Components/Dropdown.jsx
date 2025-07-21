@@ -70,6 +70,7 @@ const Content = ({
         full: 'w-full',
         48: 'w-48',
         64: 'w-64',
+        80: 'w-80',
     }[width] || 'w-auto';
 
     return (

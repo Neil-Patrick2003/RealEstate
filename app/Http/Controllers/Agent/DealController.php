@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Models\Deal;
 use App\Models\PropertyListing;
+use App\Notifications\DealCounter;
+use App\Notifications\TrippingResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -41,6 +43,19 @@ class DealController extends Controller
             'amount_last_updated_at' => now(),
             'amount_last_updated_by' => auth()->id(),
         ]);
+
+        $agent = $deal->property_listing->agent;
+
+        $buyer = $deal->buyer;
+        $property = $deal->property_listing->property;
+
+        $buyer->notify( new DealCounter([
+            'agent_name' => $agent->name,
+            'property_title' => $property->title,
+            'deal_id' => $deal->id,
+        ]));
+
+
 
         return redirect()->back()->with('success', 'Deal updated successfully');
 

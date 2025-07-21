@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Notifications\Seller;
+namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PropertyPostedNotification extends Notification
+class NewProperty extends Notification
 {
     use Queueable;
 

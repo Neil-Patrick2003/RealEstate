@@ -95,11 +95,15 @@ class AgentController extends Controller
             ->get();
 
 
+
+
+
         $feedbacks = Feedback::with('sender')
         ->where('agent_id', auth()->id())
             ->latest()
             ->take(5)
             ->get();
+
 
 
 

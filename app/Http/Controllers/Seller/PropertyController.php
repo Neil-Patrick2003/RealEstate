@@ -9,12 +9,10 @@ use App\Models\PropertyFeature;
 use App\Models\PropertyImage;
 use App\Models\PropertyListing;
 use App\Models\User;
-use App\Notifications\Seller\PropertyPostedNotification;
+use App\Notifications\NewProperty;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
 
 class PropertyController extends Controller
 {
@@ -171,18 +169,17 @@ class PropertyController extends Controller
 
 //                $agent = User::find($agentId);
 //                if ($agent) {
-//                    $agent->notify(new PropertyPostedNotification($property));
+//                    $agent->notify(new NewProperty($property));
 //                }
             }
         }
 
-        $agents = User::where('role', 'Seller')
+        $agents = User::where('role', 'Agent')
         ->get();
 
         foreach ($agents as $agent) {
-            $agent->notify(new PropertyPostedNotification($property));
+            $agent->notify(new NewProperty($property));
         }
-
 
         return redirect()->back()->with('success', 'Property has been created.');
     }

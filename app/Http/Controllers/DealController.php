@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Deal;
 use App\Models\Inquiry;
 use App\Models\PropertyListing;
+use App\Notifications\NewDeal;
 use Illuminate\Http\Request;
 
 class DealController extends Controller
@@ -43,6 +44,14 @@ class DealController extends Controller
             'amount_last_updated_by' => auth()->id(),
         ]);
 
+        $agent = $propertyListing->agent;
+        $property = $propertyListing->property;
+
+        $agent->notify( new NewDeal([
+            'buyer_name' => auth()->user()->name,
+            'property_title' => $property->title,
+        ]));
+
         return redirect()->back()->with('success', 'Deal created successfully');
     }
 
@@ -57,6 +66,15 @@ class DealController extends Controller
             'amount_last_updated_at' => now(),
             'amount_last_updated_by' => auth()->id(),
         ]);
+
+        $agent = $propertyListing->agent;
+        $property = $propertyListing->property;
+
+        $agent->notify( new NewDeal([
+            'buyer_name' => auth()->user()->name,
+            'property_title' => $property->title,
+        ]));
+
 
         return redirect()->back()->with('success', 'Deal updated successfully');
     }
@@ -116,6 +134,13 @@ class DealController extends Controller
 
             return redirect()->back()->with('success', 'Property officially sold!');
         }
+
+        $buyer = $deal->buyer;
+
+        $buyer->notify( new NewDeal([
+            'buyer_name' => $buyer->name,
+            'property_title' => $propertyListing->property->title,
+        ]));
 
         return redirect()->back()->with('success', "Deal {$status} successfully.");
     }

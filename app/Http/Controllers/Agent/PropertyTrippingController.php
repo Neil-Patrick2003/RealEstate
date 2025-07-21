@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\PropertyTripping;
+use App\Notifications\TrippingRequest;
+use App\Notifications\TrippingResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -28,6 +30,22 @@ class PropertyTrippingController extends Controller
         $tripping->update([
             'status' => 'accepted',
         ]);
+
+        $buyer = $tripping->buyer;
+
+        $property = $tripping->property;
+        $agent = $tripping->agent;
+
+        dd($buyer->toArray());
+
+        $buyer->notify(new TrippingResponse([
+            'agent_name' => $agent->name,
+            'property_title' => $property->title,
+            'status' => 'Accepted',
+            'property_id' => $property->id,
+            'buyer_id' => $tripping->buyer_id,
+        ]));
+
 
         return redirect()->back()->with('success', 'Tripping accepted');
     }

@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
+use App\Models\Property;
 use App\Models\PropertyTripping;
+use App\Models\User;
+use App\Notifications\TrippingRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -47,6 +50,17 @@ class PropertyTrippingController extends Controller
             'status' => 'pending',
             'notes' => $validated['notes'],
         ]);
+
+
+        $agent = User::where('id', $validated['agent_id'])->first();
+        $property = Property::where('id', $validated['property_id'])->first();
+
+        $agent->notify(new TrippingRequest([
+            'buyer_name' => auth()->user()->name,
+            'property_title' => $property->title,
+            'property_id' => $property->id,
+            'buyer_id' => auth()->id(),
+        ]));
 
         return redirect()->back()->with('success', 'Schedule tripping successfully.' );
     }
