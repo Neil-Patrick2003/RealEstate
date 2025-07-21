@@ -11,7 +11,7 @@ Route::post('/sanctum/token', function (Request $request) {
     $request->validate([
         'email' => 'required|email',
         'password' => 'required',
-        'device_name' => 'required',
+//        'device_name' => 'required',
     ]);
 
     $user = User::where('email', $request->email)->first();
@@ -22,7 +22,7 @@ Route::post('/sanctum/token', function (Request $request) {
         ]);
     }
 
-    
+
 
     return response()->json([
     'token' => $user->createToken($request->device_name)->plainTextToken
@@ -35,42 +35,27 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 
-
-
 //------------------middleware mobile-=----------------------------
 
-Route::middleware('auth:sanctum')->group(function () {
-
+Route::group(['middleware' => 'auth:sanctum', 'prefix' => '/agent'], function () {
     Route::get('/user', function (Request $request) {
         return response()->json($request->user());
     });
-
     Route::post('/logout', function (Request $request) {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out']);
     });
-    
+
+    Route::get('/inquiries', [\App\Http\Controllers\Api\InquiryController::class, 'index']);
+    Route::get('/inquiries/{id}/{action}', [\App\Http\Controllers\Api\InquiryController::class, 'update']);
+
+    Route::get('/properties', [App\Http\Controllers\Api\PropertyController::class, 'index']);;
+    Route::post('/properties/{id}/inquire', [\App\Http\Controllers\Api\InquiryController::class, 'store']);
+
+    Route::get('/listing', [App\Http\Controllers\Api\PropertyListingController::class, 'index']);
+    Route::get('/listing', [App\Http\Controllers\Api\PropertyListingController::class, 'index']);
 
 
-Route::get('/properties', function () {
-        return [
-            [
-                'id' => 1,
-                'title' => 'Modern Villa',
-                'location' => 'LA',
-                'details' => '4 Beds • 3 Baths • 2500 sqft',
-                'image' => 'https://images.unsplash.com/photo-1560448070-4561d88d83e4?auto=format&fit=crop&w=400&q=80',
-            ],
-            [
-                'id' => 2,
-                'title' => 'City Apartment',
-                'location' => 'NY',
-                'details' => '2 Beds • 2 Baths • 1200 sqft',
-                'image' => 'https://images.unsplash.com/photo-1572120360610-d971b9b8f27f?auto=format&fit=crop&w=400&q=80',
-            ],
-            // Add more if needed
-        ];
-    });
 });
 
 
