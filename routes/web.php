@@ -102,6 +102,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
     })->name('post-property');
+
+    Route::post('/feedback', [\App\Http\Controllers\Buyer\FeedbackController::class,'store']);
+
 });
 
 Route::middleware(['auth', ])->group(function () {
@@ -130,7 +133,7 @@ Route::middleware(['auth', ])->group(function () {
     Route::get('/seller/trippings', [TrippingController::class, 'index']);
 
     //transaction
-    Route::get('/seller/sales', [TransactionController::class, 'index']);
+    Route::get('/seller/transaction', [TransactionController::class, 'index']);
 
 });
 
@@ -237,7 +240,6 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
 
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
-    Route::post('/feedback', [\App\Http\Controllers\Buyer\FeedbackController::class,'store']);
 
 });
 

@@ -39,9 +39,9 @@ const menus = [
     },
 
     {
-        name: 'Sales',
+        name: 'Transaction',
         Icon: faChartSimple,
-        path: '/seller/sales',
+        path: '/seller/transaction',
     },
 ];
 

@@ -262,7 +262,7 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                         <div className="mt-8">
                             <a
                                 href="mailto:support@realestate.com"
-                                className="inline-block w-full text-center bg-primary    text-white text-sm font-semibold px-6 py-3 rounded-lg shadow hover:bg-indigo-700 transition duration-200"
+                                className="inline-block w-full text-center bg-primary        text-white text-sm font-semibold px-6 py-3 rounded-lg shadow hover:bg-indigo-700 transition duration-200"
                             >
                                 Contact Support
                             </a>
