@@ -47,13 +47,17 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => '/agent'], function ()
     });
 
     Route::get('/inquiries', [\App\Http\Controllers\Api\InquiryController::class, 'index']);
-    Route::get('/inquiries/{id}/{action}', [\App\Http\Controllers\Api\InquiryController::class, 'update']);
+    Route::put('/inquiries/{id}/{action}', [\App\Http\Controllers\Api\InquiryController::class, 'update']);
 
     Route::get('/properties', [App\Http\Controllers\Api\PropertyController::class, 'index']);;
     Route::post('/properties/{id}/inquire', [\App\Http\Controllers\Api\InquiryController::class, 'store']);
 
     Route::get('/listing', [App\Http\Controllers\Api\PropertyListingController::class, 'index']);
-    Route::get('/listing', [App\Http\Controllers\Api\PropertyListingController::class, 'index']);
+    Route::get('/listing/{id}', [App\Http\Controllers\Api\PropertyListingController::class, 'show']);
+    Route::patch('/listing/{id}', [App\Http\Controllers\Api\PropertyListingController::class, 'update']);
+
+    Route::get('/tripping', [\App\Http\Controllers\Api\TrippingController::class, 'index']);
+    Route::put('/tripping/{id}/{action}', [\App\Http\Controllers\Api\TrippingController::class, 'update']);
 
 
 });

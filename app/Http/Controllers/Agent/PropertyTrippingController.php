@@ -36,8 +36,6 @@ class PropertyTrippingController extends Controller
         $property = $tripping->property;
         $agent = $tripping->agent;
 
-        dd($buyer->toArray());
-
         $buyer->notify(new TrippingResponse([
             'agent_name' => $agent->name,
             'property_title' => $property->title,
@@ -46,8 +44,8 @@ class PropertyTrippingController extends Controller
             'buyer_id' => $tripping->buyer_id,
         ]));
 
-
         return redirect()->back()->with('success', 'Tripping accepted');
+
     }
 
     public function decline(Request $request, $id){

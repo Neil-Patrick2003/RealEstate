@@ -9,10 +9,20 @@ class PropertyListingController extends Controller
 {
     public function index()
     {
-        $properties = PropertyListing::where('agent_id', auth()->id())->get();
+        $properties = PropertyListing::with('property', 'seller')
+        ->where('agent_id', auth()->id())->get();
 
         return [
             'data' => $properties,
+        ];
+    }
+
+        public function show($id)
+    {
+        $inquiry = PropertyListing::with('property', 'seller', 'property.features', 'property.images', 'property.coordinate')->find($id);
+
+        return [
+            'data' => $inquiry,
         ];
     }
 }

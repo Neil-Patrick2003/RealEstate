@@ -12,15 +12,16 @@ use Illuminate\Http\Request;
 class InquiryController extends Controller
 {
     public function index()
-    {
-        $inquiries = Inquiry::with('seller', 'buyer', 'property', 'messages', 'buyer')
-            ->where('agent_id', auth()->id())
-            ->orderByDesc('created_at')
-            ->get();
+            {
+                $inquiries = Inquiry::with('seller', 'buyer', 'property', 'messages', 'buyer')
+                    ->where('agent_id', auth()->id())
+                    ->orderByDesc('created_at')
+                        ->get();
 
-        return [
-            $data = $inquiries,
-        ];
+                return [
+                    'data' => $inquiries,
+                ];
+
     }
 
     public function store(Request $request, $id){
@@ -82,10 +83,6 @@ class InquiryController extends Controller
 
     public function update(Request $request, $id, $action){
 
-        $request->validate([
-            $action => 'required|in:accept,decline,cancel'
-        ]);
-
         if($action === 'accept'){
             $status = 'Accepted';
         }
@@ -101,8 +98,9 @@ class InquiryController extends Controller
             'status' => $status
         ]);
 
-        return [
-            'success' => 'Inquiry has been ' . $status . '.',
-        ];
+        return response()->json([
+            'success' => 'Inquiry has been updated.',
+            'data' => $inquiry->fresh(['buyer', 'seller', 'property']),
+        ]);
     }
 }
