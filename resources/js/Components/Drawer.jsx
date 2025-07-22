@@ -20,7 +20,7 @@ export default function Drawer({ open, setOpen, title, children }) {
         <div
             id="drawer-overlay"
             onClick={handleOutsideClick}
-            className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 ${
+            className={`fixed inset-0 z-50 bg-black/1 transition-opacity duration-300 ${
                 open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
             }`}
         >

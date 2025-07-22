@@ -8,7 +8,8 @@ import dayjs from "dayjs";
 
 export default function AgentDashboard({ properties, inquiries, chartData, incoming_tripping, recent_inquiries, feedbacks }) {
     const totalListings = properties.length;
-    const pendingCount = inquiries.filter(i => i.status === 'p  ending').length;
+    const pendingCount = inquiries.filter(i => i.status === 'pending').length;
+
     const availableCount = properties.filter(p => p.status === 'Published').length;
     const soldCount = properties.filter(p => p.status === 'Sold').length;
     const assignedCount = properties.filter(p => p.status === 'Assigned').length;
@@ -138,7 +139,7 @@ export default function AgentDashboard({ properties, inquiries, chartData, incom
                 {/* Recent Inquiries - spans 2 columns */}
                 <div className="md:col-span-2 bg-white shadow rounded-lg overflow-x-auto">
                     <div className="p-4">
-                        <h2 className="text-lg font-semibold mb-2">Recent Inquiries</h2>
+                        <h2 className="text-lg font-semibold mb-2">Pending Inquiries</h2>
                     </div>
                     <table className="min-w-full text-sm text-gray-700">
                         <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">

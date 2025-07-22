@@ -29,7 +29,7 @@ class NewInquiry extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -43,6 +43,16 @@ class NewInquiry extends Notification implements ShouldQueue
         return (new MailMessage)
             ->line("Hi $receiver->name!,")
             ->line("You have received a new inquiry from $actor->name.");
+    }
+
+    public function toDatabase(object $notifiable): array
+    {
+        $actor = $this->inquiry->buyer ? $this->inquiry->buyer : $this->inquiry->agent;
+
+        return [
+            'inquiry_id' => $this->inquiry->id,
+            'message' => "You have received a new inquiry from $actor->name.",
+        ];
     }
 
     /**

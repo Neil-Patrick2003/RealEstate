@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
 use App\Models\Property;
 use App\Models\PropertyListing;
+use App\Notifications\InquiryResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -125,8 +126,19 @@ class InquiryController extends Controller
             ]);
         }
 
-        // Update inquiry status (accept or reject)
+        // Update inquiry status (accept or reject  )
         $inquiry->update(['status' => $status]);
+
+        $agent = $inquiry->agent;
+        $seller = auth()->user();
+
+        $agent->notify(new InquiryResponse([
+            'seller_name' => $seller->name,
+            'property_id' => $property->id,
+            'property_title' => $property->title,
+            'agent_id' => $agent->id,
+            'status' => $status,
+        ]));
 
         return back()->with('success', "Inquiry successfully {$status}.");
     }
