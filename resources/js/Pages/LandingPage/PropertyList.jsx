@@ -3,6 +3,7 @@ import { router, Link } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as SolidHeart } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as RegularHeart } from '@fortawesome/free-regular-svg-icons';
+import forsaleIcon from '../../../assets/forsale.png';
 
 const PropertyList = ({ properties, favouriteIds = [] }) => {
     const [favourites, setFavourites] = useState(new Set(favouriteIds));
@@ -57,8 +58,19 @@ const PropertyList = ({ properties, favouriteIds = [] }) => {
                                 className="w-full h-full object-cover"
                             />
 
-                            <div className="absolute top-4 right-4 bg-Amber text-black px-2 py-1 rounded-full text-xs font-bold">
-                                {property.isPresell ? 'Pre-sell' : 'For Sale'}
+                            <div className="absolute top-4 right-4 flex items-center justify-center">
+                            {property.isPresell ? (
+                                <span className="bg-white bg-opacity-100 px-2 py-1 text-xs font-bold text-black rounded ">
+                                Pre-sell
+                                </span>
+                            ) : (
+                                <div className="relative w-[70px] h-[34px]">
+                                <img src={forsaleIcon} alt="For Sale" className="w-full h-full object-contain" />
+                                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white transform -translate-x-1">
+                                    For Sale
+                                </span>
+                                </div>
+                            )}
                             </div>
 
                             <button
