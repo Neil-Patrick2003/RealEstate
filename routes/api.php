@@ -60,6 +60,10 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => '/agent'], function ()
     Route::put('/tripping/{id}/{action}', [\App\Http\Controllers\Api\TrippingController::class, 'update']);
 
 
+    Route::get('/chat', [\App\Http\Controllers\Api\ChatController::class, 'index']);
+    Route::get('/chat/channels/{channel}', [\App\Http\Controllers\Api\ChatController::class, 'show']);
+
+
 });
 
 
