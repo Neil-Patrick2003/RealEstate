@@ -277,5 +277,6 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/maps', [\App\Http\Controllers\Property\PropertyController::class, 'map']);
 Route::get('/maps/property/{id}', [\App\Http\Controllers\Property\PropertyController::class, 'map_show']);
+Route::get('/agents/{agent}', [\App\Http\Controllers\Agent\AgentController::class, 'show']);
 
 require __DIR__.'/auth.php';

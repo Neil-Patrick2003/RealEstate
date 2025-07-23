@@ -1,22 +1,9 @@
 import { ChevronLeft } from 'lucide-react';
 import React, { useEffect, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faBuilding,
-    faCircleCheck,
-    faCircleXmark,
-    faExpand,
-    faHourglassHalf,
-    faLocationDot,
-    faTags,
-    faTruckRampBox
-} from "@fortawesome/free-solid-svg-icons";
+
 import PropertyMap from "@/Components/PropertyMap.jsx";
-import {Link, router} from '@inertiajs/react';
-import Modal from '@/Components/Modal.jsx';
-import ToastHandler from "@/Components/ToastHandler.jsx";
-import PrimaryButton from "@/Components/PrimaryButton.jsx";
-import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
+import {Link} from '@inertiajs/react';
+
 import NavBar from "@/Components/NavBar.jsx";
 import ImageModal from "@/Components/modal/ImageModal.jsx";
 
@@ -217,9 +204,9 @@ export default function PropertyDetail({ property }) {
                                                 : 'A'}
                                         </div>
                                     )}
-                                    <p className='flex flex-col hover:underline'>{property.property_listing?.agent.name}
+                                    <Link href={`/agents/${property.property_listing?.agent.id}`} className='flex flex-col hover:underline'>{property.property_listing?.agent.name}
                                         <span className='text-sm'>{property.property_listing?.agent.email}</span>
-                                    </p>
+                                    </Link>
 
                                 </div>
 
