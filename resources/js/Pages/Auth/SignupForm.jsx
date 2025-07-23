@@ -2,9 +2,12 @@ import React from 'react'
 import { motion } from 'framer-motion';
 import { useForm } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
+import Modal from "@/Components/Modal.jsx";
 
 
 const SignupForm = ({buttonClasses, buttonForGFT}) => {
+    const [openSignUpModal, setOpenSignUpModal] = React.useState(false);
+    const [redirecting, setRedirecting] = React.useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -22,11 +25,88 @@ const SignupForm = ({buttonClasses, buttonForGFT}) => {
             onFinish: () => reset(),
             onError: (error) => console.log(error)
         });
+    }
+
+
+
+    const handleRoleClick = (role) => {
+        setOpenSignUpModal(false);
+        window.location.href = `/select-role?role=${role}`;
     };
 
   return (
 
     <div className="w-full overflow-x-auto     bg-white rounded-lg shadow-xl md:mt-0 sm:max-w-md xl:p-0 border border-gray-100">
+        <Modal
+            show={openSignUpModal}
+            open={openSignUpModal}
+            setOpen={setOpenSignUpModal}
+            closeable={true}
+            onClose={() => setOpenSignUpModal(false)}
+            maxWidth='md'
+        >
+            <div className="p-8 bg-white rounded-xl max-w-md mx-auto shadow-lg text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                    Choose Your Role
+                </h2>
+                <p className="text-gray-600 mb-8">
+                    Please select whether you want to continue as a Buyer or a Seller.
+                </p>
+                <div className="flex justify-center gap-8">
+                    {/* Buyer Button */}
+                    <button
+                        onClick={() => handleRoleClick('buyer')}
+                        className={`flex flex-col items-center justify-center bg-[#22c55e] hover:bg-[#16a34a] text-white font-semibold py-5 px-8 rounded-lg shadow-lg transition-colors w-36 disabled:opacity-50 disabled:cursor-not-allowed`}
+                        aria-label="Continue as Buyer"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-10 w-10 mb-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 7.5m7.5-7.5L14 21m-5 0h8"
+                            />
+                        </svg>
+                        {redirecting ? 'Redirecting...' : 'Buyer'}
+                    </button>
+
+                    {/* Seller Button */}
+                    <button
+                        onClick={() => handleRoleClick('seller')}
+                        disabled={redirecting}
+                        className={`flex flex-col items-center justify-center bg-[#f97316] hover:bg-[#c2410c] text-white font-semibold py-5 px-8 rounded-lg shadow-lg transition-colors w-36 disabled:opacity-50 disabled:cursor-not-allowed`}
+                        aria-label="Continue as Seller"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-10 w-10 mb-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M3 9l9-6 9 6v9a3 3 0 01-3 3H6a3 3 0 01-3-3V9z"
+                            />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 22V12h6v10"
+                            />
+                        </svg>
+                        {redirecting ? 'Redirecting...' : 'Seller'}
+                    </button>
+                </div>
+            </div>
+        </Modal>
       <div className="p-6 space-y-6 md:space-y-7 sm:p-8">
         <h1 className="text-xl font-bold leading-tight tracking-tight text-backgroundColor md:text-2xl text-center">
           Create Account
@@ -231,7 +311,7 @@ const SignupForm = ({buttonClasses, buttonForGFT}) => {
 
         <div className="grid grid-cols-3 gap-3">
           {/* Google */}
-          <button type="button" className={buttonForGFT}>
+          <button type="button" className={buttonForGFT}  onClick={() => setOpenSignUpModal(true)}>
             <svg
               className="h-5 w-5"
               aria-hidden="true"

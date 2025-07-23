@@ -38,7 +38,7 @@ class RegisteredUserController extends Controller
             'address' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:500',
             'photo_url' => 'nullable|url|max:255',
-            'role' => 'required|in:Seller,Buyer,Agent',
+            'role' => 'nullable|in:Seller,Buyer,Agent',
         ]);
 
 

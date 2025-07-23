@@ -13,6 +13,7 @@ class PropertyController extends Controller
 {
     public function show(Property $property )
     {
+
         $deal = null;
         $inquiry = null;
 
@@ -22,6 +23,10 @@ class PropertyController extends Controller
             $deal = Deal::where('property_listing_id', $property->property_listing->id)
                 ->where('buyer_id', auth()->user()->id)
                 ->first();
+        }
+
+        if (auth()->user()->role === 'Buyer') {
+            $property->increment('views');
         }
 
         if ($property->property_listing) {

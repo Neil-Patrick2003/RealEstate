@@ -102,12 +102,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
     })->name('post-property');
+
+    Route::post('/feedback', [\App\Http\Controllers\Buyer\FeedbackController::class,'store']);
+
 });
 
 Route::middleware(['auth', ])->group(function () {
-    Route::get('/seller/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('seller.dashboard');
+    Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
 
     Route::get('/seller/properties', [PropertyController::class, 'index'])->name('my-properties');
     Route::get('/seller/properties/{property}', [ PropertyController::class, 'show']);
@@ -132,7 +133,7 @@ Route::middleware(['auth', ])->group(function () {
     Route::get('/seller/trippings', [TrippingController::class, 'index']);
 
     //transaction
-    Route::get('/seller/sales', [TransactionController::class, 'index']);
+    Route::get('/seller/transaction', [TransactionController::class, 'index']);
 
 });
 
@@ -239,7 +240,6 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
 
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
-    Route::post('/feedback', [\App\Http\Controllers\Buyer\FeedbackController::class,'store']);
 
 });
 
@@ -270,9 +270,9 @@ Route::patch('/broker/properties/{propertyListing}/unpublish', [\App\Http\Contro
 Route::get('/broker/properties/{propertyListing}', [\App\Http\Controllers\Broker\PropertyController::class, 'show']);
 
 
-
-
-
+Route::get('/select-role', [\App\Http\Controllers\GoogleAuthController::class, 'storeSelectedRole']);
+Route::get('/google/auth', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google-auth');
+Route::get('/auth/google/callback', [\App\Http\Controllers\GoogleAuthController::class, 'callback']);;
 
 
 Route::middleware('auth')->group(function () {

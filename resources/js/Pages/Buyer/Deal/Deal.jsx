@@ -1,33 +1,35 @@
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import React, { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {faCheck, faPen, faXmark} from "@fortawesome/free-solid-svg-icons";
+import { useForm, usePage, router } from "@inertiajs/react";
 import Modal from "@/Components/Modal.jsx";
-import {router, useForm, usePage, Link} from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 import dayjs from "dayjs";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function DealsPage({ deals }){
+export default function DealsPage({ deals }) {
     const { auth } = usePage().props;
     const authUserId = auth?.user?.id;
-    const { data, setData, errors, processing,   reset, put} = useForm({
-        amount: ''
-    })
+    const unreadNotifications = auth?.notifications?.unread ?? [];
+
+    const counterOffers = unreadNotifications.filter(notification =>
+        notification?.data?.message?.toLowerCase().includes("counter your offer")
+    );
+
+    const { data, setData, errors, processing, reset, put } = useForm({ amount: '' });
 
     const [selectedDeal, setSelectedDeal] = useState(null);
-    const  [selectedStatus, setSelectedStatus] = useState(null);
+    const [selectedStatus, setSelectedStatus] = useState(null);
     const [openUpdateModal, setOpenUpdateModal] = useState(false);
     const [openAcceptModal, setOpenAcceptModal] = useState(false);
 
-
     const statusStyles = {
-        Accepted: "bg-green-100 text-green-700 ring-green-200",
-        Cancelled: "bg-red-100 text-red-700 ring-red-200",
-        Pending: "bg-yellow-100 text-yellow-700 ring-yellow-200",
-        default: "bg-orange-100 text-orange-700 ring-orange-200",
+        Accepted: "bg-green-100 text-green-700",
+        Cancelled: "bg-red-100 text-red-700",
+        Pending: "bg-yellow-100 text-yellow-700",
+        default: "bg-gray-100 text-gray-700",
     };
 
-    const openModal = (deal) => {
+    const openModal = deal => {
         setSelectedDeal(deal);
         setData("amount", deal.amount || "");
         setOpenUpdateModal(true);
@@ -36,216 +38,223 @@ export default function DealsPage({ deals }){
     const closeModal = () => {
         setOpenUpdateModal(false);
         setSelectedDeal(null);
-       reset();
+        reset();
     };
 
-    const submit = (e) => {
+    const submit = e => {
         e.preventDefault();
-
         if (!selectedDeal) return;
 
-        put(route('deal.deals.update', { propertyListing: selectedDeal.property_listing?.id, deal: selectedDeal?.id }), {
-            onError: (error) => console.log(error),
+        put(route("deal.deals.update", {
+            propertyListing: selectedDeal.property_listing?.id,
+            deal: selectedDeal.id
+        }), {
             onSuccess: () => setOpenUpdateModal(false),
-        })
+        });
     };
 
     const handleUpdateStatus = () => {
-        if (!selectedDeal|| !setSelectedStatus) return;
-
+        if (!selectedDeal || !selectedStatus) return;
         router.put(`/deal/${selectedDeal.id}/${selectedStatus}`, {}, {
             onSuccess: () => {
-                setSelectedDeal(null);
                 setOpenAcceptModal(false);
-            },
-            onError: (errors) => {
-                console.error('Error accepting deal:', errors);
+                setSelectedDeal(null);
             }
         });
     };
 
+    const markAsRead = id =>
+        router.post(`/notifications/${id}/read`, {}, { preserveScroll: true });
+
     return (
         <BuyerLayout>
-            <ConfirmDialog open={openAcceptModal} onConfirm={handleUpdateStatus} confirmText={'Accept'} cancelText={'Cancel'}  setOpen={setOpenAcceptModal} title={'Accept Offer amount'} description={'Are you sure you want to accept this offer amount?'} />
-            <Modal show={openUpdateModal} onClose={closeModal} closeable maxWidth="sm">
-                <form onSubmit={submit} className="p-6">
-                    <h3 className="text-lg font-semibold mb-4">Update Offer Amount</h3>
+            <ConfirmDialog
+                open={openAcceptModal}
+                onConfirm={handleUpdateStatus}
+                confirmText="Confirm"
+                cancelText="Cancel"
+                setOpen={setOpenAcceptModal}
+                title="Confirm Offer Status"
+                description="Please confirm this action."
+            />
 
-                    <label className="block mb-2 font-medium text-gray-700">Amount (₱)</label>
+            {/* Counter Offers Banner */}
+            <AnimatePresence>
+                {counterOffers.length > 0 && (
+                    <motion.div
+                        initial={{ y: -50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -50, opacity: 0 }}
+                        transition={{ duration: 0.4 }}
+                        className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4"
+                    >
+                        <div className="flex items-center justify-between bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg shadow">
+              <span>
+                {counterOffers.length} counter offer{counterOffers.length > 1 && "s"}
+              </span>
+                            <button onClick={() => counterOffers.forEach(n => markAsRead(n.id))}
+                                    className="text-yellow-600 hover:text-yellow-800"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Update Modal (already handles own animation) */}
+            <Modal show={openUpdateModal} onClose={closeModal} closeable maxWidth="sm">
+                <motion.form
+                    onSubmit={submit}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-8 bg-white rounded-lg shadow-lg"
+                >
+                    <h3 className="text-xl font-semibold mb-4">Edit Offer</h3>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₱)</label>
                     <input
                         type="number"
                         min="0"
                         step="0.01"
-                        id='amount'
                         value={data.amount}
-                        onChange={(e) => setData("amount", e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 mb-1 focus:outline-none focus:ring focus:ring-primary"
+                        onChange={e => setData("amount", e.target.value)}
+                        className="w-full px-4 py-2 border rounded-md focus:ring focus:ring-indigo-500"
                     />
-                    {errors.amount && (
-                        <p className="text-red-600 text-xs mb-2">{errors.amount}</p>
-                    )}
+                    {errors.amount && <p className="text-xs text-red-600 mt-1">{errors.amount}</p>}
 
-                    <div className="flex justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={closeModal}
-                            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
-                            disabled={processing}
-                        >
+                    <div className="flex justify-end gap-3 mt-6">
+                        <motion.button whileTap={{ scale: 0.95 }} type="button"
+                                       onClick={closeModal}
+                                       className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                                       disabled={processing}>
                             Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="px-4 py-2 rounded bg-primary text-white hover:bg-accent disabled:opacity-50"
-                        >
+                        </motion.button>
+                        <motion.button whileTap={{ scale: 0.95 }} type="submit"
+                                       className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                                       disabled={processing}>
                             {processing ? "Updating..." : "Update"}
-                        </button>
+                        </motion.button>
                     </div>
-                </form>
+                </motion.form>
             </Modal>
 
-            <div className="mt-20 border h-[82vh] rounded-2xl">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4 px-6 pt-4">My Deals</h2>
-                <div className="overflow-x-auto bg-white shadow-sm rounded-b-lg">
-                    <table className="min-w-full text-sm text-left text-gray-700">
-                        <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
-                        <tr>
-                            <th className="p-3">Property</th>
-                            <th className="p-3">Original Price</th>
-                            <th className="p-3">My Offer</th>
-                            <th className="p-3">Status</th>
-                            <th className="p-3">Last Update</th>
-                            <th className="p-3">Action</th>
-                        </tr>
-                        </thead>
+            {/* Notification Cards */}
+            <div className="mt-28 px-4 sm:px-6 lg:px-8 space-y-6">
+                <AnimatePresence>
+                    {counterOffers.map(notif => (
+                        <motion.div key={notif.id}
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="relative p-4 bg-white border rounded shadow"
+                        >
+                            <p>{notif.data.message}</p>
+                            <p className="text-xs text-gray-500">Submitted {notif.created_at}</p>
+                            <button
+                                onClick={() => markAsRead(notif.id)}
+                                className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                            >
+                                ✕
+                            </button>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
 
-                        <tbody className="divide-y divide-dashed">
-                        {deals?.length > 0 ? (
-                            deals.map((deal) => {
-                                const property = deal?.property_listing?.property;
-                                const statusClass = statusStyles[deal.status] || statusStyles.default;
+                {/* Deals List */}
+                {deals.length > 0 ? (
+                    deals.map(deal => {
+                        const property = deal.property_listing.property;
+                        const agent = deal.property_listing.agent;
+                        const isOwnerUpdate = deal.amount_last_updated_by === authUserId;
+                        const statusClass = statusStyles[deal.status] || statusStyles.default;
 
-                                return (
-                                    <tr
-                                        key={deal.id}
-                                        className="hover:bg-gray-50 flex flex-col md:table-row w-full"
-                                    >
-                                        <td className="p-3 md:table-cell">
-                                            <div className="flex items-center gap-3">
-                                                <img
-                                                    src={
-                                                        property?.image_url
-                                                            ? `/storage/${property.image_url}`
-                                                            : "/placeholder.png"
-                                                    }
-                                                    alt={property?.title ?? "Property"}
-                                                    className="w-14 h-14 object-cover rounded-md"
-                                                    onError={(e) => (e.target.src = "/placeholder.png")}
-                                                />
-                                                <div>
-                                                    <p className="font-semibold text-gray-800">
-                                                        {property?.title ?? "Unknown Property"}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {property?.address ?? "No address"}
-                                                    </p>
-                                                </div>
+                        return (
+                            <motion.div key={deal.id}
+                                        initial={{ opacity:0, y:20 }}
+                                        animate={{ opacity:1, y:0 }}
+                                        transition={{ duration:0.4 }}
+                                        className="bg-white rounded-lg border shadow-md p-6 space-y-6 hover:shadow-lg"
+                            >
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* Property Info */}
+                                    <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <img
+                                            src={`/storage/${property?.image_url}`}
+                                            alt={property?.title}
+                                            className="rounded-lg object-cover w-full h-64"
+                                        />
+                                        <div className="space-y-2">
+                                            <h2 className="text-lg font-bold text-gray-800">{property?.title}</h2>
+                                            <p className="text-sm text-gray-500">{property?.address}</p>
+                                            <div className="space-y-1 text-sm text-gray-700">
+                                                <div className="flex justify-between"><span>Price</span><span>₱{property.price?.toLocaleString()}</span></div>
+                                                <div className="flex justify-between font-semibold text-green-600"><span>Offer</span><span>₱{deal.amount?.toLocaleString()}</span></div>
+                                                <div className="flex justify-between"><span>Type</span><span>{property.property_type}</span></div>
+                                                <div className="flex justify-between"><span>Area</span><span>{property.lot_area} m²</span></div>
                                             </div>
-                                        </td>
-                                        <td className="p-3 md:table-cell">
-                                            <p className="text-primary font-medium">
-                                                {property?.price
-                                                    ? Number(property.price).toLocaleString("en-PH", {
-                                                        style: "currency",
-                                                        currency: "PHP",
-                                                    })
-                                                    : "₱0.00"}
-                                            </p>
-                                        </td>
-                                        <td className="p-3 md:table-cell">
-                                            <p className="text-primary font-medium">
-                                                {deal?.amount
-                                                    ? Number(deal.amount).toLocaleString("en-PH", {
-                                                        style: "currency",
-                                                        currency: "PHP",
-                                                    })
-                                                    : "₱0.00"}
-                                            </p>
-                                        </td>
-                                        <td className="p-3 md:table-cell">
-                                            <span
-                                                className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}
-                                            >
-                                                {deal.status === 'Accepted' ? (
-                                                    <span>Accepted - Proceeding with paperwork</span>
-                                                ) : (
-                                                    <span>{deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}</span>
-                                                )}
+                                        </div>
+                                    </div>
 
-                                            </span>
-                                        </td>
-                                        <td className="p-3 md:table-cell">
-                                            {deal.amount_last_updated_at
-                                                ? dayjs(deal.amount_last_updated_at).format("MMM D, YYYY h:mm A")
-                                                : "—"}
-                                        </td>
-                                        <td className="p-3 md:table-cell">
-                                            {deal.status === 'Pending' ? (
-                                                <>
-                                                    <button
-                                                        onClick={() => openModal(deal)}
-                                                        className="text-secondary border border-secondary px-4 py-2 rounded-md mr-2"
-                                                    >
-                                                        <FontAwesomeIcon icon={faPen} className='mr-2'/>
-                                                        Edit
-                                                    </button>
-                                                    {deal.amount_last_updated_by &&
-                                                        deal.amount_last_updated_by !== authUserId && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => { setSelectedDeal(deal); setOpenAcceptModal(true); setSelectedStatus('Accepted')}}
-                                                                    className="text-primary border mr-2 border-primary px-4 py-2 rounded-md hover:text-accent"
-                                                                >
-                                                                    <FontAwesomeIcon icon={faCheck} className='mr-2' />
-                                                                    Accept
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => { setSelectedDeal(deal); setOpenAcceptModal(true); setSelectedStatus('Rejected')}}
-                                                                    className="text-red-600 border  border-red-600 px-4 py-2 rounded-md hover:text-red-800"
-                                                                >
-                                                                    <FontAwesomeIcon icon={faXmark} className='mr-2' />
-                                                                    Reject
-                                                                </button>
-                                                            </>
-
-
-
-                                                        )}
-                                                </>
-
+                                    {/* Agent Info & Actions */}
+                                    <div className="space-y-4">
+                                        <div className="p-4 bg-green-50 rounded-lg flex items-center gap-4">
+                                            {agent.photo_url ? (
+                                                <img src={`/storage/${agent.photo_url}`} className="h-16 w-16 rounded-full object-cover" />
                                             ) : (
-                                                <p className='text-gray-400'>No actions available</p>
+                                                <div className="h-16 w-16 bg-gray-300 rounded-full flex items-center justify-center text-lg text-white font-semibold">
+                                                    {agent.name.charAt(0)}
+                                                </div>
                                             )}
+                                            <div>
+                                                <h4 className="font-medium text-gray-900">{agent.name}</h4>
+                                                <p className="text-xs text-gray-600">{agent.contact_number}</p>
+                                            </div>
+                                        </div>
 
-
-
-
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                            ) : (
-                                <tr>
-                                    <td colSpan="6" className="text-center py-6 text-gray-400">
-                                        No deals found.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
+                                        {deal.status === 'Pending' ? (
+                                            <div className="space-y-2">
+                                                {isOwnerUpdate ? (
+                                                    <motion.button whileTap={{ scale: 0.95 }}
+                                                                   onClick={() => openModal(deal)}
+                                                                   className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                                                        Edit Offer
+                                                    </motion.button>
+                                                ) : (
+                                                    <motion.button whileTap={{ scale: 0.95 }}
+                                                                   onClick={() => {
+                                                                       setSelectedDeal(deal);
+                                                                       setSelectedStatus("Accepted");
+                                                                       setOpenAcceptModal(true);
+                                                                   }}
+                                                                   className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                                        Accept Offer
+                                                    </motion.button>
+                                                )}
+                                                <motion.button whileTap={{ scale: 0.95 }}
+                                                               onClick={() => {
+                                                                   setSelectedDeal(deal);
+                                                                   setSelectedStatus("Cancelled");
+                                                                   setOpenAcceptModal(true);
+                                                               }}
+                                                               className="w-full px-4 py-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200">
+                                                    Decline Offer
+                                                </motion.button>
+                                            </div>
+                                        ) : (
+                                            <span className={`inline-block px-3 py-1 text-sm rounded-full ${statusClass}`}>
+                                                {deal.status}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        );
+                    })
+                ) : (
+                    <p className="text-center text-gray-500 mt-10">No deals yet.</p>
+                )}
             </div>
         </BuyerLayout>
     );

@@ -13,9 +13,10 @@ class DealController extends Controller
     public function index(){
 
         $deals = Deal::with([
-            'property_listing.property:id,title,price,image_url,address',
-            'property_listing.agent:id,name',
+            'property_listing.property:id,title,price,image_url,address,property_type,sub_type,lot_area,floor_area',
+            'property_listing.agent:id,name,photo_url,email,contact_number',
             'property_listing.seller:id,name',
+            'feedback'
         ])
             ->where('buyer_id', auth()->id())
             ->latest()
@@ -45,6 +46,7 @@ class DealController extends Controller
         ]);
 
         $agent = $propertyListing->agent;
+
         $property = $propertyListing->property;
 
         $agent->notify( new NewDeal([
@@ -67,8 +69,8 @@ class DealController extends Controller
             'amount_last_updated_by' => auth()->id(),
         ]);
 
-        $agent = $propertyListing->agent;
-        $property = $propertyListing->property;
+        $agent = $deal->property_listing->agent;
+        $property = $deal->property_listing->property;
 
         $agent->notify( new NewDeal([
             'buyer_name' => auth()->user()->name,
