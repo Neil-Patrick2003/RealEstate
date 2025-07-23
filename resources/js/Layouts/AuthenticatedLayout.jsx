@@ -206,7 +206,7 @@ export default function AuthenticatedLayout({ children }) {
                 </motion.header>
 
                 {/* Body */}
-                <div className="pt-14 p-4 sm:p-6 lg:p-8">
+                <div className="pt-14 sm:p-6 lg:p-8">
                     <FlashMessage />
                     <Breadcrumb />
                     {children}
