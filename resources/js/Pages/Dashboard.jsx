@@ -68,11 +68,21 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
         default: 'bg-gray-100 text-gray-700 ring-gray-300',
     };
 
+    const fadeInUp = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    };
+
+    const hoverScale = {
+        whileHover: { scale: 1.05 },
+        transition: { type: 'spring', stiffness: 300 },
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Dashboard" />
 
-            {/* Stats cards */}
+            {/* Stats Cards */}
             <motion.div
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 py-6"
                 variants={containerVariants}
@@ -104,14 +114,37 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
             </motion.div>
 
             {/* Recent Properties */}
-            {recent_properties?.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.8 }}
-                    className="mt-10 px-4"
-                >
-                    <h2 className="text-xl font-bold mb-6 text-gray-800">Recent Properties</h2>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+                className="mt-10 px-4"
+            >
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-800">Recent Properties</h2>
+
+                    <motion.div {...hoverScale}>
+                        <Link
+                            href="/properties/create"
+                            className="text-sm bg-primary text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-600 transition duration-200"
+                        >
+                            + Add Property
+                        </Link>
+                    </motion.div>
+
+                </div>
+
+                {recent_properties.length === 0 ? (
+                    <motion.div
+                        variants={fadeInUp}
+                        initial="hidden"
+                        animate="visible"
+                        className="flex items-center justify-center h-40 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300"
+                    >
+                        <p>No recent properties. Start by adding one!</p>
+                    </motion.div>
+
+                ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {recent_properties.slice(0, 5).map((property) => (
                             <motion.div
@@ -119,7 +152,6 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                                 whileHover={{ scale: 1.04 }}
                                 className="rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-200 overflow-hidden flex flex-col"
                             >
-                                {/* Image */}
                                 <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
                                     <img
                                         src={`/storage/${property.image_url}`}
@@ -135,16 +167,11 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                                     </span>
                                 </div>
 
-                                {/* Info */}
                                 <div className="p-6 flex flex-col flex-grow">
                                     <div className="flex items-center justify-between">
-                                        <h3
-                                            className="text-xl font-semibold text-gray-900 truncate max-w-[70%]"
-                                            title={property.title}
-                                        >
+                                        <h3 className="text-xl font-semibold text-gray-900 truncate max-w-[70%]" title={property.title}>
                                             {property.title}
                                         </h3>
-
                                         <p className="text-primary font-bold text-xl whitespace-nowrap">
                                             ₱{Number(property.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </p>
@@ -171,13 +198,24 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                             </motion.div>
                         ))}
                     </div>
-                </motion.div>
-            )}
+                )}
+            </motion.div>
 
             {/* Recent Inquiries */}
-            {recent_inquiries?.length > 0 && (
-                <section className="mt-12 px-4">
-                    <h2 className="text-xl font-bold mb-6 text-gray-800">Recent Inquiries</h2>
+            <section className="mt-12 px-4">
+                <h2 className="text-xl font-bold mb-6 text-gray-800">Recent Inquiries</h2>
+
+                {recent_inquiries.length === 0 ? (
+
+                    <motion.div
+                        variants={fadeInUp}
+                        initial="hidden"
+                        animate="visible"
+                        className="flex items-center justify-center h-40 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300"
+                    >
+                        <p>No recent inquiries yet.</p>
+                    </motion.div>
+                ) : (
                     <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
                         <table className="min-w-full text-sm text-left text-gray-700">
                             <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
@@ -226,11 +264,11 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                             </tbody>
                         </table>
                     </div>
-                </section>
-            )}
+                )}
+            </section>
 
+            {/* Support + Profile Progress */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 px-4">
-                {/* Left: Contact Support */}
                 <div className="col-span-1 md:col-span-2">
                     <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-md p-6 h-full flex flex-col justify-between transition-all hover:shadow-lg">
                         <div>
@@ -238,7 +276,6 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                             <p className="text-gray-600 text-sm leading-relaxed mb-6">
                                 Need assistance with managing properties, inquiries, or your account? Our support team is ready to help you.
                             </p>
-
                             <div className="space-y-4">
                                 <div className="flex items-center gap-4">
                                     <div className="bg-indigo-100 text-indigo-600 p-2 rounded-full text-xl">📧</div>
@@ -258,11 +295,10 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                                 </div>
                             </div>
                         </div>
-
                         <div className="mt-8">
                             <a
                                 href="mailto:support@realestate.com"
-                                className="inline-block w-full text-center bg-primary        text-white text-sm font-semibold px-6 py-3 rounded-lg shadow hover:bg-indigo-700 transition duration-200"
+                                className="inline-block w-full text-center bg-primary text-white text-sm font-semibold px-6 py-3 rounded-lg shadow hover:bg-indigo-700 transition duration-200"
                             >
                                 Contact Support
                             </a>
@@ -270,7 +306,6 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                     </div>
                 </div>
 
-                {/* Right: Profile Progress */}
                 <div className="col-span-1">
                     <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 h-full transition-all hover:shadow-lg">
                         <h2 className="text-lg font-semibold text-gray-800 mb-4">👤 Profile Progress</h2>
@@ -278,8 +313,6 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                     </div>
                 </div>
             </div>
-
-
         </AuthenticatedLayout>
     );
 }

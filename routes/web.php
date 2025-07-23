@@ -270,9 +270,9 @@ Route::patch('/broker/properties/{propertyListing}/unpublish', [\App\Http\Contro
 Route::get('/broker/properties/{propertyListing}', [\App\Http\Controllers\Broker\PropertyController::class, 'show']);
 
 
-
-
-
+Route::get('/select-role', [\App\Http\Controllers\GoogleAuthController::class, 'storeSelectedRole']);
+Route::get('/google/auth', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google-auth');
+Route::get('/auth/google/callback', [\App\Http\Controllers\GoogleAuthController::class, 'callback']);;
 
 
 Route::middleware('auth')->group(function () {
