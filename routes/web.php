@@ -107,7 +107,7 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
-Route::middleware(['auth', ])->group(function () {
+Route::middleware(['auth', 'role:seller' ])->group(function () {
     Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
 
     Route::get('/seller/properties', [PropertyController::class, 'index'])->name('my-properties');
@@ -176,17 +176,13 @@ Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\Prop
 Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::class, 'feedback']);
 
 
-
-
-
+Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
+Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
 Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])
     ->middleware('auth')
     ->name('notifications.read');
-
-
 //------------------------------------------buyer---------------------------------------------------
-Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/property-listings/{propertyListing}/deals', [DealController::class, 'store'])->name('property-listings.deals.store');
@@ -195,7 +191,6 @@ Route::middleware(['auth'])->group(function () {
 
 
 Route::middleware(['auth','role:Buyer' ])->group(function () {
-
     Route::get('/dashboard', function () {
         $properties = \App\Models\Property::with('coordinate')
             ->where('status', 'Published')
@@ -214,8 +209,6 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
         ]);
     })->name('dashboard');
 
-
-    Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
     //sent inquiries
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
@@ -242,16 +235,6 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
 
 });
-
-
-
-
-
-
-
-
-
-
 
 
 //---------------------------------broker----------------------------

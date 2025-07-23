@@ -20,23 +20,9 @@ import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
 import NavBar from "@/Components/NavBar.jsx";
 import ImageModal from "@/Components/modal/ImageModal.jsx";
 
-export default function PropertyDetail({ property, deal, inquiry }) {
+export default function PropertyDetail({ property }) {
     const [visibleImages, setVisibleImages] = useState([]);
     const [openImage, setOpenImage] = useState(false);
-    const [isOpenModal, setIsOpenModal] =useState(false);
-    const [isOpenDealForm, setIsOpenDealForm] = useState(false)
-    const [ message, setMessage] = useState('');
-
-
-
-
-
-
-    const openModal = () =>{
-        setIsOpenModal(true);
-    }
-
-
 
     useEffect(() => {
         const handleResize = () => {
@@ -49,76 +35,9 @@ export default function PropertyDetail({ property, deal, inquiry }) {
         return () => window.removeEventListener('resize', handleResize);
     }, [property.images]);
 
-    const handleSubmitInquiry = () => {
-        router.post(`/properties/${property.id}`, {
-            message: message
-        },
-            {
-                preserveScroll:true,
-                onSuccess: () => {
-                    setMessage(''),
-                        setIsOpenModal(false);
-                }
-            })
-    }
     return (
         <div className='mt-20'>
             <NavBar/>
-            <ToastHandler/>
-            <DealFormModal isOpen={isOpenDealForm} setIsOpen={setIsOpenDealForm} property={property} initialValue={deal}/>
-
-            <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
-                <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
-                    {/* Close Button */}
-                    <button
-                        onClick={() => setIsOpenModal(false)}
-                        className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 focus:outline-none"
-                        aria-label="Close modal"
-                    >
-                        &times;
-                    </button>
-
-                    {/* Agent Info */}
-                    <div className="flex items-center gap-4 mb-6">
-                        <img
-                            src={property?.seller?.avatar || '/default-avatar.png'}
-                            alt="Agent Avatar"
-                            className="w-14 h-14 rounded-full object-cover border border-gray-300"
-                        />
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-800">{property?.seller?.name}</h3>
-                            <p className="text-sm text-gray-500">Licensed Property Agent</p>
-                        </div>
-                    </div>
-
-                    {/* Message Box */}
-                    <div className="mb-4">
-                        <label htmlFor="message" className="text-sm font-medium text-gray-700">
-                            Send a quick message
-                        </label>
-                        <textarea
-                            id="message"
-                            rows={4}
-                            maxLength={250} // Character limit
-                            placeholder="Hi, I'm interested in this property. Please contact me..."
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            className="mt-2 w-full rounded-md border border-gray-200 focus:ring-2 focus:ring-primary focus:outline-none p-3 text-sm text-gray-700 resize-none transition-shadow duration-200"
-                        />
-                        <p className="text-sm text-gray-500 mt-1">{`${message.length}/250`}</p> {/* Character count */}
-                    </div>
-
-                    {/* Send Button */}
-                    <div className="flex justify-end">
-                        <button
-                            onClick={handleSubmitInquiry}
-                            className="bg-primary text-white font-medium px-5 py-2 rounded-md hover:bg-primary/90 transition duration-200 shadow-sm"
-                        >
-                            Send Message
-                        </button>
-                    </div>
-                </div>
-            </Modal>
 
 
             <div className="container flex flex-col gap-6 mx-auto px-4 pb-12 md:px-8 max-w-7xl">
@@ -127,31 +46,9 @@ export default function PropertyDetail({ property, deal, inquiry }) {
                         <ChevronLeft/>
                         Back to Listings
                     </Link>
-                    <div>
-                        {
-                            inquiry ? (
-                                <>
-                                    {inquiry?.status === 'Accepted' && (
-                                        <>
-                                            {
-                                                property?.property_listing && <PrimaryButton onClick={() => setIsOpenDealForm(true)}>
-                                                    {deal ? 'View My Offer': 'Make Offer'}
-                                                </PrimaryButton>
-                                            }
-                                        </>
-                                    )}
-
-                                </>
-                            ) : <></>
-                        }
-                    </div>
-
                 </div>
-
-
-
                 {/*images*/}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 animate-fade-in delay-100">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 animate-fa  de-in delay-100">
                     <div className="md:col-span-2 h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-lg image-container relative">
                         <img src={`/storage/${property.image_url}`} alt="Modern two-story house with large windows, green lawn, and wooden accents in a suburban neighborhood" className="w-full h-full object-cover"/>
                         <div className="image-overlay">
@@ -292,10 +189,7 @@ export default function PropertyDetail({ property, deal, inquiry }) {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">Floor Area</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property.property_type === 'land' ? property.lot_area : property.floor_area}</td>
                                     </tr>
-                                    <tr>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">Stories</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2</td>
-                                    </tr>
+
                                     <tr>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">Parking</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2 Car Garage</td>
@@ -340,51 +234,8 @@ export default function PropertyDetail({ property, deal, inquiry }) {
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden mt-8 animate-fade-in delay-200">
                     <div className="p-6 md:p-8">
                         <h2 className="text-2xl font-bold text-[#5C7934] mb-4 relative property-highlight">Location</h2>
-                        <p className="text-gray-700 mb-6">
-                            The property is located in the prestigious Green Valley neighborhood, known for its excellent schools, parks,
-                            and convenient access to shopping and dining. Just 15 minutes from downtown.
-                        </p>
-
-
-
                         <div>
                             <PropertyMap coordinates={property.coordinate} />
-                        </div>
-
-                        <div className="mt-8">
-                            <h3 className="text-xl font-semibold text-[#5C7934] mb-4">Nearby Amenities</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="flex items-start">
-                                    <div className="bg-[#5C7934]/10 p-3 rounded-lg mr-4">
-                                        <i className="fas fa-graduation-cap text-[#5C7934]"></i>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-[#5C7934]">Schools</h4>
-                                        <p className="text-gray-600 text-sm">Green Valley Elementary (0.5km)</p>
-                                        <p className="text-gray-600 text-sm">Valley High School (1.2km)</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start">
-                                    <div className="bg-[#5C7934]/10 p-3 rounded-lg mr-4">
-                                        <i className="fas fa-shopping-bag text-[#5C7934]"></i>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-[#5C7934]">Shopping</h4>
-                                        <p className="text-gray-600 text-sm">Green Valley Mall (0.8km)</p>
-                                        <p className="text-gray-600 text-sm">Organic Market (1.3km)</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start">
-                                    <div className="bg-[#5C7934]/10 p-3 rounded-lg mr-4">
-                                        <i className="fas fa-utensils text-[#5C7934]"></i>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-[#5C7934]">Dining</h4>
-                                        <p className="text-gray-600 text-sm">Farm-to-Table Bistro (0.6km)</p>
-                                        <p className="text-gray-600 text-sm">Green Valley Cafe (1.1km)</p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
