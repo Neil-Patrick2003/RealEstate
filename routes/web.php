@@ -245,13 +245,13 @@ Route::post('/broker/agents/create', [\App\Http\Controllers\Broker\AgentControll
 Route::patch('/broker/agents/update/{agent}', [\App\Http\Controllers\Broker\AgentController::class, 'update']);
 Route::delete('/broker/agents/{id}/delete', [\App\Http\Controllers\Broker\AgentController::class, 'destroy']);
 
-
-
 Route::get('/broker/properties', [\App\Http\Controllers\Broker\PropertyController::class, 'index'])->name('broker.properties');
 Route::patch('/broker/properties/{propertyListing}/publish', [\App\Http\Controllers\Broker\PropertyController::class, 'publish']);
 Route::patch('/broker/properties/{propertyListing}/unpublish', [\App\Http\Controllers\Broker\PropertyController::class, 'unpublish']);
 Route::get('/broker/properties/{propertyListing}', [\App\Http\Controllers\Broker\PropertyController::class, 'show']);
 
+Route::get('/broker/partners', [\App\Http\Controllers\Broker\DeveloperController::class, 'index']);
+Route::post('/broker/partners/create', [\App\Http\Controllers\Broker\DeveloperController::class, 'store']);
 
 Route::get('/select-role', [\App\Http\Controllers\GoogleAuthController::class, 'storeSelectedRole']);
 Route::get('/google/auth', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google-auth');
