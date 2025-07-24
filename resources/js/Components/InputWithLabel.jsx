@@ -16,6 +16,7 @@ export default function FloatingInput({
                 required={required}
                 value={value}
                 onChange={onChange}
+                autoComplete="off"
                 placeholder=" "
                 className="peer w-full border border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 bg-white placeholder-transparent transition focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
             />

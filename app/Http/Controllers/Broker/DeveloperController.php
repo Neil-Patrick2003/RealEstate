@@ -10,7 +10,12 @@ use Inertia\Inertia;
 class DeveloperController extends Controller
 {
     public function index(){
-        return Inertia::render('Broker/Partner/Partner', []);
+
+        $developers = Developer::all();
+
+        return Inertia::render('Broker/Partner/Partner', [
+            'developers' => $developers,
+        ]);
     }
 
     public function store(Request $request)
