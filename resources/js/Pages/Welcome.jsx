@@ -52,7 +52,7 @@ const Welcome = ({ auth, properties, search = '', initialType = "All" }) => {
 
             {/* Hero Section */}
             <div
-                className="relative h-screen bg-cover bg-center bg-no-repeat"
+                className="relative h-[65vh] bg-cover bg-center bg-no-repeat"
                 style={{ backgroundImage: `url(${backgroundImage})` }}
             >
                 <div className="relative z-10">

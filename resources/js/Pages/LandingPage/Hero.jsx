@@ -20,7 +20,7 @@ const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChan
         <>
             <div className="absolute inset-0 bg-black/10"></div>
 
-            <main className="relative z-10 flex justify-center items-center min-h-[90vh]">
+            <main className="relative z-10 mt-[60px]  md:mt-18 flex justify-center items-center min-h-[70vh]">
                 <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8">
                     <motion.div
                         initial={{ opacity: 0, y: -30 }}
@@ -28,10 +28,10 @@ const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChan
                         transition={{ duration: 0.8 }}
                         className="text-center mb-8 lg:mb-12"
                     >
-                        <h1 className="text-white text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-4">
+                        <h1 className="text-white text-2xl md:text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-4">
                             Find Your Perfect Home
                         </h1>
-                        <p className="text-gray-200 text-lg sm:text-xl lg:text-2xl font-light max-w-3xl mx-auto">
+                        <p className="text-gray-200 text-md md:text-lg lg:text-xl xl:text-2xl font-light max-w-3xl mx-auto">
                             Discover exceptional properties and make your dream home a reality with our premium real estate platform
                         </p>
                     </motion.div>
@@ -42,7 +42,7 @@ const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChan
                         transition={{ duration: 0.8, delay: 0.1 }}
                         className="bg-white/95 backdrop-blur-lg p-4 sm:p-6 lg:p-8 rounded-2xl shadow-2xl border border-white/20 max-w-5xl mx-auto"
                     >
-                        <div className="flex flex-col lg:flex-row gap-4 lg:gap-0">
+                        <div className="flex flex-row-reverse lg:flex-row gap-4 lg:gap-0">
                             {/* Property Type Dropdown */}
                             <div className="flex-shrink-0">
                                 <Dropdown>
@@ -51,30 +51,27 @@ const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChan
                                             type="button"
                                             className="w-full lg:w-auto inline-flex items-center justify-center lg:justify-start rounded-xl lg:rounded-l-xl lg:rounded-r-none bg-gray-50 hover:bg-gray-100 px-4 py-3 lg:py-4 border-0 lg:border-r border-gray-200 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none transition-colors duration-200"
                                         >
-                                            <SlidersHorizontal size={18} className="text-primary mr-2" />
-                                            {/* Show selected type with colored dot */}
-                                            <span
-                                                className={`w-2 h-2 rounded-full mr-2 ${selected.color}`}
-                                            ></span>
-                                            <span className="text-sm lg:text-base">{selected.label}</span>
+                                            <SlidersHorizontal size={20} className="text-primary lg:hidden" />
+                                            <div className="hidden lg:flex items-center">
+                                                <span className={`w-2 h-2 rounded-full mr-2 ${selected.color}`} />
+                                                <span className="text-sm lg:text-base">{selected.label}</span>
+                                            </div>
                                         </button>
                                     </Dropdown.Trigger>
+
                                     <Dropdown.Content>
-                                        <Dropdown.Link>
-                                            <button>Hello</button>
-                                        </Dropdown.Link>
                                         {propertyTypes.map(({ key, label, color }) => (
                                             <div
                                                 key={key}
-                                                className="hover:bg-gray-100 flex-center px-4 py-2 w-full"
+                                                className="hover:bg-gray-100 flex items-center px-4 py-2 w-full"
                                             >
                                                 <button
-                                                    className={`flex-center text-sm hover:bg-gray-100 w-full text-left ${
+                                                    className={`flex items-center text-sm hover:bg-gray-100 w-full text-left ${
                                                         selectedType === key ? 'font-semibold text-primary' : ''
                                                     }`}
                                                     onClick={() => handleTypeChange(key)}
                                                 >
-                                                    <span className={`w-2 h-2 rounded-full mr-2 ${color}`}></span>
+                                                    <span className={`w-2 h-2 rounded-full mr-2 ${color}`} />
                                                     {label}
                                                 </button>
                                             </div>
@@ -98,14 +95,15 @@ const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChan
                                 />
                             </div>
 
-                            {/* Enhanced Search Button */}
-                            <div className="flex-shrink-0">
+                            {/* Search Button hidden on mobile */}
+                            <div className="hidden lg:flex flex-shrink-0">
                                 <button className="w-full lg:w-auto flex items-center justify-center bg-primary hover:bg-primary/90 rounded-xl lg:rounded-r-xl lg:rounded-l-none text-white text-sm lg:text-base font-semibold px-6 py-3 lg:py-4 transition-colors duration-300 focus:outline-none shadow-lg hover:shadow-xl">
                                     <Search size={18} className="mr-2" />
                                     <span>Search Properties</span>
                                 </button>
                             </div>
                         </div>
+
 
                         {/* Quick Filters */}
                         <div className="mt-4 pt-4 border-t border-gray-200">
