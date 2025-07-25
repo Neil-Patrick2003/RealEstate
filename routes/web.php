@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function (Request $request) {
+
+    $featured = \App\Models\Property::with('features')
+    ->  where('status', 'Published')
+        ->latest()
+        ->take(3)
+        ->get();
     $properties = \App\Models\Property::where('status', 'Published')
         ->when($request->search, function ($q) use ($request) {
             $q->where(function ($query) use ($request) {
@@ -41,6 +47,7 @@ Route::get('/', function (Request $request) {
         'phpVersion' => PHP_VERSION,
         'properties' => $properties,
         'favouriteIds' => $favouriteIds,
+        'featured' => $featured,
 
     ]);
 });
