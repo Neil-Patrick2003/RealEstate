@@ -252,6 +252,7 @@ Route::get('/broker/properties/{propertyListing}', [\App\Http\Controllers\Broker
 
 Route::get('/broker/partners', [\App\Http\Controllers\Broker\DeveloperController::class, 'index']);
 Route::post('/broker/partners/create', [\App\Http\Controllers\Broker\DeveloperController::class, 'store']);
+Route::get('/broker/partners/{id}', [\App\Http\Controllers\Broker\DeveloperController::class, 'show']);
 
 Route::get('/select-role', [\App\Http\Controllers\GoogleAuthController::class, 'storeSelectedRole']);
 Route::get('/google/auth', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google-auth');

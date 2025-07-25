@@ -9,6 +9,7 @@ import { faCamera } from "@fortawesome/free-solid-svg-icons";
 export default function AddPartner({ show, onClose, initialValue }) {
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: '',
+        email: '',
         trade_name: '',
         registration_number: '',
         license_number: '',
@@ -24,6 +25,7 @@ export default function AddPartner({ show, onClose, initialValue }) {
         if (initialValue) {
             setData({
                 name: initialValue.name ?? '',
+                email: initialValue.email ?? '',
                 trade_name: initialValue.trade_name ?? '',
                 registration_number: initialValue.registration_number ?? '',
                 license_number: initialValue.license_number ?? '',
@@ -130,8 +132,6 @@ export default function AddPartner({ show, onClose, initialValue }) {
 
                     {/* Company Info */}
                     <div className="col-span-1 md:col-span-2 space-y-8">
-                        <h3 className="text-md font-semibold text-gray-700 border-b pb-1">Company Info</h3>
-
                         <InputWithLabel
                             id="name"
                             name="name"
@@ -142,6 +142,17 @@ export default function AddPartner({ show, onClose, initialValue }) {
                             className="w-full"
                         />
                         <InputError message={errors.name} className="mt-1" />
+
+                        <InputWithLabel
+                            id="email"
+                            name="email"
+                            label="Company Email *"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            required
+                            className="w-full"
+                        />
+                        <InputError message={errors.email} className="mt-1" />
 
                         <InputWithLabel
                             id="trade_name"

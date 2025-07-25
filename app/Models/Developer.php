@@ -8,4 +8,8 @@ class Developer extends Model
 {
     protected $guarded = [];
 
+    public function property(){
+        return $this->hasMany(Property::class);
+    }
+
 }

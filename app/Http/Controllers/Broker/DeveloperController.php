@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Broker;
 
 use App\Http\Controllers\Controller;
 use App\Models\Developer;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class DeveloperController extends Controller
@@ -22,6 +24,7 @@ class DeveloperController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required',
+            'email' => 'required|email',
             'company_logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'trade_name' => 'required',
             'registration_number' => 'required',
@@ -39,6 +42,7 @@ class DeveloperController extends Controller
 
         Developer::create([
             'name' => $validated['name'],
+            'email' => $validated['email'],
             'company_logo' => $company_logo,
             'trade_name' => $validated['trade_name'],
             'registration_number' => $validated['registration_number'],
@@ -48,8 +52,24 @@ class DeveloperController extends Controller
             'facebook_url' => $validated['facebook_url'],
         ]);
 
+//        User::create([
+//            'name' => $validated['name'],
+//            'email' => $validated['email'],
+//            'password' => bcrypt(Str::random(10)),
+//            'role' => 'Seller',
+//        ]);
+
 
         return redirect()->back();
 
+    }
+
+    public function  show($id)
+    {
+        $developer = Developer::with('properties')->find($id);
+
+        return Inertia::render('Broker/Partner/ShowPartner', [
+            'developer' => $developer,
+        ]);
     }
 }

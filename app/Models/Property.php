@@ -76,6 +76,12 @@ class Property extends Model
         return $this->hasMany(PropertyTripping::class);
     }
 
+    public function developers()
+    {
+        return $this->belongsTo(Developer::class);
+
+    }
+
 
 
 }

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('developers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('email')->unique();
             $table->string('trade_name')->nullable();
             $table->string('registration_number')->unique();
             $table->string('license_number')->unique();
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->string('website_url')->nullable();
             $table->string('facebook_url')->nullable();
             $table->string('status')->default('pending');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
