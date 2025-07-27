@@ -116,28 +116,6 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         <div className="bg-gray-50 min-h-screen pt-[60px]">
             <NavBar />
 
-            <header className="bg-white shadow-sm p-6">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800">
-                            <i className="fas fa-map-marker-alt text-green-600 mr-2"></i>
-                            Premium Lot Finder
-                        </h1>
-                        <p className="text-gray-500 mt-1">Search by filters, location, price, and more</p>
-                    </div>
-                    <div className="hidden lg:flex gap-4">
-                        <button className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">
-                            <i className="fas fa-heart text-red-500 mr-1"></i>
-                            Saved Lots
-                        </button>
-                        <button className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                            <i className="fas fa-plus mr-1"></i>
-                            List Your Property
-                        </button>
-                    </div>
-                </div>
-            </header>
-
             <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-6">
                 {/* Filters Sidebar */}
                 {(showFilters || typeof window === "undefined" || window.innerWidth >= 1024) && (

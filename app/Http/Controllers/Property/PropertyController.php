@@ -23,7 +23,6 @@ class PropertyController extends Controller
     public function map_show($id){
         $property = Property::with('images', 'features', 'coordinate')->find($id);
 
-
         return Inertia::render('Buyer/Properties/PropertyInMapShow', [
             'property' => $property,
         ]);

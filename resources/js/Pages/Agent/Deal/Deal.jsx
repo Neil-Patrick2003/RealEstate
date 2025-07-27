@@ -203,7 +203,7 @@ export default function Deal({ property_listing,  }) {
                                                                         className="text-secondary border border-secondary px-4 mr-2 py-2 rounded-md mr-2"
                                                                     >
                                                                         <FontAwesomeIcon icon={faPen} className='mr-2'/>
-                                                                        Edit
+                                                                        Counter Offer
                                                                     </button>
                                                                     {deal.amount_last_updated_by &&
                                                                         deal.amount_last_updated_by !== authUserId && (

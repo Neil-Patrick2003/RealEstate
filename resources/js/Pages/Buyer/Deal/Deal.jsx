@@ -218,19 +218,28 @@ export default function DealsPage({ deals }) {
                                                 {isOwnerUpdate ? (
                                                     <motion.button whileTap={{ scale: 0.95 }}
                                                                    onClick={() => openModal(deal)}
-                                                                   className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                                                                   className="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-accent">
                                                         Edit Offer
                                                     </motion.button>
                                                 ) : (
-                                                    <motion.button whileTap={{ scale: 0.95 }}
-                                                                   onClick={() => {
-                                                                       setSelectedDeal(deal);
-                                                                       setSelectedStatus("Accepted");
-                                                                       setOpenAcceptModal(true);
-                                                                   }}
-                                                                   className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                                                        Accept Offer
-                                                    </motion.button>
+                                                    <>
+                                                        <motion.button whileTap={{ scale: 0.95 }}
+                                                                       onClick={() => {
+                                                                           setSelectedDeal(deal);
+                                                                           setSelectedStatus("Accepted");
+                                                                           setOpenAcceptModal(true);
+                                                                       }}
+                                                                       className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                                            Accept Offer
+                                                        </motion.button>
+                                                        <motion.button whileTap={{ scale: 0.95 }}
+                                                                       onClick={() => openModal(deal)}
+                                                                       className="w-full px-4 py-2 border border-secondary text-secondary rounded-md">
+                                                            Make Counter Offer
+                                                        </motion.button>
+
+                                                    </>
+
                                                 )}
                                                 <motion.button whileTap={{ scale: 0.95 }}
                                                                onClick={() => {

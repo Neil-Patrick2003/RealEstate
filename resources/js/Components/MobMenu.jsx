@@ -163,16 +163,13 @@ export default function MobMenu({ Menus, auth, onLanguageChange, onLogout }) {
                     {/* Login/Logout Section */}
                     {auth?.user ? (
                         <div className="pt-4 border-t border-gray-200">
-                            <button
-                                onClick={() => {
-                                    onLogout();
-                                    setIsOpen(false);
-                                }}
+                            <Link
+                                href='/dashboard'
                                 className="flex items-center gap-3 w-full p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
                             >
                                 <LogOut size={18} />
-                                <span className="font-medium">Logout</span>
-                            </button>
+                                <span className="font-medium">Dashboard</span>
+                            </Link>
                         </div>
                     ) : (
                         <div className="pt-4 border-t border-gray-200">
