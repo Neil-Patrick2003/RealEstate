@@ -7,3 +7,4 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 Broadcast::channel(\App\Events\ChatChannelNewMessage::class, 'chat.channels.{channel}.new_message');
+

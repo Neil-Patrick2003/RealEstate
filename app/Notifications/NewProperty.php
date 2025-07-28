@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -27,7 +28,7 @@ class NewProperty extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -51,8 +52,17 @@ class NewProperty extends Notification
     public function toDatabase($notifiable): array
     {
         return [
+            'title' => 'New Property Posted',
+            'message' => 'A new property has been added by a seller.',
+            'property_id' => $this->property->id,
+        ];
+    }
+
+    public function toBroadcast($notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
             'property_id' => $this->property->id,
             'message' => 'A new property has been posted',
-        ];
+        ]);
     }
 }

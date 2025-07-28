@@ -16,7 +16,7 @@ const ChannelView = ({ channel }) => {
     }, [user, channel.members]);
 
     useEffect(() => {
-        Echo.channel(`chat.channels.${channel.id}.new_message`).listen(
+            Echo.channel(`chat.channels.${channel.id}.new_message`).listen(
             'ChatChannelNewMessage',
             (data) => {
                 setMessages([...messages, data.message])
