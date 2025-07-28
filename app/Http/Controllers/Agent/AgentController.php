@@ -142,5 +142,14 @@ class AgentController extends Controller
         ]);
     }
 
+    public function show(User $agent)
+    {
+        $agent = $agent->with('listing.property', 'feedbackAsReceiver.characteristics')->find($agent->id);
+
+        return Inertia::render('Agent/AgentProfile', [
+            'agent' => $agent,
+        ]);
+    }
+
 
 }

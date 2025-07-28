@@ -1,42 +1,31 @@
 import { ChevronLeft } from 'lucide-react';
 import React, { useEffect, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faBuilding,
-    faCircleCheck,
-    faCircleXmark,
-    faExpand,
-    faHourglassHalf,
-    faLocationDot,
-    faTags,
-    faTruckRampBox
-} from "@fortawesome/free-solid-svg-icons";
+
 import PropertyMap from "@/Components/PropertyMap.jsx";
 import {Link, router} from '@inertiajs/react';
-import Modal from '@/Components/Modal.jsx';
-import ToastHandler from "@/Components/ToastHandler.jsx";
-import PrimaryButton from "@/Components/PrimaryButton.jsx";
-import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
+
 import NavBar from "@/Components/NavBar.jsx";
 import ImageModal from "@/Components/modal/ImageModal.jsx";
+import Modal from "@/Components/Modal.jsx";
 
-export default function PropertyDetail({ property, deal, inquiry }) {
+export default function PropertyDetail({ property }) {
     const [visibleImages, setVisibleImages] = useState([]);
     const [openImage, setOpenImage] = useState(false);
-    const [isOpenModal, setIsOpenModal] =useState(false);
-    const [isOpenDealForm, setIsOpenDealForm] = useState(false)
-    const [ message, setMessage] = useState('');
+    const [isOpenModal, setIsOpenModal] = useState(false);
+    const [message, setMessage] = useState('');
 
-
-
-
-
-
-    const openModal = () =>{
-        setIsOpenModal(true);
+    const handleSubmitInquiry = () => {
+        router.post(`/properties/${property.id}`, {
+                message: message
+            },
+            {
+                preserveScroll:true,
+                onSuccess: () => {
+                    setMessage(''),
+                        setIsOpenModal(false);
+                }
+            })
     }
-
-
 
     useEffect(() => {
         const handleResize = () => {
@@ -49,23 +38,9 @@ export default function PropertyDetail({ property, deal, inquiry }) {
         return () => window.removeEventListener('resize', handleResize);
     }, [property.images]);
 
-    const handleSubmitInquiry = () => {
-        router.post(`/properties/${property.id}`, {
-            message: message
-        },
-            {
-                preserveScroll:true,
-                onSuccess: () => {
-                    setMessage(''),
-                        setIsOpenModal(false);
-                }
-            })
-    }
     return (
         <div className='mt-20'>
             <NavBar/>
-            <ToastHandler/>
-            <DealFormModal isOpen={isOpenDealForm} setIsOpen={setIsOpenDealForm} property={property} initialValue={deal}/>
 
             <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
                 <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
@@ -81,12 +56,12 @@ export default function PropertyDetail({ property, deal, inquiry }) {
                     {/* Agent Info */}
                     <div className="flex items-center gap-4 mb-6">
                         <img
-                            src={property?.seller?.avatar || '/default-avatar.png'}
+                            src={property?.property_listing?.agent?.image_url || '/default-avatar.png'}
                             alt="Agent Avatar"
                             className="w-14 h-14 rounded-full object-cover border border-gray-300"
                         />
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-800">{property?.seller?.name}</h3>
+                            <h3 className="text-lg font-semibold text-gray-800">{property?.property_listing?.agent?.name}</h3>
                             <p className="text-sm text-gray-500">Licensed Property Agent</p>
                         </div>
                     </div>
@@ -127,31 +102,9 @@ export default function PropertyDetail({ property, deal, inquiry }) {
                         <ChevronLeft/>
                         Back to Listings
                     </Link>
-                    <div>
-                        {
-                            inquiry ? (
-                                <>
-                                    {inquiry?.status === 'Accepted' && (
-                                        <>
-                                            {
-                                                property?.property_listing && <PrimaryButton onClick={() => setIsOpenDealForm(true)}>
-                                                    {deal ? 'View My Offer': 'Make Offer'}
-                                                </PrimaryButton>
-                                            }
-                                        </>
-                                    )}
-
-                                </>
-                            ) : <></>
-                        }
-                    </div>
-
                 </div>
-
-
-
                 {/*images*/}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 animate-fade-in delay-100">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 animate-fa  de-in delay-100">
                     <div className="md:col-span-2 h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-lg image-container relative">
                         <img src={`/storage/${property.image_url}`} alt="Modern two-story house with large windows, green lawn, and wooden accents in a suburban neighborhood" className="w-full h-full object-cover"/>
                         <div className="image-overlay">
@@ -292,10 +245,7 @@ export default function PropertyDetail({ property, deal, inquiry }) {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">Floor Area</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property.property_type === 'land' ? property.lot_area : property.floor_area}</td>
                                     </tr>
-                                    <tr>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">Stories</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2</td>
-                                    </tr>
+
                                     <tr>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">Parking</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2 Car Garage</td>
@@ -323,9 +273,9 @@ export default function PropertyDetail({ property, deal, inquiry }) {
                                                 : 'A'}
                                         </div>
                                     )}
-                                    <p className='flex flex-col hover:underline'>{property.property_listing?.agent.name}
+                                    <Link href={`/agents/${property.property_listing?.agent.id}`} className='flex flex-col hover:underline'>{property.property_listing?.agent.name}
                                         <span className='text-sm'>{property.property_listing?.agent.email}</span>
-                                    </p>
+                                    </Link>
 
                                 </div>
 
@@ -340,51 +290,8 @@ export default function PropertyDetail({ property, deal, inquiry }) {
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden mt-8 animate-fade-in delay-200">
                     <div className="p-6 md:p-8">
                         <h2 className="text-2xl font-bold text-[#5C7934] mb-4 relative property-highlight">Location</h2>
-                        <p className="text-gray-700 mb-6">
-                            The property is located in the prestigious Green Valley neighborhood, known for its excellent schools, parks,
-                            and convenient access to shopping and dining. Just 15 minutes from downtown.
-                        </p>
-
-
-
                         <div>
                             <PropertyMap coordinates={property.coordinate} />
-                        </div>
-
-                        <div className="mt-8">
-                            <h3 className="text-xl font-semibold text-[#5C7934] mb-4">Nearby Amenities</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="flex items-start">
-                                    <div className="bg-[#5C7934]/10 p-3 rounded-lg mr-4">
-                                        <i className="fas fa-graduation-cap text-[#5C7934]"></i>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-[#5C7934]">Schools</h4>
-                                        <p className="text-gray-600 text-sm">Green Valley Elementary (0.5km)</p>
-                                        <p className="text-gray-600 text-sm">Valley High School (1.2km)</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start">
-                                    <div className="bg-[#5C7934]/10 p-3 rounded-lg mr-4">
-                                        <i className="fas fa-shopping-bag text-[#5C7934]"></i>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-[#5C7934]">Shopping</h4>
-                                        <p className="text-gray-600 text-sm">Green Valley Mall (0.8km)</p>
-                                        <p className="text-gray-600 text-sm">Organic Market (1.3km)</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start">
-                                    <div className="bg-[#5C7934]/10 p-3 rounded-lg mr-4">
-                                        <i className="fas fa-utensils text-[#5C7934]"></i>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-[#5C7934]">Dining</h4>
-                                        <p className="text-gray-600 text-sm">Farm-to-Table Bistro (0.6km)</p>
-                                        <p className="text-gray-600 text-sm">Green Valley Cafe (1.1km)</p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

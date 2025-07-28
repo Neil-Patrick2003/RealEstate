@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function (Request $request) {
+
+    $featured = \App\Models\Property::with('features')
+    ->  where('status', 'Published')
+        ->latest()
+        ->take(3)
+        ->get();
     $properties = \App\Models\Property::where('status', 'Published')
         ->when($request->search, function ($q) use ($request) {
             $q->where(function ($query) use ($request) {
@@ -41,6 +47,7 @@ Route::get('/', function (Request $request) {
         'phpVersion' => PHP_VERSION,
         'properties' => $properties,
         'favouriteIds' => $favouriteIds,
+        'featured' => $featured,
 
     ]);
 });
@@ -107,7 +114,7 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
-Route::middleware(['auth', ])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
 
     Route::get('/seller/properties', [PropertyController::class, 'index'])->name('my-properties');
@@ -176,17 +183,13 @@ Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\Prop
 Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::class, 'feedback']);
 
 
-
-
-
+Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
+Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
 Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])
     ->middleware('auth')
     ->name('notifications.read');
-
-
 //------------------------------------------buyer---------------------------------------------------
-Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/property-listings/{propertyListing}/deals', [DealController::class, 'store'])->name('property-listings.deals.store');
@@ -195,7 +198,6 @@ Route::middleware(['auth'])->group(function () {
 
 
 Route::middleware(['auth','role:Buyer' ])->group(function () {
-
     Route::get('/dashboard', function () {
         $properties = \App\Models\Property::with('coordinate')
             ->where('status', 'Published')
@@ -214,8 +216,6 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
         ]);
     })->name('dashboard');
 
-
-    Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
     //sent inquiries
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
@@ -244,16 +244,6 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
 });
 
 
-
-
-
-
-
-
-
-
-
-
 //---------------------------------broker----------------------------
 Route::get('/broker/dashboard', [\App\Http\Controllers\Broker\BrokerController::class, 'index'])->name('broker.dashboard');
 Route::get('/broker/agents', [\App\Http\Controllers\Broker\AgentController::class, 'index'])->name('broker.agents');
@@ -262,13 +252,14 @@ Route::post('/broker/agents/create', [\App\Http\Controllers\Broker\AgentControll
 Route::patch('/broker/agents/update/{agent}', [\App\Http\Controllers\Broker\AgentController::class, 'update']);
 Route::delete('/broker/agents/{id}/delete', [\App\Http\Controllers\Broker\AgentController::class, 'destroy']);
 
-
-
 Route::get('/broker/properties', [\App\Http\Controllers\Broker\PropertyController::class, 'index'])->name('broker.properties');
 Route::patch('/broker/properties/{propertyListing}/publish', [\App\Http\Controllers\Broker\PropertyController::class, 'publish']);
 Route::patch('/broker/properties/{propertyListing}/unpublish', [\App\Http\Controllers\Broker\PropertyController::class, 'unpublish']);
 Route::get('/broker/properties/{propertyListing}', [\App\Http\Controllers\Broker\PropertyController::class, 'show']);
 
+Route::get('/broker/partners', [\App\Http\Controllers\Broker\DeveloperController::class, 'index']);
+Route::post('/broker/partners/create', [\App\Http\Controllers\Broker\DeveloperController::class, 'store']);
+Route::get('/broker/partners/{id}', [\App\Http\Controllers\Broker\DeveloperController::class, 'show']);
 
 Route::get('/select-role', [\App\Http\Controllers\GoogleAuthController::class, 'storeSelectedRole']);
 Route::get('/google/auth', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google-auth');
@@ -294,5 +285,6 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/maps', [\App\Http\Controllers\Property\PropertyController::class, 'map']);
 Route::get('/maps/property/{id}', [\App\Http\Controllers\Property\PropertyController::class, 'map_show']);
+Route::get('/agents/{agent}', [\App\Http\Controllers\Agent\AgentController::class, 'show']);
 
 require __DIR__.'/auth.php';

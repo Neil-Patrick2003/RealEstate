@@ -41,7 +41,7 @@ const MapView = ({ properties }) => {
             const lng = parseFloat(marker.coordinates.lng ?? marker.coordinates[0]);
 
             const dist = getDistanceFromLatLonInMeters(currentPos[0], currentPos[1], lat, lng);
-            return dist <= 500000;
+            return dist <= 500;
         });
 
         setFilteredProps(filtered);

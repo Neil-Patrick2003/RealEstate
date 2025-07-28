@@ -26,6 +26,7 @@ const menus = [
     { name: "Tripping", Icon: faCalendar, path: "/broker/trippings" },
     { name: "Favourites", Icon: faStar, path: "/broker/favourites" },
     { name: "Transactions", Icon: faChartSimple, path: "/broker/transactions" },
+    { name: "Partners", Icon: faChartSimple, path: "/broker/partners" },
 ];
 
 const Sidebar_animation = {

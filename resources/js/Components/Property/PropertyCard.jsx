@@ -68,6 +68,7 @@
 
                         <p className="text-xl font-bold text-green-600">{formattedPrice}</p>
                     </div>
+                    <button className='w-full border text-primary py-2 rounded-md'>View Details</button>
                 </div>
             </Link>
         );

@@ -101,7 +101,7 @@ export default function Dashboard({ properties, inquiries }) {
                 </section>
 
                 {/* Featured Properties */}
-                <section className="space-y-4 mb-10">
+                <section className="space-y-4 mb-10 ">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-semibold text-gray-800">Featured Properties</h2>
                         <Link href="/buyer/properties" className="text-sm text-primary hover:underline">View All</Link>

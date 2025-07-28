@@ -102,5 +102,17 @@ class User extends Authenticatable
         return $this->hasMany(Feedback::class, 'sender_id');
     }
 
+    public function feedbackAsReceiver(): User|\Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Feedback::class, 'agent_id');
+    }
+
+    public function develops()
+    {
+        return $this->hasOne(Developer::class, 'user_id');
+    }
+
+
+
 
 }

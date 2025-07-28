@@ -128,7 +128,6 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
                     <tr>
                         <th className="p-3 text-center"><input type="checkbox" /></th>
                         <th className="p-3">Property</th>
-                        <th className="p-3">Seller</th>
                         <th className="p-3">Agent(s)</th>
                         <th className="p-3">Type</th>
                         <th className="p-3">Address</th>
@@ -152,11 +151,6 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
                                             <p className="text-xs text-gray-500">{property.property.property_type} | {property.property.sub_type}</p>
                                         </div>
                                     </div>
-                                </td>
-
-                                <td className="p-3 md:table-cell">
-                                    <div className="font-bold text-primary hover:underline">{property.seller.name}</div>
-                                    <div className="text-xs text-gray-500">{property.seller.email}</div>
                                 </td>
                                 <td className="p-3 md:table-cell">
                                     {property.agent?.length > 0

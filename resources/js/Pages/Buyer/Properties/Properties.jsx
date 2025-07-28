@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { debounce } from "lodash";
-import PropertyCard from "@/Components/Property/PropertyCard.jsx";
-import PropertyListCard from "@/Pages/Property/PropertyListCard.jsx";
-import DisplayMap from "@/Pages/Buyer/Properties/DisplayMap.jsx";
-import NavBar from "@/Components/NavBar.jsx";
+import PropertyCard from "@/Components/Property/PropertyCard";
+import PropertyListCard from "@/Pages/Property/PropertyListCard";
+import DisplayMap from "@/Pages/Buyer/Properties/DisplayMap";
+import NavBar from "@/Components/NavBar";
 
 function CheckboxFilter({ label, value, checked, onChange }) {
     return (
-        <label className="inline-flex items-center space-x-2">
+        <label className="flex items-center space-x-2 text-gray-700">
             <input
                 type="checkbox"
-                value={value}
+                className="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded"
                 checked={checked}
                 onChange={(e) => onChange(value, e.target.checked)}
-                className="form-checkbox rounded text-primary"
             />
-            <span className="text-gray-700">{label}</span>
+            <span>{label}</span>
         </label>
     );
 }
@@ -26,15 +25,30 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
     const [isPresell, setIsPresell] = useState(false);
     const [priceMin, setPriceMin] = useState("");
     const [priceMax, setPriceMax] = useState("");
+    const [bedrooms, setBedrooms] = useState("");
+    const [bathrooms, setBathrooms] = useState("");
+    const [floorAreaMin, setFloorAreaMin] = useState("");
+    const [lotAreaMin, setLotAreaMin] = useState("");
     const [viewMode, setViewMode] = useState("grid");
     const [sortOrder, setSortOrder] = useState("default");
+    const [showFilters, setShowFilters] = useState(false);
 
     const allTypes = ['Apartment', 'Commercial', 'Condominium', 'House', 'Land'];
 
+    const resetFilters = () => {
+        setSearchTerm("");
+        setSelectedTypes([]);
+        setIsPresell(false);
+        setPriceMin("");
+        setPriceMax("");
+        setBedrooms("");
+        setBathrooms("");
+        setFloorAreaMin("");
+        setLotAreaMin("");
+    };
+
     const handleTypeChange = (type, checked) => {
-        setSelectedTypes((prev) =>
-            checked ? [...prev, type] : prev.filter((t) => t !== type)
-        );
+        setSelectedTypes(prev => checked ? [...prev, type] : prev.filter(t => t !== type));
     };
 
     const [filtered, setFiltered] = useState(properties);
@@ -43,27 +57,31 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         const applyFilters = () => {
             let arr = [...properties];
 
-            arr = arr.filter((p) => (isPresell ? p.isPresell : !p.isPresell));
+            arr = arr.filter(p => (isPresell ? p.isPresell : !p.isPresell));
 
             const lower = searchTerm.toLowerCase();
             if (lower) {
-                arr = arr.filter(
-                    (p) =>
-                        p.title?.toLowerCase().includes(lower) ||
-                        p.location?.toLowerCase().includes(lower)
+                arr = arr.filter(p =>
+                    p.title?.toLowerCase().includes(lower) ||
+                    p.location?.toLowerCase().includes(lower)
                 );
             }
 
             if (selectedTypes.length > 0) {
-                arr = arr.filter((p) => selectedTypes.includes(p.property_type));
+                arr = arr.filter(p => selectedTypes.includes(p.property_type));
             }
 
             const min = Number(priceMin) || 0;
             const max = Number(priceMax) || Infinity;
-            arr = arr.filter((p) => {
-                const pr = Number(p.price) || 0;
-                return pr >= min && pr <= max;
+            arr = arr.filter(p => {
+                const price = Number(p.price) || 0;
+                return price >= min && price <= max;
             });
+
+            if (bedrooms) arr = arr.filter(p => Number(p.bedrooms || 0) >= Number(bedrooms));
+            if (bathrooms) arr = arr.filter(p => Number(p.bathrooms || 0) >= Number(bathrooms));
+            if (floorAreaMin) arr = arr.filter(p => Number(p.floor_area || 0) >= Number(floorAreaMin));
+            if (lotAreaMin) arr = arr.filter(p => Number(p.lot_area || 0) >= Number(lotAreaMin));
 
             setFiltered(arr);
         };
@@ -71,172 +89,211 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         const deb = debounce(applyFilters, 300);
         deb();
         return () => deb.cancel();
-    }, [properties, searchTerm, selectedTypes, isPresell, priceMin, priceMax]);
+    }, [
+        properties,
+        searchTerm,
+        selectedTypes,
+        isPresell,
+        priceMin,
+        priceMax,
+        bedrooms,
+        bathrooms,
+        floorAreaMin,
+        lotAreaMin
+    ]);
 
-    const sortedProperties = React.useMemo(() => {
+    const sortedProperties = useMemo(() => {
         if (sortOrder === "low-to-high") {
-            return [...filtered].sort(
-                (a, b) => (Number(a.price) || 0) - (Number(b.price) || 0)
-            );
+            return [...filtered].sort((a, b) => Number(a.price) - Number(b.price));
         }
         if (sortOrder === "high-to-low") {
-            return [...filtered].sort(
-                (a, b) => (Number(b.price) || 0) - (Number(a.price) || 0)
-            );
+            return [...filtered].sort((a, b) => Number(b.price) - Number(a.price));
         }
         return filtered;
     }, [filtered, sortOrder]);
 
     return (
-        <div className="flex  h-[calc(100vh-100px)] flex-col lg:flex-row min-h-screen">
+        <div className="bg-gray-50 min-h-screen pt-[60px]">
             <NavBar />
 
-            {/* Sidebar Filters */}
-            <aside className="w-full lg:w-1/4 p-6 mt-20 border-b lg:border-r bg-gray-50 space-y-8 text-sm">
-                {/* Search Input */}
-                <div className="space-y-2">
-                    <label className="block font-medium text-gray-700">Search</label>
-                    <input
-                        type="text"
-                        placeholder="Search title or location"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg shadow-sm"
-                    />
-                </div>
-
-                {/* Sale / Pre-Selling Toggle */}
-                <div className="space-y-2">
-                    <label className="block font-medium text-gray-700">Availability</label>
-                    <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-                        <button
-                            onClick={() => setIsPresell(false)}
-                            className={`flex-1 py-2 font-semibold ${
-                                !isPresell ? "bg-primary text-white" : "bg-white text-gray-800"
-                            }`}
-                        >
-                            For Sale
-                        </button>
-                        <button
-                            onClick={() => setIsPresell(true)}
-                            className={`flex-1 py-2 font-semibold ${
-                                isPresell ? "bg-primary text-white" : "bg-white text-gray-800"
-                            }`}
-                        >
-                            Pre‑Selling
-                        </button>
-                    </div>
-                </div>
-
-                {/* Property Types */}
-                <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-700 border-b pb-1">Property Type</h4>
-                    <ul className="space-y-2 pl-1">
-                        {allTypes.map((t) => (
-                            <li key={t}>
-                                <CheckboxFilter
-                                    label={t}
-                                    value={t}
-                                    checked={selectedTypes.includes(t)}
-                                    onChange={handleTypeChange}
-                                />
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* Price Range */}
-                <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-700 border-b pb-1">Price Range (₱)</h4>
-                    <div className="flex flex-col gap-3">
-                        <p className='text-gray-400'>From</p>
-                        <input
-                            type="number"
-                            placeholder="Min"
-                            value={priceMin}
-                            onChange={(e) => setPriceMin(e.target.value)}
-                            className="flex-1 p-3 border border-gray-300 rounded-lg"
-                        />
-                        <p className='text-gray-400'>To</p>
-                        <input
-                            type="number"
-                            placeholder="Max"
-                            value={priceMax}
-                            onChange={(e) => setPriceMax(e.target.value)}
-                            className="flex-1 p-3 border border-gray-300 rounded-lg"
-                        />
-                    </div>
-                </div>
-            </aside>
-
-
-            {/* Main Content */}
-            <main
-                className="flex-1 pt-20  px-6 flex flex-col"
-                style={{ height: "calc(100vh - 60px)" }} // accounts for 60px navbar
-            >
-                <div className="mb-4 h-64 border rounded overflow-hidden">
-                    <DisplayMap properties={propertiesWithMap} />
-                </div>
-
-                {/* Controls: Grid/List + Sort */}
-                <div className="mb-4 flex justify-between items-center">
-                    <div className="flex space-x-2">
-                        <button
-                            onClick={() => setViewMode("grid")}
-                            className={`px-4 py-2 rounded ${
-                                viewMode === "grid" ? "bg-primary text-white" : "bg-gray-200"
-                            }`}
-                        >
-                            Grid View
-                        </button>
-                        <button
-                            onClick={() => setViewMode("list")}
-                            className={`px-4 py-2 rounded ${
-                                viewMode === "list" ? "bg-primary text-white" : "bg-gray-200"
-                            }`}
-                        >
-                            List View
-                        </button>
-                    </div>
-
-                    <select
-                        value={sortOrder}
-                        onChange={(e) => setSortOrder(e.target.value)}
-                        className="py-1.5 border border-gray-400 rounded text-primary"
-                        aria-label="Sort properties by price"
-                    >
-                        <option value="default">Sort By</option>
-                        <option value="low-to-high">Price: Low to High</option>
-                        <option value="high-to-low">Price: High to Low</option>
-                    </select>
-                </div>
-
-                {/* Scrollable property list/grid */}
-                <div className="flex-1 overflow-y-auto">
-                    {viewMode === "grid" ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
-                            {sortedProperties.length === 0 && <p>No matching properties.</p>}
-
-                            {sortedProperties.map((p) => (
-                                <div key={p.id} className="flex flex-col">
-                                    <div className="flex-1">
-                                        <PropertyCard property={p} />
-                                    </div>
-                                </div>
-                            ))}
+            <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-6">
+                {/* Filters Sidebar */}
+                {(showFilters || typeof window === "undefined" || window.innerWidth >= 1024) && (
+                    <aside className="w-full lg:w-80 shrink-0 bg-white p-6 rounded-lg shadow-sm space-y-6 sticky top-6 h-fit">
+                        <div className="flex justify-between items-center border-b pb-2">
+                            <h3 className="text-lg font-semibold">Filters</h3>
+                            <button
+                                className="text-sm text-green-600 hover:text-green-800"
+                                onClick={resetFilters}
+                            >
+                                Reset All
+                            </button>
                         </div>
-                    ) : (
+
+                        {/* Search */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg"
+                                placeholder="Title or Location"
+                            />
+                        </div>
+
+                        {/* Availability */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
+                            <div className="flex rounded-lg overflow-hidden border border-gray-300">
+                                <button
+                                    className={`flex-1 p-2 ${!isPresell ? "bg-green-600 text-white" : ""}`}
+                                    onClick={() => setIsPresell(false)}
+                                >
+                                    For Sale
+                                </button>
+                                <button
+                                    className={`flex-1 p-2 ${isPresell ? "bg-green-600 text-white" : ""}`}
+                                    onClick={() => setIsPresell(true)}
+                                >
+                                    Pre‑Selling
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Property Type */}
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Property Type</h4>
+                            <div className="space-y-2">
+                                {allTypes.map((type) => (
+                                    <CheckboxFilter
+                                        key={type}
+                                        label={type}
+                                        value={type}
+                                        checked={selectedTypes.includes(type)}
+                                        onChange={handleTypeChange}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Price */}
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Price Range (₱)</h4>
+                            <input
+                                type="number"
+                                className="w-full p-2 border border-gray-300 rounded mb-2"
+                                value={priceMin}
+                                onChange={(e) => setPriceMin(e.target.value)}
+                                placeholder="Min"
+                            />
+                            <input
+                                type="number"
+                                className="w-full p-2 border border-gray-300 rounded"
+                                value={priceMax}
+                                onChange={(e) => setPriceMax(e.target.value)}
+                                placeholder="Max"
+                            />
+                        </div>
+
+                        {/* Advanced Filters */}
                         <div className="space-y-4">
-                            {sortedProperties.length === 0 && <p>No matching properties.</p>}
-
-                            {sortedProperties.map((p) => (
-                                <PropertyListCard key={p.id} property={p} />
-                            ))}
+                            <div>
+                                <label className="text-sm text-gray-700">Bedrooms (min)</label>
+                                <input
+                                    type="number"
+                                    className="w-full p-2 border border-gray-300 rounded"
+                                    value={bedrooms}
+                                    onChange={(e) => setBedrooms(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-700">Bathrooms (min)</label>
+                                <input
+                                    type="number"
+                                    className="w-full p-2 border border-gray-300 rounded"
+                                    value={bathrooms}
+                                    onChange={(e) => setBathrooms(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-700">Floor Area (min)</label>
+                                <input
+                                    type="number"
+                                    className="w-full p-2 border border-gray-300 rounded"
+                                    value={floorAreaMin}
+                                    onChange={(e) => setFloorAreaMin(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-700">Lot Area (min)</label>
+                                <input
+                                    type="number"
+                                    className="w-full p-2 border border-gray-300 rounded"
+                                    value={lotAreaMin}
+                                    onChange={(e) => setLotAreaMin(e.target.value)}
+                                />
+                            </div>
                         </div>
-                    )}
-                </div>
-            </main>
+                    </aside>
+                )}
+
+                {/* Main Content */}
+                <main className="flex-1 flex flex-col overflow-hidden">
+                    <div className="mb-6 h-64 border rounded overflow-hidden shadow-sm">
+                        <DisplayMap properties={propertiesWithMap} />
+                    </div>
+
+                    <div className="mb-6 flex flex-col sm:flex-row justify-between gap-4">
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={() => setViewMode("grid")}
+                                className={`px-4 py-2 rounded border ${
+                                    viewMode === "grid" ? "bg-green-600 text-white" : "bg-white"
+                                }`}
+                            >
+                                Grid
+                            </button>
+                            <button
+                                onClick={() => setViewMode("list")}
+                                className={`px-4 py-2 rounded border ${
+                                    viewMode === "list" ? "bg-green-600 text-white" : "bg-white"
+                                }`}
+                            >
+                                List
+                            </button>
+                        </div>
+
+                        <select
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className="py-2 px-3 border rounded"
+                        >
+                            <option value="default">Sort By</option>
+                            <option value="low-to-high">Price: Low to High</option>
+                            <option value="high-to-low">Price: High to Low</option>
+                        </select>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto">
+                        {sortedProperties.length === 0 ? (
+                            <p className="text-center text-gray-500">No matching properties.</p>
+                        ) : viewMode === "grid" ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                {sortedProperties.map((p) => (
+                                    <PropertyCard key={p.id} property={p} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {sortedProperties.map((p) => (
+                                    <PropertyListCard key={p.id} property={p} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </main>
+            </div>
         </div>
     );
 }

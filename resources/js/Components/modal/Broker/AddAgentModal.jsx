@@ -36,7 +36,7 @@ export default function AddAgentModal({ openAddAgent, setOpenAddAgent }) {
     const submit = (e) => {
         e.preventDefault();
         post('/broker/agents/create', {
-            onSuccess: closeModal,
+            onSuccess: {closeModal, reset},
             forceFormData: true
         });
     };

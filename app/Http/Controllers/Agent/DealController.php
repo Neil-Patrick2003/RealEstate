@@ -35,7 +35,7 @@ class DealController extends Controller
     public function update(Request $request, Deal $deal)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:1|max:999999.99',
+            'amount' => 'required|numeric|min:1|max:999999999.99',
         ]);
 
         $deal->update([
