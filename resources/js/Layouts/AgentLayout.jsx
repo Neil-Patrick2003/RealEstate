@@ -208,7 +208,9 @@ export default function AgentLayout({ children }) {
                             <h3 className="text-md font-semibold mb-2 text-gray-800">Unread</h3>
                             <ul className="space-y-2">
                                 {unreadNotifications.map((notif) => (
-                                    <li key={notif.id} onClick={() => markAsRead(notif.id)} className="rounded-md cursor-pointer bg-gray-100 hover:bg-gray-200 transition">
+                                    <li key={notif.id}
+                                        // onClick={() => markAsRead(notif.id)}
+                                        className="rounded-md cursor-pointer bg-gray-100 hover:bg-gray-200 transition">
 
                                         <div
                                             className="notification-item p-4 hover:bg-gray-50 transition-colors duration-200">
@@ -223,11 +225,13 @@ export default function AgentLayout({ children }) {
                                                     </div>
                                                     <p className="text-sm text-gray-500 mt-1">{notif?.data?.message || notif?.message} </p>
                                                     <div className="mt-2">
-                                                        {notif?.link || notif?.data?.link && (
+                                                        {notif?.link && (
                                                             <Link href={notif?.link} className="text-blue-500 hover:underline">View</Link>
-                                                        ) || notif?.data?.link && (
+                                                        )}
+
+                                                        {notif?.data?.link && (
                                                             <Link href={notif?.data?.link} className="text-blue-500 hover:underline">View</Link>
-                                                        ) }
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <button className="text-gray-400 hover:text-gray-600">

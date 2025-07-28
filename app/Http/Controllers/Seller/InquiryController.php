@@ -102,23 +102,20 @@ class InquiryController extends Controller
         $status = $action === 'accept' ? 'Accepted' : 'Rejected';
         $property = $inquiry->property;
 
-
-        // If "accept"
         if ($status === 'Accepted') {
-            // If property does NOT allow multiple agents
+            // Reject other inquiries if multiple agents are not allowed
             if (!$property->allow_multi_agents) {
-                // Reject all other pending inquiries for the same property
                 Inquiry::where('property_id', $property->id)
                     ->where('id', '!=', $inquiry->id)
                     ->where('status', 'Pending')
-                    ->update(['status' => 'rejected']);
+                    ->update(['status' => 'Rejected']);
             }
 
-            // Update property status to Assigned (if not already)
+            // Update property status if not already assigned
             $property->update(['status' => 'Assigned']);
 
-            // Create a property listing for the accepted agent
-            PropertyListing::create([
+            // Create listing
+            $listing = PropertyListing::create([
                 'agent_id'    => $inquiry->agent_id,
                 'property_id' => $inquiry->property_id,
                 'seller_id'   => $inquiry->seller_id,
@@ -126,21 +123,29 @@ class InquiryController extends Controller
             ]);
         }
 
-        // Update inquiry status (accept or reject  )
+        // Update the inquiry status
         $inquiry->update(['status' => $status]);
 
         $agent = $inquiry->agent;
         $seller = auth()->user();
 
-        $agent->notify(new InquiryResponse([
+        // Prepare notification data
+        $notificationData = [
             'seller_name' => $seller->name,
-            'property_id' => $property->id,
-            'property_title' => $property->title,
-            'agent_id' => $agent->id,
             'status' => $status,
-        ]));
+            'property_title' => $property->title,
+        ];
+
+        // Add listing URL if accepted
+        if ($status === 'Accepted') {
+            $notificationData['link'] = "/agents/my-listings/{$listing->id}";
+        }
+
+        // Send notification to the agent
+        $agent->notify(new InquiryResponse($notificationData));
 
         return back()->with('success', "Inquiry successfully {$status}.");
     }
+
 
 }

@@ -27,7 +27,7 @@ class NewDeal extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -44,7 +44,18 @@ class NewDeal extends Notification
      public function toDatabase($notifiable): array
       {
           return [
-              'message' => "{$this->data['buyer_name']} has offer a new deal for '{$this->data['property_title']}'",
+              'title' => 'Offer a Deal',
+              'message' => "{$this->data['buyer_name']} has offered an amount of {$this->data['amount']} for '{$this->data['property_title']}'",
+              'link' => '/agents/deal'
+          ];
+      }
+
+      public function toBroadcast($notifiable): array
+      {
+          return [
+              'title' => 'Offer a Deal',
+              'message' => "{$this->data['buyer_name']} has offered an amount of {$this->data['amount']} for '{$this->data['property_title']}'",
+              'link' => '/agents/deal'
           ];
       }
 

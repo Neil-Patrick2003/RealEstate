@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Deal;
 use App\Models\Inquiry;
 use App\Models\PropertyListing;
+use App\Notifications\DealResponse;
 use App\Notifications\NewDeal;
 use Illuminate\Http\Request;
 
@@ -36,7 +37,7 @@ class DealController extends Controller
             'amount' => 'required|numeric|min:1',
         ]);
 
-        Deal::create([
+        $deal = Deal::create([
             'property_listing_id' => $propertyListing->id,
             'amount' => $request->amount,
             'buyer_id' => auth()->id(),
@@ -51,6 +52,7 @@ class DealController extends Controller
 
         $agent->notify( new NewDeal([
             'buyer_name' => auth()->user()->name,
+            'amount' => $deal->amount,
             'property_title' => $property->title,
         ]));
 
@@ -75,6 +77,7 @@ class DealController extends Controller
         $agent->notify( new NewDeal([
             'buyer_name' => auth()->user()->name,
             'property_title' => $property->title,
+            'amount' => $deal->amount,
         ]));
 
 
@@ -84,22 +87,18 @@ class DealController extends Controller
 
     public function handleUpdate(Request $request, $id, $status)
     {
-        // Find deal
         $deal = Deal::find($id);
         if (!$deal) {
             return redirect()->back()->with('error', 'Deal not found');
         }
 
-        // Update deal status
         $deal->update(['status' => $status]);
 
-        // Find property listing
         $propertyListing = PropertyListing::find($deal->property_listing_id);
         if (!$propertyListing) {
             return redirect()->back()->with('error', 'Property listing not found');
         }
 
-        // Get inquiries related to the property
         $inquiries = Inquiry::where('property_id', $propertyListing->property_id)
             ->whereNotNull('buyer_id')
             ->get();
@@ -112,14 +111,12 @@ class DealController extends Controller
                     $inquiry->update(['status' => 'Declined']);
                 }
             }
-
-        } elseif ($status === 'Rejected' || $status === 'Cancelled') {
+        } elseif (in_array($status, ['Rejected', 'Cancelled'])) {
             foreach ($inquiries as $inquiry) {
                 if ($inquiry->buyer_id === $deal->buyer_id) {
                     $inquiry->update(['status' => 'Closed No Deal']);
                 }
             }
-
         } elseif ($status === 'Sold') {
             foreach ($inquiries as $inquiry) {
                 if ($inquiry->buyer_id === $deal->buyer_id) {
@@ -138,14 +135,28 @@ class DealController extends Controller
         }
 
         $buyer = $deal->buyer;
+        $agent = $propertyListing->agent;
 
-        $buyer->notify( new NewDeal([
-            'buyer_name' => $buyer->name,
-            'property_title' => $propertyListing->property->title,
-        ]));
+        // ✅ Only notify buyer if the last update was NOT made by the buyer
+        if ($deal->amount_last_updated_by === $buyer->id) {
+            $buyer->notify(new DealResponse([
+                'name' => $buyer->name,
+                'property_title' => $propertyListing->property->title,
+                'status' => $status,
+            ]));
+        }
+        else{
+            $agent->notify(new DealResponse([
+                'name' => $buyer->name,
+                'property_title' => $propertyListing->property->title,
+                'status' => $status,
+            ]));
+        }
+
 
         return redirect()->back()->with('success', "Deal {$status} successfully.");
     }
+
 
 
 }

@@ -28,7 +28,7 @@ class InquiryResponse extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -44,10 +44,33 @@ class InquiryResponse extends Notification
 
       public function toDatabase($notifiable): array
       {
+          $status = $this->data['status'];
+
+          // Set title dynamically based on status
+          $title = $status === 'Accepted'
+              ? 'New Property Assigned to You'
+              : 'Inquiry Rejected';
+
           return [
-              'message' => "{$this->data['seller_name']} {$this->data['status']} your inquiry for '{$this->data['property_title']}'",
-              'property_id' => $this->data['property_id'],
-              'agent_id' => $this->data['agent_id'],
+              'title' => $title,
+              'message' => "{$this->data['seller_name']} {$status} your inquiry for '{$this->data['property_title']}'",
+              'link' => $this->data['link'] ?? null,
+          ];
+      }
+
+      public function toBroadcast($notifiable): array
+      {
+          $status = $this->data['status'];
+
+          // Set title dynamically based on status
+          $title = $status === 'Accepted'
+              ? 'New Assigned Property'
+              : 'Inquiry Rejected';
+
+          return [
+              'title' => $title,
+              'message' => "{$this->data['seller_name']} {$status} your inquiry for '{$this->data['property_title']}'",
+              'link' => $this->data['link'] ?? null,
           ];
       }
 

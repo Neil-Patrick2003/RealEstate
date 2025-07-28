@@ -58,8 +58,6 @@ class PropertyTrippingController extends Controller
         $agent->notify(new TrippingRequest([
             'buyer_name' => auth()->user()->name,
             'property_title' => $property->title,
-            'property_id' => $property->id,
-            'buyer_id' => auth()->id(),
         ]));
 
         return redirect()->back()->with('success', 'Schedule tripping successfully.' );

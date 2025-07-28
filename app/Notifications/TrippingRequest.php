@@ -28,7 +28,7 @@ class TrippingRequest extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];;
     }
 
     /**
@@ -45,9 +45,18 @@ class TrippingRequest extends Notification
       public function toDatabase($notifiable): array
       {
           return [
+              'title' => 'New Tripping Request',
               'message' => "{$this->data['buyer_name']} requested a tripping for '{$this->data['property_title']}'",
-              'property_id' => $this->data['property_id'],
-              'buyer_id' => $this->data['buyer_id'],
+          ];
+      }
+
+      public function toBroadcast($notifiable): array
+      {
+
+
+          return [
+              'title' => 'New Tripping Request',
+              'message' => "{$this->data['buyer_name']} requested a tripping for '{$this->data['property_title']}'",
           ];
       }
 

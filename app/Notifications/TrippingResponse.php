@@ -27,7 +27,7 @@ class TrippingResponse extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -43,10 +43,28 @@ class TrippingResponse extends Notification
 
      public function toDatabase($notifiable): array
       {
+          $status = $this->data['status'];
+
+          $title = $status === 'accepted'
+              ? 'Tripping Visit Scheduled'
+              : 'Scheduled Tripping Visit Rejected';
+
           return [
+              'title' => $title,
               'message' => "{$this->data['agent_name']} {$this->data['status']} your tripping request for '{$this->data['property_title']}'",
-              'property_id' => $this->data['property_id'],
-              'buyer_id' => $this->data['buyer_id'],
+          ];
+      }
+      public function toBroadcast($notifiable): array
+      {
+          $status = $this->data['status'];
+
+          $title = $status === 'accepted'
+              ? 'Tripping Visit Scheduled'
+              : 'Scheduled Tripping Visit Rejected';
+
+          return [
+              'title' => $title,
+              'message' => "{$this->data['agent_name']} {$this->data['status']} your tripping request for '{$this->data['property_title']}'",
           ];
       }
 

@@ -29,7 +29,7 @@ class NewInquiry extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail', 'database', 'broadcast'];;
     }
 
     /**
@@ -47,19 +47,69 @@ class NewInquiry extends Notification implements ShouldQueue
 
     public function toDatabase(object $notifiable): array
     {
-        $actor = $this->inquiry->buyer ? $this->inquiry->buyer : $this->inquiry->agent;
+        $inquiry = $this->inquiry;
+
+        // Determine who the receiver is
+        if ($inquiry->buyer && $notifiable->id === $inquiry->buyer->id) {
+            $receiverRole = 'buyers';
+        } elseif ($inquiry->seller && $notifiable->id === $inquiry->seller->id) {
+            $receiverRole = 'sellers';
+        } elseif ($inquiry->agent && $notifiable->id === $inquiry->agent->id) {
+            $receiverRole = 'agents';
+        } else {
+            $receiverRole = null; // fallback case
+        }
+
+        // Build the path based on role
+        $path = $receiverRole ? "/{$receiverRole}/inquiries/{$inquiry->id}" : "/inquiries/{$inquiry->id}";
+
+        // Determine actor (the one who made the inquiry)
+        $actor = $inquiry->buyer ?: $inquiry->agent;
 
         return [
-            'inquiry_id' => $this->inquiry->id,
-            'message' => "You have received a new inquiry from $actor->name.",
+            'title' => 'New Inquiry',
+            'inquiry_id' => $inquiry->id,
+            'message' => "You have received a new inquiry from {$actor->name}.",
+            'link' => $path,
         ];
     }
+
+    public function toBroadcast($notifiable): array
+    {
+        $inquiry = $this->inquiry;
+
+        // Determine who the receiver is
+        if ($inquiry->buyer && $notifiable->id === $inquiry->buyer->id) {
+            $receiverRole = 'buyers';
+        } elseif ($inquiry->seller && $notifiable->id === $inquiry->seller->id) {
+            $receiverRole = 'sellers';
+        } elseif ($inquiry->agent && $notifiable->id === $inquiry->agent->id) {
+            $receiverRole = 'agents';
+        } else {
+            $receiverRole = null; // fallback case
+        }
+
+        // Build the path based on role
+        $path = $receiverRole ? "/{$receiverRole}/inquiries" : "/inquiries";
+
+        // Determine actor (the one who made the inquiry)
+        $actor = $inquiry->buyer ?: $inquiry->agent;
+
+        return [
+            'title' => 'New Inquiry',
+            'inquiry_id' => $inquiry->id,
+            'message' => "You have received a new inquiry from {$actor->name}.",
+            'link' => $path,
+        ];
+    }
+
 
     /**
      * Get the array representation of the notification.
      *
      * @return array<string, mixed>
      */
+
     public function toArray(object $notifiable): array
     {
         return [

@@ -27,7 +27,7 @@ class DealResponse extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -43,12 +43,29 @@ class DealResponse extends Notification
 
      public function  toDatabase($notifiable): array
      {
+
+         $status = $this->data['status'];
+
+
+         $title = $status === 'accepted' ? 'Deal Accepted' : 'Deal Rejected';
+
          return [
-             'message' => "{$this->data['agent_name']} has offer a new deal for '{$this->data['property_title']}'",
-             'deal_id' => $this->data['deal_id'],
-             'buyer_id' => $this->data['buyer_id'],
+             'title' => 'Close A Deal',
+             'message' => "{$this->data['name']} has accepted your offer for '{$this->data['property_title']}'"
          ];
 
+     }
+
+     public function  toBroadcast($notifiable): array
+     {
+         $status = $this->data['status'];
+
+
+         $title = $status === 'accepted' ? 'Deal Accepted' : 'Deal Rejected';
+         return [
+             'title' => 'Close A Deal',
+             'message' => "{$this->data['name']} has accepted your offer for '{$this->data['property_title']}'"
+         ];
      }
 
     /**

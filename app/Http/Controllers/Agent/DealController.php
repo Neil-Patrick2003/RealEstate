@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Deal;
 use App\Models\PropertyListing;
 use App\Notifications\DealCounter;
+use App\Notifications\NewDeal;
 use App\Notifications\TrippingResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -50,9 +51,10 @@ class DealController extends Controller
         $property = $deal->property_listing->property;
 
         $buyer->notify( new DealCounter([
-            'agent_name' => $agent->name,
+            'agent_name' => auth()->user()->name,
             'property_title' => $property->title,
-            'deal_id' => $deal->id,
+            'amount' => $deal->amount,
+            'url' => '/deal'
         ]));
 
 

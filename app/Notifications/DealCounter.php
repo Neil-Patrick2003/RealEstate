@@ -44,8 +44,18 @@ class DealCounter extends Notification
      public function toDatabase($notifiable): array
      {
          return [
-             'message' => "{$this->data['agent_name']} has counter your offer with a deal for '{$this->data['property_title']}'",
-             'deal_id' => $this->data['deal_id'],
+             'title' => 'Deal Counter',
+             'message' => "{$this->data['agent_name']} has made a counteroffer of {$this->data['amount']} for '{$this->data['property_title']}'",
+             'url' => $this->data['url'],
+         ];
+     }
+
+     public function toBroadcast($notifiable): array
+     {
+         return [
+             'title' => 'Deal Counter',
+             'message' => "{$this->data['agent_name']} has made a counter offer of {$this->data['amount']} for '{$this->data['property_title']}'",
+             'url' => $this->data['url'],
          ];
      }
 
