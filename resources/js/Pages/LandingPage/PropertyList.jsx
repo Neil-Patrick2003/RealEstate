@@ -3,6 +3,7 @@ import { router, Link } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as SolidHeart } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as RegularHeart } from '@fortawesome/free-regular-svg-icons';
+import forsaleIcon from '../../../assets/forsale.png';
 
 const PropertyList = ({ properties, favouriteIds = [] }) => {
     const [favourites, setFavourites] = useState(new Set(favouriteIds));
@@ -59,32 +60,24 @@ const PropertyList = ({ properties, favouriteIds = [] }) => {
                         <div className="relative h-48 overflow-hidden">
                             <img
                                 src={`/storage/${property.image_url}`}
-                                alt="Beautiful vacant land lot with mountain views in a prime location"
-                                className="w-full h-full object-cover"/>
-                            <div
-                                className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black to-transparent opacity-70"></div>
-                            <div className="absolute bottom-4 left-4 text-white">
-                                <div className="flex items-center gap-2">
-                                        {/*<div className="flex items-center">*/}
-                                        {/*    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20"*/}
-                                        {/*         fill="currentColor">*/}
-                                        {/*        <path fill-rule="evenodd"*/}
-                                        {/*              d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"*/}
-                                        {/*              clipRule="evenodd"/>*/}
-                                        {/*    </svg>*/}
-                                        {/*    <span className="ml-1 text-sm">Lot 45</span>*/}
-                                        {/*</div>*/}
-                                        {/*<span className="text-sm">|</span>*/}
-                                    <div className="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20"
-                                             fill="currentColor">
-                                            <path fillRule="evenodd"
-                                                  d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z"
-                                                  clipRule="evenodd"/>
-                                        </svg>
-                                        <span className="ml-1 text-sm">{property.lot_area} ㎡</span>
-                                    </div>
+                                alt={property.title}
+                                className="w-full h-full object-cover"
+                            />
+
+                            <div className="absolute top-4 right-4 flex items-center justify-center">
+                            {property.isPresell ? (
+                                <span className="bg-white bg-opacity-100 px-2 py-1 text-xs font-bold text-black rounded ">
+                                Pre-sell
+                                </span>
+                            ) : (
+                                <div className="relative w-[70px] h-[34px]">
+                                <img src={forsaleIcon} alt="For Sale" className="w-full h-full object-contain" />
+                                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white transform -translate-x-1">
+                                    For Sale
+                                </span>
                                 </div>
+                            )}
+
                             </div>
                         </div>
                         <div className="p-6">
