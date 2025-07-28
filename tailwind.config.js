@@ -13,7 +13,8 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                inter: ["Inter", ...defaultTheme.fontFamily.sans],
+                // inter: ["Inter", ...defaultTheme.fontFamily.sans],
+                poppins: ['Poppins', 'sans-serif'],
             },
             extend: {
                 animation: {
@@ -31,7 +32,7 @@ export default {
                 topbar: '#5C7934',         // same as primary
                 Amber: '#FFBF00',           //good yellow orange
                 Blacky: '#131313',          // goods na black
-                
+
             }
         },
 

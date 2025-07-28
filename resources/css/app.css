@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,8 +7,10 @@
 
 /* body style */
 body{
-    @apply bg-white text-text font-inter;
-    @apply font-mono;
+    @apply bg-white text-text ;
+    @apply font-poppins;
+
+
 }
 
 @layer components {

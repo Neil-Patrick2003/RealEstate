@@ -54,15 +54,16 @@ class NewProperty extends Notification
         return [
             'title' => 'New Property Posted',
             'message' => 'A new property has been added by a seller.',
-            'property_id' => $this->property->id,
+            'link' => '/agents/properties/'.$this->property->id,
         ];
     }
 
     public function toBroadcast($notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-            'property_id' => $this->property->id,
-            'message' => 'A new property has been posted',
+            'title' => 'New Property Posted',
+            'message' => 'A new property has been added by a seller.',
+            'link' => '/agents/properties/'.$this->property->id,
         ]);
     }
 }

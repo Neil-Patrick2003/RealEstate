@@ -47,7 +47,7 @@ export default function Drawer({ open, setOpen, title, children }) {
                     </div>
 
                     {/* Scrollable Main Content */}
-                    <div className="overflow-y-auto flex-1 px-6 pb-6">
+                    <div className="overflow-y-auto flex-1 pb-6">
                         {children}
                     </div>
                 </div>
