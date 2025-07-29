@@ -136,6 +136,7 @@ Route::middleware(['auth'])->group(function () {
     //Inquiries
     Route::get('/seller/inquiries', [\App\Http\Controllers\Seller\InquiryController::class, 'index']);
     Route::patch('/seller/inquiries/{inquiry}/{action}', [\App\Http\Controllers\Seller\InquiryController::class, 'updateStatus'])->where('action', 'accept|reject');
+    Route::get('/seller/inquiries/agent/{agent}', [\App\Http\Controllers\Seller\InquiryController::class, 'show']);
     //tripping
     Route::get('/seller/trippings', [TrippingController::class, 'index']);
 

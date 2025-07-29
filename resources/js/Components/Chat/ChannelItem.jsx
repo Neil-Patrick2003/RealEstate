@@ -5,6 +5,8 @@ const ChannelItem = ({ channel, isActive = false}) => {
     const {user} = usePage().props.auth
     const { url } = usePage();
 
+    console.log(channel);
+
     const title = useMemo(() => {
         return channel.members.filter(member => member.id !== user.id)
             .map(member => member.name)
@@ -23,8 +25,11 @@ const ChannelItem = ({ channel, isActive = false}) => {
             {title?.charAt(0) || '?'}
         </span>
 
-        <div className="flex-1 truncate font-medium text-sm group-hover:text-primary">
-            {title}
+        <div className="flex-1 truncate text-sm">
+            <div className="font-medium group-hover:text-primary">{title}</div>
+            {channel?.subject?.title && (
+                <div className="text-gray-500 truncate text-xs">{channel.subject.title}</div>
+            )}
         </div>
     </Link>
 }

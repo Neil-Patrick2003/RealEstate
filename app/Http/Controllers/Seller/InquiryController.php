@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
 use App\Models\Property;
 use App\Models\PropertyListing;
+use App\Models\User;
 use App\Notifications\InquiryResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -145,6 +146,14 @@ class InquiryController extends Controller
         $agent->notify(new InquiryResponse($notificationData));
 
         return back()->with('success', "Inquiry successfully {$status}.");
+    }
+
+    public function show(User $agent){
+        $agent = $agent->with('listing.property', 'feedbackAsReceiver.characteristics')->find($agent->id);
+
+        return Inertia::render('Seller/Inquiries/ViewAgent', [
+            'agent' => $agent,
+        ]);
     }
 
 
