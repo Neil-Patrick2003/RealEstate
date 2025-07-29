@@ -39,7 +39,18 @@ Route::get('/user', function (Request $request) {
 
 Route::group(['middleware' => 'auth:sanctum', 'prefix' => '/agent'], function () {
     Route::get('/user', function (Request $request) {
-        return response()->json($request->user());
+
+        $listingCount = \App\Models\PropertyListing::where('agent_id', $request->user()->id)->count();
+        $inquiryCount = \App\Models\Inquiry::where('agent_id', $request->user()->id)->count();
+        $availableCount = \App\Models\PropertyListing::where('agent_id', $request->user()->id)->where('status', 'Published')->count();
+
+
+        return $data = [
+            'user' => $request->user(),
+            'listingCount' => $listingCount,
+            'inquiryCount' => $inquiryCount,
+            'availableCount' => $availableCount,
+        ];
     });
     Route::post('/logout', function (Request $request) {
         $request->user()->currentAccessToken()->delete();
