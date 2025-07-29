@@ -37,9 +37,9 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
             text: 'text-yellow-900',
         },
         {
-            label: total_views === 0 ? 'No Trippings' : 'Incoming Trippings',
+            label: 'Total Views',
             count: total_views,
-            icon: total_views === 0 ? '👁️‍🗨️' : '📅',
+            icon:  '👁️‍🗨️' ,    
             from: 'from-orange-200',
             to: 'to-orange-100',
             text: 'text-orange-900',
