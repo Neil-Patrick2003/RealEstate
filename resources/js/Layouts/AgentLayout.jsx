@@ -126,12 +126,19 @@ export default function AgentLayout({ children }) {
                 >
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={() => setIsOpen(!isOpen)}
+                            onClick={() => {
+                                if (isMobile) {
+                                    setIsMobileOpen(true); // open drawer sidebar on mobile
+                                } else {
+                                    setIsOpen(!isOpen); // toggle desktop sidebar
+                                }
+                            }}
                             className="p-2 rounded-lg border-0 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition"
                             aria-label="Toggle sidebar"
                         >
                             <AlignLeft size={20} className="text-gray-500" />
                         </button>
+
                         <input
                             type="search"
                             id="search_all"

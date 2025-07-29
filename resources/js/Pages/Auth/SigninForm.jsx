@@ -3,6 +3,7 @@ import {useForm, Link, router} from '@inertiajs/react';
 import React from 'react'
 import { motion } from 'framer-motion';
 import Modal from "@/Components/Modal.jsx";
+import LoadingText from "@/Components/Loding/LoadingText.jsx";
 
 const SigninForm = ({ buttonClasses, buttonForGFT }) => {
     const [openSignUpModal, setOpenSignUpModal] = React.useState(false);
@@ -36,6 +37,12 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
             }}
             className="w-full bg-white rounded-lg shadow-xl md:mt-0 sm:max-w-md xl:p-0 border border-gray-100"
         >
+
+            {processing && (
+                <div className="fixed inset-0 z-50 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center">
+                    <LoadingText text="Signing in..." />
+                </div>
+            )}
 
 
             <div className="p-6 space-y-6 md:space-y-7 sm:p-8">
@@ -149,7 +156,7 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
                     {/* Google */}
                     <button
                         type="button"
-                        className={`${buttonForGFT} bg-[#22c55e] hover:bg-[#16a34a] text-white`}
+                        className={`${buttonForGFT} bg-[#22c55e] hover:bg-[#16a34a] text-gray-600`}
                         onClick={() => window.location.href = '/google/auth'}
                         aria-label="Continue with Google"
                     >
@@ -162,12 +169,12 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
                             <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
                         </svg>
                     </button>
- 
+
 
                     {/* Facebook */}
                     <button
                         type="button"
-                        className={`${buttonForGFT} bg-[#3b5998] hover:bg-[#2d4373] text-white`}
+                        className={`${buttonForGFT} bg-[#3b5998] hover:bg-[#2d4373] text-gray-600`}
                         aria-label="Continue with Facebook"
                     >
                         <svg
@@ -187,7 +194,7 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
                     {/* Twitter */}
                     <button
                         type="button"
-                        className={`${buttonForGFT} bg-[#1da1f2] hover:bg-[#0d8ddb] text-white`}
+                        className={`${buttonForGFT} bg-[#1da1f2] hover:bg-[#0d8ddb] ttext-gray-600`}
                         aria-label="Continue with Twitter"
                     >
                         <svg

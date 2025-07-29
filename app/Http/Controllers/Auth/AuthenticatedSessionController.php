@@ -33,6 +33,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        sleep(1);
+
         $role = Auth::user()->role;
 
         return match ($role) {

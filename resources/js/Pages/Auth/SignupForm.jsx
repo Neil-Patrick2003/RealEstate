@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useForm } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
 import Modal from "@/Components/Modal.jsx";
+import LoadingText from "@/Components/Loding/LoadingText.jsx";
 
 
 const SignupForm = ({buttonClasses, buttonForGFT}) => {
@@ -45,6 +46,11 @@ const SignupForm = ({buttonClasses, buttonForGFT}) => {
             onClose={() => setOpenSignUpModal(false)}
             maxWidth='md'
         >
+            {processing && (
+                <div className="mt-4 flex justify-center">
+                    <LoadingText text="Signing in..." />
+                </div>
+            )}
             <div className="p-8 bg-white rounded-xl max-w-md mx-auto shadow-lg text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
                     Choose Your Role
