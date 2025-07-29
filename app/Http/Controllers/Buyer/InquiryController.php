@@ -24,7 +24,44 @@ class InquiryController extends Controller
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 return $q->status($request->status);
             })
-        ->latest()->paginate(10);
+            ->latest()
+            ->paginate(10);
+
+        // Get related property IDs
+        $propertyIds = $inquiries->pluck('property.id')->filter()->unique();
+
+        // Load chat channels and their first messages
+        $chatChannels = \App\Models\ChatChannel::where('subject_type', \App\Models\Property::class)
+            ->whereIn('subject_id', $propertyIds)
+            ->with(['messages' => function ($q) {
+                $q->oldest('created_at')->limit(1);
+            }])
+            ->get()
+            ->keyBy('subject_id');
+
+        // Attach chat channel and first message to each inquiry
+        $inquiries->getCollection()->transform(function ($inquiry) use ($chatChannels) {
+            $property = $inquiry->property;
+            if ($property && $chatChannels->has($property->id)) {
+                $channel = $chatChannels->get($property->id);
+                $firstMessage = $channel->messages->first();
+
+                $inquiry->chat_channel = [
+                    'id' => $channel->id,
+                    'created_at' => $channel->created_at,
+                ];
+
+                $inquiry->first_message = $firstMessage ? [
+                    'id' => $firstMessage->id,
+                    'message' => $firstMessage->content,
+                    'created_at' => $firstMessage->created_at,
+                ] : null;
+            } else {
+                $inquiry->chat_channel = null;
+                $inquiry->first_message = null;
+            }
+            return $inquiry;
+        });
 
         $allCount = Inquiry::where('buyer_id', auth()->id())->count();
         $pendingCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Pending')->count();
@@ -33,7 +70,6 @@ class InquiryController extends Controller
             ->where('status', 'like', '%Cancelled%')
             ->count();
         $rejectCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Rejected')->count();
-
 
         return Inertia::render('Buyer/Inquiries/Inquiries', [
             'inquiries' => $inquiries,
@@ -44,6 +80,7 @@ class InquiryController extends Controller
             'rejectCount' => $rejectCount,
         ]);
     }
+
 
     public function store(Request $request, $id)
     {

@@ -210,13 +210,18 @@
 
                                         <div className="col-span-12 lg:col-span-3 flex flex-col justify-between">
                                             <div className="flex items-center mb-4">
-                                                <div className="w-10 h-10 rounded-full overflow-hidden mr-3 border">
+                                                {agent.photo_url ? (
                                                     <img
-                                                        src={agent.avatar_url || "https://placehold.co/80x80"}
+                                                        src={agent.photo_url}
                                                         alt={agent.name ?? "Agent"}
-                                                        className="w-full h-full object-cover"
+                                                        className="w-full h-full object-cover mr-2"
                                                     />
-                                                </div>
+                                                ) : (
+                                                    <div className="w-10 h-10 flex items-center mr-2 justify-center bg-gray-300 text-gray-700 text-xl font-bold rounded-full">
+                                                        {agent.name ? agent.name.charAt(0).toUpperCase() : "A"}
+                                                    </div>
+                                                )}
+
                                                 <div>
                                                     <p className="text-sm font-medium text-gray-800">
                                                         {agent.name ?? "Unknown Agent"}
@@ -227,7 +232,7 @@
 
                                             <div className="text-xs text-gray-500 mb-4 space-y-1">
                                                 <p><FontAwesomeIcon icon={faEnvelope} className="mr-1" /> {agent.email ?? "N/A"}</p>
-                                                <p><FontAwesomeIcon icon={faPhone} className="mr-1" /> {agent.phone ?? "+63 912 345 6789"}</p>
+                                                <p><FontAwesomeIcon icon={faPhone} className="mr-1" /> {agent.phone ?? "Not provided"}</p>
                                             </div>
 
                                             <div className="flex flex-col gap-2">
