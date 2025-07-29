@@ -9,6 +9,8 @@ import FlashMessage from '@/Components/FlashMessage.jsx';
 import Drawer from "@/Components/Drawer.jsx";
 import AgentSidebar from "@/Components/Sidebar/AgentSidebar.jsx";
 import { Link } from '@inertiajs/react';
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faBan, faCircleCheck, faInfo} from "@fortawesome/free-solid-svg-icons";
 
 export default function AgentLayout({ children }) {
     const { auth } = usePage().props;
@@ -215,29 +217,127 @@ export default function AgentLayout({ children }) {
                                         <div
                                             className="notification-item p-4 hover:bg-gray-50 transition-colors duration-200">
                                             <div className="flex items-start">
-                                                <div className="shrink-0 p-2 bg-blue-100 rounded-full">
-                                                    <i className="fas fa-info-circle text-blue-500"></i>
-                                                </div>
+                                                {notif?.data?.title ===  'New Property Posted' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'New Property Posted' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+                                                {notif?.data?.title ===  'Offer a Deal' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'New Property Posted' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+                                                {notif?.data?.title ===  'New Tripping Request' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'ew Tripping Request' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'New Inquiry' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'New Inquiry' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'Inquiry Rejected' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-red-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faBan} className='text-red-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'Inquiry Rejected' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-red-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faBan} className='text-red-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'New Property Assigned to You' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'New Property Assigned to You' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'Deal Counter' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'Deal Counter' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'Close A Deal' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'Close A Deal' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
+                                                    </div>
+                                                }
                                                 <div className="ml-3 flex-1">
                                                     <div className="flex justify-between">
                                                         <p className="text-sm font-medium text-gray-900">{notif?.data?.title || notif?.title }</p>
                                                         <span className="text-xs text-gray-500">{ notif?.data?.created_at || notif?.created_at }</span>
                                                     </div>
                                                     <p className="text-sm text-gray-500 mt-1">{notif?.data?.message || notif?.message} </p>
-                                                    <div className="mt-2">
-                                                        {notif?.link && (
-                                                            <Link href={notif?.link} className="text-blue-500 hover:underline">View</Link>
-                                                        )}
+                                                    <div className='flex justify-end'>
+                                                        <div className="mr-2">
+                                                            {notif?.link && (
+                                                                <Link href={notif?.link} className="text-blue-500 hover:underline text-sm ">View</Link>
+                                                            )}
 
-                                                        {notif?.data?.link && (
-                                                            <Link href={notif?.data?.link} className="text-blue-500 hover:underline">View</Link>
-                                                        )}
+                                                            {notif?.data?.link && (
+                                                                <Link href={notif?.data?.link} className="text-blue-500 hover:underline text-sm">View</Link>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => markAsRead(notif.id)}
+                                                            className="text-gray-400 hover:text-gray-600 text-sm ">
+                                                            Mark as read
+                                                        </button>
                                                     </div>
+
+
                                                 </div>
                                                 <button className="text-gray-400 hover:text-gray-600">
                                                     <i className="fas fa-times"></i>
                                                 </button>
-                                                <span className="text-xs text-accent">New</span>
+                                                <span className="ml-4 text-xs text-accent">New</span>
                                             </div>
                                         </div>
                                     </li>
@@ -261,9 +361,99 @@ export default function AgentLayout({ children }) {
                                         <div
                                             className="notification-item p-4 hover:bg-gray-50 transition-colors duration-200">
                                             <div className="flex items-start">
-                                                <div className="shrink-0 p-2 bg-blue-100 rounded-full">
-                                                    <i className="fas fa-info-circle text-blue-500"></i>
-                                                </div>
+                                                {notif?.data?.title ===  'New Property Posted' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'New Property Posted' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+                                                {notif?.data?.title ===  'Offer a Deal' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'New Property Posted' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+                                                {notif?.data?.title ===  'New Tripping Request' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'ew Tripping Request' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'New Inquiry' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'New Inquiry' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'Inquiry Rejected' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-red-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faBan} className='text-red-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'Inquiry Rejected' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-red-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faBan} className='text-red-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'New Property Assigned to You' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'New Property Assigned to You' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'Deal Counter' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'Deal Counter' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
+
+                                                {notif?.data?.title ===  'Close A Deal' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
+                                                    </div>
+                                                }
+                                                {notif?.title ===  'Close A Deal' &&
+                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
+                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
+                                                    </div>
+                                                }
+
                                                 <div className="ml-3 flex-1">
                                                     <div className="flex justify-between">
                                                         <p className="text-sm font-medium text-gray-900">{notif?.data?.title}</p>

@@ -8,6 +8,7 @@ use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Property;
 use App\Models\PropertyTripping;
+use App\Notifications\InquiryResponse;
 use App\Notifications\NewInquiry;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -134,6 +135,17 @@ class InquiryController extends Controller
         $inquiry->update([
             'status' => 'Accepted',
         ]);
+
+        $inquiry->load(['property', 'buyer', 'agent']);
+
+        $buyer = $inquiry->buyer;
+
+        $buyer->notify(new InquiryResponse([
+            'status' => 'Accepted',
+            'seller_name' => $inquiry->agent->name,
+            'property_title' => $inquiry->property->title,
+            'link' => '/inquiries'
+        ]));
 
         return back()->with('success', 'Inquiry accepted successfully.');
     }

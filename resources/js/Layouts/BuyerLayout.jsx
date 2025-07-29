@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlignLeft, Bell, Languages, LogOut, Moon, X } from 'lucide-react';
-import {router, usePage} from '@inertiajs/react';
+import {Link, router, usePage} from '@inertiajs/react';
 import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
 import BuyerSidebar from "@/Components/Sidebar/BuyerSidebar.jsx";
@@ -11,8 +11,9 @@ import Drawer from "@/Components/Drawer.jsx";
 export default function BuyerLayout({ children }) {
     const { auth } = usePage().props;
 
-    const allNotifications = auth?.notifications?.all ?? [];
-    const unreadNotifications = auth?.notifications?.unread ?? [];
+    const [notifications, setNotifications] = useState(auth?.notifications?.all ?? []);
+    const [unreadNotifications, setUnreadNotifications] = useState(auth?.notifications?.unread ?? []);
+
     const [ openDrawer, setOpenDrawer ] = useState(false);
 
   const [isOpen, setIsOpen] = useState(() => {
@@ -44,8 +45,43 @@ export default function BuyerLayout({ children }) {
     }
   }, [isMobile]);
 
-    const markAsRead = (id) => router.post(`/notifications/${id}/read`, {}, { preserveScroll: true });
 
+    const markAsRead = (id) => {
+        router.post(`/notifications/${id}/read`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setUnreadNotifications(prev =>
+                    prev.filter(notif => notif.id !== id)
+                );
+                setNotifications(prev =>
+                    prev.map(notif =>
+                        notif.id === id ? { ...notif, read_at: new Date().toISOString() } : notif
+                    )
+                );
+            },
+            onError: (error) => {
+                console.error('Error marking notification as read:', error);
+            }
+        });
+    };
+
+
+    const markAllAsRead = () => {
+        unreadNotifications.forEach(notif => markAsRead(notif.id));
+    };
+
+    useEffect(() => {
+        Echo.private(`App.Models.User.${auth.user.id}`)
+            .notification((notification) => {
+                console.log('Real-time NOTIFICATION: ', notification);
+                setNotifications(prev => [notification, ...prev]);
+                setUnreadNotifications(prev => [notification, ...prev]);
+            });
+
+        return () => {
+            Echo.leave(`App.Models.User.${auth.user.id}`);
+        };
+    }, [auth.user.id]);
 
     return (
     <div className="h-screen bg-white flex overflow-hidden relative">
@@ -204,38 +240,47 @@ export default function BuyerLayout({ children }) {
         </div>
       </main>
         <Drawer title="Notifications" setOpen={setOpenDrawer} open={openDrawer}>
-            <div className="p-4 space-y-6 max-h-[75vh] overflow-y-auto">
-                {/* Header */}
+            <div className="py-4  border space-y-6 max-h-[75vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
-                    <button
-                        // onClick={markAllAsRead}
-                        className="text-sm text-blue-600 hover:underline"
-                    >
-                        Mark all as read
-                    </button>
+                    <button onClick={markAllAsRead} className="text-sm text-blue-600 hover:underline">Mark all as read</button>
                 </div>
 
-                {/* Unread Notifications */}
                 {unreadNotifications.length > 0 && (
                     <div>
                         <h3 className="text-md font-semibold mb-2 text-gray-800">Unread</h3>
                         <ul className="space-y-2">
                             {unreadNotifications.map((notif) => (
-                                <li
-                                    key={notif.id}
-                                    onClick={() => markAsRead(notif.id)}
-                                    className="p-4 border rounded-md cursor-pointer bg-gray-100 hover:bg-gray-200 transition"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-900">{notif.data.message}</p>
-                                            {notif.created_at && (
-                                                <p className="text-xs text-gray-400 mt-1">
-                                                    {new Date(notif.created_at).toLocaleString()}
-                                                </p>
-                                            )}
+                                <li key={notif.id}
+                                    // onClick={() => markAsRead(notif.id)}
+                                    className="rounded-md cursor-pointer bg-gray-100 hover:bg-gray-200 transition">
+
+                                    <div
+                                        className="notification-item p-4 hover:bg-gray-50 transition-colors duration-200">
+                                        <div className="flex items-start">
+                                            <div className="shrink-0 p-2 bg-blue-100 rounded-full">
+                                                <i className="fas fa-info-circle text-blue-500"></i>
+                                            </div>
+                                            <div className="ml-3 flex-1">
+                                                <div className="flex justify-between">
+                                                    <p className="text-sm font-medium text-gray-900">{notif?.data?.title || notif?.title }</p>
+                                                    <span className="text-xs text-gray-500">{ notif?.data?.created_at || notif?.created_at }</span>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mt-1">{notif?.data?.message || notif?.message} </p>
+                                                <div className="mt-2">
+                                                    {notif?.link && (
+                                                        <Link href={notif?.link} className="text-blue-500 hover:underline">View</Link>
+                                                    )}
+
+                                                    {notif?.data?.link && (
+                                                        <Link href={notif?.data?.link} className="text-blue-500 hover:underline">View</Link>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <button className="text-gray-400 hover:text-gray-600">
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                            <span className="text-xs text-accent">New</span>
                                         </div>
-                                        <span className="text-xs text-red-500 font-semibold ml-4 mt-1">New</span>
                                     </div>
                                 </li>
                             ))}
@@ -243,42 +288,42 @@ export default function BuyerLayout({ children }) {
                     </div>
                 )}
 
-                {/* All Notifications */}
                 <div>
                     <h3 className="text-md font-semibold mb-2 text-gray-800">All Notifications</h3>
-                    {allNotifications.length === 0 ? (
+                    {notifications.length === 0 ? (
                         <p className="text-gray-500 text-sm">You have no notifications.</p>
                     ) : (
-                        <ul className="space-y-2">
-                            {allNotifications.map((notif) => (
-                                <li
-                                    key={notif.id}
-                                    onClick={() => markAsRead(notif.id)}
-                                    className={`p-4 border rounded-md cursor-pointer transition group ${
-                                        notif.read_at === null
-                                            ? 'bg-gray-100 hover:bg-gray-200'
-                                            : 'bg-white hover:bg-gray-50'
-                                    }`}
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <p
-                                                className={`text-sm ${
-                                                    notif.read_at === null ? 'font-medium text-gray-900' : 'text-gray-700'
-                                                }`}
-                                            >
-                                                {notif.data.message}
-                                            </p>
-                                            {notif.created_at && (
-                                                <p className="text-xs text-gray-400 mt-1">
-                                                    {new Date(notif.created_at).toLocaleString()}
-                                                </p>
-                                            )}
+                        <ul className="border space-y-2">
+
+                            {notifications.map((notif) => (
+
+                                <li key={notif.id}
+                                    className={`rounded-md cursor-pointer transition group ${notif.read_at === null ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-50'}`}>
+
+                                    <div
+                                        className="notification-item p-4 hover:bg-gray-50 transition-colors duration-200">
+                                        <div className="flex items-start">
+                                            <div className="shrink-0 p-2 bg-blue-100 rounded-full">
+                                                <i className="fas fa-info-circle text-blue-500"></i>
+                                            </div>
+                                            <div className="ml-3 flex-1">
+                                                <div className="flex justify-between">
+                                                    <p className="text-sm font-medium text-gray-900">{notif?.data?.title}</p>
+                                                    <span className="text-xs text-gray-500">{notif.created_at}</span>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mt-1">{notif?.data?.message}</p>
+                                                <div className="mt-2">
+                                                    {notif?.data?.link && (
+                                                        <Link href={notif?.data?.link} className="text-blue-500 hover:underline">View</Link>
+                                                    ) }
+                                                </div>
+                                            </div>
+                                            <button className="text-gray-400 hover:text-gray-600">
+                                                <i className="fas fa-times"></i>
+                                            </button>
                                         </div>
-                                        {notif.read_at === null && (
-                                            <span className="text-xs text-red-500 font-semibold ml-4 mt-1">New</span>
-                                        )}
                                     </div>
+
                                 </li>
                             ))}
                         </ul>
