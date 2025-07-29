@@ -59,14 +59,25 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => '/agent'], function ()
     Route::put('/inquiries/{id}/{action}', [\App\Http\Controllers\Api\InquiryController::class, 'update']);
 
     Route::get('/properties', [App\Http\Controllers\Api\PropertyController::class, 'index']);;
+
+    //    ----------------new----------------------------------
     Route::get('/properties/{id}', [App\Http\Controllers\Api\PropertyController::class, 'show']);
+    //    ----------------new----------------------------------
+
+    //ito sa button na inquire
     Route::post('/properties/{id}/inquire', [\App\Http\Controllers\Api\InquiryController::class, 'store']);
 
+    //ito handle property
     Route::get('/listing', [App\Http\Controllers\Api\PropertyListingController::class, 'index']);
+    //show handle property with button publish
     Route::get('/listing/{id}', [App\Http\Controllers\Api\PropertyListingController::class, 'show']);
+    //update publish
     Route::patch('/listing/{id}', [App\Http\Controllers\Api\PropertyListingController::class, 'update']);
 
+    //tripping
     Route::get('/tripping', [\App\Http\Controllers\Api\TrippingController::class, 'index']);
+
+    //accept or reject tripping
     Route::put('/tripping/{id}/{action}', [\App\Http\Controllers\Api\TrippingController::class, 'update']);
 
 
