@@ -22,8 +22,6 @@ Route::post('/sanctum/token', function (Request $request) {
         ]);
     }
 
-
-
     return response()->json([
     'token' => $user->createToken($request->device_name)->plainTextToken
 ]);
@@ -61,6 +59,7 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => '/agent'], function ()
     Route::put('/inquiries/{id}/{action}', [\App\Http\Controllers\Api\InquiryController::class, 'update']);
 
     Route::get('/properties', [App\Http\Controllers\Api\PropertyController::class, 'index']);;
+    Route::get('/properties/{id}', [App\Http\Controllers\Api\PropertyController::class, 'show']);
     Route::post('/properties/{id}/inquire', [\App\Http\Controllers\Api\InquiryController::class, 'store']);
 
     Route::get('/listing', [App\Http\Controllers\Api\PropertyListingController::class, 'index']);

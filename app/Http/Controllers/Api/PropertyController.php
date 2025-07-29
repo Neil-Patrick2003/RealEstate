@@ -17,5 +17,15 @@ class PropertyController extends Controller
         ];
     }
 
+//    bago to pag pinindot properties
+
+    public function show($id){
+        $property = Property::with(['seller:id,name,email,photo_url,contact_number', 'images', 'features', 'coordinate'])->find($id);
+
+        return [
+            'data' => $property,
+        ];
+    }
+
 
 }
