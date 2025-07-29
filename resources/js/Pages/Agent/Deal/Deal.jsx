@@ -241,7 +241,6 @@ export default function Deal({ property_listing,  }) {
                                                                     onChange={(e) => onStatusChange(deal, e.target.value)}
                                                                     className="border border-primary text-primary rounded-md py-1.5"
                                                                 >
-                                                                    <option>Accepted</option>
                                                                     <option value="Cancelled">Cancelled</option>
                                                                     <option value="Sold">Sold</option>
                                                                 </select>

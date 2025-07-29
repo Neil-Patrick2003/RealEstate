@@ -194,7 +194,7 @@ export default function DealsPage({ deals }) {
                                                     {agent.name?.[0] || "A"}
                                                 </div>
                                             )}
-                                        </div>  
+                                        </div>
                                         <div>
                                             <p className="text-sm font-medium text-gray-800">{agent.name ?? "Unknown Agent"}</p>
                                             <p className="text-xs text-gray-500">4.8 ⭐ (76 reviews)</p>
