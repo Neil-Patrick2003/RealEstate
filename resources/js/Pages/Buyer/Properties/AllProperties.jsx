@@ -109,7 +109,7 @@ export default function AllProperties({ property_listing }) {
 
                 {selectedProperty && (
                     <Drawer open={open} setOpen={handleDrawerClose} title={selectedProperty?.property.title}>
-                        <div className="flex flex-col space-y-6">
+                        <div className="flex flex-col space-y-6 p-4">
                             {/* Top image & header */}
                             <div>
                                 <img

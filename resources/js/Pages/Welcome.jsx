@@ -89,7 +89,7 @@ const Welcome = ({ auth, properties, search = '', initialType = "All", featured 
                             {featured.map((feature) => (
                                 <div key={feature.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition">
                                     <div className="relative">
-                                        <img src={`/storage/${feature.image_url}`}/>
+                                        <img src={`/storage/${feature.image_url}`} className='object-cover w-full h-48' alt='Property'/>
                                     </div>
                                     <div className="p-6">
                                         <h3 className="text-xl font-bold mb-2">{feature.title}</h3>

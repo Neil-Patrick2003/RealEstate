@@ -69,6 +69,8 @@ const TileLayerManager = ({ base, showLabels }) => {
 };
 
 const PropertyMap = ({ coordinates }) => {
+
+
     const [mapType, setMapType] = useState("Street");
     const [labelsVisible, setLabelsVisible] = useState(true);
 

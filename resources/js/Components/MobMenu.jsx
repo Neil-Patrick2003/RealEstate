@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { ChevronDown, Menu, X, User, Settings, Languages, LogOut, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Link } from '@inertiajs/react';
+import {Link, usePage} from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 
-export default function MobMenu({ Menus, auth, onLanguageChange, onLogout }) {
+export default function MobMenu({ Menus , onLanguageChange, onLogout }) {
     const [isOpen, setIsOpen] = useState(false);
     const [clicked, setClicked] = useState(false);
     const { t } = useTranslation();
+
+    const auth = usePage().props.auth;
+
 
     // toggle drawer
     const toggleDrawer = () => {
@@ -42,49 +45,35 @@ export default function MobMenu({ Menus, auth, onLanguageChange, onLogout }) {
                 className='fixed left-0 right-0 top-16 overflow-y-auto h-full bg-white shadow-xl'
             >
                 <div className="p-6">
-                    {/* User Section */}
-                    {auth?.user && (
-                        <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                                    <User size={20} className="text-white" />
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-gray-900">{auth.user.name}</p>
-                                    <p className="text-sm text-gray-600">{auth.user.email}</p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-2">
-                                <Link
-                                    href="/dashboard"
-                                    className="flex items-center gap-2 px-3 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors duration-200 flex-1 justify-center"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    <Settings size={16} />
-                                    Dashboard
-                                </Link>
-                                <Link
-                                    href="/profile"
-                                    className="flex items-center gap-2 px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors duration-200 flex-1 justify-center"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    <User size={16} />
-                                    Profile
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-
                     {/* List Property Button */}
+                    {/* Dashboard or List Property Button */}
                     <div className="mb-6">
-                        <Link href="/post-property" onClick={() => setIsOpen(false)}>
-                            <div className="flex items-center gap-3 p-4 bg-secondary hover:bg-secondary/90 text-white rounded-xl transition-all duration-200">
-                                <Plus size={20} />
-                                <span className="font-semibold">{t('List your property')}</span>
-                            </div>
-                        </Link>
+                        {auth?.user ? (
+                            <Link
+                                href={
+                                    auth.user.role === 'Seller'
+                                        ? '/seller/dashboard'
+                                        : auth.user.role === 'Agent'
+                                            ? '/agents/dashboard'
+                                            : '/dashboard'
+                                }
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <div className="flex items-center gap-3 p-4 bg-primary hover:bg-primary/90 text-white rounded-xl transition-all duration-200">
+                                    <Settings size={20} />
+                                    <span className="font-semibold">{t('Dashboard')}</span>
+                                </div>
+                            </Link>
+                        ) : (
+                            <Link href="/post-property" onClick={() => setIsOpen(false)}>
+                                <div className="flex items-center gap-3 p-4 bg-secondary hover:bg-secondary/90 text-white rounded-xl transition-all duration-200">
+                                    <Plus size={20} />
+                                    <span className="font-semibold">{t('List your property')}</span>
+                                </div>
+                            </Link>
+                        )}
                     </div>
+
 
                     {/* Navigation Menu */}
                     <div className="mb-6">

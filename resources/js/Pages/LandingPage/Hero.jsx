@@ -20,7 +20,7 @@ const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChan
         <>
             <div className="absolute inset-0 bg-black/10"></div>
 
-            <main className="relative z-10 mt-[60px]  md:mt-18 flex justify-center items-center h-[100vh]">
+            <main className="relative z-10 mt-[60px]  md:mt-18 flex justify-center items-center h-[85vh]">
                 <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8">
                     <motion.div
                         initial={{ opacity: 0, y: -30 }}

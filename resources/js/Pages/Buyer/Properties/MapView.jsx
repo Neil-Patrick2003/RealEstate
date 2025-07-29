@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import {
     MapContainer,
     TileLayer,
@@ -14,11 +14,11 @@ import "leaflet-control-geocoder/dist/Control.Geocoder.css";
 import "leaflet-control-geocoder";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
-// Custom house icon
+// --- ICONS ---
 const houseIcon = new L.Icon({
     iconUrl: "/icon/house.png",
     iconSize: [60, 90],
-    iconAnchor: [30, 65], // horizontally center, bottom aligned
+    iconAnchor: [30, 65],
     popupAnchor: [0, -70],
     shadowUrl: iconShadow,
     shadowSize: [50, 50],
@@ -26,13 +26,17 @@ const houseIcon = new L.Icon({
 
 const landIcon = new L.Icon({
     iconUrl: "/icon/land.png",
-    iconSize: [30, 30],
-    iconAnchor: [15, 30],
+    iconSize: [60, 90],
+    iconAnchor: [30, 65],
     popupAnchor: [0, -30],
+    shadowUrl: iconShadow,
+    shadowSize: [40, 40],
 });
 
+// --- DEFAULT MAP CENTER ---
 const DEFAULT_CENTER = [13.41, 122.56];
 
+// --- GEOCODER CONTROL ---
 function GeocoderControl() {
     const map = useMap();
 
@@ -48,8 +52,7 @@ function GeocoderControl() {
         }).addTo(map);
 
         control.on("markgeocode", function (e) {
-            const bbox = e.geocode.bbox;
-            const bounds = L.latLngBounds(bbox);
+            const bounds = L.latLngBounds(e.geocode.bbox);
             map.fitBounds(bounds);
         });
 
@@ -59,6 +62,7 @@ function GeocoderControl() {
     return null;
 }
 
+// --- FIT BOUNDS CONTROL ---
 function FitBoundsControl({ property_listing }) {
     const map = useMap();
 
@@ -96,10 +100,17 @@ function FitBoundsControl({ property_listing }) {
     return null;
 }
 
+// --- MAIN COMPONENT ---
 export default function MapView({ property_listing = [], onMarkerClick }) {
-    const getPolygonColor = (type) => {
-        return type === "land" ? "#28a745" : "#007bff";
+    const getIconByType = (type) => {
+        return type?.toLowerCase() === "land" ? landIcon : houseIcon;
     };
+
+    const getPolygonColor = (type) => {
+        return type?.toLowerCase() === "land" ? "#28a745" : "#007bff";
+    };
+
+    console.log(property_listing);
 
     return (
         <MapContainer
@@ -125,10 +136,7 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                         const lng = parseFloat(c.coordinates.lng ?? c.coordinates[0]);
                         if (isNaN(lat) || isNaN(lng)) return null;
 
-                        const icon =
-                            property.property_type?.toLowerCase() === "land"
-                                ? landIcon
-                                : houseIcon;
+                        const icon = getIconByType(property.property.property_type);
 
                         return (
                             <Marker
