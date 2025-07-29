@@ -151,8 +151,7 @@
                         inquiries.data.map((inquiry) => {
                             const property = inquiry.property ?? {};
                             const agent = inquiry.agent ?? {};
-                            const message = inquiry.messages?.message;
-
+                            const message = inquiry?.first_message?.message || null;
                             const statusLower = inquiry.status.toLowerCase();
                             const isAccepted = statusLower === "accepted";
                             const isCancelled = statusLower === "cancelled" || statusLower === "cancelled by buyer";
@@ -170,7 +169,7 @@
                                                 />
                                                 <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
                                                     <FontAwesomeIcon icon={faPesoSign} />
-                                                    {property.price?.toLocaleString() ?? "N/A"}
+                                                        {Number(property.price).toLocaleString('en-PH', {style: 'currency', currency: 'PHP' }) ?? "N/A"}
                                                 </div>
                                             </div>
                                         </div>
@@ -197,7 +196,7 @@
 
                                                 <div className="bg-gray-50 border border-gray-200 rounded-md p-3 mb-3">
                                                     <p className="text-sm text-gray-700 line-clamp-2">
-                                                        <strong>Your message: </strong>
+                                                        <strong>message: </strong>
                                                         {message || "No message provided."}
                                                     </p>
                                                 </div>

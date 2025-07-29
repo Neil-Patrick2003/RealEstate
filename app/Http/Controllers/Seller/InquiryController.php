@@ -16,7 +16,6 @@ class InquiryController extends Controller
 {
     public function index(Request $request)
     {
-
         $sellerId = auth()->id();
 
         $allCount = Inquiry::where('seller_id', $sellerId)->count();
@@ -25,18 +24,52 @@ class InquiryController extends Controller
         $rejectedCount = Inquiry::where('seller_id', $sellerId)->where('status', 'Rejected')->count();
         $cancelledCount = Inquiry::where('seller_id', $sellerId)->where('status', 'Cancelled')->count();
 
-        $inquiries = Inquiry::where('seller_id', $sellerId)
-            ->with('property', 'agent', 'messages')
+        $inquiries = Inquiry::with('property', 'agent', 'messages')
+            ->where('seller_id', $sellerId)
             ->when($request->search, function ($q) use ($request) {
                 $q->whereHas('agent', function ($q2) use ($request) {
                     $q2->where('name', 'like', '%' . $request->search . '%');
                 });
             })
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
-                $q->status($request->status);
+                $q->where('status', $request->status); // fixed typo: ->status() to ->where()
             })
             ->latest()
             ->paginate(10);
+
+        // 🔁 Attach chat channel + first message
+        $inquiries->getCollection()->transform(function ($inquiry) {
+            $property = $inquiry->property;
+
+            if ($property) {
+                $chatChannel = \App\Models\ChatChannel::where('subject_type', \App\Models\Property::class)
+                    ->where('subject_id', $property->id)
+                    ->first();
+
+                if ($chatChannel) {
+                    $firstMessage = $chatChannel->messages()->oldest('created_at')->first();
+
+                    $inquiry->chat_channel = [
+                        'id' => $chatChannel->id,
+                        'created_at' => $chatChannel->created_at,
+                    ];
+
+                    $inquiry->first_message = $firstMessage ? [
+                        'id' => $firstMessage->id,
+                        'message' => $firstMessage->content,
+                        'created_at' => $firstMessage->created_at,
+                    ] : null;
+                } else {
+                    $inquiry->chat_channel = null;
+                    $inquiry->first_message = null;
+                }
+            } else {
+                $inquiry->chat_channel = null;
+                $inquiry->first_message = null;
+            }
+
+            return $inquiry;
+        });
 
         return Inertia::render('Seller/Inquiries/Inquiries', [
             'inquiries' => $inquiries,
@@ -46,50 +79,8 @@ class InquiryController extends Controller
             'rejectedCount' => $rejectedCount,
             'cancelledCount' => $cancelledCount,
         ]);
-
-
-
-
-//        $query = Property::where('seller_id', Auth::id())
-//            ->whereHas('inquiries')
-//            ->with(['inquiries.agent']);
-//
-//        if ($request->filled('search')) {
-//            $query->where(function ($q) use ($request) {
-//                $q->where('title', 'like', "%{$request->search}%")
-//                    ->orWhere('address', 'like', "%{$request->search}%");
-//            });
-//        }
-//
-//        if ($request->filled('property_type')) {
-//            $query->where('property_type', $request->property_type);
-//        }
-//
-//        if ($request->filled('status')) {
-//            $query->whereHas('inquiries', function ($q) use ($request) {
-//                $q->where('status', $request->status);
-//            });
-//        }
-//
-//        $properties = $query->latest()
-//            ->paginate($request->items_per_page ?? 10)
-//            ->withQueryString();
-//
-//
-//        return Inertia::render('Seller/Inquiries/Inquiries', [
-//            'properties' => $properties,
-//            'itemsPerPage' => $request->items_per_page ?? 10,
-//            'search' => $request->search,
-//            'filters' => [
-//                'status' => $request->status,
-//                'property_type' => $request->property_type,
-//            ],
-//            'allCount' => Property::where('seller_id', Auth::id())->whereHas('inquiries')->count(),
-//            'acceptedCount' => Property::where('seller_id', Auth::id())->whereHas('inquiries', fn($q) => $q->where('status', 'Accepted'))->count(),
-//            'pendingCount' => Property::where('seller_id', Auth::id())->whereHas('inquiries', fn($q) => $q->where('status', 'Pending'))->count(),
-//            'rejectedCount' => Property::where('seller_id', Auth::id())->whereHas('inquiries', fn($q) => $q->where('status', 'Rejected'))->count(),
-//        ]);
     }
+
 
 
 
