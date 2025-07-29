@@ -1,11 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Link } from '@inertiajs/inertia-react';
 import dayjs from "dayjs";
 import ProfileProgress from "@/Components/ProfileProgress.jsx";
+
 
 export default function Dashboard({ total_properties, total_inquiries, total_views, sold_properties, recent_properties, recent_inquiries, auth_user }) {
     const { t } = useTranslation();
@@ -39,7 +39,7 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
         {
             label: 'Total Views',
             count: total_views,
-            icon:  '👁️‍🗨️' ,    
+            icon:  '👁️‍🗨️' ,
             from: 'from-orange-200',
             to: 'to-orange-100',
             text: 'text-orange-900',
@@ -126,7 +126,7 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                     <motion.div {...hoverScale}>
                         <Link
                             href="/properties/create"
-                            className="text-sm bg-primary text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-600 transition duration-200"
+                            className="text-sm bg-primary text-white px-4 py-2 rounded-lg shadow hover:bg-accent transition duration-200"
                         >
                             + Add Property
                         </Link>
@@ -188,7 +188,7 @@ export default function Dashboard({ total_properties, total_inquiries, total_vie
                                         </div>
 
                                         <Link
-                                            href={`/properties/${property.id}`}
+                                            href={`/seller/properties/${property.id}`}
                                             className="text-primary font-semibold hover:text-accent transition-colors duration-200 whitespace-nowrap"
                                         >
                                             View Details &rarr;

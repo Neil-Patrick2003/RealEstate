@@ -16,7 +16,7 @@ class SellerController extends Controller
         $total_views = Property::where('seller_id', auth()->id())->sum('views');
         $sold_properties = Property::where('seller_id', auth()->id())->where('status', 'Sold')->count();
         $recent_properties = Property::where('seller_id', auth()->id())->orderBy('created_at', 'desc')->take(6)->get();
-        $recent_inquiries = Inquiry::with('property', 'agent')->where('seller_id', auth()->id())->orderBy('created_at', 'desc')->take(5)->get();
+        $recent_inquiries = Inquiry::with('property', 'agent')->where('seller_id', auth()->id())->orderBy('created_at', 'desc')->take(6)->get();
         $auth_user = auth()->user();
         return Inertia::render('Dashboard', [
             'total_properties' => $total_properties,
