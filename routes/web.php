@@ -254,9 +254,16 @@ Route::patch('/broker/agents/update/{agent}', [\App\Http\Controllers\Broker\Agen
 Route::delete('/broker/agents/{id}/delete', [\App\Http\Controllers\Broker\AgentController::class, 'destroy']);
 
 Route::get('/broker/properties', [\App\Http\Controllers\Broker\PropertyController::class, 'index'])->name('broker.properties');
+Route::get('/broker/properties/create', [\App\Http\Controllers\Broker\PropertyController::class, 'create'])->name('broker.properties.create');
+Route::post('/broker/properties/create', [\App\Http\Controllers\Broker\PropertyController::class, 'store']);
+
 Route::patch('/broker/properties/{propertyListing}/publish', [\App\Http\Controllers\Broker\PropertyController::class, 'publish']);
 Route::patch('/broker/properties/{propertyListing}/unpublish', [\App\Http\Controllers\Broker\PropertyController::class, 'unpublish']);
 Route::get('/broker/properties/{propertyListing}', [\App\Http\Controllers\Broker\PropertyController::class, 'show']);
+Route::get('/broker/properties/{propertyListing}/edit', [\App\Http\Controllers\Broker\PropertyController::class, 'edit']);
+Route::patch('/broker/properties/{property}/edit', [\App\Http\Controllers\Broker\PropertyController::class, 'update'])->name('broker.properties.update');
+
+
 
 Route::get('/broker/partners', [\App\Http\Controllers\Broker\DeveloperController::class, 'index']);
 Route::post('/broker/partners/create', [\App\Http\Controllers\Broker\DeveloperController::class, 'store']);
