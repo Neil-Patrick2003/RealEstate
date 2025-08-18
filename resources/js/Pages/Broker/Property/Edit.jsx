@@ -664,7 +664,7 @@ export default function Edit({property}) {
                         </div>
                         <div>
                             <h2 className="text-2xl font-bold text-gray-800">Main Image</h2>
-                            <p className="text-gray-600">List property features</p>
+                            <p className="text-gray-600">Display image in main listing</p>
                         </div>
                     </div>
 
@@ -735,7 +735,7 @@ export default function Edit({property}) {
                         </div>
                         <div>
                             <h2 className="text-2xl font-bold text-gray-800">Other Images</h2>
-                            <p className="text-gray-600">List property features</p>
+                            <p className="text-gray-600">List property images</p>
                         </div>
                     </div>
 

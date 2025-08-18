@@ -113,7 +113,12 @@ class PropertyController extends Controller
             'Status' => 'Published'
         ]);
 
-        return redirect()->back()->with('success', 'Property has been created.');
+        $property->update([
+            'status' => 'Published',
+        ]);
+
+
+        return redirect()->route('broker.properties')->with('success', 'Property has been created.');
     }
 
     public function edit(PropertyListing $propertyListing)

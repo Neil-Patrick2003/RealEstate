@@ -30,10 +30,10 @@ class StorePropertyRequest extends FormRequest
             'address' => 'required|string|max:255',
             'lot_area' => 'nullable|numeric|min:0',
             'floor_area' => 'nullable|numeric|min:0',
-            'total_rooms' => 'nullable|integer|min:0|max:10',
-            'total_bedrooms' => 'nullable|integer|min:0|max:10',
-            'total_bathrooms' => 'nullable|integer|min:0|max:10',
-            'car_slots' => 'nullable|integer|min:0|max:10',
+            'total_rooms' => 'nullable|integer|min:0',
+            'total_bedrooms' => 'nullable|integer|min:0',
+            'total_bathrooms' => 'nullable|integer|min:0',
+            'car_slots' => 'nullable|integer|min:0',
             'image_url' => 'required|file|image',
             'image_urls.*' => 'file|image',
             'feature_name' => 'required|array',
@@ -43,7 +43,6 @@ class StorePropertyRequest extends FormRequest
             'isPresell' => 'boolean',
             'allowMultipleAgent' => 'nullable|boolean',
             'agent_ids' => 'nullable|array',
-            'agent_ids.*' => 'exists:users,id',
         ];
     }
 }
