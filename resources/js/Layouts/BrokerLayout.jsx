@@ -6,6 +6,7 @@ import { useMediaQuery } from 'react-responsive';
 import Dropdown from '@/Components/Dropdown';
 import Breadcrumb from '@/Components/Breadcrumbs';
 import FlashMessage from '@/Components/FlashMessage.jsx';
+import 'quill/dist/quill.snow.css'; // or 'bubble.css'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BrokerSidebar from "@/Components/Sidebar/BrokerSidebar.jsx";
@@ -192,7 +193,7 @@ export default function BrokerLayout({ children }) {
                 </motion.header>
 
                 {/* Body */}
-                <div className="pt-14 p-4 sm:p-6 lg:p-8">
+                <div className="pt-14 p-4 sm:p-6 lg:p-8 bg-gray-50">
                     <FlashMessage />
                     <Breadcrumb />
                     {children}

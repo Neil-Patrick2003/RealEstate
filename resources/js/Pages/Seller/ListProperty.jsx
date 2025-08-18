@@ -14,7 +14,6 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Editor from 'react-simple-wysiwyg';
 import MapWithDraw from '@/Components/MapWithDraw';
-import { Accordion, AccordionDetails, AccordionSummary, Typography } from '@mui/material';
 import Collapsable from '@/Components/collapsable/collapsable';
 import Toggle from '@/Components/Toggle';
 import ToastHandler from "@/Components/ToastHandler.jsx";
@@ -45,7 +44,6 @@ const ListProperty = ({ agents = [] }) => {
     image_preview: '',
     agent_ids: [],
     allowMultipleAgent: false
-
   });
 
 
@@ -174,13 +172,7 @@ const ListProperty = ({ agents = [] }) => {
       setData('property_type', typeName);
     };
 
-    const [enabled, setEnabled] = useState(false);
-
     const [preview, setPreview] = useState(null); // For image preview
-
-
-
-
 
     const handleImagePropertyChange = (e) => {
       const file = e.target.files[0];

@@ -5,7 +5,7 @@ export default function FloatingInput({
                                           onChange,
                                           name,
                                           type = "text",
-                                          required = true,
+                                          required = false,
                                       }) {
     return (
         <label htmlFor={id} className="relative block w-full">
@@ -18,7 +18,7 @@ export default function FloatingInput({
                 onChange={onChange}
                 autoComplete="off"
                 placeholder=" "
-                className="peer w-full border border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 bg-white placeholder-transparent transition focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
+                className="peer w-full border border-gray-200 rounded-md px-4 py-3 text-sm text-gray-800 bg-white placeholder-transparent transition focus:outline-none focus:ring-0  focus:border-gray-500"
             />
             <span
                 className="absolute left-4 text-gray-500 uppercase tracking-wide bg-white px-1 text-sm transition-all duration-200 pointer-events-none

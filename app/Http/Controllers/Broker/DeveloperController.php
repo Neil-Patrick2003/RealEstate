@@ -66,7 +66,7 @@ class DeveloperController extends Controller
 
     public function  show($id)
     {
-        $developer = Developer::with('properties')->find($id);
+        $developer = Developer::with('property')->find($id);
 
         return Inertia::render('Broker/Partner/ShowPartner', [
             'developer' => $developer,

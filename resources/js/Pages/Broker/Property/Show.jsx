@@ -35,12 +35,12 @@ import { Link } from '@inertiajs/react';
                     {/* Seller Info */}
                     <div className="flex flex-col gap-3 border p-6 rounded-lg shadow-sm">
                         <p className="text-gray-500 font-semibold uppercase tracking-wide">Seller Information</p>
-                        <p className="text-xl font-bold text-primary">{seller.name}</p>
+                        <p className="text-xl font-bold text-primary">{seller?.name}</p>
 
                         <div className="text-sm text-gray-700 space-y-1">
-                            <p><FontAwesomeIcon icon={faEnvelope} className='text-gray-500 mr-2' /> <span className="text-gray-500">{seller.email}</span></p>
-                            <p><FontAwesomeIcon icon={faPhone}  className='text-gray-500 mr-2' /> <span className="text-gray-500">{seller.contact_number}</span></p>
-                            <p><FontAwesomeIcon icon={faLocationDot}  className='text-gray-500 mr-2' /> <span className="text-gray-500">{seller.address}</span></p>
+                            <p><FontAwesomeIcon icon={faEnvelope} className='text-gray-500 mr-2' /> <span className="text-gray-500">{seller?.email}</span></p>
+                            <p><FontAwesomeIcon icon={faPhone}  className='text-gray-500 mr-2' /> <span className="text-gray-500">{seller?.contact_number}</span></p>
+                            <p><FontAwesomeIcon icon={faLocationDot}  className='text-gray-500 mr-2' /> <span className="text-gray-500">{seller?.address}</span></p>
                             <button className='bg-secondary text-white rounded-2xl px-4 py-2 font-bold'>
                                 <FontAwesomeIcon icon={faMessage} className='mr-2'/>
                                 Message
@@ -52,12 +52,12 @@ import { Link } from '@inertiajs/react';
                     {/* Agent Info */}
                     <div className="flex flex-col gap-3 border p-6 rounded-lg shadow-sm">
                         <p className="text-gray-500 font-semibold uppercase tracking-wide">Agent Information</p>
-                        <p className="text-xl font-bold text-primary">{agent.name}</p>
+                        <p className="text-xl font-bold text-primary">{agent?.name}</p>
 
                         <div className="text-sm text-gray-700 space-y-1">
-                            <p><FontAwesomeIcon icon={faEnvelope} className='text-gray-500 mr-2' /> <span className="text-gray-500">{agent.email}</span></p>
-                            <p><FontAwesomeIcon icon={faPhone}  className='text-gray-500 mr-2' /> <span className="text-gray-500">{agent.contact_number}</span></p>
-                            <p><FontAwesomeIcon icon={faLocationDot}  className='text-gray-500 mr-2' /> <span className="text-gray-500">{agent.address}</span></p>
+                            <p><FontAwesomeIcon icon={faEnvelope} className='text-gray-500 mr-2' /> <span className="text-gray-500">{agent?.email}</span></p>
+                            <p><FontAwesomeIcon icon={faPhone}  className='text-gray-500 mr-2' /> <span className="text-gray-500">{agent?.contact_number}</span></p>
+                            <p><FontAwesomeIcon icon={faLocationDot}  className='text-gray-500 mr-2' /> <span className="text-gray-500">{agent?.address}</span></p>
                             <button className='bg-secondary text-white rounded-2xl px-4 py-2 font-bold'>
                                 <FontAwesomeIcon icon={faMessage} className='mr-2'/>
                                 Message

@@ -6,7 +6,9 @@ import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 import BrokerPropertyTabFilter from "@/Components/tabs/BrokerProeprtyTabFilter.jsx";
 import { debounce } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import {faEllipsisVertical, faEye, faPen, faSearch, faTrash} from "@fortawesome/free-solid-svg-icons";
+import Dropdown from "@/Components/Dropdown.jsx";
+import {SlidersHorizontal} from "lucide-react";
 
 export default function Index({ properties, allCount, assignedCount, publishedCount, unpublishedCount, itemsPerPage = 10, status = "All", page = 1, search = "" }) {
     const imageUrl = "/storage/";
@@ -81,7 +83,10 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
             <ConfirmDialog {...{ open: openPublishModal, setOpen: setOpenPublishModal, title: "Confirm Publish", description: "Are you sure you want to publish this property?", confirmText: "Publish", cancelText: "Cancel", onConfirm: handlePublished, loading }} />
             <ConfirmDialog {...{ open: openUnpublishModal, setOpen: setOpenUnpublishModal, title: "Confirm Unpublish", description: "Are you sure you want to unpublish this property?", confirmText: "Unpublish", cancelText: "Cancel", onConfirm: handleUnpublished, loading }} />
 
-            <h1 className="text-primary text-xl font-bold mb-4  ">Properties</h1>
+            <div className='flex-center-between'>
+                <h1 className="text-primary text-xl font-bold mb-4  ">Properties</h1>
+                <Link href='/broker/properties/create'>Add Properties</Link>
+            </div>
 
             {/* Tab Filters */}
             <div className="rounded-t-xl border border-gray-100 shadow-sm ">
@@ -122,23 +127,23 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
             </div>
 
             {/* Properties Table */}
-            <div className="overflow-x-auto bg-white border border-gray-100 scrollbar-thumb-gray-300 shadow-sm  scrollbar-track-transparent max-h-[56vh] overflow-y-auto">
+            <div className="overflow-x-auto min-h-[55vh] bg-white border border-gray-100 scrollbar-thumb-gray-300 shadow-sm  scrollbar-track-transparent max-h-[56vh] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group sticky top-0 z-20 shadow-sm">
                     <tr>
                         <th className="p-3 text-center"><input type="checkbox" /></th>
-                        <th className="p-3">Property</th>
-                        <th className="p-3">Agent(s)</th>
-                        <th className="p-3">Type</th>
-                        <th className="p-3">Address</th>
-                        <th className="p-3">Price</th>
-                        <th className="p-3">Size</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3 text-right">Actions</th>
+                        <th className="p-3 text-start">Property</th>
+                        <th className="p-3 text-start">Agent(s)</th>
+                        <th className="p-3 text-start">Type</th>
+                        <th className="p-3 text-start">Address</th>
+                        <th className="p-3 text-start">Price</th>
+                        <th className="p-3 text-start">Size</th>
+                        <th className="p-3 text-start">Status</th>
+                        <th className="p-3 text-start">Actions</th>
                     </tr>
                     </thead>
-                    <tbody className="divide-y divide-dashed">
-                    {properties?.data.length > 0 ? properties.data.map(property => {
+                    <tbody className="divide-y divide-dashed ">
+                    {properties?.data?.length > 0 ? properties?.data?.map(property => {
                         const statusClass = statusStyles[property.status] || statusStyles.default;
                         return (
                             <tr key={property.id} className="flex flex-col md:table-row hover:bg-gray-50">
@@ -155,7 +160,7 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
                                 <td className="p-3 md:table-cell">
                                     {property.agent?.length > 0
                                         ? property.agent.map((a, i) => <span key={i}>{a.name}{i < property.agent.length - 1 && ', '}</span>)
-                                        : property.agent?.name
+                                        : 'No agents assigned'
                                     }
                                 </td>
                                 <td className="p-3 md:table-cell">{property.property.property_type} | {property.property.sub_type}</td>
@@ -167,36 +172,99 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
                                             {property.status}
                                         </span>
                                 </td>
-                                <td className="p-3 text-right md:table-cell">
-                                    <div className="flex flex-col md:flex-row md:justify-end md:space-x-2 space-y-2 md:space-y-0">
-                                        {property.status === "Published" ? (
-                                            <button
-                                                className="border px-4 py-2 bg-secondary w-full md:w-24 rounded-md text-white text-sm"
-                                                onClick={() => {
-                                                    setSelectedPropertyId(property.id);
-                                                    setOpenUnpublishModal(true);
-                                                }}
-                                            >
-                                                Unpublish
+                                {/*<td className="p-3 text-right md:table-cell">*/}
+                                {/*    <div className="flex flex-col md:flex-row md:justify-end md:space-x-2 space-y-2 md:space-y-0">*/}
+                                {/*        {property.status === "Published" ? (*/}
+                                {/*            <button*/}
+                                {/*                className="border px-4 py-2 bg-secondary w-full md:w-24 rounded-md text-white text-sm"*/}
+                                {/*                onClick={() => {*/}
+                                {/*                    setSelectedPropertyId(property.id);*/}
+                                {/*                    setOpenUnpublishModal(true);*/}
+                                {/*                }}*/}
+                                {/*            >*/}
+                                {/*                Unpublish*/}
+                                {/*            </button>*/}
+                                {/*        ) : (*/}
+                                {/*            <button*/}
+                                {/*                className="border px-4 py-2 bg-primary w-full md:w-24 rounded-md text-white text-sm"*/}
+                                {/*                onClick={() => {*/}
+                                {/*                    setSelectedPropertyId(property.id);*/}
+                                {/*                    setOpenPublishModal(true);*/}
+                                {/*                }}*/}
+                                {/*            >*/}
+                                {/*                Publish*/}
+                                {/*            </button>*/}
+                                {/*        )}*/}
+                                {/*        <Link*/}
+                                {/*            href={`/broker/properties/${property.id}`}*/}
+                                {/*            className="border border-primary px-4 py-2 w-full md:w-24 text-center rounded-md text-primary text-sm"*/}
+                                {/*        >*/}
+                                {/*            View*/}
+                                {/*        </Link>*/}
+                                {/*        <div className="flex-shrink-0">*/}
+                                {/*            <Dropdown>*/}
+                                {/*                <Dropdown.Trigger>*/}
+                                {/*                    <button*/}
+                                {/*                        type="button"*/}
+                                {/*                        className="w-full lg:w-auto inline-flex items-center justify-center lg:justify-start rounded-xl lg:rounded-l-xl lg:rounded-r-none bg-gray-50 hover:bg-gray-100 px-4 py-3 lg:py-4 border-0 lg:border-r border-gray-200 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none transition-colors duration-200"*/}
+                                {/*                    >*/}
+                                {/*                        <SlidersHorizontal size={20} className="text-primary lg:hidden" />*/}
+                                {/*                        <div className="hidden lg:flex items-center">*/}
+                                {/*                            /!*<span className={`w-2 h-2 rounded-full mr-2 ${selected.color}`} />*!/*/}
+                                {/*                            /!*<span className="text-sm lg:text-base">{selected.label}</span>*!/*/}
+                                {/*                        </div>*/}
+                                {/*                    </button>*/}
+                                {/*                </Dropdown.Trigger>*/}
+
+                                {/*                <Dropdown.Content>*/}
+                                {/*                    <button>View</button>*/}
+                                {/*                    <button>Edit</button>*/}
+                                {/*                    <button>Delete</button>*/}
+                                {/*                </Dropdown.Content>*/}
+                                {/*            </Dropdown>*/}
+                                {/*        </div>*/}
+                                {/*    </div>*/}
+                                {/*</td>*/}
+                                <td className="p-3 md:table-cell relative">
+                                    {/* Dropdown Trigger */}
+                                    <Dropdown>
+                                        <Dropdown.Trigger>
+                                            <button className="text-gray-600 hover:text-gray-900 p-2 rounded-md hover:bg-gray-100 transition">
+                                                <FontAwesomeIcon icon={faEllipsisVertical} />
                                             </button>
-                                        ) : (
-                                            <button
-                                                className="border px-4 py-2 bg-primary w-full md:w-24 rounded-md text-white text-sm"
-                                                onClick={() => {
-                                                    setSelectedPropertyId(property.id);
-                                                    setOpenPublishModal(true);
-                                                }}
-                                            >
-                                                Publish
-                                            </button>
-                                        )}
-                                        <Link
-                                            href={`/broker/properties/${property.id}`}
-                                            className="border border-primary px-4 py-2 w-full md:w-24 text-center rounded-md text-primary text-sm"
-                                        >
-                                            View
-                                        </Link>
-                                    </div>
+                                        </Dropdown.Trigger>
+
+                                        <Dropdown.Content align="right" width="32" contentClasses="bg-white ring-1 ring-gray-200 shadow-md">
+                                            <div className="w-32 py-1 text-sm text-gray-700">
+
+                                                <Link
+                                                    href={`/broker/properties/${property.id}`}
+                                                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition rounded"
+                                                >
+                                                    <FontAwesomeIcon icon={faEye} className="w-4 h-4 text-gray-500" />
+                                                    <span>View</span>
+                                                </Link>
+
+                                                <Link
+                                                    href={`/broker/properties/${property.id}/edit`}
+                                                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition rounded"
+                                                >
+                                                    <FontAwesomeIcon icon={faPen} className="w-4 h-4 text-gray-500" />
+                                                    <span>Edit</span>
+                                                </Link>
+
+                                                <button
+                                                    className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-red-50 text-red-600 hover:text-red-700 transition rounded"
+                                                    onClick={() => {/* handle delete */}}
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
+                                                    <span>Delete</span>
+                                                </button>
+
+                                            </div>
+                                        </Dropdown.Content>
+                                    </Dropdown>
+
                                 </td>
 
                             </tr>
@@ -211,7 +279,7 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
             </div>
 
             {/* Pagination */}
-            <div className="flex flex-wrap gap-2 justify-center items-center     p-4 border border-gray-100  shadow-sm rounded-b-xl">
+            <div className="flex flex-wrap gap-2 justify-center items-center p-4 border border-gray-100  shadow-sm rounded-b-xl">
                 {properties?.links.map((link, i) => (
                     link.url ? (
                         <Link

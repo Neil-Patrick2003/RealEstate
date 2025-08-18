@@ -24,5 +24,9 @@ class PropertyListing extends Model
         return $this->hasMany(Deal::class);
     }
 
+    public  function broker(){
+        return $this->belongsTo(User::class, 'broker_id');
+    }
+
 
 }

@@ -110,3 +110,9 @@ body{
     bottom: 80px;
     left: 10px;
 }
+
+.custom-quill .ql-container {
+    border: 2px solid #3490dc; /* Tailwind 'blue-500' for example */
+    border-radius: 6px;
+}
+

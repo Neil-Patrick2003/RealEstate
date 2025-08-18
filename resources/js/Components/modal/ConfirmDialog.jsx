@@ -30,7 +30,7 @@ export default function ConfirmDialog({
       {open && (
         <Dialog
           as="div"
-          className="relative z-10"
+          className="relative z-50"
           initialFocus={cancelButtonRef}
           open={open}
           onClose={setOpen}

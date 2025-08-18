@@ -82,6 +82,15 @@ class Property extends Model
 
     }
 
+    public function listings()
+    {
+        return $this->hasMany(PropertyListing::class);
+    }
+
+    public function developer(){
+        return $this->belongsTo(Developer::class);
+    }
+
 
 
 }
