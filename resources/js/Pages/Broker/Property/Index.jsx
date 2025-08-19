@@ -1,5 +1,4 @@
 import BrokerLayout from "@/Layouts/BrokerLayout.jsx";
-import dayjs from "dayjs";
 import { Link, router } from "@inertiajs/react";
 import React, { useEffect, useRef, useState } from "react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
@@ -8,9 +7,9 @@ import { debounce } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {faEllipsisVertical, faEye, faPen, faSearch, faTrash} from "@fortawesome/free-solid-svg-icons";
 import Dropdown from "@/Components/Dropdown.jsx";
-import {SlidersHorizontal} from "lucide-react";
+import AssignAgentModal from "@/Components/modal/Broker/AssignAgentModal.jsx"
 
-export default function Index({ properties, allCount, assignedCount, publishedCount, unpublishedCount, itemsPerPage = 10, status = "All", page = 1, search = "" }) {
+export default function Index({ properties, allCount, assignedCount, publishedCount, unpublishedCount, itemsPerPage = 10, status = "All", page = 1, search = "", agents }) {
     const imageUrl = "/storage/";
     const statusStyles = {
         accepted: "bg-green-100 text-green-700 ring-green-200",
@@ -28,6 +27,7 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
     const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
     const [selectedSort, setSelectedSort] = useState("latest");
     const [searchTerm, setSearchTerm] = useState(search || "");
+    const [openAssignAgentModal, setOpenAssignAgentModal] = useState(false);
 
     const debouncedFilter = useRef(debounce(params => {
         router.get("/broker/properties", params, { preserveState: true, replace: true });
@@ -79,7 +79,8 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
 
     return (
         <BrokerLayout>
-            {/* Confirm Modals */}
+
+            <AssignAgentModal openAssignAgentModal={openAssignAgentModal} setOpenAssignAgentModal={setOpenAssignAgentModal} agents={agents} selectedPropertyId={selectedPropertyId} />
             <ConfirmDialog {...{ open: openPublishModal, setOpen: setOpenPublishModal, title: "Confirm Publish", description: "Are you sure you want to publish this property?", confirmText: "Publish", cancelText: "Cancel", onConfirm: handlePublished, loading }} />
             <ConfirmDialog {...{ open: openUnpublishModal, setOpen: setOpenUnpublishModal, title: "Confirm Unpublish", description: "Are you sure you want to unpublish this property?", confirmText: "Unpublish", cancelText: "Cancel", onConfirm: handleUnpublished, loading }} />
 
@@ -172,99 +173,75 @@ export default function Index({ properties, allCount, assignedCount, publishedCo
                                             {property.status}
                                         </span>
                                 </td>
-                                {/*<td className="p-3 text-right md:table-cell">*/}
-                                {/*    <div className="flex flex-col md:flex-row md:justify-end md:space-x-2 space-y-2 md:space-y-0">*/}
-                                {/*        {property.status === "Published" ? (*/}
-                                {/*            <button*/}
-                                {/*                className="border px-4 py-2 bg-secondary w-full md:w-24 rounded-md text-white text-sm"*/}
-                                {/*                onClick={() => {*/}
-                                {/*                    setSelectedPropertyId(property.id);*/}
-                                {/*                    setOpenUnpublishModal(true);*/}
-                                {/*                }}*/}
-                                {/*            >*/}
-                                {/*                Unpublish*/}
-                                {/*            </button>*/}
-                                {/*        ) : (*/}
-                                {/*            <button*/}
-                                {/*                className="border px-4 py-2 bg-primary w-full md:w-24 rounded-md text-white text-sm"*/}
-                                {/*                onClick={() => {*/}
-                                {/*                    setSelectedPropertyId(property.id);*/}
-                                {/*                    setOpenPublishModal(true);*/}
-                                {/*                }}*/}
-                                {/*            >*/}
-                                {/*                Publish*/}
-                                {/*            </button>*/}
-                                {/*        )}*/}
-                                {/*        <Link*/}
-                                {/*            href={`/broker/properties/${property.id}`}*/}
-                                {/*            className="border border-primary px-4 py-2 w-full md:w-24 text-center rounded-md text-primary text-sm"*/}
-                                {/*        >*/}
-                                {/*            View*/}
-                                {/*        </Link>*/}
-                                {/*        <div className="flex-shrink-0">*/}
-                                {/*            <Dropdown>*/}
-                                {/*                <Dropdown.Trigger>*/}
-                                {/*                    <button*/}
-                                {/*                        type="button"*/}
-                                {/*                        className="w-full lg:w-auto inline-flex items-center justify-center lg:justify-start rounded-xl lg:rounded-l-xl lg:rounded-r-none bg-gray-50 hover:bg-gray-100 px-4 py-3 lg:py-4 border-0 lg:border-r border-gray-200 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none transition-colors duration-200"*/}
-                                {/*                    >*/}
-                                {/*                        <SlidersHorizontal size={20} className="text-primary lg:hidden" />*/}
-                                {/*                        <div className="hidden lg:flex items-center">*/}
-                                {/*                            /!*<span className={`w-2 h-2 rounded-full mr-2 ${selected.color}`} />*!/*/}
-                                {/*                            /!*<span className="text-sm lg:text-base">{selected.label}</span>*!/*/}
-                                {/*                        </div>*/}
-                                {/*                    </button>*/}
-                                {/*                </Dropdown.Trigger>*/}
-
-                                {/*                <Dropdown.Content>*/}
-                                {/*                    <button>View</button>*/}
-                                {/*                    <button>Edit</button>*/}
-                                {/*                    <button>Delete</button>*/}
-                                {/*                </Dropdown.Content>*/}
-                                {/*            </Dropdown>*/}
-                                {/*        </div>*/}
-                                {/*    </div>*/}
-                                {/*</td>*/}
-                                <td className="p-3 md:table-cell relative">
-                                    {/* Dropdown Trigger */}
-                                    <Dropdown>
-                                        <Dropdown.Trigger>
-                                            <button className="text-gray-600 hover:text-gray-900 p-2 rounded-md hover:bg-gray-100 transition">
-                                                <FontAwesomeIcon icon={faEllipsisVertical} />
+                                <td className="p-3 text-right md:table-cell">
+                                    <div className="flex flex-col md:flex-row md:justify-end md:space-x-2 space-y-2 md:space-y-0">
+                                        {/* Publish / Unpublish Button */}
+                                        {property.status === "Published" ? (
+                                            <button
+                                                className="border px-4 py-2 bg-secondary w-full md:w-24 rounded-md text-white text-sm"
+                                                onClick={() => {
+                                                    setSelectedPropertyId(property.id);
+                                                    setOpenUnpublishModal(true);
+                                                }}
+                                            >
+                                                Unpublish
                                             </button>
-                                        </Dropdown.Trigger>
+                                        ) : (
+                                            <button
+                                                className="border px-4 py-2 bg-primary w-full md:w-24 rounded-md text-white text-sm"
+                                                onClick={() => {
+                                                    setSelectedPropertyId(property.id);
+                                                    setOpenPublishModal(true);
+                                                }}
+                                            >
+                                                Publish
+                                            </button>
+                                        )}
 
-                                        <Dropdown.Content align="right" width="32" contentClasses="bg-white ring-1 ring-gray-200 shadow-md">
-                                            <div className="w-32 py-1 text-sm text-gray-700">
+                                        <button onClick={() => {
+                                            setOpenAssignAgentModal(true);
+                                            setSelectedPropertyId(property.id);
+                                        }}>Assign Agent</button>
 
-                                                <Link
-                                                    href={`/broker/properties/${property.id}`}
-                                                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition rounded"
-                                                >
-                                                    <FontAwesomeIcon icon={faEye} className="w-4 h-4 text-gray-500" />
-                                                    <span>View</span>
-                                                </Link>
-
-                                                <Link
-                                                    href={`/broker/properties/${property.id}/edit`}
-                                                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition rounded"
-                                                >
-                                                    <FontAwesomeIcon icon={faPen} className="w-4 h-4 text-gray-500" />
-                                                    <span>Edit</span>
-                                                </Link>
-
-                                                <button
-                                                    className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-red-50 text-red-600 hover:text-red-700 transition rounded"
-                                                    onClick={() => {/* handle delete */}}
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
-                                                    <span>Delete</span>
+                                        {/* Dropdown Menu */}
+                                        <Dropdown>
+                                            <Dropdown.Trigger>
+                                                <button className="text-gray-600 hover:text-gray-900 p-2 rounded-md hover:bg-gray-100 transition">
+                                                    <FontAwesomeIcon icon={faEllipsisVertical} />
                                                 </button>
+                                            </Dropdown.Trigger>
 
-                                            </div>
-                                        </Dropdown.Content>
-                                    </Dropdown>
+                                            <Dropdown.Content align="right" width="32" contentClasses="bg-white ring-1 ring-gray-200 shadow-md">
+                                                <div className="w-32 py-1 text-sm text-gray-700">
+                                                    <Link
+                                                        href={`/broker/properties/${property.id}`}
+                                                        className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition rounded"
+                                                    >
+                                                        <FontAwesomeIcon icon={faEye} className="w-4 h-4 text-gray-500" />
+                                                        <span>View</span>
+                                                    </Link>
 
+                                                    <Link
+                                                        href={`/broker/properties/${property.id}/edit`}
+                                                        className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition rounded"
+                                                    >
+                                                        <FontAwesomeIcon icon={faPen} className="w-4 h-4 text-gray-500" />
+                                                        <span>Edit</span>
+                                                    </Link>
+
+                                                    <button
+                                                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-red-50 text-red-600 hover:text-red-700 transition rounded"
+                                                        onClick={() => {
+                                                            // Handle delete logic
+                                                        }}
+                                                    >
+                                                        <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
+                                                        <span>Delete</span>
+                                                    </button>
+                                                </div>
+                                            </Dropdown.Content>
+                                        </Dropdown>
+                                    </div>
                                 </td>
 
                             </tr>

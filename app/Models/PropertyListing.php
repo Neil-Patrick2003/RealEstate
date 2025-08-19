@@ -28,5 +28,8 @@ class PropertyListing extends Model
         return $this->belongsTo(User::class, 'broker_id');
     }
 
+    public function agents(){
+        return $this->belongsToMany(User::class, 'property_listing_agents', 'property_listing_id', 'agent_id');
+    }
 
 }

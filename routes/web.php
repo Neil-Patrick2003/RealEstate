@@ -263,6 +263,7 @@ Route::get('/broker/properties/{propertyListing}', [\App\Http\Controllers\Broker
 Route::get('/broker/properties/{propertyListing}/edit', [\App\Http\Controllers\Broker\PropertyController::class, 'edit']);
 Route::patch('/broker/properties/{property}/edit', [\App\Http\Controllers\Broker\PropertyController::class, 'update'])->name('broker.properties.update');
 
+Route::post('/broker/properties/{propertyListing}/assign-agents', [\App\Http\Controllers\PropertyListingAgentController::class, 'store']);
 
 
 Route::get('/broker/partners', [\App\Http\Controllers\Broker\DeveloperController::class, 'index']);

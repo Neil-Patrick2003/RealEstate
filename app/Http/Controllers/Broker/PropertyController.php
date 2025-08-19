@@ -49,6 +49,9 @@ class PropertyController extends Controller
             ->paginate((int) $request->get('items_per_page', 10));
 
 
+        $agents = User::where('broker_id', auth()->id())->get();
+
+
         $allCount = PropertyListing::count();
         $publishedCount = PropertyListing::where('status', 'Published')->count();
         $assignedCount = PropertyListing::where('status', 'Assigned')->count();
@@ -60,6 +63,7 @@ class PropertyController extends Controller
             'publishedCount' => $publishedCount,
             'assignedCount' => $assignedCount,
             'unpublishedCount' => $unpublishedCount,
+            'agents' => $agents,
         ]);
     }
 

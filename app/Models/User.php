@@ -112,6 +112,10 @@ class User extends Authenticatable
         return $this->hasOne(Developer::class, 'user_id');
     }
 
+    public function property_listings()
+    {
+        return $this->belongsToMany(PropertyListing::class, 'property_listing_agents', 'agent_id', 'property_listing_id');    }
+
 
 
 
