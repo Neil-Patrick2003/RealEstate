@@ -116,3 +116,13 @@ body{
     border-radius: 6px;
 }
 
+.gallery-thumbnail {
+    height: 80px;
+    width: 80px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+.gallery-thumbnail:hover {
+    transform: scale(1.05);
+}
+

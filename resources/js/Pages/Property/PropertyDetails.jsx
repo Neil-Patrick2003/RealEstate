@@ -273,9 +273,9 @@ export default function PropertyDetail({ property }) {
                                                 : 'A'}
                                         </div>
                                     )}
-                                    <Link href={`/agents/${property.property_listing?.agent.id}`} className='flex flex-col hover:underline'>{property.property_listing?.agent.name}
-                                        <span className='text-sm'>{property.property_listing?.agent.email}</span>
-                                    </Link>
+                                    {/*<Link href={`/agents/${property.property_listing?.agent.id}`} className='flex flex-col hover:underline'>{property.property_listing?.agent.name}*/}
+                                    {/*    <span className='text-sm'>{property.property_listing?.agent.email}</span>*/}
+                                    {/*</Link>*/}
 
                                 </div>
 
