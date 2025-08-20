@@ -5,7 +5,7 @@ const Breadcrumb = React.memo(({ pages = [] }) => {
   if (!pages.length) return null;
 
   return (
-    <nav aria-label="Breadcrumb" className="flex py-2 px-4">
+    <nav aria-label="Breadcrumb" className="flex py-2">
       <ol role="list" className="flex items-center space-x-4 overflow-x-auto">
         <li>
           <a href="/" className="text-gray-400 hover:text-gray-600 flex items-center">

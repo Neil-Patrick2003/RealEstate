@@ -5,7 +5,6 @@ import { router } from '@inertiajs/react';
 const tabs = [
     { name: 'All', color: 'black' },
     { name: 'Published', color: 'blue' },
-    { name: 'Assigned', color: 'green' },
     { name: 'Unpublished', color: 'red' },
 ];
 
@@ -40,7 +39,6 @@ export default function BrokerPropertyTabFilter({
         const map = {
             All: isActive ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700',
             Published: isActive ? 'bg-secondary text-white' : 'bg-orange-100 text-secondary',
-            Assigned: isActive ? 'bg-accent text-white' : 'bg-lightaccent text-green-800',
             Unpublished: isActive ? 'bg-primary text-white' : 'bg-lightaccent text-primary',
         };
         return map[name] || 'bg-gray-100 text-gray-800';

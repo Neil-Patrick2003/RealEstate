@@ -193,7 +193,7 @@ export default function BrokerLayout({ children }) {
                 </motion.header>
 
                 {/* Body */}
-                <div className="pt-14 p-4 sm:p-6 lg:p-8 bg-gray-50">
+                <div className=" p-4 sm:p-6 lg:p-8 bg-white">
                     <FlashMessage />
                     <Breadcrumb />
                     {children}

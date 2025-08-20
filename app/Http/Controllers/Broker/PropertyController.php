@@ -22,7 +22,7 @@ class PropertyController extends Controller
     public function index(Request $request)
     {
 
-        $properties = PropertyListing::with('property')
+        $properties = PropertyListing::with('property', 'agents:id,name,photo_url')
             ->where('broker_id', auth()->id())
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->search;
@@ -43,25 +43,33 @@ class PropertyController extends Controller
                     });
                 });
             })
-
+            ->when($request->filled('sort'), function ($query) use ($request) {
+                $sort = $request->sort;
+                $query->orderBy('created_at', $sort);
+            })
 
             ->latest()
             ->paginate((int) $request->get('items_per_page', 10));
 
 
+
         $agents = User::where('broker_id', auth()->id())->get();
 
+        $allCount = PropertyListing::where('broker_id', auth()->id())->count();
 
-        $allCount = PropertyListing::count();
-        $publishedCount = PropertyListing::where('status', 'Published')->count();
-        $assignedCount = PropertyListing::where('status', 'Assigned')->count();
-        $unpublishedCount = PropertyListing::where('status', 'Unpublished')->count();
+        $publishedCount = PropertyListing::where('broker_id', auth()->id())
+            ->where('status', 'Published')
+            ->count();
+
+        $unpublishedCount = PropertyListing::where('broker_id', auth()->id())
+            ->where('status', 'Unpublished')
+            ->count();
+
 
         return Inertia::render('Broker/Property/Index', [
             'properties' => $properties,
             'allCount' => $allCount,
             'publishedCount' => $publishedCount,
-            'assignedCount' => $assignedCount,
             'unpublishedCount' => $unpublishedCount,
             'agents' => $agents,
         ]);
@@ -102,6 +110,8 @@ class PropertyController extends Controller
 
     public function store(StorePropertyRequest $request, PropertiesService $propertiesService)
     {
+
+        dd($request->all());
         $validated = $request->validated();
 
         $files = [
