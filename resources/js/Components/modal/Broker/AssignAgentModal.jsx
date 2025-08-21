@@ -5,6 +5,7 @@ import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export default function AssignAgentModal({
+                                             selectedProperty,
                                              openAssignAgentModal,
                                              setOpenAssignAgentModal,
                                              agents = [],
@@ -15,12 +16,19 @@ export default function AssignAgentModal({
     });
 
     const handleCheckboxChange = (agentId) => {
-        const newAgentIds = data.agent_ids.includes(agentId)
-            ? data.agent_ids.filter(id => id !== agentId)
-            : [...data.agent_ids, agentId];
+        if (selectedProperty?.allows_multiple_agents) {
+            // Multiple agents allowed
+            const newAgentIds = data.agent_ids.includes(agentId)
+                ? data.agent_ids.filter(id => id !== agentId)
+                : [...data.agent_ids, agentId];
 
-        setData('agent_ids', newAgentIds);
+            setData('agent_ids', newAgentIds);
+        } else {
+            // Only one agent allowed
+            setData('agent_ids', data.agent_ids.includes(agentId) ? [] : [agentId]);
+        }
     };
+
 
     const handleSubmit = () => {
         post(`/broker/properties/${selectedPropertyId}/assign-agents`, {
@@ -59,6 +67,7 @@ export default function AssignAgentModal({
         >
             <div className="px-6 py-4 max-h-[80vh] overflow-y-auto">
                 <h2 className="text-xl font-semibold mb-4">Assign Agent</h2>
+                <h2 className="text-xl font-semibold mb-4">{selectedProperty?.title}</h2>
 
                 <div className="mb-4">
                     <p className="block text-sm font-medium text-gray-700 mb-2">Select Agents</p>
@@ -93,8 +102,14 @@ export default function AssignAgentModal({
                                         value={agent.id}
                                         checked={data.agent_ids.includes(agent.id)}
                                         onChange={() => handleCheckboxChange(agent.id)}
+                                        disabled={
+                                            !selectedProperty?.allows_multiple_agents &&
+                                            data.agent_ids.length > 0 &&
+                                            !data.agent_ids.includes(agent.id)
+                                        }
                                         className="hidden"
                                     />
+
                                     <span className="text-xs text-gray-600 flex items-center space-x-1">
                                         <FontAwesomeIcon
                                             icon={data.agent_ids.includes(agent.id) ? faMinus : faPlus}
@@ -110,20 +125,30 @@ export default function AssignAgentModal({
                     </div>
                 </div>
 
-                <div className="flex justify-end space-x-2">
-                    <button
-                        onClick={handleClose}
-                        className="px-4 py-2 text-sm bg-gray-200 rounded-md hover:bg-gray-300"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={processing}
-                        className={`px-4 py-2 text-sm text-white rounded-md ${processing ? 'bg-gray-400' : 'bg-primary hover:bg-primary-dark'}`}
-                    >
-                        {processing ? 'Saving...' : 'Save Assignments'}
-                    </button>
+                <div className="flex-center-between space-x-2">
+                    <div>
+                        {!selectedProperty?.allows_multiple_agents && (
+                            <p className="text-sm text-gray-500 mb-2">
+                                Only one agent can be assigned to this property.
+                            </p>
+                        )}
+                    </div>
+                    <div className='flex flex-row space-x-2'>
+                        <button
+                            onClick={handleClose}
+                            className="px-4 py-2 text-sm bg-gray-200 rounded-md hover:bg-gray-300"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={processing}
+                            className={`px-4 py-2 text-sm text-white rounded-md ${processing ? 'bg-gray-400' : 'bg-primary hover:bg-primary-dark'}`}
+                        >
+                            {processing ? 'Saving...' : 'Save Assignments'}
+                        </button>
+                    </div>
+
                 </div>
             </div>
         </Modal>

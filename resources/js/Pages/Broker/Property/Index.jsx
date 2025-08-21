@@ -47,6 +47,7 @@ export default function Index({
     const [selectedSort, setSelectedSort] = useState("latest");
     const [searchTerm, setSearchTerm] = useState(search);
     const [openAssignAgentModal, setOpenAssignAgentModal] = useState(false);
+    const [selectedProperty, setSelectedProperty] = useState(null);
 
     const debouncedFilter = useRef(
         debounce(params => {
@@ -99,10 +100,13 @@ export default function Index({
         { name: 'Properties', href: '/broker/properties', current: true },
     ];
 
+    console.log(selectedProperty)
+
     return (
         <BrokerLayout>
             <Breadcrumb pages={pages} />
             <AssignAgentModal
+                selectedProperty={selectedProperty?.property}
                 openAssignAgentModal={openAssignAgentModal}
                 setOpenAssignAgentModal={setOpenAssignAgentModal}
                 agents={agents}
@@ -151,6 +155,7 @@ export default function Index({
                 <div className="p-4 md:p-6 flex flex-wrap gap-4 justify-between">
                     <div className="relative w-full md:w-1/4">
                         <input
+                            id="search"
                             value={searchTerm}
                             onChange={e => {
                                 setSearchTerm(e.target.value);
@@ -207,7 +212,7 @@ export default function Index({
                 <table className="min-w-full divide-y divide-gray-200 text-sm text-gray-700">
                     <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group sticky top-0 z-20 shadow-sm">
                     <tr>
-                        <th className="p-3 text-center"><input type="checkbox" /></th>
+                        <th className="p-3 text-center"><input type="checkbox" id='all' /></th>
                         <th className="p-3 text-start">Property</th>
                         <th className="p-3 text-start">Agent(s)</th>
                         <th className="p-3 text-start">Type</th>
@@ -223,7 +228,7 @@ export default function Index({
                         const statusClass = statusStyles[property.status.toLowerCase()] || statusStyles.default;
                         return (
                             <tr key={property.id} className="flex flex-col md:table-row hover:bg-gray-50">
-                                <td className="p-3 text-center hidden md:table-cell"><input type="checkbox" /></td>
+                                <td className="p-3 text-center hidden md:table-cell"><input type="checkbox" id={property.id}/></td>
                                 <td className="p-3 md:table-cell">
                                     <div className="flex items-center gap-3">
                                         <img
@@ -289,6 +294,7 @@ export default function Index({
                                 </td>
                                 <td className="p-3 md:table-cell relative">
                                     <select
+                                        id={`status-${property.id}`}
                                         value={property.status}
                                         onChange={e => {
                                             setSelectedPropertyId(property.id);
@@ -309,6 +315,7 @@ export default function Index({
                                         <button
                                             onClick={() => {
                                                 setOpenAssignAgentModal(true);
+                                                setSelectedProperty(property);
                                                 setSelectedPropertyId(property.id);
                                             }}
                                             title="Assign Agent"
