@@ -189,7 +189,7 @@ class PropertyController extends Controller
 
         $property = $property->load('images', 'coordinate', 'features');
 
-        return Inertia::render('Seller/Properties/ShowProperty', [
+        return Inertia::render('Seller/Properties/SingleProperty', [
             'property' => $property
         ]);
     }

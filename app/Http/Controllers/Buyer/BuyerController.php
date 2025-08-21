@@ -32,6 +32,7 @@ class BuyerController extends Controller
 
 
 
+
         $propertiesWithMap = Property::where('status', 'Published')
             ->with('coordinate')
             ->get();

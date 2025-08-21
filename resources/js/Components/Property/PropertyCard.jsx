@@ -28,7 +28,7 @@
 
         return (
             <Link
-                href={`/properties/${id}`}
+                href={`/all-properties/${id}`}
                 className="block focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-xl"
             >
                 <div className="max-w-[350px] bg-white shadow-sm hover:shadow-md hover:scale-105 transition-transform duration-300 relative rounded-lg overflow-hidden">

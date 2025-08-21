@@ -48,9 +48,10 @@ Route::get('/', function (Request $request) {
         'properties' => $properties,
         'favouriteIds' => $favouriteIds,
         'featured' => $featured,
-
     ]);
 });
+
+
 //<-----------------------Header Pages---------------------->
 Route::get('/contact', function () {
     return Inertia::render('Headers/ContactPage');
@@ -185,7 +186,7 @@ Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::cla
 
 
 Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
-Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
+Route::get('/all-properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
 Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])
     ->middleware('auth')

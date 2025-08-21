@@ -114,7 +114,14 @@ class User extends Authenticatable
 
     public function property_listings()
     {
-        return $this->belongsToMany(PropertyListing::class, 'property_listing_agents', 'agent_id', 'property_listing_id');    }
+        return $this->belongsToMany(PropertyListing::class, 'property_listing_agents', 'agent_id', 'property_listing_id');
+    }
+
+
+    public function broker_listing(){
+        return $this->hasMany(PropertyListing::class, 'broker_id');
+
+    }
 
 
 

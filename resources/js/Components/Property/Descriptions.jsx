@@ -12,7 +12,7 @@ import React from "react";
 export default function Descriptions({price, lot_area, floor_area, description, features, sub_type, total_rooms, car_slots, property_type}) {
     return (
         <div className='w-full flex flex-col gap-6'>
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-6 bg-gradient-to-r from-green-50 to-green-100">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div className="mb-4 sm:mb-0">
                         <div className="text-3xl font-bold text-green-600">

@@ -7,7 +7,7 @@ import "quill/dist/quill.snow.css";
 import {CheckLine, RotateCcw, Trash2, X} from "lucide-react";
 import InputLabel from "@/Components/InputLabel.jsx";
 import MapWithDraw from '@/Components/MapWithDraw';
-import Toggle from "@/Components/Toggle.jsx";
+import Toggle from "@/Components/Toggle/Toggle.jsx";
 import TextInput from "@/Components/TextInput.jsx";
 import { MapPin, House, Building2, Building, Landmark } from "lucide-react";
 import {
@@ -318,7 +318,12 @@ export default function Edit({property}) {
                                     <p className="text-sm text-gray-600">Mark if this is a pre-construction sale</p>
                                 </div>
                             </div>
-                            <Toggle data={data} setData={setData}/>
+                            {/*<Toggle*/}
+                            {/*    name="allowMultipleAgent"*/}
+                            {/*    checked={data.allowMultipleAgent}*/}
+                            {/*    onChange={(val) => setData('allowMultipleAgent', val)}*/}
+                            {/*    ariaLabel="Allow multiple agents"*/}
+                            {/*/>*/}
                         </div>
                     </div>
 
@@ -432,7 +437,7 @@ export default function Edit({property}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
@@ -597,7 +602,7 @@ export default function Edit({property}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
@@ -655,8 +660,8 @@ export default function Edit({property}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                 fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
-                                 stroke-linejoin="round" className="lucide lucide-image-icon lucide-image">
+                                 fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"
+                                 strokeLinejoin="round" className="lucide lucide-image-icon lucide-image">
                                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
                                 <circle cx="9" cy="9" r="2"/>
                                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
@@ -726,8 +731,8 @@ export default function Edit({property}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                 fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
-                                 stroke-linejoin="round" className="lucide lucide-image-icon lucide-image">
+                                 fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"
+                                 strokeLinejoin="round" className="lucide lucide-image-icon lucide-image">
                                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
                                 <circle cx="9" cy="9" r="2"/>
                                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
@@ -805,8 +810,8 @@ export default function Edit({property}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                 fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
-                                 stroke-linejoin="round" className="lucide lucide-map-pin-icon lucide-map-pin">
+                                 fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"
+                                 strokeLinejoin="round" className="lucide lucide-map-pin-icon lucide-map-pin">
                                 <path
                                     d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
                                 <circle cx="12" cy="10" r="3"/>

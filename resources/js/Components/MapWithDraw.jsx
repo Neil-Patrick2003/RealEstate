@@ -51,10 +51,6 @@ const PropertyMapDraw = ({ onChange, boundary, pin }) => {
     const [markerPosition, setMarkerPosition] = useState(pin || null);
     const featureGroupRef = useRef(null);
 
-    console.log(boundary);
-    console.log(pin);
-
-
     // Load existing boundary & pin
     useEffect(() => {
         const group = featureGroupRef.current;

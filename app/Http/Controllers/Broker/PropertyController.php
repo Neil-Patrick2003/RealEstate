@@ -111,7 +111,6 @@ class PropertyController extends Controller
     public function store(StorePropertyRequest $request, PropertiesService $propertiesService)
     {
 
-        dd($request->all());
         $validated = $request->validated();
 
         $files = [
@@ -154,6 +153,8 @@ class PropertyController extends Controller
         ];
 
         $propertiesService->update($request, $property, $files);
+
+
     }
 
 }

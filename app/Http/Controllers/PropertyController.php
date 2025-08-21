@@ -13,11 +13,12 @@ class PropertyController extends Controller
 {
     public function show(Property $property )
     {
-        $property->load('images', 'features', 'coordinate', 'seller', 'property_listing.agent', );
+        $property->load('images', 'features', 'coordinate', 'seller', 'property_listing.agents', 'property_listing.broker' );
+
 
         $property->increment('views');
 
-        return Inertia::render('Property/PropertyDetails', [
+        return Inertia::render('LandingPage/Property/ShowProperty', [
             'property' => $property,
         ]);
     }

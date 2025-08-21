@@ -12,6 +12,7 @@ import Toggle from "@/Components/Toggle.jsx";
 import TextInput from "@/Components/TextInput.jsx";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { MapPin, House, Building2, Building, Landmark } from "lucide-react";
+import AllowMultiAgentToggle from '@/Components/Toggle/AllowMultiAgentToggle.jsx';
 
 import {
     faBath,
@@ -113,6 +114,13 @@ export default function Create({developers}) {
         setData('pin', pin);
     };
 
+    const handleToggleChange = (val) => {
+        setData((prev) => ({
+            ...prev,
+            isPresell: val,
+        }));
+    };
+
 
 
     const property_type = [
@@ -152,372 +160,6 @@ export default function Create({developers}) {
     };
 
     return (
-        // <BrokerLayout>
-        //     <form className="space-y-10"
-        //       onSubmit={(e) => {
-        //         e.preventDefault();
-        //         console.log(data);
-        //         post('/broker/properties/create');
-        //       }
-        //     }>
-        //         <div className='flex'>
-        //             <h1>Project By</h1>
-        //             {developers.map((developer) => (
-        //                 <input
-        //                     key={developer.id}
-        //                     className="flex"
-        //                     value={developer.name}
-        //                     onChange={() => {}} // required to avoid React warning (if you intend to make it controlled)
-        //                     readOnly // if you don't want editing
-        //                 />
-        //             ))}
-        //         </div>
-        //         <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
-        //             <p className="text-gray-700 text-sm font-medium">Pre Selling?</p>
-        //             <Toggle data={data} setData={setData} />
-        //         </div>
-        //
-        //         {/* Section: Title */}
-        //         <div>
-        //             <h2 className="text-lg font-semibold text-gray-800 mb-2">Property Title</h2>
-        //             <InputWithLabel
-        //                 id="title"
-        //                 name="title"
-        //                 label="Property Title *"
-        //                 value={data.title}
-        //                 onChange={(e) => setData('title', e.target.value)}
-        //                 required
-        //                 className="w-full"
-        //             />
-        //             <InputError message={errors.title} className="mt-1" />
-        //         </div>
-        //
-        //         {/* Section: Image Upload */}
-        //         <div>
-        //             <h2 className="text-lg font-semibold text-gray-800 mb-2">Upload Property Image</h2>
-        //             <div className="flex flex-col items-center">
-        //                 <label
-        //                     htmlFor="property_image"
-        //                     className={`flex flex-col items-center justify-center w-full h-48 md:h-80 border-2 border-dashed rounded-xl transition ${
-        //                         preview
-        //                             ? 'border-transparent'
-        //                             : 'border-gray-300 bg-white hover:bg-gray-50 cursor-pointer'
-        //                     }`}
-        //                 >
-        //                     {!preview ? (
-        //                         <div className="flex flex-col items-center justify-center px-6 pt-5 pb-6">
-        //                             <div className="mb-4 bg-gray-100 rounded-full p-3">
-        //                                 <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        //                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-        //                                           d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1M12 12v6m0-6l-3 3m3-3l3 3M16 8a4 4 0 0 0-8 0v1H5a2 2 0 0 0 0 4h14a2 2 0 0 0 0-4h-3V8z"/>
-        //                                 </svg>
-        //                             </div>
-        //                             <p className="mb-1 text-lg font-semibold text-gray-700">Drag & Drop or Click to Upload</p>
-        //                             <p className="text-sm text-gray-500 text-center">PNG, JPG, WebP</p>
-        //                         </div>
-        //                     ) : (
-        //                         <div className="relative w-full h-full">
-        //                             <img src={preview} alt="Preview"
-        //                                  className="h-full w-full rounded-xl object-cover shadow-md"/>
-        //                             <button
-        //                                 type="button"
-        //                                 onClick={() => document.getElementById('property_image').click()}
-        //                                 className="absolute bottom-4 right-4 flex items-center border px-4 py-2 text-sm text-white bg-primary hover:bg-accent rounded transition duration-200"
-        //                             >
-        //                                 Change Image
-        //                                 <RotateCcw className="w-5 h-5 ml-2"/>
-        //                             </button>
-        //                         </div>
-        //                     )}
-        //                 </label>
-        //
-        //                 <input
-        //                     type="file"
-        //                     id="property_image"
-        //                     accept="image/*"
-        //                     className="hidden"
-        //                     onChange={handleImagePropertyChange}
-        //                 />
-        //                 <InputError message={errors.image_url} className="mt-1" />
-        //
-        //             </div>
-        //
-        //         </div>
-        //
-        //         {/*description*/}
-        //         <div>
-        //             <h2 className="text-lg font-semibold text-gray-800 mb-2">Property Description</h2>
-        //             <div ref={editorRef} id="editor" className="bg-white rounded-md border border-gray-300" style={{ height: "300px" }}/>
-        //             <InputError message={errors.description} className="mt-1" />
-        //         </div>
-        //         {/* Property Type */}
-        //         <div>
-        //             <h2 className="text-lg font-semibold text-gray-800 mb-2">Property Type *</h2>
-        //             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        //                 {property_type.map((type) => (
-        //                     <div
-        //                         key={type.name}
-        //                         className={`border px-4 py-2 text-center rounded-xl cursor-pointer transition ${
-        //                             selectedType?.name === type.name ? 'bg-primary text-white border-primary' : 'bg-white hover:bg-gray-100'
-        //                         }`}
-        //                         onClick={() => {
-        //                             setSelectedType(type);
-        //                             setData('property_type', type.name);
-        //                             setSelectedSubType(null); // Reset sub-type when type changes
-        //                         }}
-        //                     >
-        //                         {type.name}
-        //                     </div>
-        //                 ))}
-        //             </div>
-        //             <InputError message={errors.property_type} className="mt-1" />
-        //
-        //         </div>
-        //
-        //         {/* Subtype */}
-        //         {selectedType && (
-        //             <div className="mt-6">
-        //                 <h2 className="text-lg font-semibold text-gray-800 mb-2">Property Subtype *</h2>
-        //                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        //                     {selectedType.subTypes.map((subType, index) => (
-        //                         <div
-        //                             key={index}
-        //                             className={`border px-4 py-2 text-center rounded-xl cursor-pointer transition ${
-        //                                 selectedSubType === subType ? 'bg-primary text-white border-primary' : 'bg-white hover:bg-gray-100'
-        //                             }`}
-        //                             onClick={() => {
-        //                                 setSelectedSubType(subType);
-        //                                 setData('property_sub_type', subType);
-        //                             }}
-        //                         >
-        //                             {subType}
-        //                         </div>
-        //                     ))}
-        //                 </div>
-        //                 <InputError message={errors.sub_type} className="mt-1" />
-        //             </div>
-        //
-        //         )}
-        //         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        //             <InputWithLabel
-        //                 id="address"
-        //                 name="address"
-        //                 label="Address *"
-        //                 value={data.address}
-        //                 onChange={(e) => setData('address', e.target.value)}
-        //                 required
-        //             />
-        //             <InputError message={errors.address} className="mt-1" />
-        //
-        //
-        //             <InputWithLabel
-        //                 id="price"
-        //                 name="price"
-        //                 type="number"
-        //                 label="Price (₱) *"
-        //                 value={data.price}
-        //                 onChange={(e) => setData('price', e.target.value)}
-        //                 required
-        //             />
-        //             <InputError message={errors.price} className="mt-1" />
-        //
-        //
-        //             {selectedType?.name === "Land" ? (
-        //                 <>
-        //                     <InputWithLabel
-        //                         id="lot_area"
-        //                         name="lot_area"
-        //                         type="number"
-        //                         label="Lot Area (m²) *"
-        //                         value={data.lot_area}
-        //                         onChange={(e) => setData('lot_area', e.target.value)}
-        //                         required
-        //                     />
-        //                     <InputError message={errors.lot_area} className="mt-1" />
-        //                 </>
-        //                 ) : (
-        //                     <>
-        //                         <InputWithLabel
-        //                             id="floor_area"
-        //                             name="floor_area"
-        //                             type="number"
-        //                             label="Floor Area (m²) *"
-        //                             value={data.floor_area}
-        //                             onChange={(e) => setData('floor_area', e.target.value)}
-        //                             required
-        //                         />
-        //                         <InputError message={errors.floor_area} className="mt-1" />
-        //                     </>
-        //             )}
-        //
-        //             <InputWithLabel
-        //                 id="total_rooms"
-        //                 name="total_rooms"
-        //                 type="number"
-        //                 label="Total Rooms (Optional)"
-        //                 value={data.total_rooms}
-        //                 onChange={(e) => setData('total_rooms', e.target.value)}
-        //             />
-        //             <InputError message={errors.total_rooms} className="mt-1" />
-        //
-        //
-        //             <InputWithLabel
-        //                 id="total_bedrooms"
-        //                 name="total_bedrooms"
-        //                 type="number"
-        //                 label="Total Bedrooms (Optional)"
-        //                 value={data.total_bedrooms}
-        //                 onChange={(e) => setData('total_bedrooms', e.target.value)}
-        //             />
-        //             <InputError message={errors.total_bedrooms} className="mt-1" />
-        //
-        //
-        //             <InputWithLabel
-        //                 id="total_bathrooms"
-        //                 name="total_bathrooms"
-        //                 type="number"
-        //                 label="Total Bathrooms (Optional)"
-        //                 value={data.total_bathrooms}
-        //                 onChange={(e) => setData('total_bathrooms', e.target.value)}
-        //             />
-        //             <InputError message={errors.total_bedrooms} className="mt-1" />
-        //
-        //
-        //             <InputWithLabel
-        //                 id="car_slots"
-        //                 name="car_slots"
-        //                 type="number"
-        //                 label="Parking Slot (Optional)"
-        //                 value={data.car_slots}
-        //                 onChange={(e) => setData('car_slots', e.target.value)}
-        //             />
-        //             <InputError message={errors.car_slots} className="mt-1" />
-        //
-        //         </div>
-        //
-        //         <div className="mt-10 p-6 border border-gray-200 rounded-md">
-        //             <p className="text-lg font-semibold text-gray-800 mb-2">Property Features</p>
-        //
-        //             {/* Tags display */}
-        //             <div className="flex flex-wrap gap-2 mb-4">
-        //                 {data.feature_name.map((tag, index) => (
-        //                     <div
-        //                         key={index}
-        //                         className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-200 text-sm text-primary"
-        //                     >
-        //                         {tag}
-        //                         <button
-        //                             type="button"
-        //                             onClick={() => handleFeatureNameDelete(index)}
-        //                             className="text-red-500 hover:text-red-700 font-bold"
-        //                         >
-        //                             &times;
-        //                         </button>
-        //                     </div>
-        //                 ))}
-        //             </div>
-        //
-        //             {/* Input to add tags */}
-        //             <div className="flex gap-2">
-        //                 <input
-        //                     name="feature_name"
-        //                     type="text"
-        //                     value={featureName}
-        //                     onChange={handleFeatureNameChange}
-        //                     placeholder="Enter feature name"
-        //                 />
-        //                 <button
-        //                     type="button"
-        //                     onClick={handleFeatureNameAdd}
-        //                     disabled={!featureName.trim()}
-        //                     className={`bg-primary text-white px-4 py-2 rounded hover:bg-accent transition ${featureName.trim() ? '' : 'opacity-75 cursor-not-allowed'}`}
-        //                 >
-        //                     Add
-        //                 </button>
-        //
-        //             </div>
-        //             <InputError message={errors.feature_name} className="mt-1" />
-        //         </div>
-        //
-        //         <div className="mb-6">
-        //             <InputLabel htmlFor="image_upload" value="Property Images" />
-        //             <label
-        //                 htmlFor="image_upload"
-        //                 className="mt-2 flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-300 rounded-xl bg-white cursor-pointer hover:bg-gray-50 transition"
-        //             >
-        //                 <div className="flex flex-col items-center justify-center px-6 pt-5 pb-6">
-        //                     <div className="mb-4 bg-gray-100 rounded-full p-3">
-        //                         <svg
-        //                             className="w-6 h-6 text-gray-500"
-        //                             fill="none"
-        //                             stroke="currentColor"
-        //                             viewBox="0 0 24 24"
-        //                         >
-        //                             <path
-        //                                 strokeLinecap="round"
-        //                                 strokeLinejoin="round"
-        //                                 strokeWidth="2"
-        //                                 d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1M12 12v6m0-6l-3 3m3-3l3 3M16 8a4 4 0 0 0-8 0v1H5a2 2 0 0 0 0 4h14a2 2 0 0 0 0-4h-3V8z"
-        //                             />
-        //                         </svg>
-        //                     </div>
-        //                     <p className="mb-1 text-lg font-semibold text-gray-700">Drag & Drop Files Here</p>
-        //                     <p className="text-sm text-gray-500 text-center">PNG, JPG, WebP, SVG — or click to browse</p>
-        //                 </div>
-        //                 <input
-        //                     id="image_upload"
-        //                     type="file"
-        //                     accept="image/*"
-        //                     multiple
-        //                     onChange={handleImageChange}
-        //                     className="hidden"
-        //                 />
-        //             </label>
-        //
-        //             {/* Image Previews */}
-        //             {imagePreviews.length > 0 && (
-        //                 <div className="flex flex-wrap gap-4 mt-4">
-        //                     {imagePreviews.map((img, index) => (
-        //                         <div key={index} className="relative w-24 h-24">
-        //                             <img
-        //                                 src={img.preview}
-        //                                 alt={`Preview ${index}`}
-        //                                 className="w-full h-full object-cover border rounded shadow"
-        //                             />
-        //                             <button
-        //                                 type="button"
-        //                                 onClick={() => handleRemoveImage(index)}
-        //                                 className="absolute top-1 right-1 bg-white rounded-full p-1 shadow hover:bg-red-500 hover:text-white"
-        //                             >
-        //                                 <Trash2 size={16} />
-        //                             </button>
-        //                         </div>
-        //                     ))}
-        //                 </div>
-        //             )}
-        //             <InputError message={errors.image_urls} className="mt-2" />
-        //         </div>
-        //
-        //         <div>
-        //             <MapWithDraw userId={authId} onChange={handleMapChange} />
-        //             <InputError message={errors.boundary} className="mt-1" />
-        //
-        //         </div>
-        //
-        //
-        //         <div className="mt-10">
-        //             <button
-        //                 type="submit"
-        //                 disabled={processing}
-        //                 className="px-6 py-3 bg-primary hover:bg-blue-700 text-white text-base font-medium rounded transition"
-        //             >
-        //                 Submit Property
-        //             </button>
-        //         </div>
-        //
-        //
-        //     </form>
-        // </BrokerLayout>
         <BrokerLayout>
             <div className="bg-white rounded-3xl p-8 mb-8 border border-white/20 shadow-md">
                 <div
@@ -685,7 +327,7 @@ export default function Create({developers}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
@@ -850,7 +492,7 @@ export default function Create({developers}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
@@ -908,8 +550,8 @@ export default function Create({developers}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                 fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
-                                 stroke-linejoin="round" className="lucide lucide-image-icon lucide-image">
+                                 fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"
+                                 strokeLinejoin="round" className="lucide lucide-image-icon lucide-image">
                                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
                                 <circle cx="9" cy="9" r="2"/>
                                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
@@ -979,8 +621,8 @@ export default function Create({developers}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                 fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
-                                 stroke-linejoin="round" className="lucide lucide-image-icon lucide-image">
+                                 fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"
+                                 strokeLinejoin="round" className="lucide lucide-image-icon lucide-image">
                                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
                                 <circle cx="9" cy="9" r="2"/>
                                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
@@ -1058,8 +700,8 @@ export default function Create({developers}) {
                         <div
                             className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                 fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
-                                 stroke-linejoin="round" className="lucide lucide-map-pin-icon lucide-map-pin">
+                                 fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"
+                                 strokeLinejoin="round" className="lucide lucide-map-pin-icon lucide-map-pin">
                                 <path
                                     d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
                                 <circle cx="12" cy="10" r="3"/>
@@ -1081,6 +723,23 @@ export default function Create({developers}) {
                     </div>
 
                     <InputError message={errors.boundary} className="mt-1"/>
+                </div>
+
+                <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor"
+                                 viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                            </svg>
+                            <div>
+                                <p className="font-semibold text-gray-800">Allow Multiple Agent</p>
+                                <p className="text-sm text-gray-600">Mark if you allow to handle this with multiple agent </p>
+                            </div>
+                        </div>
+                        <AllowMultiAgentToggle data={data} setData={setData}/>
+                    </div>
                 </div>
 
                 <div className=" flex flex-col w-full">

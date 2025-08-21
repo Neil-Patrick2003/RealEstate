@@ -25,7 +25,7 @@ export default function PropertyListItem({ property }) {
 
     return (
         <Link
-            href={`/properties/${id}`}
+            href={`/all-properties/${id}`}
             className="flex items-center space-x-4 bg-white rounded-lg shadow-sm hover:shadow-md hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
             <div className="relative w-24 h-24 flex-shrink-0">

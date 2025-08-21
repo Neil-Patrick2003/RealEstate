@@ -81,7 +81,7 @@ class PropertyListingController extends Controller
 
 
 
-        return Inertia::render('Agent/PropertyListing/ShowProperty', [
+        return Inertia::render('Agent/PropertyListing/SingleProperty', [
             'propertyListing' => $propertyListing,
         ]);
     }

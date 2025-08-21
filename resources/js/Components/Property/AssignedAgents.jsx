@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function AssignedAgents({agents, auth}) {
+export default function AssignedAgents({agents, auth, setIsOpenModal}) {
     return (
         <div>
             {agents.length > 0 && (
@@ -8,7 +8,7 @@ export default function AssignedAgents({agents, auth}) {
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">Property Agents</h2>
                     <div className="flex flex-col space-y-4">
                         {agents.map((agent, index) => (
-                            <div key={agent.id} className="bg-white rounded-xl shadow-sm p-6 mb-6 sticky top-6">
+                            <div key={agent.id} className="bg-white border rounded-xl shadow-sm p-6 mb-6 sticky top-6">
                                 <div className="flex items-center mb-4">
                                     {agent.image ? (
                                         <img
@@ -50,15 +50,34 @@ export default function AssignedAgents({agents, auth}) {
                                 </div>
 
                                 <button
-                                    disabled={auth.role !== 'Buyer'}
+                                    onClick={() => {
+                                        if (!auth) {
+                                            // 🔁 Redirect to login
+                                            router.push('/login'); // use your actual login route
+                                        } else if (auth.role !== 'Buyer') {
+                                            // ❌ Block non-buyers
+                                            alert('Only buyers can contact agents.');
+                                        } else {
+                                            // ✅ Proceed with contacting the agent
+                                            // e.g., openModal(), sendMessage(), etc.
+                                            setIsOpenModal(true)
+                                        }
+                                    }}
                                     className={`w-full mt-4 px-4 py-2 rounded-lg transition-colors font-medium flex items-center justify-center
-                                                    ${auth.role !== 'Buyer'
-                                        ? 'bg-primary opacity-75 cursor-not-allowed text-white'
-                                        : 'bg-primary hover:bg-accent text-white'}`}
-                                    title={auth.role !== 'Buyer' ? 'Only buyers can contact agents' : 'Contact the agent'}
+                                        ${!auth || auth.role !== 'Buyer'
+                                        ? 'bg-primary opacity-75  cursor-not-allowed text-white'
+                                        : 'bg-primary hover:bg-green-700 text-white'}`}
+                                    title={
+                                        !auth
+                                            ? 'You must be logged in to contact an agent'
+                                            : auth.role !== 'Buyer'
+                                                ? 'Only buyers can contact agents'
+                                                : 'Contact the agent'
+                                    }
                                 >
                                     <i className="fas fa-comment-alt mr-2"></i> Contact Agent
                                 </button>
+
                             </div>
                         ))}
                     </div>

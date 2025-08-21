@@ -158,13 +158,6 @@ export default function PropertyDetail({ property }) {
                                         currency: 'PHP',
                                     })}</p>
                                 </div>
-
-
-
-
-
-
-
                             </div>
                         </div>
 
