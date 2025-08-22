@@ -5,28 +5,40 @@ import Descriptions from "@/Components/Property/Descriptions.jsx";
 import PropertyMap from "@/Components/PropertyMap.jsx";
 import AssignedAgents from "@/Components/Property/AssignedAgents.jsx";
 import React, {useState} from "react";
-import {router} from "@inertiajs/react";
+import {router, useForm} from "@inertiajs/react";
 import Modal from "@/Components/Modal.jsx";
+import ContactBroker from "@/Components/Property/ContactBroker.jsx";
+import ToastHandler from "@/Components/ToastHandler.jsx";
 
-export default function SingleProperty({property, auth, agents}) {
+export default function SingleProperty({property, auth, agents, broker}) {
+    const { data, setData, post, errors, processing } = useForm({
+        'message': '',
+        'person': ''
+    });
+
     const [isOpenModal, setIsOpenModal] = useState(false);
-    const [message, setMessage] = useState('');
+    const [selectedPerson, setSelectedPerson] = useState(null);
 
     const handleSubmitInquiry = () => {
-        router.post(`/properties/${property.id}`, {
-                message: message
-            },
-            {
-                preserveScroll:true,
-                onSuccess: () => {
-                    setMessage(''),
-                        setIsOpenModal(false);
-                }
-            })
-    }
+        setData('person', selectedPerson.id);
+        post(`/properties/${property.id}`,  {
+            preserveScroll: true,
+            onSuccess: () => {
+                setData('message', ''); // Clear the message on success
+                setSelectedPerson(null); // Optional: Reset person
+                setIsOpenModal(false);
+            }
+        });
+    };
+
+
+
+
     return (
 
         <div className='flex flex-col gap-4 mt-4'>
+            <ToastHandler />
+
             <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
                 <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
                     {/* Close Button */}
@@ -40,14 +52,23 @@ export default function SingleProperty({property, auth, agents}) {
 
                     {/* Agent Info */}
                     <div className="flex items-center gap-4 mb-6">
-                        <img
-                            src={property?.property_listing?.agent?.image_url || '/default-avatar.png'}
-                            alt="Agent Avatar"
-                            className="w-14 h-14 rounded-full object-cover border border-gray-300"
-                        />
+                        {selectedPerson?.photo_url ? (
+                            <img
+                                src={`/storage/${selectedPerson?.photo_url}`}
+                                alt={`${selectedPerson.name}'s Avatar`}
+                                className="w-14 h-14 rounded-full object-cover border border-gray-300"
+                            />
+                        ) : (
+                            <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 text-lg font-semibold border border-gray-300">
+                                {selectedPerson?.name.charAt(0).toUpperCase()}
+                            </div>
+                        )}
+
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-800">{property?.property_listing?.agent?.name}</h3>
-                            <p className="text-sm text-gray-500">Licensed Property Agent</p>
+                            <h3 className="text-lg font-semibold text-gray-800">{selectedPerson?.name}</h3>
+                            <p className="text-sm text-gray-500">
+                                {selectedPerson?.role === 'Agent' ? 'Real Estate Agent' : 'Licensed Broker'}
+                            </p>
                         </div>
                     </div>
 
@@ -61,20 +82,21 @@ export default function SingleProperty({property, auth, agents}) {
                             rows={4}
                             maxLength={250} // Character limit
                             placeholder="Hi, I'm interested in this property. Please contact me..."
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            value={data.message}
+                            onChange={(e) => setData('message', e.target.value)}
                             className="mt-2 w-full rounded-md border border-gray-200 focus:ring-2 focus:ring-primary focus:outline-none p-3 text-sm text-gray-700 resize-none transition-shadow duration-200"
                         />
-                        <p className="text-sm text-gray-500 mt-1">{`${message.length}/250`}</p> {/* Character count */}
+                        <p className="text-sm text-gray-500 mt-1">{`${data.message.length}/250`}</p> {/* Character count */}
                     </div>
 
                     {/* Send Button */}
                     <div className="flex justify-end">
                         <button
+                            disabled={processing}
                             onClick={handleSubmitInquiry}
                             className="bg-primary text-white font-medium px-5 py-2 rounded-md hover:bg-primary/90 transition duration-200 shadow-sm"
                         >
-                            Send Message
+                            {processing ? 'Sending...' : 'Send Message'}
                         </button>
                     </div>
                 </div>
@@ -107,7 +129,18 @@ export default function SingleProperty({property, auth, agents}) {
                 </div>
 
                 <div className="lg:col-span-1">
-                    <AssignedAgents agents={agents} auth={auth} setIsOpenModal={setIsOpenModal} />
+                    {agents && agents.length > 0 ? (
+                        <AssignedAgents agents={agents} auth={auth} setIsOpenModal={setIsOpenModal} setSelectedPerson={setSelectedPerson} />
+                    ) : (
+                        <>
+                            {broker && (
+                                <ContactBroker broker={broker} setIsOpenModal={setIsOpenModal} setSelectedPerson={setSelectedPerson} />
+                            )}
+                        </>
+                    )}
+
+
+
 
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>

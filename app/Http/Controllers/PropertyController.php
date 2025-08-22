@@ -15,7 +15,6 @@ class PropertyController extends Controller
     {
         $property->load('images', 'features', 'coordinate', 'seller', 'property_listing.agents', 'property_listing.broker' );
 
-
         $property->increment('views');
 
         return Inertia::render('LandingPage/Property/ShowProperty', [
@@ -23,3 +22,4 @@ class PropertyController extends Controller
         ]);
     }
 }
+

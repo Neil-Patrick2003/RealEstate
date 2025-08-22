@@ -283,7 +283,10 @@ Route::middleware('auth')->group(function () {
 
     //posting property
     Route::get('/post-property', function(){
-        return Inertia::render('Seller/ListProperty');
+        $agents = \App\Models\User::where('role', 'Agent')->get();
+        return Inertia::render('Seller/ListProperty', [
+            'agents' => $agents,
+        ]);
     })->name('post-property');
 
     //store

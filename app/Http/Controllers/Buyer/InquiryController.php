@@ -85,13 +85,25 @@ class InquiryController extends Controller
     public function store(Request $request, $id)
     {
 
-        //validate
+
+        // Only buyers can inquire
+        if (auth()->user()->role !== 'Buyer') {
+            return redirect()->back()->with('error', 'You are not authorized to inquire about this property.');
+        }
+
+        // Validate input
         $validated = $request->validate([
             'message' => 'required|max:255',
+            'person' => 'required|exists:users,id',
         ]);
 
-        //get property
+
+        // Fetch recipient user (agent or broker)
+        $recipient = User::select('id', 'role')->findOrFail($request->person);
+
+        // Fetch property
         $property = Property::findOrFail($id);
+
 
         // Prevent duplicate inquiries
         $existing = Inquiry::where('buyer_id', auth()->id())
@@ -102,33 +114,30 @@ class InquiryController extends Controller
             return redirect()->back()->with('error', 'You have already inquired about this property.');
         }
 
-        //create inquiry
-        $agent_id = $property->property_listing->agent_id;
-
-        $agent = User::findOrFail($agent_id);
-
         $inquiry = Inquiry::create([
             'buyer_id' => auth()->id(),
-            'agent_id' => $agent_id,
             'property_id' => $property->id,
             'status' => 'pending',
+            $recipient->role === 'Agent' ? 'agent_id' : 'broker_id' => $recipient->id,
         ]);
 
-        $agent->notify(new NewInquiry($inquiry));
+        $recipient->notify(new NewInquiry($inquiry));
 
-        $channel = ChatChannel::create([
-            'subject_id' => $property->id,
-            'subject_type' => get_class($property),
-            'title' => 'Inquiry',
-        ]);
+//        $channel = ChatChannel::create([
+//            'subject_id' => $property->id,
+//            'subject_type' => get_class($property),
+//            'title' => 'Inquiry',
+//        ]);
+//
+//        $channel->members()->attach(auth()->id());
+//        $channel->members()->attach($recipient->id);
+//
+//        $channel->messages()->create([
+//            'content' => $validated['message'],
+//            'sender_id' => auth()->id(),
+//        ]);
 
-        $channel->members()->attach(auth()->id());
-        $channel->members()->attach($agent_id);
-
-        $channel->messages()->create([
-            'content' => $validated['message'],
-            'sender_id' => auth()->id(),
-        ]);
+        dd($request->all());;
 
         return redirect()->back()->with('success', 'Inquiry submitted successfully.');
     }
