@@ -13,9 +13,13 @@ export default function PropertyHeader({title, address, isPresell = false }) {
                 </div>
             </div>
             <div>
-                {isPresell && (
+                {isPresell ? (
                     <div className="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium">
                         Pre-sell
+                    </div>
+                ): (
+                    <div className="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium">
+                        For Sale
                     </div>
                 )}
             </div>

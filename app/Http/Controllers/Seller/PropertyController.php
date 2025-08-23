@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePropertyRequest;
+use App\Http\Requests\UpdatePropertyRequest;
 use App\Models\Property;
 use App\Models\PropertyCoordinate;
 use App\Models\PropertyFeature;
@@ -117,66 +118,16 @@ class PropertyController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdatePropertyRequest $request, Property $property, PropertiesService $propertiesService)
     {
 
+        $files = [
+            'image_url' => $request->file('image_url'),
+            'image_urls' => $request->file('image_urls'),
+        ];
 
+        $propertiesService->update($request, $property, $files);
 
-        $property = Property::findOrFail($id);
-
-        //  Validate request data
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'property_type' => 'required|string',
-            'property_sub_type' => 'required|string',
-            'price' => 'required|numeric|min:0',
-            'address' => 'required|string|max:255',
-            'lot_area' => 'nullable|numeric|min:0',
-            'floor_area' => 'nullable|numeric|min:0',
-            'total_rooms' => 'required|integer|min:0',
-            'total_bedrooms' => 'required|integer|min:0',
-            'total_bathrooms' => 'required|integer|min:0',
-            'car_slots' => 'required|integer|min:0',
-            'image_url' => 'nullable', // up to 5MB
-            'image_urls' => 'nullable',
-            'boundary' => 'nullable|array',
-            'pin' => 'nullable|array',
-            'isPresell' => 'nullable|boolean',
-        ]);
-
-
-        //  Main image upload
-        $property_image_url = $property->image_url;
-        if ($request->hasFile('image_url')) {
-            $image = $request->file('image_url');
-            $photo_name = $image->getClientOriginalName();
-            $property_image_url = $image->storeAs('images', $photo_name, 'public');
-        }
-
-        //  Update main property data
-        $property->update([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'property_type' => $validated['property_type'],
-            'sub_type' => $validated['property_sub_type'],
-            'price' => $validated['price'],
-            'address' => $validated['address'],
-            'status' => 'pending',
-            'lot_area' => $validated['lot_area'],
-            'floor_area' => $validated['floor_area'],
-            'total_rooms' => $validated['total_rooms'],
-            'bedrooms' => $validated['total_bedrooms'],
-            'bathrooms' => $validated['total_bathrooms'],
-            'car_slots' => $validated['car_slots'],
-            'isPresell' => $validated['isPresell'],
-            'image_url' => $property_image_url,
-        ]);
-
-
-
-        // (Optional) dump for testing
-        // dd($request->toArray());
 
         return redirect()->back()->with('success', 'Property updated successfully.');
     }
