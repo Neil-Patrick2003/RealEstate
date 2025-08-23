@@ -1,7 +1,7 @@
     import Dropdown from '@/Components/Dropdown';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
     import { EllipsisVertical, Search as SearchIcon } from 'lucide-react';
-    import React, { useEffect, useState, useCallback } from 'react';
+    import React, {useEffect, useState, useCallback, useRef} from 'react';
     import { Link, router } from '@inertiajs/react';
     import { debounce } from 'lodash';
     import SellerPropertiesFilterTab from '@/Components/tabs/SellerPropetiesFilterTab';
@@ -31,67 +31,28 @@
         const [deletingId, setDeletingId] = useState(null);
 
         // Sync props changes into state
+        const debouncedFilter = useRef(
+            debounce(params => {
+                router.get("/seller/properties", params, { preserveState: true, replace: true });
+            }, 500)
+        ).current;
+
         useEffect(() => {
             if (search) setSearchTerm(search);
         }, [search]);
 
-        useEffect(() => {
-            if (status) setSelectedStatus(status);
-        }, [status]);
+        useEffect(() => () => debouncedFilter.cancel(), []);
 
-        // Helper function to fetch properties with current filters
-        const fetchProperties = useCallback((searchValue = searchTerm, statusValue = selectedStatus, itemsPerPageValue = selectedItemsPerPage, pageValue = page) => {
-            if (!router) return; // protect against undefined
-            try {
-                router.get(
-                    '/seller/properties',
-                    {
-                        page: pageValue,
-                        search: searchValue,
-                        items_per_page: itemsPerPageValue,
-                        status: statusValue,
-                    },
-                    {
-                        preserveState: true,
-                        replace: true,
-                    }
-                );
-            } catch (err) {
-                console.error('Failed to fetch properties:', err);
-            }
-        }, [searchTerm, selectedStatus, selectedItemsPerPage, page]);
-
-
-        // Debounced search handler
-        const debouncedSearch = useCallback(
-            debounce((value) => {
-                fetchProperties(value, selectedStatus, selectedItemsPerPage, 1);
-            }, 500),
-            [selectedStatus, selectedItemsPerPage]
-        );
-
-        // Cleanup debounce on unmount
-        useEffect(() => {
-            return () => debouncedSearch.cancel();
-        }, [debouncedSearch]);
-
-        // Handle search input changes
-        const handleSearchTermChange = (value) => {
-            setSearchTerm(value);
-            debouncedSearch(value);
+        const handleFiltersChange = newFilters => {
+            debouncedFilter({
+                page,
+                items_per_page: selectedItemsPerPage,
+                status: selectedStatus,
+                search: searchTerm,
+                ...newFilters
+            });
         };
 
-        // Handle items per page changes
-        const handleItemsPerPageChange = (e) => {
-            const newItemsPerPage = Number(e.target.value);
-            setSelectedItemsPerPage(newItemsPerPage);
-            fetchProperties(searchTerm, selectedStatus, newItemsPerPage, 1);
-        };
-
-        // Handle status change from filter tab (sync and fetch)
-        useEffect(() => {
-            fetchProperties(searchTerm, selectedStatus, selectedItemsPerPage, 1);
-        }, [selectedStatus]);
 
         // Delete dialog handlers
         const handleOpenDeleteDialog = (id) => {
@@ -176,8 +137,10 @@
                                     id='search'
                                     value={searchTerm}
                                     name="searchProperty"
-                                    onChange={(e) => handleSearchTermChange(e.target.value)}
-                                    placeholder="Search properties..."
+                                    onChange={e => {
+                                        setSearchTerm(e.target.value);
+                                        handleFiltersChange({ search: e.target.value });
+                                    }}                                    placeholder="Search properties..."
                                     className="w-full h-10 pl-10 pr-4 rounded-md border border-gray-200 text-sm md:text-base text-gray-700 placeholder-gray-400 focus:ring-primary focus:outline-none"
                                     aria-label="Search properties"
                                 />
@@ -293,7 +256,18 @@
                                 <select
                                     id="selectedItemsPerPage"
                                     value={selectedItemsPerPage}
-                                    onChange={handleItemsPerPageChange}
+                                    onChange={e => {
+                                        setSelectedItemsPerPage(e.target.value);
+                                        router.get("/seller/properties", {
+                                            page: 1,
+                                            items_per_page: e.target.value,
+                                            status: selectedStatus,
+                                            search: searchTerm,
+                                        }, {
+                                            preserveState: true,
+                                            replace: true
+                                        });
+                                    }}
                                     className="border border-gray-300 rounded-md text-sm"
                                 >
                                     {[5, 10, 15, 20].map((val) => (
