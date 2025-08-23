@@ -181,12 +181,24 @@ class PropertyController extends Controller
         return redirect()->back()->with('success', 'Property updated successfully.');
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         $property = Property::findOrFail($id);
 
+        // Check if assigned
+        if ($property->property_listing) {
+            return redirect()->back()->with('error', 'Property is assigned to a listing. Please unassign it first.');
+        }
+
+        // Delete related data
+        $property->images()->delete();
+        $property->features()->delete();
+        $property->coordinate()->delete();
+
+        // Delete property
         $property->delete();
 
-        return redirect()->back()->with('sucess', 'Deleted propety sucessfully!');
+        return redirect()->back()->with('success', 'Deleted property successfully!');
     }
 
 
