@@ -42,7 +42,7 @@ export default function SellerPropertiesFilterTab({ count, selectedStatus, setSe
     setSelectedIndex(idx);
     setSelectedStatus(name);
 
-    router.get('/properties', {
+    router.get('/seller/properties', {
       page: 1,
       search: searchTerm,
       items_per_page: selectedItemsPerPage,
