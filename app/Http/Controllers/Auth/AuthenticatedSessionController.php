@@ -40,6 +40,7 @@ class AuthenticatedSessionController extends Controller
         return match ($role) {
             'Seller' => redirect()->intended(route('seller.dashboard')),
             'Agent'  => redirect()->intended(route('agent.dashboard')),
+            'Broker' => redirect()->intended(route('broker.dashboard')),
             'Admin'  => redirect()->intended(route('admin.dashboard')),
             default  => redirect()->intended(route('dashboard')),
         };

@@ -300,4 +300,11 @@ Route::get('/maps', [\App\Http\Controllers\Property\PropertyController::class, '
 Route::get('/maps/property/{id}', [\App\Http\Controllers\Property\PropertyController::class, 'map_show']);
 Route::get('/agents/{agent}', [\App\Http\Controllers\Agent\AgentController::class, 'show']);
 
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/properties', [\App\Http\Controllers\Admin\PropertyController::class, 'index'])->name('admin.properties');
+});
+
+
 require __DIR__.'/auth.php';

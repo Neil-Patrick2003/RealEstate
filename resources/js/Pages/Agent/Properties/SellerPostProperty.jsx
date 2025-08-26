@@ -36,7 +36,7 @@ export default function SellerPostProperty({ properties }) {
         const [imgErr, setImgErr] = useState(false);
 
         return (
-            <article className="group bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transform hover:scale-105 transition duration-200 flex flex-col">
+            <article className="group bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:border-primary transform  transition duration-200 flex flex-col">
                 <div className="relative">
                     <img
                         src={!imgErr && property.image_url ? `${imageUrl}${property.image_url}` : fallback}
@@ -45,10 +45,14 @@ export default function SellerPostProperty({ properties }) {
                         className="w-full h-64 object-cover rounded-t-lg"
                         loading="lazy"
                     />
-                    {property.status && (
+                    {property.isPresell ? (
                         <span className="absolute top-3 left-3 bg-primary/80 text-white text-xs uppercase px-2 py-1 rounded">
-              {property.status}
-            </span>
+                            Pre-sell
+                        </span>
+                    ): (
+                        <span className="absolute top-3 left-3 bg-green-100/80 text-green-800 text-xs uppercase px-2 py-1 rounded">
+                            For Sale
+                        </span>
                     )}
                     <button className="absolute top-3 right-3 bg-white/75 p-2 rounded-full opacity-0 group-hover:opacity-100 transition">
                         <FontAwesomeIcon icon={faShareNodes} />
@@ -105,7 +109,7 @@ export default function SellerPostProperty({ properties }) {
                 <h1 className="text-2xl font-bold text-gray-900">All Properties</h1>
             </div>
             <div className="px-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4  gap-6">
                     {properties.length ? (
                         properties.map(p => <PropertyCard key={p.id} property={p} />)
                     ) : (

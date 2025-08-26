@@ -4,12 +4,12 @@ import {
     faBed,
     faBuilding,
     faCircleCheck,
-    faDoorClosed,
+    faDoorClosed, faPaperPlane,
     faRulerCombined
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 
-export default function Descriptions({price, lot_area, floor_area, description, features, sub_type, total_rooms, car_slots, property_type}) {
+export default function Descriptions({price, lot_area, floor_area, description, features, sub_type, total_rooms, car_slots, property_type, auth}) {
     return (
         <div className='w-full flex flex-col gap-6'>
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6 bg-gradient-to-r from-green-50 to-green-100">
@@ -23,16 +23,32 @@ export default function Descriptions({price, lot_area, floor_area, description, 
                         </div>
                         <div className="text-gray-500 text-sm mt-1">{lot_area} {floor_area} square meter</div>
                     </div>
-                    <div className="flex space-x-3">
-                        <button
-                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium">
-                            <i className="fas fa-calendar-alt mr-2"></i> Schedule Tour
-                        </button>
-                        <button
-                            className="border border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors font-medium">
-                            <i className="fas fa-file-signature mr-2"></i> Make Offer
-                        </button>
-                    </div>
+
+                    {auth && auth.role === 'Buyer' && (
+                        <div className="flex space-x-3">
+                            <button
+                                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium">
+                                <i className="fas fa-calendar-alt mr-2"></i> Schedule Tour
+                            </button>
+                            <button
+                                className="border border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors font-medium">
+                                <i className="fas fa-file-signature mr-2"></i> Make Offer
+                            </button>
+                        </div>
+                    )}
+
+
+                    {auth && auth.role === 'Agent' && (
+                        <div className="flex space-x-3">
+                            <button
+                                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-accent transition-colors font-medium ">
+                                <FontAwesomeIcon icon={faPaperPlane}  className='w-4 h-4 mr-2'/>
+                                Send <Request></Request>
+                            </button>
+                        </div>
+                    )}
+
+
                 </div>
             </div>
 

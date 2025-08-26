@@ -10,7 +10,7 @@ import Modal from "@/Components/Modal.jsx";
 import ContactBroker from "@/Components/Property/ContactBroker.jsx";
 import ToastHandler from "@/Components/ToastHandler.jsx";
 
-export default function SingleProperty({property, auth, agents, broker}) {
+export default function SingleProperty({property, auth, agents, broker, seller}) {
     const { data, setData, post, errors, processing } = useForm({
         'message': '',
         'person': ''
@@ -32,12 +32,18 @@ export default function SingleProperty({property, auth, agents, broker}) {
     };
 
 
+    console.log(auth)
+
+    // const handleContactSeller = () => {
+    //
+    // }
 
 
     return (
 
         <div className='flex flex-col gap-4 mt-4'>
             <ToastHandler />
+
 
             <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
                 <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
@@ -119,6 +125,7 @@ export default function SingleProperty({property, auth, agents, broker}) {
                         description={property.description}
                         lot_area={property.lot_area}
                         floor_area={property.floor_area}
+                        auth={auth}
                     />
 
                     <div className="bg-white mt-6 rounded-xl shadow p-6">

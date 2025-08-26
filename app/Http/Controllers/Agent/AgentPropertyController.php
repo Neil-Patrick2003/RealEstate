@@ -26,7 +26,7 @@ class AgentPropertyController extends Controller
 
     public function show(Property $property)
     {
-        $property = $property->with(['seller:id,name,contact_number,email,photo_url', 'images', 'coordinate'])->find($property->id);
+        $property = $property->with(['seller:id,name,contact_number,email,photo_url', 'images', 'coordinate', 'features', 'coordinate'])->find($property->id);
 
         return Inertia::render('Agent/Properties/PropertyDetails', [
             'property' => $property
