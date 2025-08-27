@@ -9,7 +9,7 @@ export default function PropertyDetails({property}){
     const auth = usePage().props.auth.user;
     return (
         <AgentLayout>
-            <SingleProperty property={property} auth={auth} />
+            <SingleProperty property={property} auth={auth}  seller={property.seller} />
         </AgentLayout>
     );
 }

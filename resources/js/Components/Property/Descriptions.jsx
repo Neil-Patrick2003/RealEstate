@@ -9,7 +9,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 
-export default function Descriptions({price, lot_area, floor_area, description, features, sub_type, total_rooms, car_slots, property_type, auth}) {
+export default function Descriptions({price, lot_area, floor_area, description, features, sub_type, total_rooms, car_slots, property_type, auth, setIsContactSeller}) {
     return (
         <div className='w-full flex flex-col gap-6'>
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6 bg-gradient-to-r from-green-50 to-green-100">
@@ -41,9 +41,10 @@ export default function Descriptions({price, lot_area, floor_area, description, 
                     {auth && auth.role === 'Agent' && (
                         <div className="flex space-x-3">
                             <button
+                                onClick={() => setIsContactSeller(true)}
                                 className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-accent transition-colors font-medium ">
                                 <FontAwesomeIcon icon={faPaperPlane}  className='w-4 h-4 mr-2'/>
-                                Send <Request></Request>
+                                Send Request
                             </button>
                         </div>
                     )}

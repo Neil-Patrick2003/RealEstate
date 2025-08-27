@@ -78,9 +78,6 @@ class PropertyListingController extends Controller
     {
         $propertyListing->load(['property.coordinate', 'seller', 'property.images', 'property.features', 'agents']);
 
-
-
-
         return Inertia::render('Agent/PropertyListing/ShowProperty', [
             'propertyListing' => $propertyListing,
         ]);

@@ -66,8 +66,13 @@ class InquiryController extends Controller
         ]);
     }
 
-    public function store($id)
+    public function store(Request $request, $id)
     {
+
+        $request->validate([
+            'message' => 'required|max:255',
+        ]);
+
         $property = Property::findOrFail($id);
         $seller = $property->seller;
 
@@ -84,13 +89,11 @@ class InquiryController extends Controller
             return redirect()->back()->with('error', 'You have already inquired about this property.');
         }
 
-        $message = 'I\'m interested in this property.';
-
         $inquiry = Inquiry::create([
             'agent_id' => auth()->id(),
             'seller_id' => $seller->id,
             'property_id' => $property->id,
-            'message' => $message,
+            'message' => $request->message,
             'status' => 'Pending',
         ]);
 
@@ -106,7 +109,7 @@ class InquiryController extends Controller
         $channel->members()->attach($seller->id);
 
         $channel->messages()->create([
-            'content' => $message,
+            'content' => $request->message,
             'sender_id' => auth()->id(),
         ]);
 

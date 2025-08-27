@@ -18,7 +18,6 @@ const ListingHeader = ({  onPublish, pages }) => (
         >
             <span>Publish</span>
             <Check className="h-4 w-4" />
-
         </button>
     </div>
 );
