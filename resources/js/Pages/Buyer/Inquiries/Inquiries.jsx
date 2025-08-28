@@ -202,7 +202,7 @@ export default function Inquiries({
                                         <div className="flex items-center mb-4">
                                             <div className="w-10 h-10 rounded-full overflow-hidden mr-3 border">
                                                 <img
-                                                    src="https://placehold.co/80x80"
+                                                    src={`/storage/${agent.photo_url}`}
                                                     alt={agent.name ?? "Agent"}
                                                     className="w-full h-full object-cover"
                                                 />

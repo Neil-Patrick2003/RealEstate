@@ -212,9 +212,9 @@
                                             <div className="flex items-center mb-4">
                                                 {agent.photo_url ? (
                                                     <img
-                                                        src={agent.photo_url}
+                                                        src={`/storage/${agent.photo_url}`}
                                                         alt={agent.name ?? "Agent"}
-                                                        className="w-full h-full object-cover mr-2"
+                                                        className="w-10 h-10 object-cover mr-2"
                                                     />
                                                 ) : (
                                                     <div className="w-10 h-10 flex items-center mr-2 justify-center bg-gray-300 text-gray-700 text-xl font-bold rounded-full">
@@ -232,7 +232,7 @@
 
                                             <div className="text-xs text-gray-500 mb-4 space-y-1">
                                                 <p><FontAwesomeIcon icon={faEnvelope} className="mr-1" /> {agent.email ?? "N/A"}</p>
-                                                <p><FontAwesomeIcon icon={faPhone} className="mr-1" /> {agent.phone ?? "Not provided"}</p>
+                                                <p><FontAwesomeIcon icon={faPhone} className="mr-1" /> {agent.contact_number ?? "Not provided"}</p>
                                             </div>
 
                                             <div className="flex flex-col gap-2">

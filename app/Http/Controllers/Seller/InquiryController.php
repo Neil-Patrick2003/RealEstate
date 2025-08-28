@@ -37,7 +37,7 @@ class InquiryController extends Controller
             ->latest()
             ->paginate(10);
 
-        // 🔁 Attach chat channel + first message
+        //  Attach chat channel + first message
         $inquiries->getCollection()->transform(function ($inquiry) {
             $property = $inquiry->property;
 
@@ -95,6 +95,16 @@ class InquiryController extends Controller
         $property = $inquiry->property;
 
         if ($status === 'Accepted') {
+
+            // Count how many agents have already been accepted for this property
+            $acceptedCount = Inquiry::where('property_id', $property->id)
+                ->where('status', 'Accepted')
+                ->count();
+
+            if ($acceptedCount >= 3) {
+                return back()->with('error', 'Maximum number of accepted agents (3) already reached.');
+            }
+
             // Reject other inquiries if multiple agents are not allowed
             if (!$property->allow_multi_agents) {
                 Inquiry::where('property_id', $property->id)
@@ -103,16 +113,26 @@ class InquiryController extends Controller
                     ->update(['status' => 'Rejected']);
             }
 
-            // Update property status if not already assigned
-            $property->update(['status' => 'Assigned']);
+            // Check or create property listing
+            $listing = PropertyListing::where('property_id', $property->id)->first();
 
-            // Create listing
-            $listing = PropertyListing::create([
-                'agent_id'    => $inquiry->agent_id,
-                'property_id' => $inquiry->property_id,
-                'seller_id'   => $inquiry->seller_id,
-                'status'      => 'Assigned',
-            ]);
+            if (!$listing) {
+                $listing = PropertyListing::create([
+                    'property_id' => $property->id,
+                    'seller_id'   => $inquiry->seller_id,
+                    'status'      => 'Assigned',
+                ]);
+            }
+
+            // Attach agent if not already attached
+            if (!$listing->agents->contains($inquiry->agent_id)) {
+                $listing->agents()->attach($inquiry->agent_id);
+            }
+
+            // If 3 agents have now been accepted, update property status
+            if ($acceptedCount + 1 === 3) {
+                $property->update(['status' => 'Assigned']);
+            }
         }
 
         // Update the inquiry status
@@ -138,6 +158,7 @@ class InquiryController extends Controller
 
         return back()->with('success', "Inquiry successfully {$status}.");
     }
+
 
     public function show(User $agent){
         $agent = $agent->with('listing.property', 'feedbackAsReceiver.characteristics')->find($agent->id);

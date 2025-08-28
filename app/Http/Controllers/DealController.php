@@ -23,9 +23,6 @@ class DealController extends Controller
             ->latest()
             ->get();
 
-
-
-
         return inertia('Buyer/Deal/Deal', [
             'deals' => $deals,
         ]);
@@ -46,15 +43,20 @@ class DealController extends Controller
             'amount_last_updated_by' => auth()->id(),
         ]);
 
-        $agent = $propertyListing->agent;
+        $agents = $propertyListing->load('agents')->agents;
+
+
 
         $property = $propertyListing->property;
 
-        $agent->notify( new NewDeal([
-            'buyer_name' => auth()->user()->name,
-            'amount' => $deal->amount,
-            'property_title' => $property->title,
-        ]));
+        foreach ($agents as $agent) {
+            $agent->notify(new NewDeal([
+                'buyer_name' => auth()->user()->name,
+                'amount' => $deal->amount,
+                'property_title' => $property->title,
+            ]));
+        }
+
 
         return redirect()->back()->with('success', 'Deal created successfully');
     }
@@ -71,14 +73,17 @@ class DealController extends Controller
             'amount_last_updated_by' => auth()->id(),
         ]);
 
-        $agent = $deal->property_listing->agent;
+        $agents = $propertyListing->load('agents')->agents;
+
         $property = $deal->property_listing->property;
 
-        $agent->notify( new NewDeal([
-            'buyer_name' => auth()->user()->name,
-            'property_title' => $property->title,
-            'amount' => $deal->amount,
-        ]));
+        foreach ($agents as $agent) {
+            $agent->notify(new NewDeal([
+                'buyer_name' => auth()->user()->name,
+                'amount' => $deal->amount,
+                'property_title' => $property->title,
+            ]));
+        }
 
 
         return redirect()->back()->with('success', 'Deal updated successfully');

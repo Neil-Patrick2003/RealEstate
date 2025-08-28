@@ -12,10 +12,13 @@ class PropertyListingController extends Controller
 {
     public function index(Request $request)
     {
-        $properties = PropertyListing::with(['property', 'seller'])
-            ->where('agent_id', auth()->id())
+        $properties = PropertyListing::with(['property', 'seller', 'agents'])
+            ->whereHas('agents', function ($query) {
+                $query->where('agent_id', auth()->id());
+            })
 
-            // Search filter
+
+        // Search filter
             ->when($request->filled('search'), function ($query) use ($request) {
                 $searchTerm = trim($request->search);
                 $query->where(function ($q) use ($searchTerm) {
@@ -85,16 +88,17 @@ class PropertyListingController extends Controller
 
     public function update(Request $request, $id)
     {
+
         $property = Property::findOrFail($id);
 
         $property->update([
-            'status' => "Published",
+            'status' => $request->status,
         ]);
 
         // Update the related property_listing (assuming one-to-one)
         if ($property->property_listing) {
             $property->property_listing->update([
-                'status' => 'Published',
+                'status' => $request->status,
             ]);
         }
 

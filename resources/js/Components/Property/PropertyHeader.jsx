@@ -14,11 +14,11 @@ export default function PropertyHeader({title, address, isPresell = false }) {
             </div>
             <div>
                 {isPresell ? (
-                    <div className="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium">
+                    <div className="bg-orange-100 text-secondary  px-4 py-2  text-sm font-medium">
                         Pre-sell
                     </div>
                 ): (
-                    <div className="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium">
+                    <div className="bg-green-100 text-primary px-4 py-2  text-sm font-medium">
                         For Sale
                     </div>
                 )}

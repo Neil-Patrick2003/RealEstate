@@ -165,7 +165,7 @@ export default function Trippings({ trippings }) {
                                             <div className="flex items-center mb-4">
                                                 <div className="w-10 h-10 rounded-full overflow-hidden border mr-3">
                                                     <img
-                                                        src={trip.agent.photo_url || "https://placehold.co/80x80"}
+                                                        src={`/storage/${trip.agent.photo_url}`}
                                                         alt={trip.agent.name}
                                                         className="w-full h-full object-cover"
                                                     />

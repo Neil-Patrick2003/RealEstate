@@ -10,11 +10,13 @@ class AgentPropertyController extends Controller
 {
     public function index()
     {
-        $properties = Property::with('features', 'seller')
-            ->where('status', '=', 'Unassigned')
+        $properties = Property::with(['features', 'seller'])
+            ->where(function ($query) {
+                $query->where('status', 'Unassigned')
+                    ->orWhere('allow_multi_agents', true);
+            })
             ->latest()
             ->paginate(10);
-
 
         return Inertia::render('Agent/Properties/SellerPostProperty', [
             'properties' => $properties

@@ -61,7 +61,7 @@ class AgentController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'role' => 'agent',
+            'role' => 'Agent    ',
             'contact_number' => $request->contact_number,
             'address' => $request->address,
             'photo_url' => $propertyImageUrl,

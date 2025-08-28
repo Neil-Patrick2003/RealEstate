@@ -9,8 +9,9 @@ import {router, useForm} from "@inertiajs/react";
 import Modal from "@/Components/Modal.jsx";
 import ContactBroker from "@/Components/Property/ContactBroker.jsx";
 import ToastHandler from "@/Components/ToastHandler.jsx";
+import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
 
-export default function SingleProperty({property, auth, agents, broker, seller}) {
+export default function SingleProperty({property, auth, agents, broker, seller, deal, }) {
     const { data, setData, post, errors, processing } = useForm({
         'message': '',
         'person': ''
@@ -18,7 +19,7 @@ export default function SingleProperty({property, auth, agents, broker, seller})
 
     const [isOpenModal, setIsOpenModal] = useState(false);
     const [selectedPerson, setSelectedPerson] = useState(null);
-
+    const [isOpenDealForm, setIsOpenDealForm] = useState(false)
     const [isContactSeller, setIsContactSeller] = useState(false);
 
 
@@ -54,6 +55,8 @@ export default function SingleProperty({property, auth, agents, broker, seller})
 
         <div className='flex flex-col gap-4 mt-4'>
             <ToastHandler />
+            <DealFormModal isOpen={isOpenDealForm} setIsOpen={setIsOpenDealForm} property={property} initialValue={deal}/>
+
 
             <Modal show={isContactSeller} onClose={() => setIsContactSeller(false)} maxWidth="2xl">
                 <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
@@ -203,7 +206,10 @@ export default function SingleProperty({property, auth, agents, broker, seller})
                         floor_area={property.floor_area}
                         auth={auth}
                         setIsContactSeller={setIsContactSeller}
-
+                        isOpenDealForm={isOpenDealForm}
+                        property={property}
+                        deal={deal}
+                        setIsOpenDealForm={setIsOpenDealForm}
                     />
 
                     <div className="bg-white mt-6 rounded-xl shadow p-6">

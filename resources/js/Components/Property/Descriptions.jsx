@@ -8,8 +8,9 @@ import {
     faRulerCombined
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
+import PrimaryButton from "@/Components/PrimaryButton.jsx";
 
-export default function Descriptions({price, lot_area, floor_area, description, features, sub_type, total_rooms, car_slots, property_type, auth, setIsContactSeller}) {
+export default function Descriptions({price, lot_area, floor_area, description, features, sub_type, total_rooms, car_slots, property, deal, auth, setIsContactSeller, setIsOpenDealForm}) {
     return (
         <div className='w-full flex flex-col gap-6'>
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6 bg-gradient-to-r from-green-50 to-green-100">
@@ -34,6 +35,11 @@ export default function Descriptions({price, lot_area, floor_area, description, 
                                 className="border border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors font-medium">
                                 <i className="fas fa-file-signature mr-2"></i> Make Offer
                             </button>
+                            {
+                                property?.property_listing && <PrimaryButton  onClick={() => setIsOpenDealForm(true)}>
+                                    {deal ? 'View My Offer': 'Make Offer'}
+                                </PrimaryButton>
+                            }
                         </div>
                     )}
 

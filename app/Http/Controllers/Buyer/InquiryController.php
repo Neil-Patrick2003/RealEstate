@@ -123,21 +123,20 @@ class InquiryController extends Controller
 
         $recipient->notify(new NewInquiry($inquiry));
 
-//        $channel = ChatChannel::create([
-//            'subject_id' => $property->id,
-//            'subject_type' => get_class($property),
-//            'title' => 'Inquiry',
-//        ]);
-//
-//        $channel->members()->attach(auth()->id());
-//        $channel->members()->attach($recipient->id);
-//
-//        $channel->messages()->create([
-//            'content' => $validated['message'],
-//            'sender_id' => auth()->id(),
-//        ]);
+        $channel = ChatChannel::create([
+            'subject_id' => $property->id,
+            'subject_type' => get_class($property),
+            'title' => 'Inquiry',
+        ]);
 
-        dd($request->all());;
+        $channel->members()->attach(auth()->id());
+        $channel->members()->attach($recipient->id);
+
+        $channel->messages()->create([
+            'content' => $validated['message'],
+            'sender_id' => auth()->id(),
+        ]);
+
 
         return redirect()->back()->with('success', 'Inquiry submitted successfully.');
     }
