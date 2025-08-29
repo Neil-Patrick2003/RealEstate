@@ -15,7 +15,7 @@ class DealController extends Controller
 
         $deals = Deal::with([
             'property_listing.property:id,title,price,image_url,address,property_type,sub_type,lot_area,floor_area',
-            'property_listing.agent:id,name,photo_url,email,contact_number',
+            'property_listing.agents:id,name,photo_url,email,contact_number',
             'property_listing.seller:id,name',
             'feedback'
         ])

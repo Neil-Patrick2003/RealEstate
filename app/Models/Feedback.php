@@ -17,14 +17,25 @@ class Feedback extends Model
         return $this->hasMany(FeedbackCharacteristic::class);
     }
 
-    public function agent(): BelongsTo
+    public function deal()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Deal::class);
     }
 
-    public function sender()
+    public function agent()
     {
+        return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    public function buyer()
+    {
+        return $this->belongsTo(User::class, 'buyer_id');
+    }
+
+    public function sender(){
         return $this->belongsTo(User::class, 'sender_id');
     }
+
+
 
 }

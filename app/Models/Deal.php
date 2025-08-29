@@ -18,9 +18,9 @@ class Deal extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function feedback(): \Illuminate\Database\Eloquent\Relations\HasOne|Deal
+    public function feedback()
     {
-        return $this->hasOne(Feedback::class);
+        return $this->hasMany(Feedback::class);
     }
 
 }

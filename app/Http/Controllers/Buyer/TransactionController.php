@@ -12,17 +12,20 @@ class TransactionController extends Controller
 {
     public function index()
     {
-
-
-        $transactions = Deal::with('property_listing.property', 'property_listing.agent', 'feedback')
-        ->where('buyer_id', auth()->id())
+        $transactions = Deal::with([
+            'property_listing.property',
+            'property_listing.agents',
+            'feedback', // Many feedbacks per deal (per agent)
+        ])->where('buyer_id', auth()->id())
             ->where('status', 'Sold')
             ->get();
 
-
-
-       return Inertia::render('Buyer/Transactions/Transactions', [
-            'transactions' => $transactions
-       ]);
+        return Inertia::render('Buyer/Transactions/Transactions', [
+            'transactions' => $transactions,
+            'auth' => [
+                'user' => auth()->user()
+            ]
+        ]);
     }
+
 }

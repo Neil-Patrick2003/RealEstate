@@ -19,7 +19,12 @@ class AgentController extends Controller
     {
         $user = auth()->user();
 
-        $properties = PropertyListing::where('agent_id', $user->id)->get();
+        $properties = PropertyListing::with('agents')
+            ->whereHas('agents', function ($query) use ($user) {
+                $query->where('agent_id', $user->id);
+            })
+            ->latest()
+            ->get();
         $totalListing = $properties->count();
 
         $inquiries = Inquiry::where('agent_id', $user->id)->get();
@@ -103,6 +108,7 @@ class AgentController extends Controller
             ->latest()
             ->take(5)
             ->get();
+
 
 
 

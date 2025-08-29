@@ -15,15 +15,18 @@ class DealController extends Controller
 {
     public function index()
     {
-        $property_Listing = PropertyListing::with([
+        $propertyListings = PropertyListing::with([
             'deal' => function ($query) {
                 $query->orderBy('created_at', 'asc');
             },
             'deal.buyer',
             'property:id,image_url,title,address,price',
             'seller:id,photo_url,name',
+            'agents'
         ])
-            ->where('agent_id', auth()->id())
+            ->whereHas('agents', function ($query) {
+                $query->where('id', auth()->id());
+            })
             ->whereHas('deal', function ($q) {
                 $q->whereNotIn('status', ['sold', 'cancelled', 'rejected']);
             })
@@ -31,9 +34,11 @@ class DealController extends Controller
             ->paginate(15);
 
         return Inertia::render('Agent/Deal/Deal', [
-            'property_listing' => $property_Listing,
+            'property_listings' => $propertyListings,
         ]);
     }
+
+
 
 
     public function update(Request $request, Deal $deal)

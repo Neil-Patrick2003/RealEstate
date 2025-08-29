@@ -15,10 +15,16 @@ class TransactionController extends Controller
     {
         $search = $request->search;
 
-        $propertyListingIds = PropertyListing::where('agent_id', auth()->id())
-            ->pluck('id');
+        // Get all property listing IDs where the authenticated agent is involved
+        $propertyListingIds = PropertyListing::whereHas('agents', function ($query) {
+            $query->where('id', auth()->id());
+        })->pluck('id');
 
-        $transactions = Deal::with(['property_listing.property', 'buyer', 'property_listing.seller'])
+        $transactions = Deal::with([
+            'property_listing.property',
+            'buyer',
+            'property_listing.seller'
+        ])
             ->whereIn('property_listing_id', $propertyListingIds)
             ->where('status', 'Sold')
             ->when($search, function ($q) use ($search) {
@@ -37,11 +43,12 @@ class TransactionController extends Controller
             })
             ->latest()
             ->paginate(10)
-            ->appends(['search' => $search]); // Keeps query in URL when paginating
+            ->appends(['search' => $search]);
 
         return Inertia::render('Agent/Transaction/Transaction', [
             'transactions' => $transactions,
             'search' => $search,
         ]);
     }
+
 }

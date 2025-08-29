@@ -123,6 +123,11 @@ class User extends Authenticatable
 
     }
 
+    public function feedbackReceived()
+    {
+        return $this->hasMany(Feedback::class, 'agent_id');
+    }
+
 
 
 

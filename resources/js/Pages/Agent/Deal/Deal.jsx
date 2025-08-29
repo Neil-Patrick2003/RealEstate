@@ -8,12 +8,12 @@ import {router, useForm, usePage, Link, Head} from "@inertiajs/react";
 import Modal from "@/Components/Modal.jsx";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 
-export default function Deal({ property_listing,  }) {
+export default function Deal({ property_listings,  }) {
 
     const { auth } = usePage().props;
     const authUserId = auth?.user?.id;
 
-    const listings = property_listing?.data ?? [];
+    const listings = property_listings?.data ?? [];
 
     const [selectedDeal, setSelectedDeal] = useState(null);
     const [selectedListingId, setSelectedListingId] = useState(null);
@@ -268,7 +268,7 @@ export default function Deal({ property_listing,  }) {
                 )}
 
                 <div className="flex justify-end items-end gap-2 p-2 mt-4">
-                    {property_listing.links.map((link, i) =>
+                    {property_listings.links.map((link, i) =>
                         link.url ? (
                             <Link
                                 key={i}
