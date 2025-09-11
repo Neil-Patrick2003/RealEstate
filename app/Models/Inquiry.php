@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Inquiry extends Model
 {
-    protected $fillable = ['agent_id',  'buyer_id',  'seller_id',  'property_id', 'status'];
+    protected $fillable = ['agent_id',  'buyer_id',  'seller_id',  'property_id', 'status', 'notes'];
 
     public function seller (): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

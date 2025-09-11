@@ -2,7 +2,6 @@ import React from "react";
 
 export default function AssignedAgents({agents, auth, setIsOpenModal, setSelectedPerson}) {
 
-    console.log(agents)
     return (
         <div>
             {agents.length > 0 && (

@@ -10,6 +10,7 @@ import Modal from "@/Components/Modal.jsx";
 import ContactBroker from "@/Components/Property/ContactBroker.jsx";
 import ToastHandler from "@/Components/ToastHandler.jsx";
 import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
+import InquiryForm from "@/Components/Inquiry/InquiryForm.jsx";
 
 export default function SingleProperty({property, auth, agents, broker, seller, deal, }) {
     const { data, setData, post, errors, processing } = useForm({
@@ -24,12 +25,14 @@ export default function SingleProperty({property, auth, agents, broker, seller, 
 
 
     const handleSubmitInquiry = () => {
+
+        console.log("submit");
         if (!selectedPerson) {
             post(`/agents/properties/${property.id}/sent-inquiry`, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    setData('message', ''); // Clear the message on success
-                    setSelectedPerson(null); // Optional: Reset person
+                    setData('message', '');
+                    setSelectedPerson(null);
                     setIsOpenModal(false);
                 }
             });
@@ -56,6 +59,15 @@ export default function SingleProperty({property, auth, agents, broker, seller, 
         <div className='flex flex-col gap-4 mt-4'>
             <ToastHandler />
             <DealFormModal isOpen={isOpenDealForm} setIsOpen={setIsOpenDealForm} property={property} initialValue={deal}/>
+            <InquiryForm
+                show={isOpenModal}
+                onClose={() => setIsOpenModal(false)}
+                person={selectedPerson}
+                message={data.message}
+                onChangeMessage={(val) => setData('message', val)}
+                onSubmit={handleSubmitInquiry}
+                processing={processing}
+            />
 
 
             <Modal show={isContactSeller} onClose={() => setIsContactSeller(false)} maxWidth="2xl">
@@ -121,71 +133,6 @@ export default function SingleProperty({property, auth, agents, broker, seller, 
                 </div>
             </Modal>
 
-
-
-
-            <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
-                <div className="p-6 bg-white rounded-xl shadow-lg transition-transform transform-gpu">
-                    {/* Close Button */}
-                    <button
-                        onClick={() => setIsOpenModal(false)}
-                        className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 focus:outline-none"
-                        aria-label="Close modal"
-                    >
-                        &times;
-                    </button>
-
-                    {/* Agent Info */}
-                    <div className="flex items-center gap-4 mb-6">
-                        {selectedPerson?.photo_url ? (
-                            <img
-                                src={`/storage/${selectedPerson?.photo_url}`}
-                                alt={`${selectedPerson.name}'s Avatar`}
-                                className="w-14 h-14 rounded-full object-cover border border-gray-300"
-                            />
-                        ) : (
-                            <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 text-lg font-semibold border border-gray-300">
-                                {selectedPerson?.name.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-800">{selectedPerson?.name}</h3>
-                            <p className="text-sm text-gray-500">
-                                {selectedPerson?.role === 'Agent' ? 'Real Estate Agent' : 'Licensed Broker'}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Message Box */}
-                    <div className="mb-4">
-                        <label htmlFor="message" className="text-sm font-medium text-gray-700">
-                            Send a quick message
-                        </label>
-                        <textarea
-                            id="message"
-                            rows={4}
-                            maxLength={250} // Character limit
-                            placeholder="Hi, I'm interested in this property. Please contact me..."
-                            value={data.message}
-                            onChange={(e) => setData('message', e.target.value)}
-                            className="mt-2 w-full rounded-md border border-gray-200 focus:ring-2 focus:ring-primary focus:outline-none p-3 text-sm text-gray-700 resize-none transition-shadow duration-200"
-                        />
-                        <p className="text-sm text-gray-500 mt-1">{`${data.message.length}/250`}</p> {/* Character count */}
-                    </div>
-
-                    {/* Send Button */}
-                    <div className="flex justify-end">
-                        <button
-                            disabled={processing}
-                            onClick={handleSubmitInquiry}
-                            className="bg-primary text-white font-medium px-5 py-2 rounded-md hover:bg-primary/90 transition duration-200 shadow-sm"
-                        >
-                            {processing ? 'Sending...' : 'Send Message'}
-                        </button>
-                    </div>
-                </div>
-            </Modal>
             <PropertyHeader title={property.title} address={property.address} isPresell={property.isPresell} />
             <MainImage image_url={property.image_url} title={property.title} />
             <Thumbnail images={property.images} />

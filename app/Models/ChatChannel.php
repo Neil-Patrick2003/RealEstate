@@ -29,4 +29,10 @@ class ChatChannel extends Model
     {
         return $this->hasMany(ChannelMessage::class, 'channel_id');
     }
+
+    public function firstMessage(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ChannelMessage::class, 'channel_id')->latest();
+    }
+
 }

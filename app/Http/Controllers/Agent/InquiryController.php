@@ -15,8 +15,8 @@ use Inertia\Inertia;
 
 class InquiryController extends Controller
 {
-    public function index(Request $request){
-
+    public function index(Request $request)
+    {
         $inquiries = Inquiry::with('seller', 'agent', 'property', 'buyer')
             ->where('agent_id', auth()->id())
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
@@ -31,7 +31,38 @@ class InquiryController extends Controller
             ->orderByDesc('created_at')
             ->paginate($request->get('items_per_page', 10));
 
+        $inquiries->getCollection()->transform(function ($inquiry) {
+            $property = $inquiry->property;
+            if ($property) {
+                $chatChannel = \App\Models\ChatChannel::where('subject_type', \App\Models\Property::class)
+                    ->where('subject_id', $property->id)
+                    ->first();
 
+                if ($chatChannel) {
+                    $firstMessage = $chatChannel->messages()->oldest('created_at')->first();
+
+                    $inquiry->chat_channel = [
+                        'id' => $chatChannel->id,
+                        'created_at' => $chatChannel->created_at,
+                        // You can add other chat channel fields here if needed
+                    ];
+
+                    $inquiry->first_message = $firstMessage ? [
+                        'id' => $firstMessage->id,
+                        'message' => $firstMessage->content,
+                        'created_at' => $firstMessage->created_at,
+                    ] : null;
+                } else {
+                    $inquiry->chat_channel = null;
+                    $inquiry->first_message = null;
+                }
+            } else {
+                $inquiry->chat_channel = null;
+                $inquiry->first_message = null;
+            }
+
+            return $inquiry;
+        });
 
         $buyerInquiryCount = Inquiry::whereNotNull('buyer_id')->count();
         $sellerInquiryCount = Inquiry::whereNotNull('seller_id')->count();
@@ -54,7 +85,7 @@ class InquiryController extends Controller
             ->where('status', 'cancelled')
             ->count();
 
-        return Inertia::render('Agent/Inquiry/Inquiries' , [
+        return Inertia::render('Agent/Inquiry/Inquiries', [
             'inquiries' => $inquiries,
             'inquiryCount' => $inquiryCount,
             'rejectedCount' => $rejectedCount,
@@ -65,6 +96,7 @@ class InquiryController extends Controller
             'sellerInquiryCount' => $sellerInquiryCount,
         ]);
     }
+
 
     public function store(Request $request, $id)
     {
@@ -144,7 +176,7 @@ class InquiryController extends Controller
         $buyer = $inquiry->buyer;
 
         $buyer->notify(new InquiryResponse([
-            'status' => 'Accepted',
+            'status' => 'accepted',
             'seller_name' => $inquiry->agent->name,
             'property_title' => $inquiry->property->title,
             'link' => '/inquiries'

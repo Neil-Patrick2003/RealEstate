@@ -28,13 +28,13 @@ class InquiryController extends Controller
             ->paginate(10);
 
         // Get related property IDs
-        $propertyIds = $inquiries->pluck('property.id')->filter()->unique();
+        $propertyIds = $inquiries->pluck('property.id')->filter()->unique()->values()->all();
 
         // Load chat channels and their first messages
         $chatChannels = \App\Models\ChatChannel::where('subject_type', \App\Models\Property::class)
             ->whereIn('subject_id', $propertyIds)
-            ->with(['messages' => function ($q) {
-                $q->oldest('created_at')->limit(1);
+            ->with(['firstMessage', 'members' => function ($q) {
+                $q->where('users.id', '!=', auth()->id());
             }])
             ->get()
             ->keyBy('subject_id');
@@ -44,7 +44,7 @@ class InquiryController extends Controller
             $property = $inquiry->property;
             if ($property && $chatChannels->has($property->id)) {
                 $channel = $chatChannels->get($property->id);
-                $firstMessage = $channel->messages->first();
+                $firstMessage = $channel->firstMessage;
 
                 $inquiry->chat_channel = [
                     'id' => $channel->id,
@@ -82,10 +82,9 @@ class InquiryController extends Controller
     }
 
 
+
     public function store(Request $request, $id)
     {
-
-
         // Only buyers can inquire
         if (auth()->user()->role !== 'Buyer') {
             return redirect()->back()->with('error', 'You are not authorized to inquire about this property.');
@@ -118,7 +117,8 @@ class InquiryController extends Controller
             'buyer_id' => auth()->id(),
             'property_id' => $property->id,
             'status' => 'pending',
-            $recipient->role === 'Agent' ? 'agent_id' : 'broker_id' => $recipient->id,
+            'notes' => $validated['message'],
+            $recipient->role === 'Agent' ? 'agent_id' : 'seller_id' => $recipient->id,
         ]);
 
         $recipient->notify(new NewInquiry($inquiry));

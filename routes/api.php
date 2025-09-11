@@ -88,3 +88,24 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => '/agent'], function ()
 });
 
 
+use Illuminate\Support\Facades\Http;
+
+Route::get('/nominatim-search', function (\Illuminate\Http\Request $request) {
+    $query = $request->query('q');
+
+    if (!$query) {
+        return response()->json(['error' => 'Missing search query'], 400);
+    }
+
+    $response = Http::withHeaders([
+        'User-Agent' => 'YourAppName/1.0 (your@email.com)',
+    ])->get('https://nominatim.openstreetmap.org/search', [
+        'q' => $query,
+        'format' => 'json',
+    ]);
+
+    return $response->json();
+});
+
+
+

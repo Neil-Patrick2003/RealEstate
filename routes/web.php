@@ -275,6 +275,9 @@ Route::get('/select-role', [\App\Http\Controllers\GoogleAuthController::class, '
 Route::get('/google/auth', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google-auth');
 Route::get('/auth/google/callback', [\App\Http\Controllers\GoogleAuthController::class, 'callback']);;
 
+Route::get('/broker/inquiries', [\App\Http\Controllers\Broker\InquiryController::class, 'index']);
+Route::patch('/broker/inquiries/{inquiry}/{action}', [\App\Http\Controllers\Broker\InquiryController::class, 'update'])->where('action', 'accept|reject');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -305,6 +308,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/properties', [\App\Http\Controllers\Admin\PropertyController::class, 'index'])->name('admin.properties');
 });
+
+
 
 
 require __DIR__.'/auth.php';

@@ -15,7 +15,6 @@ import {
     faLocationDot,
     faPesoSign,
     faPhone,
-    faTrashAlt,
     faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { Link } from '@inertiajs/react';
@@ -35,9 +34,6 @@ const Inquiries = ({
                        buyerInquiryCount,
                        sellerInquiryCount
                    }) => {
-
-    console.log(inquiries);
-
 
     const [selectedStatus, setSelectedStatus] = useState('All');
     const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
@@ -223,7 +219,7 @@ const Inquiries = ({
                     inquiries.data.map((inquiry) => {
                         const property = inquiry.property ?? {};
                         const agent = inquiry.agent ?? {};
-                        const message = inquiry.messages?.message;
+                        const message = inquiry.first_message?.message;
 
                         return (
                             <div
@@ -403,7 +399,6 @@ const Inquiries = ({
                                                     </>
                                                 )}
                                             </div>
-
                                         </div>
                                     </div>
                                 </div>
