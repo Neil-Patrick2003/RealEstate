@@ -11,7 +11,6 @@ class InquiryController extends Controller
 {
     public function index(Request $request){
 
-
         $inquiries = Inquiry::with('seller', 'buyer', 'property')
             ->where('seller_id', auth()->id())
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
@@ -62,6 +61,17 @@ class InquiryController extends Controller
         $inquiry->update(['status' => $validActions[$action]]);
 
         return redirect()->back()->with('success', 'Inquiry status updated successfully.');
+    }
+
+    public function show(Inquiry $inquiry){
+
+
+        $inquiry = $inquiry->load( 'buyer', 'property');
+
+
+        return Inertia::render('Broker/Inquiry/Show', [
+            'inquiry' => $inquiry,
+        ]);
     }
 
 }

@@ -277,6 +277,7 @@ Route::get('/auth/google/callback', [\App\Http\Controllers\GoogleAuthController:
 
 Route::get('/broker/inquiries', [\App\Http\Controllers\Broker\InquiryController::class, 'index']);
 Route::patch('/broker/inquiries/{inquiry}/{action}', [\App\Http\Controllers\Broker\InquiryController::class, 'update'])->where('action', 'accept|reject');
+Route::get('/broker/inquiries/{inquiry}', [\App\Http\Controllers\Broker\InquiryController::class, 'show']);
 
 
 Route::middleware('auth')->group(function () {

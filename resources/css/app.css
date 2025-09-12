@@ -125,3 +125,11 @@ body{
     transform: scale(1.05);
 }
 
+.message-box::-webkit-scrollbar {
+    width: 8px;
+}
+.message-box::-webkit-scrollbar-thumb {
+    background-color: #a0aec0;
+    border-radius: 4px;
+}
+
