@@ -62,7 +62,6 @@ export default function Inquiries({
             {},
             {
                 onSuccess: () => {
-                    console.log("Inquiry cancelled successfully.");
                     setIsCancelModalOpen(false);
                     setCancelId(null);
                 },
@@ -122,7 +121,9 @@ export default function Inquiries({
                     inquiries.data.map((inquiry) => {
                         const property = inquiry.property ?? {};
                         const agent = inquiry.agent ?? {};
-                        const message = inquiry.first_message?.message;
+                        const broker = inquiry.broker ?? {};
+
+                        const message = inquiry?.notes;
 
                         const statusLower = inquiry.status.toLowerCase();
                         const isAccepted = statusLower === "accepted";
@@ -243,6 +244,7 @@ export default function Inquiries({
                                                             setSelectedVisitData({
                                                                 property: inquiry.property,
                                                                 agentId: agent.id,
+                                                                brokerId: broker.id,
                                                                 inquiryId: inquiry.id,
                                                             });
                                                             setIsAddVisitModal(true);

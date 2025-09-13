@@ -29,10 +29,12 @@ class PropertyTrippingController extends Controller
     public function store(Request $request){
 
 
+
         //validate
         $validated = request()->validate([
             'property_id' => 'required',
-            'agent_id' => 'required',
+            'agent_id' => 'nullable',
+            'broker_id' => 'nullable',
             'inquiry_id' => 'required',
             'date' => 'required',
             'time' => 'required',
@@ -47,18 +49,37 @@ class PropertyTrippingController extends Controller
             'inquiry_id' => $validated['inquiry_id'],
             'visit_date' => $validated['date'],
             'visit_time' => $validated['time'],
+            'broker_id' => $validated['broker_id'],
             'status' => 'pending',
             'notes' => $validated['notes'],
         ]);
 
 
-        $agent = User::where('id', $validated['agent_id'])->first();
-        $property = Property::where('id', $validated['property_id'])->first();
+        if (!empty($validated['agent_id'])) {
+            $agent = User::find($validated['agent_id']);
+            $property = Property::find($validated['property_id']);
 
-        $agent->notify(new TrippingRequest([
-            'buyer_name' => auth()->user()->name,
-            'property_title' => $property->title,
-        ]));
+            if ($agent) {
+                $agent->notify(new TrippingRequest([
+                    'buyer_name' => auth()->user()->name,
+                    'property_title' => $property->title,
+                ]));
+            }
+        } elseif (!empty($validated['broker_id'])) {
+            $broker = User::find($validated['broker_id']);
+            $property = Property::find($validated['property_id']);
+
+            if ($broker) {
+                $broker->notify(new TrippingRequest([
+                    'buyer_name' => auth()->user()->name,
+                    'property_title' => $property->title,
+                ]));
+            }
+        }
+
+
+
+
 
         return redirect()->back()->with('success', 'Schedule tripping successfully.' );
     }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Inquiry extends Model
 {
-    protected $fillable = ['agent_id',  'buyer_id',  'seller_id',  'property_id', 'status', 'notes'];
+    protected $guarded = [];
 
     public function seller (): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -60,6 +60,10 @@ class Inquiry extends Model
     public function feedback()
     {
         return $this->hasOne(Feedback::class);
+    }
+
+    public function broker(){
+        return $this->belongsTo(User::class, 'broker_id');
     }
 
 }

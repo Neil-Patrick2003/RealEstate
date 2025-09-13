@@ -11,8 +11,8 @@ class InquiryController extends Controller
 {
     public function index(Request $request){
 
-        $inquiries = Inquiry::with('seller', 'buyer', 'property')
-            ->where('seller_id', auth()->id())
+        $inquiries = Inquiry::with('broker', 'buyer', 'property')
+            ->where('broker_id', auth()->id())
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 if (strtolower($request->status) === 'cancelled') {
                     // Match all statuses that start with "Cancelled"

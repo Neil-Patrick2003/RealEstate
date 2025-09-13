@@ -5,12 +5,15 @@ import { router } from "@inertiajs/react";
 export default function ScheduleVisitModal({ open, setOpen, visitData }) {
 
     console.log(visitData);
+
     const [form, setForm] = useState({
         date: '',
         time: '',
         notes: '',
         agentId: null,
+        brokerId: null,
         inquiryId: null,
+
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,6 +25,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                 time: '',
                 notes: '',
                 agentId: visitData.agentId || null,
+                brokerId: visitData.brokerId || null,
                 inquiryId: visitData.inquiryId || null,
             });
         }
@@ -39,6 +43,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
             property_id: visitData?.property?.id,
             agent_id: form.agentId,
             inquiry_id: form.inquiryId,
+            broker_id: form.brokerId,
             date: form.date,
             time: form.time,
             notes: form.notes,

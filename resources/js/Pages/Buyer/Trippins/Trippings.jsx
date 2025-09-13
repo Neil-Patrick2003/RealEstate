@@ -165,22 +165,22 @@ export default function Trippings({ trippings }) {
                                             <div className="flex items-center mb-4">
                                                 <div className="w-10 h-10 rounded-full overflow-hidden border mr-3">
                                                     <img
-                                                        src={`/storage/${trip.agent.photo_url}`}
-                                                        alt={trip.agent.name}
+                                                        src={`/storage/${trip?.agent?.photo_url}`}
+                                                        alt={trip.agent?.name}
                                                         className="w-full h-full object-cover"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-gray-800">{trip.agent.name}</p>
-                                                    <p className="text-xs text-gray-500">{trip.agent.email}</p>
+                                                    <p className="text-sm font-medium text-gray-800">{trip?.agent?.name}</p>
+                                                    <p className="text-xs text-gray-500">{trip?.agent?.email}</p>
                                                 </div>
                                             </div>
 
                                             <div className="text-xs text-gray-500 space-y-1 mb-4">
-                                                {trip.agent.contact_number && (
+                                                {trip.agent?.contact_number && (
                                                     <p>
                                                         <FontAwesomeIcon icon={faPhone} className="mr-1" />
-                                                        {trip.agent.contact_number}
+                                                        {trip?.agent?.contact_number}
                                                     </p>
                                                 )}
                                             </div>

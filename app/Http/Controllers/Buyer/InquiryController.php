@@ -20,48 +20,15 @@ class InquiryController extends Controller
     public function index(Request $request)
     {
         $inquiries = Inquiry::where('buyer_id', auth()->id())
-            ->with('property', 'agent', 'messages', 'trippings')
+            ->with('property', 'agent', 'messages', 'trippings', 'broker')
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 return $q->status($request->status);
             })
             ->latest()
             ->paginate(10);
 
-        // Get related property IDs
-        $propertyIds = $inquiries->pluck('property.id')->filter()->unique()->values()->all();
 
-        // Load chat channels and their first messages
-        $chatChannels = \App\Models\ChatChannel::where('subject_type', \App\Models\Property::class)
-            ->whereIn('subject_id', $propertyIds)
-            ->with(['firstMessage', 'members' => function ($q) {
-                $q->where('users.id', '!=', auth()->id());
-            }])
-            ->get()
-            ->keyBy('subject_id');
 
-        // Attach chat channel and first message to each inquiry
-        $inquiries->getCollection()->transform(function ($inquiry) use ($chatChannels) {
-            $property = $inquiry->property;
-            if ($property && $chatChannels->has($property->id)) {
-                $channel = $chatChannels->get($property->id);
-                $firstMessage = $channel->firstMessage;
-
-                $inquiry->chat_channel = [
-                    'id' => $channel->id,
-                    'created_at' => $channel->created_at,
-                ];
-
-                $inquiry->first_message = $firstMessage ? [
-                    'id' => $firstMessage->id,
-                    'message' => $firstMessage->content,
-                    'created_at' => $firstMessage->created_at,
-                ] : null;
-            } else {
-                $inquiry->chat_channel = null;
-                $inquiry->first_message = null;
-            }
-            return $inquiry;
-        });
 
         $allCount = Inquiry::where('buyer_id', auth()->id())->count();
         $pendingCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Pending')->count();
@@ -85,6 +52,7 @@ class InquiryController extends Controller
 
     public function store(Request $request, $id)
     {
+
         // Only buyers can inquire
         if (auth()->user()->role !== 'Buyer') {
             return redirect()->back()->with('error', 'You are not authorized to inquire about this property.');
@@ -93,7 +61,7 @@ class InquiryController extends Controller
         // Validate input
         $validated = $request->validate([
             'message' => 'required|max:255',
-            'person' => 'required|exists:users,id',
+            'person' => 'required',
         ]);
 
 
@@ -113,12 +81,14 @@ class InquiryController extends Controller
             return redirect()->back()->with('error', 'You have already inquired about this property.');
         }
 
+        $key = $recipient->role === 'Agent' ? 'agent_id' : 'broker_id';
+
         $inquiry = Inquiry::create([
-            'buyer_id' => auth()->id(),
+            'buyer_id'    => auth()->id(),
             'property_id' => $property->id,
-            'status' => 'pending',
-            'notes' => $validated['message'],
-            $recipient->role === 'Agent' ? 'agent_id' : 'seller_id' => $recipient->id,
+            'status'      => 'pending',
+            'notes'       => $validated['message'],
+            $key          => $recipient->id,
         ]);
 
         $recipient->notify(new NewInquiry($inquiry));

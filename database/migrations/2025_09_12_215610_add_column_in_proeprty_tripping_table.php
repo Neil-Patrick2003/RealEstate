@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('inquiries', function (Blueprint $table) {
+        Schema::table('property_trippings', function (Blueprint $table) {
             $table->unsignedBigInteger('broker_id')->nullable();
             $table->foreign('broker_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->string('notes')->nullable();
+
         });
     }
 
@@ -23,10 +23,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('inquiries', function (Blueprint $table) {
-            $table->dropColumn('notes');
-            $table->dropColumn('broker_id');
+        Schema::table('property_trippings', function (Blueprint $table) {
             $table->dropForeign(['broker_id']);
+            $table->dropColumn('broker_id');
         });
     }
 };

@@ -32,7 +32,7 @@ export default function FilterTabs({
     };
 
     return (
-        <div className="relative border-b border-gray-300 px-4 pt-4">
+        <div className="relative border-b border-gray-200 px-4 pt-4">
             <div className="relative flex justify-start space-x-1">
                 {tabs.map((tab, idx) => {
                     const isActive = tab.name === selectedTab;

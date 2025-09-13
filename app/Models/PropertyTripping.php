@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PropertyTripping extends Model
 {
-    protected $fillable = ['property_id','agent_id', 'buyer_id', 'inquiry_id', 'visit_date', 'visit_time', 'status', 'notes'];
+    protected $guarded = [];
 
     public function property(){
         return $this->belongsTo('App\Models\Property');
@@ -23,5 +23,11 @@ class PropertyTripping extends Model
     public function inquiry(){
         return $this->belongsTo('App\Models\Inquiry', 'inquiry_id');
     }
+
+    public function broker(){
+        return $this->belongsTo('App\Models\User', 'broker_id');
+    }
+
+
 
 }

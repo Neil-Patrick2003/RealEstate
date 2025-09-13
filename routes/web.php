@@ -279,6 +279,9 @@ Route::get('/broker/inquiries', [\App\Http\Controllers\Broker\InquiryController:
 Route::patch('/broker/inquiries/{inquiry}/{action}', [\App\Http\Controllers\Broker\InquiryController::class, 'update'])->where('action', 'accept|reject');
 Route::get('/broker/inquiries/{inquiry}', [\App\Http\Controllers\Broker\InquiryController::class, 'show']);
 
+Route::get('/broker/trippings', [\App\Http\Controllers\Broker\TrippingController::class, 'index']);
+Route::patch('/broker/trippings/{id}/{action}', [\App\Http\Controllers\Broker\TrippingController::class, 'update'])->name('broker.trippings.update');;
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
