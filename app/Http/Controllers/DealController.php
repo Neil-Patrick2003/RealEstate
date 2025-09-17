@@ -73,14 +73,28 @@ class DealController extends Controller
             'amount_last_updated_by' => auth()->id(),
         ]);
 
-        $agents = $propertyListing->load('agents')->agents;
+//        $agents = $propertyListing->load('agents')->agents;
+        $propertyListing->load(['agents', 'broker', 'property']);
+
 
         $property = $deal->property_listing->property;
 
-        foreach ($agents as $agent) {
-            $agent->notify(new NewDeal([
-                'buyer_name' => auth()->user()->name,
-                'amount' => $deal->amount,
+        // Notify all agents (if any)
+        if ($propertyListing->agents->isNotEmpty()) {
+            foreach ($propertyListing->agents as $agent) {
+                $agent->notify(new NewDeal([
+                    'buyer_name'     => auth()->user()->name,
+                    'amount'         => $deal->amount,
+                    'property_title' => $property->title,
+                ]));
+            }
+        }
+
+        // Notify broker (if any)
+        if ($propertyListing->broker) {
+            $propertyListing->broker->notify(new NewDeal([
+                'buyer_name'     => auth()->user()->name,
+                'amount'         => $deal->amount,
                 'property_title' => $property->title,
             ]));
         }
@@ -140,7 +154,11 @@ class DealController extends Controller
         }
 
         $buyer = $deal->buyer;
-        $agent = $propertyListing->agent;
+//        $agent = $propertyListing->agent;
+
+        $propertyListing->load(['agents', 'broker', 'property']);
+        $property = $propertyListing->property;
+
 
         // ✅ Only notify buyer if the last update was NOT made by the buyer
         if ($deal->amount_last_updated_by === $buyer->id) {
@@ -151,11 +169,24 @@ class DealController extends Controller
             ]));
         }
         else{
-            $agent->notify(new DealResponse([
-                'name' => $buyer->name,
-                'property_title' => $propertyListing->property->title,
-                'status' => $status,
-            ]));
+            if ($propertyListing->agents->isNotEmpty()) {
+                foreach ($propertyListing->agents as $agent) {
+                    $agent->notify(new NewDeal([
+                        'buyer_name'     => auth()->user()->name,
+                        'amount'         => $deal->amount,
+                        'property_title' => $property->title,
+                    ]));
+                }
+            }
+
+// Notify broker (if any)
+            if ($propertyListing->broker) {
+                $propertyListing->broker->notify(new NewDeal([
+                    'buyer_name'     => auth()->user()->name,
+                    'amount'         => $deal->amount,
+                    'property_title' => $property->title,
+                ]));
+            }
         }
 
 

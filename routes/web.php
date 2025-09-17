@@ -13,6 +13,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use function Pest\Laravel\get;
 
 Route::get('/', function (Request $request) {
 
@@ -282,6 +283,12 @@ Route::get('/broker/inquiries/{inquiry}', [\App\Http\Controllers\Broker\InquiryC
 Route::get('/broker/trippings', [\App\Http\Controllers\Broker\TrippingController::class, 'index']);
 Route::patch('/broker/trippings/{id}/{action}', [\App\Http\Controllers\Broker\TrippingController::class, 'update'])->name('broker.trippings.update');;
 
+
+Route::get('/broker/transactions', [\App\Http\Controllers\Broker\TransactionController::class, 'index']);
+
+Route::get('/broker/deals', [\App\Http\Controllers\Broker\DealController::class, 'index']);
+Route::patch('/broker/deals/{deal}/{status}', [\App\Http\Controllers\Broker\DealController::class, 'update'])->name('broker.deals.update');
+Route::patch('/broker/deals/{deal}', [\App\Http\Controllers\Broker\DealController::class, 'counter'])->name('broker.deals.counter-offer');;
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

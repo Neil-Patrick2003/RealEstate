@@ -49,11 +49,11 @@ export default function ConfirmDialog({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl"
+              className="w-full max-w-md transform overflow-hidden rounded-lg bg-white p-8 text-left align-middle shadow-xl"
             >
               <div className="sm:flex sm:items-start">
-                <div className="mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                  <Icon className="h-6 w-6 text-red-600" aria-hidden="true" />
+                <div className="mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <Icon className="h-6 w-6 text-primary" aria-hidden="true" />
                 </div>
                 <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
                   <DialogTitle as="h3" className="text-lg font-medium leading-6 text-gray-900">
@@ -71,7 +71,7 @@ export default function ConfirmDialog({
                   type="button"
                   disabled={loading}
                   onClick={handleConfirm}
-                  className="inline-flex w-full justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:opacity-50"
+                  className="inline-flex w-full justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent sm:ml-3 sm:w-auto disabled:opacity-50"
                 >
                   {loading ? 'Processing...' : confirmText}
                 </button>

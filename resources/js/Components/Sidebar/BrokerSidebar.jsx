@@ -24,8 +24,8 @@ const menus = [
     { name: "Agents", Icon: faMessage, path: "/broker/agents" },
     { name: "Inquiries", Icon: faEnvelope, path: "/broker/inquiries" },
     { name: "Tripping", Icon: faCalendar, path: "/broker/trippings" },
-    { name: "Favourites", Icon: faStar, path: "/broker/favourites" },
     { name: "Transactions", Icon: faChartSimple, path: "/broker/transactions" },
+    { name: "Deals", Icon: faChartSimple, path: "/broker/deals" },
     { name: "Partners", Icon: faChartSimple, path: "/broker/partners" },
 ];
 
