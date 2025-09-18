@@ -10,7 +10,7 @@ const CounterOfferModal = ({ show, onClose, property, buyer, deal }) => {
         buyerId: buyer?.id,
     });
 
-    const userId = usePage().props.auth.user.id;
+    const userId = usePage().props?.auth?.user?.id;
 
     // Format currency helper
     const formatCurrency = (amount) =>

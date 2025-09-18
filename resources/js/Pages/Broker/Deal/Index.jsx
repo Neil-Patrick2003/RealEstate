@@ -24,7 +24,7 @@ export default function Index({
     const [openCounterModal, setOpenCounterModal] = useState(false);
     const [selectedDeal, setSelectedDeal] = useState(null);
 
-    const userId = usePage().props.auth.user.id;
+    const userId = usePage().props?.auth?.user?.id;
 
     const handleStatusUpdate = (deal, status) => {
         setSelectedDeal(deal);
@@ -61,7 +61,7 @@ export default function Index({
         listing.deal?.filter((deal) => ["Pending", "Accepted"].includes(deal.status)) || [];
 
     // Check if there are any deals at all
-    const hasDeals = property_listings?.data?.some(
+    const hasDeals = property_listings?.some(
         (listing) => filteredDeals(listing).length > 0
     );
 
@@ -132,7 +132,7 @@ export default function Index({
                             </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                            {property_listings.data.map(
+                            {property_listings.map(
                                 (listing) =>
                                     filteredDeals(listing).length > 0 &&
                                     filteredDeals(listing).map((deal) => (
@@ -184,7 +184,7 @@ export default function Index({
                                                         <button
                                                             onClick={() => handleStatusUpdate(deal, "Accepted")}
                                                             disabled={processing || deal?.amount_last_updated_by === userId}
-                                                            className="text-sm px-3 py-1.5 rounded-md text-white bg-green-600 hover:bg-green-700 transition disabled:opacity-50"
+                                                            className="text-sm px-3 py-1.5 rounded-md text-white bg-green-600 hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
                                                             Accept
                                                         </button>
@@ -197,7 +197,7 @@ export default function Index({
                                                         <button
                                                             onClick={() => handleStatusUpdate(deal, "Declined")}
                                                             disabled={processing || deal?.amount_last_updated_by === userId}
-                                                            className="text-sm px-3 py-1.5 rounded-md text-red-600 border border-red-300 hover:bg-red-50 transition disabled:opacity-50"
+                                                            className="text-sm px-3 py-1.5 rounded-md text-red-600 border border-red-300 hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
                                                             Decline
                                                         </button>
@@ -233,7 +233,7 @@ export default function Index({
                 {/* Mobile Cards */}
                 <div className="sm:hidden space-y-4">
                     {hasDeals ? (
-                        property_listings.data.map(
+                        property_listings.map(
                             (listing) =>
                                 filteredDeals(listing).length > 0 &&
                                 filteredDeals(listing).map((deal) => (
@@ -294,7 +294,7 @@ export default function Index({
                                                     <button
                                                         onClick={() => handleStatusUpdate(deal, "Accepted")}
                                                         disabled={processing || deal?.amount_last_updated_by === userId}
-                                                        className="flex-1 text-sm px-3 py-2 rounded-md text-white bg-green-600 hover:bg-green-700 transition disabled:opacity-50"
+                                                        className="flex-1 text-sm px-3 py-2 rounded-md text-white bg-green-600 hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
                                                         Accept
                                                     </button>
@@ -307,7 +307,7 @@ export default function Index({
                                                     <button
                                                         onClick={() => handleStatusUpdate(deal, "Declined")}
                                                         disabled={processing || deal?.amount_last_updated_by === userId}
-                                                        className="flex-1 text-sm px-3 py-2 rounded-md text-red-600 border border-red-300 hover:bg-red-50 transition disabled:opacity-50"
+                                                        className="flex-1 text-sm px-3 py-2 rounded-md text-red-600 border border-red-300 hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
                                                         Decline
                                                     </button>

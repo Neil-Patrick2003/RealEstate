@@ -7,8 +7,8 @@ use App\Models\Deal;
 use App\Models\PropertyListing;
 use App\Notifications\DealCounter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+
 class DealController extends Controller
 {
 
@@ -30,7 +30,7 @@ class DealController extends Controller
             })
             ->latest()
             ->get();
-        
+
         // Flatten all deals across listings
         $allDeals = $propertyListings->flatMap(fn($listing) => $listing->deal)->filter()->values();
 
@@ -51,22 +51,35 @@ class DealController extends Controller
 
     public function update(Deal $deal, $action, Request $request)
     {
-
         $allowedStatuses = ['Accepted', 'Declined', 'Pending', 'Cancelled', 'Sold'];
 
+        $status = collect($allowedStatuses)->first(function ($allowed) use ($action) {
+            return strtolower($allowed) === strtolower($action);
+        });
 
-        $status = ucfirst(strtolower($action));
-
-        if (!in_array($status, $allowedStatuses)) {
+        if (!$status) {
             return response()->json(['error' => 'Invalid status.'], 400);
         }
 
-        $deal->update([
-            'status' => $status
-        ]);
+        $deal->update(['status' => $status]);
+
+        $listing = $deal->property_listing;
+        $property = $listing->property;
+
+        if ($status === 'Sold') {
+            $listing->update(['status' => 'Sold']);
+            $property->update(['status' => 'Sold']);
+            $property->inquiries()->update(['status' => 'Closed with Deal']);
+        }
+
+        if ($status === 'Cancelled') {
+            $listing->update(['status' => 'Cancelled']);
+            $property->inquiries()->update(['status' => 'Closed No Deal']);
+        }
 
         return redirect()->back()->with('success', 'Deal status updated successfully.');
     }
+
 
     public function counter(Deal $deal, Request $request){
 
