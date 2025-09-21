@@ -24,7 +24,6 @@ Route::get('/', function (Request $request) {
         ->take(10)
         ->get();
 
-//    dd($featured->toArray());
     $properties = \App\Models\Property::where('status', 'Published')
         ->when($request->search, function ($q) use ($request) {
             $q->where(function ($query) use ($request) {
@@ -320,6 +319,8 @@ Route::middleware('auth')->group(function () {
 Route::get('/maps', [\App\Http\Controllers\Property\PropertyController::class, 'map']);
 Route::get('/maps/property/{id}', [\App\Http\Controllers\Property\PropertyController::class, 'map_show']);
 Route::get('/agents/{agent}', [\App\Http\Controllers\Agent\AgentController::class, 'show']);
+Route::get('properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
+Route::post('/properties/{id}/favorites', [\App\Http\Controllers\Property\PropertyController::class, 'favourite'])->name('properties.favourite');
 
 
 Route::middleware(['auth'])->group(function () {

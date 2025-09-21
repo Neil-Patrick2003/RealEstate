@@ -99,8 +99,18 @@ class InquiryController extends Controller
             'title' => 'Inquiry',
         ]);
 
-        $channel->members()->attach(auth()->id());
-        $channel->members()->attach($recipient->id);
+        $channel->load('members');
+
+        if (!$channel->members->contains('id', auth()->id())) {
+            $channel->members()->attach(auth()->id());
+        }
+
+        if (!$channel->members->contains('id', $recipient->id)) {
+            $channel->members()->attach($recipient->id);
+        }
+
+
+
 
         $channel->messages()->create([
             'content' => $validated['message'],

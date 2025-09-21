@@ -52,6 +52,7 @@
         "lodash": "^4.17.21",
         "lucide-react": "^0.511.0",
         "quill": "^2.0.3",
+        "react-animated-heart": "^0.0.8",
         "react-apexcharts": "^1.7.0",
         "react-big-calendar": "^1.19.4",
         "react-hot-toast": "^2.5.2",

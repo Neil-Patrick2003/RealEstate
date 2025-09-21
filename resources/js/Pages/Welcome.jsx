@@ -28,6 +28,7 @@ import MostViewed from "@/Components/MostViewed.jsx";
 import WhyChooseUs from "@/Components/WhyChooseUs.jsx";
 import OurBroker from "@/Components/OurBroker.jsx";
 import OurProcess from "@/Components/OurProcess.jsx";
+import CTA from "@/Components/CTA.jsx";
 
 const Welcome = ({ auth, properties, search = '', initialType = 'All', featured,  }) => {
     const [searchTerm, setSearchTerm] = useState(search || '');
@@ -104,7 +105,7 @@ const Welcome = ({ auth, properties, search = '', initialType = 'All', featured,
             <MostViewed  featured={featured}/>
             <WhyChooseUs />
             <OurProcess />
-            {/*<Featured  featured={featured}/>*/}
+            <CTA/>
             <OurBroker />
 
 

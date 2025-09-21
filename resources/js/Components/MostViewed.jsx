@@ -1,154 +1,174 @@
-    import React from "react";
-    import { Link } from "@inertiajs/react";
-    import {
-        Bed,
-        Bath,
-        Scale,
-        DoorClosed,
-        Heart,
-    } from "lucide-react";
+import React, { useState } from "react";
+import { Link, router } from "@inertiajs/react";
+import { Bed, Bath, Scale, DoorClosed, Heart } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart } from "@fortawesome/free-solid-svg-icons";
 
-    export default function MostViewed({ featured = [] }) {
+export default function MostViewed({ featured = [] }) {
+    const [favoriteIds, setFavoriteIds] = useState([]);
 
-        // Format price to PHP currency
-        const formatToPHP = (amount, withDecimals = true) =>
-            new Intl.NumberFormat("en-PH", {
-                style: "currency",
-                currency: "PHP",
-                minimumFractionDigits: withDecimals ? 2 : 0,
-                maximumFractionDigits: withDecimals ? 2 : 0,
-            }).format(amount ?? 0);
+    const toggleFavorite = (propertyId) => {
+        setFavoriteIds((prev) =>
+            prev.includes(propertyId)
+                ? prev.filter((id) => id !== propertyId)
+                : [...prev, propertyId]
+        );
 
-        // Format date to readable format
-        const formatDate = (dateString) => {
-            if (!dateString) return "";
-            const date = new Date(dateString);
-            return date.toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-            });
-        };
-
-        // Render agent or broker avatar/name
-        const renderAgentOrBroker = (listing) => {
-            const agents = listing?.agents ?? [];
-            const broker = listing?.broker;
-
-            if (agents.length > 0) {
-                const firstAgent = agents[0];
-                return (
-                    <div className="flex items-center gap-2">
-                        {firstAgent.image_url ? (
-                            <img
-                                src={firstAgent.image_url}
-                                alt={firstAgent.name}
-                                className="w-8 h-8 rounded-full object-cover"
-                            />
-                        ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold">
-                                {firstAgent.name?.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                        <div>
-                            <p className="font-medium">{firstAgent.name}</p>
-                            <p className="text-sm text-gray-600">Real Estate Agent</p>
-                        </div>
-                        {agents.length > 1 && (
-                            <span className="text-sm text-gray-600 ml-2">
-                                +{agents.length - 1}
-                            </span>
-                        )}
-                    </div>
-                );
+        router.post(
+            `/properties/${propertyId}/favorites`,
+            { id: propertyId },
+            {
+                preserveScroll: true,
+                onSuccess: () => console.log("Added to favorites!"),
+                onError: () => console.log("Failed to add to favorites"),
             }
+        );
+    };
 
-            // Show broker fallback
+    // Format price to PHP currency
+    const formatToPHP = (amount, withDecimals = true) =>
+        new Intl.NumberFormat("en-PH", {
+            style: "currency",
+            currency: "PHP",
+            minimumFractionDigits: withDecimals ? 2 : 0,
+            maximumFractionDigits: withDecimals ? 2 : 0,
+        }).format(amount ?? 0);
+
+    // Render agent or broker avatar/name
+    const renderAgentOrBroker = (listing) => {
+        const agents = listing?.agents ?? [];
+        const broker = listing?.broker;
+
+        if (agents.length > 0) {
+            const firstAgent = agents[0];
             return (
                 <div className="flex items-center gap-2">
-                    {broker?.image_url ? (
+                    {firstAgent.image_url ? (
                         <img
-                            src={broker.image_url}
-                            alt={broker.name}
+                            src={firstAgent.image_url}
+                            alt={firstAgent.name}
                             className="w-8 h-8 rounded-full object-cover"
                         />
                     ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold">
-                            {broker?.name?.charAt(0).toUpperCase()}
+                        <div className="w-8 h-8  rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold">
+                            {firstAgent.name?.charAt(0).toUpperCase()}
                         </div>
                     )}
                     <div>
-                        <p className="font-medium">{broker?.name}</p>
+                        <p className="font-medium line-clamp-1">{firstAgent.name}</p>
                         <p className="text-sm text-gray-600">Real Estate Agent</p>
                     </div>
+                    {agents.length > 1 && (
+                        <span className="text-sm text-gray-600 ml-2">
+                            +{agents.length - 1}
+                        </span>
+                    )}
                 </div>
             );
-        };
+        }
 
+        // Broker fallback
         return (
-            <section className="py-12 max-w-7xl mx-auto bg-white dark:bg-gray-900">
-                {/* Header */}
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold text-gray-800 mb-4">Most Viewed <span className='text-primary'>Property</span></h2>
-                    <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                        Discover our most viewed properties in the most desirable locations
-                    </p>
+            <div className="flex items-center gap-2">
+                {broker?.image_url ? (
+                    <img
+                        src={broker.image_url}
+                        alt={broker.name}
+                        className="w-8 h-8 rounded-full object-cover"
+                    />
+                ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold">
+                        {broker?.name?.charAt(0).toUpperCase()}
+                    </div>
+                )}
+                <div>
+                    <p className="font-medium">{broker?.name}</p>
+                    <p className="text-sm text-gray-600">Real Estate Agent</p>
                 </div>
+            </div>
+        );
+    };
 
-                {/* Properties Grid */}
-                {featured.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-                        {featured.map((property) => (
-                            <article
-                                key={property.id}
-                                className="overflow-hidden rounded-xl shadow-lg hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 flex flex-col"
-                            >
-                                {/* Image */}
-                                <Link
-                                    href={`/properties/${property.id}`}
-                                    className="block relative group"
+    return (
+        <section className="py-12 max-w-7xl mx-auto bg-white dark:bg-gray-900">
+            {/* Header */}
+            <div className="text-center mb-16">
+                <h2 className="text-4xl font-bold text-gray-800 mb-4">
+                    Most Viewed <span className="text-primary">Property</span>
+                </h2>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Discover our most viewed properties in the most desirable locations
+                </p>
+            </div>
+
+            {/* Properties Grid */}
+            {featured.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
+                    {featured.map((property) => (
+                        <article
+                            key={property.id}
+                            className="overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-shadow bg-white dark:bg-gray-800 flex flex-col"
+                        >
+                            {/* Image */}
+                            <div className="block relative group">
+                                <img
+                                    src={
+                                        property.image_url
+                                            ? `/storage/${property.image_url}`
+                                            : "/images/placeholder.jpg"
+                                    }
+                                    alt={property.title}
+                                    className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                                    loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-40 transition-all duration-300"></div>
+
+                                {/* Status */}
+                                <p className="absolute bg-white/70 dark:bg-black/50 px-2 py-1 bottom-3 left-3 rounded font-bold text-xs text-gray-800 dark:text-gray-200">
+                                    {property.isPresell ? "Pre-sell" : "For Sale"}
+                                </p>
+
+                                {/* Favorite Button */}
+                                <button
+                                    onClick={() => toggleFavorite(property.id)}
+                                    type="button"
+                                    className="absolute top-3 right-3 flex items-center justify-center w-9 h-9 bg-white text-primary rounded-full shadow hover:bg-gray-100 transition"
+                                    aria-label="Add to favorites"
+                                    title={
+                                        favoriteIds.includes(property.id)
+                                            ? "Remove from favorites"
+                                            : "Add to favorites"
+                                    }
                                 >
-                                    <img
-                                        src={
-                                            property.image_url
-                                                ? `/storage/${property.image_url}`
-                                                : "/images/placeholder.jpg"
-                                        }
-                                        alt={property.title}
-                                        className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-40 transition-all duration-300"></div>
+                                    {favoriteIds.includes(property.id) ? (
+                                        <FontAwesomeIcon
+                                            icon={faHeart}
+                                            className="text-red-500"
+                                        />
+                                    ) : (
+                                        <Heart className="h-5 w-5 text-primary" />
+                                    )}
+                                </button>
+                            </div>
 
-                                    {/* Status */}
-                                    <p className="absolute bg-white/70 dark:bg-black/50 px-2 py-1 bottom-3 left-3 rounded font-bold text-xs text-gray-800 dark:text-gray-200">
-                                        {property.isPresell ? "Pre-sell" : "For Sale"}
-                                    </p>
+                            {/* Content */}
+                            <div className="p-5 flex flex-col flex-1">
+                                <h1 className="text-primary font-bold text-xl mb-2 line-clamp-1">
+                                    {formatToPHP(property.price)}
+                                </h1>
+                                <h3 className="text-text font-bold text-lg mb-1 line-clamp-1">
+                                    {property.title}
+                                </h3>
+                                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-1">
+                                    {property.address}
+                                </p>
 
-                                    <button
-                                        type="button"
-                                        className="absolute top-3 right-3 flex items-center justify-center w-9 h-9 bg-white text-primary rounded-full shadow hover:bg-gray-100 transition"
-                                        aria-label="Add to favorites"
-                                    >
-                                        <Heart className="h-5 w-5" />
-                                    </button>
-
-
-                                </Link>
-
-                                {/* Content */}
-                                <div className="p-5 flex flex-col flex-1">
-                                    <h1 className="text-primary font-bold text-xl mb-2 line-clamp-1">
-                                        {formatToPHP(property.price)}
-                                    </h1>
-                                    <h3 className="text-text font-bold text-lg mb-1 line-clamp-1">
-                                        {property.title}
-                                    </h3>
-                                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-1">
-                                        {property.address}
-                                    </p>
-
-                                    {/* Details */}
+                                {/* Details */}
+                                {(property.bedrooms &&
+                                    property.bathrooms &&
+                                    property.lot_area &&
+                                    property.floor_area &&
+                                    property.total_rooms) && (
                                     <div className="flex flex-wrap gap-4 border-b pb-4 text-gray-600 dark:text-gray-400 mb-6 text-sm">
                                         <span className="flex items-center gap-1" title="Lot/Floor Area">
                                             <Scale className="w-4 h-4" />
@@ -171,29 +191,39 @@
                                             {property.bathrooms ?? "N/A"}
                                         </span>
                                     </div>
+                                )}
 
-                                    {/* Agent / Broker */}
-                                    <div className="mt-auto">
-                                        <div className='flex-center-between'>
-                                            {renderAgentOrBroker(property.property_listing)}
-                                            <Link href="/login">
-                                                <span className="relative inline-block px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg overflow-hidden transition-colors duration-300 hover:text-white group">
-                                                    <span className="absolute inset-0 w-full h-full bg-secondary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 ease-out z-0"></span>
-                                                    <span className="relative z-10">View Details</span>
-                                                </span>
-                                            </Link>
-                                        </div>
-
+                                {/* Agent / Broker */}
+                                <div className="mt-auto">
+                                    <div className="flex items-center justify-between">
+                                        {renderAgentOrBroker(property.property_listing)}
+                                        <Link href={`/properties/${property.id}`}>
+                                            <span className="relative inline-block px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg overflow-hidden transition-colors duration-300 hover:text-white group">
+                                                <span className="absolute inset-0 w-full h-full bg-secondary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 ease-out z-0"></span>
+                                                <span className="relative z-10">View</span>
+                                            </span>
+                                        </Link>
                                     </div>
                                 </div>
-                            </article>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
-                        No featured properties available.
-                    </p>
-                )}
-            </section>
-        );
-    }
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            ) : (
+                <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
+                    No featured properties available.
+                </p>
+            )}
+
+            {/* View All Button */}
+            <div className="flex justify-center p-8 mt-6">
+                <Link href={`/all-properties`}>
+                    <span className="relative inline-block px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg overflow-hidden transition-colors duration-300 hover:text-white group">
+                        <span className="absolute inset-0 w-full h-full bg-secondary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 ease-out z-0"></span>
+                        <span className="relative z-10">View All Properties</span>
+                    </span>
+                </Link>
+            </div>
+        </section>
+    );
+}

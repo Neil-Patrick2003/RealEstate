@@ -14,6 +14,7 @@ class PropertyController extends Controller
     public function show(Property $property )
     {
 
+
         $deal = null;
 
         $property->load('images', 'features', 'coordinate', 'seller', 'property_listing',  'property_listing.agents', 'property_listing.broker' );
