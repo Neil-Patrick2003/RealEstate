@@ -60,7 +60,7 @@ const NavBar = () => {
 
   return (
     <header className="h-16 fixed top-0 left-0 right-0 bg-white shadow  z-[1100] ">
-      <nav className="flex justify-between items-center h-full max-w-8xl mx-auto px-4 text-sm">
+      <nav className="flex justify-between items-center h-full max-w-7xl mx-auto text-sm">
         <Link href="/">
           <motion.div
             initial={{ y: -50, opacity: 0 }}
@@ -68,7 +68,7 @@ const NavBar = () => {
             transition={{ duration: 0.5 }}
             className="flex items-center gap-3 hover:scale-105 transition-transform duration-200"
           >
-            <img src={framer_logo} alt="logo" className="w-8 h-8 drop-shadow-md" />
+            <img src={framer_logo} alt="logo" className="w-8 h-8 -ml-1.5 drop-shadow-md" />
             <h3 className="hidden md:block text-primary text-lg font-bold tracking-wide drop-shadow-sm">
               MJVI Realty
             </h3>

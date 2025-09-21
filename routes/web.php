@@ -17,11 +17,14 @@ use function Pest\Laravel\get;
 
 Route::get('/', function (Request $request) {
 
-    $featured = \App\Models\Property::with('features')
+    $featured = \App\Models\Property::with('features', 'images', 'property_listing.agents', 'property_listing.broker')
     ->  where('status', 'Published')
+        ->orderBy('views', 'desc')
         ->latest()
-        ->take(3)
+        ->take(10)
         ->get();
+
+//    dd($featured->toArray());
     $properties = \App\Models\Property::where('status', 'Published')
         ->when($request->search, function ($q) use ($request) {
             $q->where(function ($query) use ($request) {
@@ -40,15 +43,19 @@ Route::get('/', function (Request $request) {
         ? auth()->user()->favourites()->pluck('property_id')->toArray()
         : [];
 
+    $properties = \App\Models\Property::where('status', 'Published')
+        ->latest()
+        ->get();
+
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
-        'properties' => $properties,
         'favouriteIds' => $favouriteIds,
         'featured' => $featured,
+        'properties' => $properties,
     ]);
 });
 

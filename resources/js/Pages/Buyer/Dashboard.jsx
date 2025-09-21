@@ -50,7 +50,7 @@ export default function Dashboard({ properties, inquiries }) {
 
 
                     <div className="relative z-10">
-                        <div className="relative rounded-2xl overflow-hidden shadow-xl">
+                              <div className="relative rounded-2xl overflow-hidden shadow-xl">
 
                             {/* Foreground: Carousel content */}
                             <div className="relative z-10">

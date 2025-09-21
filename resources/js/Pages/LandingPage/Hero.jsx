@@ -13,14 +13,13 @@ const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChan
         { key: 'Land', label: 'Land', color: 'bg-primary/70' },
     ];
 
-    // Find current selected type label and color for showing in trigger button
     const selected = propertyTypes.find(pt => pt.key === selectedType) || propertyTypes[0];
 
     return (
         <>
-            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="absolute  inset-0 bg-black/10"></div>
 
-            <main className="relative z-10 mt-[60px]  md:mt-18 flex justify-center items-center h-[85vh]">
+            <main className="relative z-10 flex justify-center items-center h-[100vh]">
                 <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8">
                     <motion.div
                         initial={{ opacity: 0, y: -30 }}
@@ -120,6 +119,9 @@ const Hero = ({ searchTerm, handleSearchTermChange, selectedType, handleTypeChan
                             </div>
                         </div>
                     </motion.div>
+                </div>
+                <div className='absolute bottom-12 animate-bounce text-white text-2xl cursor-pointer'>
+                    Scroll down
                 </div>
             </main>
         </>
