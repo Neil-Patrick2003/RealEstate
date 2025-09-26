@@ -326,6 +326,12 @@ Route::post('/properties/{id}/favorites', [\App\Http\Controllers\Property\Proper
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/properties', [\App\Http\Controllers\Admin\PropertyController::class, 'index'])->name('admin.properties');
+
+    Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users');
+    Route::get('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('admin.users.create');
+    Route::post('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
+    Route::get('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit');
+    Route::patch('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
 });
 
 

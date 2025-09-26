@@ -23,4 +23,11 @@ class Deal extends Model
         return $this->hasMany(Feedback::class);
     }
 
+
+    public function dealsAsBuyer()
+    {
+        return $this->hasMany(Deal::class, 'buyer_id');
+    }
+
+
 }

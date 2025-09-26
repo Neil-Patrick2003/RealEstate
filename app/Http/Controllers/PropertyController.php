@@ -11,28 +11,34 @@ use Inertia\Inertia;
 
 class PropertyController extends Controller
 {
-    public function show(Property $property )
+    public function show(Property $property)
     {
-
-
         $deal = null;
 
-        $property->load('images', 'features', 'coordinate', 'seller', 'property_listing',  'property_listing.agents', 'property_listing.broker' );
+        $property->load(
+            'images',
+            'features',
+            'coordinate',
+            'seller',
+            'property_listing',
+            'property_listing.agents',
+            'property_listing.broker'
+        );
 
-
-        if ($property->property_listing) {
+        // Only check deals if a user is logged in
+        if (auth()->check() && $property->property_listing) {
             $deal = Deal::where('property_listing_id', $property->property_listing->id)
-                ->where('buyer_id', auth()->user()->id)
+                ->where('buyer_id', auth()->id())
                 ->first();
         }
 
         $property->increment('views');
-
 
         return Inertia::render('LandingPage/Property/ShowProperty', [
             'property' => $property,
             'deal' => $deal,
         ]);
     }
+
 }
 

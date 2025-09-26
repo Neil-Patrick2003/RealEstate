@@ -113,7 +113,7 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
     }, [filtered, sortOrder]);
 
     return (
-        <div className="bg-gray-50 min-h-screen pt-[60px]">
+        <div className="bg-white min-h-screen pt-[60px]">
             <NavBar />
 
             <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-6">
@@ -279,7 +279,7 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
                         {sortedProperties.length === 0 ? (
                             <p className="text-center text-gray-500">No matching properties.</p>
                         ) : viewMode === "grid" ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 {sortedProperties.map((p) => (
                                     <PropertyCard key={p.id} property={p} />
                                 ))}

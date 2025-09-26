@@ -32,4 +32,14 @@ class PropertyListing extends Model
         return $this->belongsToMany(User::class, 'property_listing_agents', 'property_listing_id', 'agent_id');
     }
 
+    public function deals()
+    {
+        return $this->hasMany(Deal::class);
+    }
+
+    public function buyers()
+    {
+        return $this->hasManyThrough(User::class, Deal::class, 'property_listing_id', 'id', 'id', 'buyer_id');
+    }
+
 }
