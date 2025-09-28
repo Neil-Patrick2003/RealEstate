@@ -8,6 +8,7 @@ import { Eye } from "lucide-react";
 export default function MostViewed({ featured = [] }) {
     const [favoriteIds, setFavoriteIds] = useState([]);
 
+
     const toggleFavorite = (propertyId) => {
         setFavoriteIds((prev) =>
             prev.includes(propertyId)

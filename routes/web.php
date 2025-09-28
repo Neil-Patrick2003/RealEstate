@@ -207,49 +207,21 @@ Route::middleware(['auth'])->group(function () {
 
 
 Route::middleware(['auth','role:Buyer' ])->group(function () {
-    Route::get('/dashboard', function () {
-        $properties = \App\Models\Property::with('coordinate')
-            ->where('status', 'Published')
-            ->latest()
-            ->get();
-
-        $inquiries = \App\Models\Inquiry::with('property', 'agent:id,name,email')
-            ->where('buyer_id', auth()->id())
-            ->latest() // defaults to 'created_at' in descending order
-            ->take(10) // limit to 10 results
-            ->get();
-
-        return Inertia::render('Buyer/Dashboard', [
-            'properties' => $properties,
-            'inquiries' => $inquiries,
-        ]);
-    })->name('dashboard');
-
-    //sent inquiries
+    Route::get('/dashboard', [\App\Http\Controllers\Buyer\BuyerController::class, 'index'])->name('dashboard');
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
     Route::get('/inquiries/{property}', [\App\Http\Controllers\Buyer\InquiryController::class, 'show']);
     Route::patch('/inquiries/{id}/cancel', [\App\Http\Controllers\Buyer\InquiryController::class, 'cancel']);
-
     Route::get('/chat', [\App\Http\Controllers\Buyer\ChatController::class, 'index'])->name('buyer.chat.index');
     Route::get('/chat/channels/{channel}', [\App\Http\Controllers\Buyer\ChannelController::class, 'show'])->name('buyer.chat.channels.show');
-
-    //triping
     Route::get('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'index']);
     Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
-
-    //favourites
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
     Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
-
     Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
-
-
     Route::get('/deals', [DealController::class, 'index']);
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
-
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
-
 });
 
 

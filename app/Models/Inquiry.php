@@ -66,4 +66,6 @@ class Inquiry extends Model
         return $this->belongsTo(User::class, 'broker_id');
     }
 
+
+
 }

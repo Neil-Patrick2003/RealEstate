@@ -1,8 +1,8 @@
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
-import { usePage, Link, Head } from "@inertiajs/react";
+import {usePage, Link, Head, router} from "@inertiajs/react";
 import PropertiesMap from "@/Components/PropertiesMap.jsx";
 import dayjs from "dayjs";
-import React from "react";
+import React, {useState} from "react";
 import Progress from "@/Components/Progress.jsx";
 import PropertyCard from "@/Components/Property/PropertyCard.jsx";
 import CustomCarousel from "@/Components/Slider/custom.slider.jsx";
@@ -22,24 +22,44 @@ const statusStyles = {
 export default function Dashboard({ properties, inquiries }) {
     const auth = usePage().props?.auth?.user ?? null;
     const progressInquiry = inquiries.find(i => i.status === 'accepted');
+    const [favoriteIds, setFavoriteIds] = useState([]);
+
+
+    const toggleFavorite = (propertyId) => {
+        setFavoriteIds((prev) =>
+            prev.includes(propertyId)
+                ? prev.filter((id) => id !== propertyId)
+                : [...prev, propertyId]
+        );
+
+        router.post(
+            `/properties/${propertyId}/favorites`,
+            { id: propertyId },
+            {
+                preserveScroll: true,
+                onSuccess: () => console.log("Added to favorites!"),
+                onError: () => console.log("Failed to add to favorites"),
+            }
+        );
+    };
 
     return (
         <BuyerLayout>
             <Head title="Dashboard" />
-            <div className="py-10 px-4 sm:px-6 lg:px-8 space-y-12">
+            <div className="py-10 px-4 sm:px-4 lg:px-0 space-y-12">
 
                 {/* Welcome + Carousel Section */}
                 <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Welcome Card */}
-                    <div className="md:col-span-2 bg-gradient-to-tl from-primary to-accent rounded-2xl p-8 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div className="space-y-4">
-                            <h1 className="text-3xl font-bold tracking-tight">Welcome back 👋</h1>
+                    <div className="md:col-span-2 bg-gradient-to-tl from-primary to-accent rounded-2xl p-4 md:p-6 lg:p-8 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="space-y-1 md:space-y-4">
+                            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight">Welcome back 👋</h1>
                             <p className="text-xl font-medium">{auth?.name}</p>
                             <p className="text-sm text-slate-200">
                                 Explore a personalized experience to help you find the perfect lot.
                                 Track saved properties and manage your inquiries — all in one place.
                             </p>
-                            <Link href="/" className="inline-block px-4 py-2 bg-secondary text-white rounded-md text-sm font-semibold hover:scale-105 transition-transform">
+                            <Link href="/" className="inline-block px-4 py-2 bg-secondary text-white rounded-full text-sm font-semibold hover:scale-105 transition-transform">
                                 Discover Now
                             </Link>
                         </div>
@@ -53,49 +73,52 @@ export default function Dashboard({ properties, inquiries }) {
                               <div className="relative rounded-2xl overflow-hidden shadow-xl">
 
                             {/* Foreground: Carousel content */}
-                            <div className="relative z-10">
-                                <CustomCarousel>
-                                    {/* Slide 1 - Find Your Dream Home */}
-                                    <div className="relative rounded-xl h-80 flex flex-col justify-center items-center text-center p-6 text-white overflow-hidden bg-gradient-to-tl from-primary to-accent" >
-                                        {/* Large faint house icon */}
-                                        <FontAwesomeIcon
-                                            icon={faHouse}
-                                            className="absolute text-white opacity-20 text-[8rem] top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none"
-                                        />
-                                        <h2 className="text-3xl font-bold mb-3 z-10">Find Your Dream Home</h2>
-                                        <p className="text-lg z-10 max-w-md">
-                                            Browse hundreds of properties across the country.
-                                        </p>
-                                    </div>
+                                  <div className="relative z-10">
+                                      <CustomCarousel>
+                                          {/* Slide 1 - Find Your Dream Home */}
+                                          <div className="relative rounded-xl h-60 sm:h-72 md:h-80 flex flex-col justify-center items-center text-center p-3 sm:p-4 lg:p-6 text-white overflow-hidden bg-gradient-to-tl from-primary to-accent">
+                                              <FontAwesomeIcon
+                                                  icon={faHouse}
+                                                  className="absolute text-white opacity-20 text-6xl sm:text-7xl md:text-[8rem] top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none"
+                                              />
+                                              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 z-10">
+                                                  Find Your Dream Home
+                                              </h2>
+                                              <p className="text-sm sm:text-base md:text-lg z-10 max-w-xs sm:max-w-md">
+                                                  Browse hundreds of properties across the country.
+                                              </p>
+                                          </div>
 
-                                    {/* Slide 2 - Verified Listings Only */}
-                                    <div className="relative rounded-xl h-80 flex flex-col justify-center items-center text-center p-6 text-white overflow-hidden bg-gradient-to-tl from-primary to-accent" >
-                                        {/* Large faint check circle icon */}
-                                        <FontAwesomeIcon
-                                            icon={faCheckCircle}
-                                            className="absolute text-white opacity-20 text-[8rem] top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none"
-                                        />
-                                        <h2 className="text-3xl font-bold mb-3 z-10">Verified Listings Only</h2>
-                                        <p className="text-lg z-10 max-w-md">
-                                            We make sure every property is checked and trusted.
-                                        </p>
-                                    </div>
+                                          {/* Slide 2 */}
+                                          <div className="relative rounded-xl h-60 sm:h-72 md:h-80 flex flex-col justify-center items-center text-center p-3 sm:p-4 lg:p-6 text-white overflow-hidden bg-gradient-to-tl from-primary to-accent">
+                                              <FontAwesomeIcon
+                                                  icon={faCheckCircle}
+                                                  className="absolute text-white opacity-20 text-6xl sm:text-7xl md:text-[8rem] top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none"
+                                              />
+                                              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 z-10">
+                                                  Verified Listings Only
+                                              </h2>
+                                              <p className="text-sm sm:text-base md:text-lg z-10 max-w-xs sm:max-w-md">
+                                                  We make sure every property is checked and trusted.
+                                              </p>
+                                          </div>
 
-                                    {/* Slide 3 - Connect With Local Agents */}
-                                    <div className="relative rounded-xl h-80 flex flex-col justify-center items-center text-center p-6 text-white overflow-hidden  bg-gradient-to-tl from-primary to-accent">
-                                        {/* Large faint user tie icon */}
-                                        <FontAwesomeIcon
-                                            icon={faUserTie}
-                                            className="absolute text-white opacity-20 text-[8rem] top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none"
-                                        />
-                                        <h2 className="text-3xl font-bold mb-3 z-10">Connect With Local Agents</h2>
-                                        <p className="text-lg z-10 max-w-md">
-                                            Get expert advice directly from certified professionals.
-                                        </p>
-                                    </div>
-                                </CustomCarousel>
-                            </div>
-                        </div>
+                                          {/* Slide 3 */}
+                                          <div className="relative rounded-xl h-60 sm:h-72 md:h-80 flex flex-col justify-center items-center text-center p-3 sm:p-4 lg:p-6 text-white overflow-hidden bg-gradient-to-tl from-primary to-accent">
+                                              <FontAwesomeIcon
+                                                  icon={faUserTie}
+                                                  className="absolute text-white opacity-20 text-6xl sm:text-7xl md:text-[8rem] top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none"
+                                              />
+                                              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 z-10">
+                                                  Connect With Local Agents
+                                              </h2>
+                                              <p className="text-sm sm:text-base md:text-lg z-10 max-w-xs sm:max-w-md">
+                                                  Get expert advice directly from certified professionals.
+                                              </p>
+                                          </div>
+                                      </CustomCarousel>
+                                  </div>
+                              </div>
                     </div>
 
                 </section>
@@ -107,10 +130,13 @@ export default function Dashboard({ properties, inquiries }) {
                         <Link href="/buyer/properties" className="text-sm text-primary hover:underline">View All</Link>
                     </div>
                     <div className="overflow-x-auto flex space-x-6 snap-x snap-mandatory scroll-smooth pb-2">
-                        {properties.slice(0, 5).map((property) => (
-                            <PropertyCard key={property.id} property={property} />
+                        {properties.slice(0, 4).map((property) => (
+                            <div key={property.id} className="snap-center flex-shrink-0 w-80">
+                                <PropertyCard property={property} favoriteIds={favoriteIds} toggleFavorite={toggleFavorite} />
+                            </div>
                         ))}
                     </div>
+
                 </section>
 
                 {/* Map View */}
@@ -169,7 +195,7 @@ export default function Dashboard({ properties, inquiries }) {
                                                     </td>
                                                     <td className="p-3 md:table-cell">
                                                         <p className="text-primary hover:underline cursor-pointer">
-                                                            {inquiry.agent?.name ?? 'Unknown Agent'}
+                                                            {inquiry.agent?.name ?? inquiry.broker?.name}
                                                             <br />
                                                             <span className="text-xs text-gray-500">{inquiry.agent?.email}</span>
                                                         </p>

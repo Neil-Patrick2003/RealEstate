@@ -234,7 +234,7 @@ export default function BuyerLayout({ children }) {
               </div>
           </motion.header>
 
-        <div className='py-8 px-0 md:px-4 lg:px-12 xl:px-16 sl:px-16'>
+        <div className='py-8 px-0 md:px-4 lg:px-8'>
             <ToastHandler />
           {children}
         </div>

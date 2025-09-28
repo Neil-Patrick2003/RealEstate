@@ -11,7 +11,10 @@ import {
     Repeat2,
     Heart,
 } from "lucide-react";
-export default function PropertyListItem({ property }) {
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faHeart} from "@fortawesome/free-solid-svg-icons";
+import CopyLinkButton from "@/Components/CopyLinkButton.jsx";
+export default function PropertyListItem({ property, favoriteIds, toggleFavorite }) {
 
     const formatToPHP = (amount, withDecimals = true) =>
         new Intl.NumberFormat("en-PH", {
@@ -132,20 +135,18 @@ export default function PropertyListItem({ property }) {
                     </p>
                     <div className="flex gap-2">
                         <button
-                            aria-label="Compare"
-                            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                            type="button"
+                            onClick={() => toggleFavorite(property.id)}
+                            className=""
                         >
-                            <Repeat2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                        </button>
-                        <button
-                            aria-label="Add to favorites"
-                            className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-700 transition-colors"
-                            type="button"
-                        >
-                            <Heart className="w-5 h-5 text-red-500" />
+                            <FontAwesomeIcon
+                                icon={faHeart}
+                                className={`w-5 h-5 ${
+                                    favoriteIds.includes(property.id) ? "text-red-500" : "text-gray-600"
+                                }`}
+                            />
                         </button>
                     </div>
+
                 </div>
             </div>
         </article>
