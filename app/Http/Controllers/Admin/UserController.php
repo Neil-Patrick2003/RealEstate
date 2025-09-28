@@ -111,6 +111,59 @@ class UserController extends Controller
 
         return redirect()->route('admin.users')->with('success', 'User updated successfully.');
 
-
     }
+
+    public function destroy(User $user)
+    {
+        if ($user->inquiriesAsBuyer()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They have buyer inquiries.']);
+        }
+
+        if ($user->sellerInquiriesAsAgent()->exists()) {
+            return redirect()->back()->withs(['error' => 'Cannot delete user. They have seller inquiries as agent.']);
+        }
+
+        if ($user->buyerInquiriesAsAgent()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They have buyer inquiries as agent.']);
+        }
+
+        if ($user->properties()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They are a seller with listed properties.']);
+        }
+
+        if ($user->property()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They are an agent for some properties.']);
+        }
+
+        if ($user->listing()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They have property listings.']);
+        }
+
+        if ($user->messages()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They have messages.']);
+        }
+
+        if ($user->favourites()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They have favourite properties.']);
+        }
+
+        if ($user->feedback()->exists() || $user->feedbackReceived()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They are involved in feedback.']);
+        }
+
+        if ($user->agent_trippings()->exists() || $user->buyer_trippings()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They have property trippings.']);
+        }
+
+        if ($user->develops()->exists()) {
+            return redirect()->back()->with(['error' => 'Cannot delete user. They are associated with a developer profile.']);
+        }
+
+        // ✅ All good — proceed to delete
+        $user->delete();
+
+        return redirect()->back()->with('success', 'User deleted successfully.');
+    }
+
+
 }

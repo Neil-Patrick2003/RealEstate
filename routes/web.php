@@ -21,7 +21,7 @@ Route::get('/', function (Request $request) {
     ->  where('status', 'Published')
         ->orderBy('views', 'desc')
         ->latest()
-        ->take(10)
+        ->take(4)
         ->get();
 
     $properties = \App\Models\Property::where('status', 'Published')
@@ -332,6 +332,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
     Route::get('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit');
     Route::patch('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
 });
 
 

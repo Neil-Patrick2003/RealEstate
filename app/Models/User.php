@@ -66,6 +66,8 @@ class User extends Authenticatable
         return $this->hasMany(Property::class, 'seller_id');
     }
 
+
+
     public function buyerInquiriesAsAgent()
     {
         return $this->hasMany(Inquiry::class, 'buyer_id')
