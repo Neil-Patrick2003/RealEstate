@@ -54,6 +54,9 @@ export default function Inquiries({
         status && status.trim() !== "" ? status : "All"
     );
 
+
+    console.log(inquiries);
+
     const handleCancelInquiry = () => {
         if (!cancelId) return;
 
@@ -120,8 +123,11 @@ export default function Inquiries({
                 ) : (
                     inquiries.data.map((inquiry) => {
                         const property = inquiry.property ?? {};
-                        const agent = inquiry.agent ?? {};
-                        const broker = inquiry.broker ?? {};
+                        const agent = inquiry.agent ?? null;
+                        const broker = inquiry.broker ?? null;
+
+                        const contact = agent || broker || {};
+
 
                         const message = inquiry?.notes;
 
@@ -151,7 +157,6 @@ export default function Inquiries({
                                                 className="w-full h-full object-cover hover:scale-105 transition-transform"
                                             />
                                             <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                                                <FontAwesomeIcon icon={faPesoSign} />
                                                 {Number(property.price).toLocaleString('en-PH', {style: 'currency', currency: 'PHP' }) ?? "N/A"}
                                             </div>
                                         </div>
@@ -202,15 +207,23 @@ export default function Inquiries({
                                     <div className="col-span-12 lg:col-span-3 flex flex-col justify-between">
                                         <div className="flex items-center mb-4">
                                             <div className="w-10 h-10 rounded-full overflow-hidden mr-3 border">
-                                                <img
-                                                    src={`/storage/${agent.photo_url}`}
-                                                    alt={agent.name ?? "Agent"}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                {contact?.photo_url ? (
+                                                    <img
+                                                        src={`/storage/${contact.photo_url}`}
+                                                        alt={contact?.name ?? "Contact"}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex items-center justify-center w-full h-full bg-gray-300 text-white font-bold text-xl">
+                                                        {contact?.name ? contact.name.charAt(0).toUpperCase() : "?"}
+                                                    </div>
+                                                )}
+
+
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium text-gray-800">
-                                                    {agent.name ?? "Unknown Agent"}
+                                                    {contact?.name ?? "Contact"}
                                                 </p>
                                                 <p className="text-xs text-gray-500">4.8 ⭐ (76 reviews)</p>
                                             </div>
@@ -219,12 +232,14 @@ export default function Inquiries({
                                         <div className="text-xs text-gray-500 mb-4 space-y-1">
                                             <p>
                                                 <FontAwesomeIcon icon={faEnvelope} className="mr-1" />{" "}
-                                                {agent.email ?? "N/A"}
+                                                {contact?.email ?? "N/A"}
                                             </p>
                                             <p>
-                                                <FontAwesomeIcon icon={faPhone} className="mr-1" /> +63 912 345 6789
+                                                <FontAwesomeIcon icon={faPhone} className="mr-1" />{" "}
+                                                {contact?.phone ?? "+63 912 345 6789"}
                                             </p>
                                         </div>
+
 
                                         <div className="flex flex-col gap-2">
                                             {isAccepted ? (

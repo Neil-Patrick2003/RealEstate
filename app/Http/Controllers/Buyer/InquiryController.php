@@ -27,9 +27,6 @@ class InquiryController extends Controller
             ->latest()
             ->paginate(10);
 
-
-
-
         $allCount = Inquiry::where('buyer_id', auth()->id())->count();
         $pendingCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Pending')->count();
         $acceptedCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Accepted')->count();
@@ -123,15 +120,9 @@ class InquiryController extends Controller
 
     public  function cancel($id){
 
-
-    //find inquiry
         $inquiry = Inquiry::findOrFail($id);
 
-        //check if inquiry
-
         $existingTripping = PropertyTripping::where('inquiry_id', $inquiry->id)->first();
-
-
 
         if ($existingTripping) {
             $existingTripping->update([
