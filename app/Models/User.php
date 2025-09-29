@@ -128,7 +128,7 @@ class User extends Authenticatable
 
 
 
-        public function broker_listing(){
+    public function broker_listing(){
         return $this->hasMany(PropertyListing::class, 'broker_id');
 
     }
@@ -138,7 +138,27 @@ class User extends Authenticatable
         return $this->hasMany(Feedback::class, 'agent_id');
     }
 
-    // inside User.php
+    public function deals()
+    {
+        return $this->hasMany(Deal::class, 'agent_id');
+    }
+
+    public function dealsViaListings()
+    {
+        return $this->hasManyThrough(
+            \App\Models\Deal::class,            // final
+            \App\Models\PropertyListing::class, // through
+            'broker_id',                        // listings.broker_id -> users.id
+            'property_listing_id',              // deals.property_listing_id -> listings.id
+            'id',                               // users.id
+            'id'                                // listings.id
+        );
+    }
+
+    public function listingsAsBroker()
+    {
+        return $this->hasMany(\App\Models\PropertyListing::class, 'broker_id');
+    }
 
 
 

@@ -42,4 +42,6 @@ class PropertyListing extends Model
         return $this->hasManyThrough(User::class, Deal::class, 'property_listing_id', 'id', 'id', 'buyer_id');
     }
 
+
+
 }
