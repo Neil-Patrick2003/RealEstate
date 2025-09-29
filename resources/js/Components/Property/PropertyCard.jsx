@@ -34,7 +34,7 @@ export default function PropertyListItem({ property, favoriteIds = [], toggleFav
         return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
     };
 
-    
+
 
     // Derivations
     const imgSrc = property?.image_url ? `/storage/${property.image_url}` : "/images/placeholder.jpg";

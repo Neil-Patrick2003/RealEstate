@@ -92,7 +92,7 @@ class PropertyController extends Controller
     }
 
     public function show(PropertyListing $propertyListing){
-        $property = PropertyListing::with('property.coordinate', 'property.images', 'property.features', 'seller', 'agents')->where('id', $propertyListing->id)->first();
+        $property = PropertyListing::with('property.coordinate', 'property.images', 'property.features', 'seller', 'agents', 'broker')->where('id', $propertyListing->id)->first();
 
         return Inertia::render('Broker/Property/Show', [
             'property' => $property,
