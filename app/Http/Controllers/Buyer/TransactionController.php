@@ -15,6 +15,7 @@ class TransactionController extends Controller
         $transactions = Deal::with([
             'property_listing.property',
             'property_listing.agents',
+            'property_listing.broker',
             'feedback', // Many feedbacks per deal (per agent)
         ])->where('buyer_id', auth()->id())
             ->where('status', 'Sold')

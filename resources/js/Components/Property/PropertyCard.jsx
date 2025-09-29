@@ -1,152 +1,185 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "@inertiajs/react";
 import PropTypes from "prop-types";
+import { Camera, Scale, DoorClosed, Bed, Bath, Repeat2, Share2 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart as faHeartSolid } from "@fortawesome/free-solid-svg-icons";
 
-import {
-    Camera,
-    Scale,
-    DoorClosed,
-    Bed,
-    Bath,
-    Repeat2,
-    Heart,
-} from "lucide-react";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faHeart} from "@fortawesome/free-solid-svg-icons";
-import CopyLinkButton from "@/Components/CopyLinkButton.jsx";
-export default function PropertyListItem({ property, favoriteIds, toggleFavorite }) {
+// --- tiny safety helpers ---
+const A = (v) => (Array.isArray(v) ? v : []);
+const S = (v) => (typeof v === "string" ? v : "");
+const includesSafe = (src, needle) =>
+    Array.isArray(src) ? src.includes(needle) : typeof src === "string" ? src.includes(String(needle)) : false;
 
-    const formatToPHP = (amount, withDecimals = true) =>
+export default function PropertyListItem({ property, favoriteIds = [], toggleFavorite }) {
+    // Formatters
+    const formatToPHP = (amount, withDecimals = false) =>
         new Intl.NumberFormat("en-PH", {
             style: "currency",
             currency: "PHP",
             minimumFractionDigits: withDecimals ? 2 : 0,
             maximumFractionDigits: withDecimals ? 2 : 0,
-        }).format(amount ?? 0);
+        }).format(Number(amount ?? 0));
 
-    // Format date to readable format
     const formatDate = (dateString) => {
-        if (!dateString) return "";
-        const date = new Date(dateString);
-        return date.toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
+        if (!dateString) return "—";
+        const d = new Date(dateString);
+        if (Number.isNaN(d.getTime())) return "—";
+        return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     };
 
+    const daysSince = (dateString) => {
+        const d = new Date(dateString);
+        if (Number.isNaN(d.getTime())) return Infinity;
+        return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+    };
 
-    const {
-        id,
-        title,
-        image_url,
-        property_type,
-        beds,
-        baths,
-        sqft,
-        price,
-        status,
-    } = property;
+    
 
-    const formattedPrice = price
-        ? new Intl.NumberFormat("en-PH", {
-            "style": "currency",
-            "currency": "PHP",
-            "maximumFractionDigits": 0,
-        }).format(Number(price))
-        : "Price N/A";
+    // Derivations
+    const imgSrc = property?.image_url ? `/storage/${property.image_url}` : "/images/placeholder.jpg";
+    const imagesCount = A(property?.images).length;
+    const statusText = property?.isPresell ? "Pre-Selling" : "For Sale";
+    const areaText = property?.lot_area
+        ? `${property.lot_area} sqm`
+        : property?.floor_area
+            ? `${property.floor_area} sqm`
+            : "N/A";
+    const priceText = property?.price != null ? formatToPHP(property.price) : "Price N/A";
+    const isNew = daysSince(property?.created_at) <= 14;
+    const isFavorite = useMemo(() => includesSafe(favoriteIds, property?.id), [favoriteIds, property?.id]);
+
+    // Share / Copy link
+    const [shared, setShared] = useState(false);
+    const onShare = async () => {
+        try {
+            const url = `${window.location.origin}/properties/${property?.id}`;
+            if (navigator.share) {
+                await navigator.share({ title: S(property?.title) || "Property", url });
+                setShared(true);
+            } else {
+                await navigator.clipboard.writeText(url);
+                setShared(true);
+            }
+            setTimeout(() => setShared(false), 1500);
+        } catch {
+            // noop
+        }
+    };
 
     return (
         <article
-            key={property.id}
-            className="overflow-hidden rounded-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 flex flex-col"
+            className="overflow-hidden rounded-2xl bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:shadow-lg transition-shadow flex flex-col"
+            aria-label={property?.title || "Property"}
         >
-            {/* Image */}
-            <Link
-                href={`/properties/${property.id}`}
-                className="block relative group"
-            >
-                <img
-                    src={
-                        property.image_url
-                            ? `/storage/${property.image_url}`
-                            : "/images/placeholder.jpg"
-                    }
-                    alt={property.title}
-                    className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-40 transition-all duration-300"></div>
+            {/* Image / Badges */}
+            <Link href={`/properties/${property?.id}`} className="relative block group">
+                <div className="w-full aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-700">
+                    <img
+                        src={imgSrc}
+                        alt={S(property?.title) || "Property image"}
+                        onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                        decoding="async"
+                    />
+                </div>
 
-                {/* Status */}
-                <p className="absolute bg-white/70 dark:bg-black/50 px-2 py-1 bottom-3 left-3 rounded font-bold text-xs text-gray-800 dark:text-gray-200">
-                    {property.isPresell ? "Pre-sell" : "For Sale"}
-                </p>
+                {/* overlay */}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                {/* Image count */}
-                {property.images?.length > 0 && (
-                    <p className="absolute flex items-center bg-black/60 px-2 py-1 rounded top-3 right-3 text-white font-medium text-xs">
-                        <Camera className="h-4 w-4 mr-1" />
-                        {property.images.length}
-                    </p>
-                )}
+                {/* left/bottom chips */}
+                <div className="absolute left-3 bottom-3 flex items-center gap-2">
+          <span className="px-2 py-1 rounded-md text-[11px] font-semibold bg-white/85 dark:bg-black/50 text-gray-800 dark:text-gray-100 backdrop-blur">
+            {statusText}
+          </span>
+                    {isNew && <span className="px-2 py-1 rounded-md text-[11px] font-semibold bg-emerald-600 text-white">New</span>}
+                </div>
+
+                {/* right/top chips */}
+                <div className="absolute right-3 top-3 flex items-center gap-2">
+                    {imagesCount > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-black/60 text-white text-xs">
+              <Camera className="h-4 w-4" />
+                            {imagesCount}
+            </span>
+                    )}
+                </div>
             </Link>
 
             {/* Content */}
-            <div className="p-5 flex flex-col flex-1">
-                <h3 className="text-text font-bold text-lg mb-1 line-clamp-1">
-                    {property.title}
+            <div className="p-5 flex flex-col gap-2 flex-1">
+                <h3 className="text-gray-900 dark:text-gray-100 font-semibold text-[1.05rem] leading-tight line-clamp-1">
+                    {S(property?.title) || "Untitled Property"}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm mb-2 line-clamp-1">
-                    {property.address}
+                <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-1">
+                    {S(property?.address) || "Address unavailable"}
                 </p>
-                <p className="text-gray-400 dark:text-gray-500 text-xs mb-4">
-                    Added: {formatDate(property.created_at)}
-                </p>
+                <p className="text-gray-400 dark:text-gray-500 text-xs">Added: {formatDate(property?.created_at)}</p>
 
-                {/* Details */}
-                <div className="flex flex-wrap gap-4 text-gray-600 dark:text-gray-400 mb-6 text-sm">
-                                    <span className="flex items-center gap-1" title="Lot/Floor Area">
-                                        <Scale className="w-4 h-4" />
-                                        {property.lot_area
-                                            ? `${property.lot_area} sqm`
-                                            : property.floor_area
-                                                ? `${property.floor_area} sqm`
-                                                : "N/A"}
-                                    </span>
-                    <span className="flex items-center gap-1" title="Total Rooms">
-                                        <DoorClosed className="w-4 h-4" />
-                        {property.total_rooms ?? "N/A"}
-                                    </span>
-                    <span className="flex items-center gap-1" title="Bedrooms">
-                                        <Bed className="w-4 h-4" />
-                        {property.bedrooms ?? "N/A"}
-                                    </span>
-                    <span className="flex items-center gap-1" title="Bathrooms">
-                                        <Bath className="w-4 h-4" />
-                        {property.bathrooms ?? "N/A"}
-                                    </span>
+                {/* Specs */}
+                <div className="mt-2 mb-3 flex flex-wrap gap-x-4 gap-y-2 text-gray-600 dark:text-gray-400 text-sm">
+          <span className="inline-flex items-center gap-1.5" title="Lot/Floor Area">
+            <Scale className="w-4 h-4" />
+              {areaText}
+          </span>
+                    <span className="inline-flex items-center gap-1.5" title="Total Rooms">
+            <DoorClosed className="w-4 h-4" />
+                        {property?.total_rooms ?? "N/A"}
+          </span>
+                    <span className="inline-flex items-center gap-1.5" title="Bedrooms">
+            <Bed className="w-4 h-4" />
+                        {property?.bedrooms ?? "N/A"}
+          </span>
+                    <span className="inline-flex items-center gap-1.5" title="Bathrooms">
+            <Bath className="w-4 h-4" />
+                        {property?.bathrooms ?? "N/A"}
+          </span>
                 </div>
 
                 {/* Price + Actions */}
-                <div className="flex justify-between items-center mt-auto">
-                    <p className="text-primary font-bold text-lg">
-                        {formatToPHP(property.price)}
-                    </p>
-                    <div className="flex gap-2">
+                <div className="mt-auto flex items-center justify-between pt-2">
+                    <p className="text-primary font-bold text-lg">{priceText}</p>
+
+                    <div className="flex items-center gap-1.5">
+                        {/* Compare (hook up later if you want) */}
                         <button
-                            onClick={() => toggleFavorite(property.id)}
-                            className=""
+                            type="button"
+                            aria-label="Compare"
+                            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            title="Compare"
+                        >
+                            <Repeat2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                        </button>
+
+                        {/* Share */}
+                        <button
+                            type="button"
+                            onClick={onShare}
+                            aria-label="Share link"
+                            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            title={shared ? "Copied!" : "Share"}
+                        >
+                            <Share2 className={`w-5 h-5 ${shared ? "text-emerald-600" : "text-gray-600 dark:text-gray-300"}`} />
+                        </button>
+
+                        {/* Favorite */}
+                        <button
+                            type="button"
+                            onClick={() => toggleFavorite?.(property?.id)}
+                            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                            aria-pressed={isFavorite}
+                            title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                            className={`p-2 rounded-full transition-colors ${
+                                isFavorite ? "bg-red-100 hover:bg-red-200" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                            }`}
                         >
                             <FontAwesomeIcon
-                                icon={faHeart}
-                                className={`w-5 h-5 ${
-                                    favoriteIds.includes(property.id) ? "text-red-500" : "text-gray-600"
-                                }`}
+                                icon={faHeartSolid}
+                                className={`w-5 h-5 ${isFavorite ? "text-red-600" : "text-gray-600 dark:text-gray-300"}`}
                             />
                         </button>
                     </div>
-
                 </div>
             </div>
         </article>
@@ -154,38 +187,22 @@ export default function PropertyListItem({ property, favoriteIds, toggleFavorite
 }
 
 PropertyListItem.propTypes = {
-    "property": PropTypes.shape({
-        "id": PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-        "title": PropTypes.string,
-        "image_url": PropTypes.string,
-        "property_type": PropTypes.string,
-        "beds": PropTypes.number,
-        "baths": PropTypes.number,
-        "sqft": PropTypes.number,
-        "price": PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-        "status": PropTypes.string, // e.g., "For Sale", "New"
+    property: PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        title: PropTypes.string,
+        image_url: PropTypes.string,
+        images: PropTypes.arrayOf(PropTypes.any),
+        property_type: PropTypes.string,
+        bedrooms: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        bathrooms: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        total_rooms: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        floor_area: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        lot_area: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        price: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        isPresell: PropTypes.bool,
+        address: PropTypes.string,
+        created_at: PropTypes.string,
     }).isRequired,
+    favoriteIds: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])),
+    toggleFavorite: PropTypes.func.isRequired,
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

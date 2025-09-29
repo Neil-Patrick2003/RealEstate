@@ -27,6 +27,8 @@ class InquiryController extends Controller
             ->latest()
             ->paginate(10);
 
+        
+
         $allCount = Inquiry::where('buyer_id', auth()->id())->count();
         $pendingCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Pending')->count();
         $acceptedCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Accepted')->count();

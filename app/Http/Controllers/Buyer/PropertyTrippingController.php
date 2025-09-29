@@ -17,7 +17,7 @@ class PropertyTrippingController extends Controller
 
     public function index(){
 
-        $trippings = PropertyTripping::with('property', 'agent')
+        $trippings = PropertyTripping::with('property', 'agent', 'broker')
             ->where('buyer_id', auth()->id())
             ->latest()
             ->paginate(10);

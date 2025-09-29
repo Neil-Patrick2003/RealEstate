@@ -1,162 +1,301 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import { router, Link } from '@inertiajs/react';
-import { debounce } from 'lodash';
-import {color, motion} from 'framer-motion';
-import {
-    DoorClosed,
-    Scaling,
+import React, { useState } from "react";
+import { Link, Head } from "@inertiajs/react";
 
-    Bath,
-    Bed,
-    CircleParking,
-    MapPinIcon,
-    ArrowRightIcon,
-} from 'lucide-react';
+// Primary: green, Secondary: orange
+// Uses Tailwind utility classes; swap to your project's theme tokens if you already have .text-primary/.bg-secondary.
 
-import NavBar from '@/Components/NavBar';
-import ToastHandler from '@/Components/ToastHandler.jsx';
-import Hero from './LandingPage/Hero';
-import PropertyList from './LandingPage/PropertyList';
-import Footer from './LandingPage/Footer';
+const Section = ({ id, children, className = "" }) => (
+    <section id={id} className={`relative w-full ${className}`}>{children}</section>
+);
 
-import backgroundImage from '../../assets/background.jpg';
-import process from "../../assets/process.png";
-import {Card, CardContent} from "@mui/material";
-import Button from "@mui/material/Button";
-import Featured from "@/Components/Featured.jsx";
-import MostViewed from "@/Components/MostViewed.jsx";
-import WhyChooseUs from "@/Components/WhyChooseUs.jsx";
-import OurBroker from "@/Components/OurBroker.jsx";
-import OurProcess from "@/Components/OurProcess.jsx";
-import CTA from "@/Components/CTA.jsx";
+const Stat = ({ label, value }) => (
+    <div className="rounded-2xl bg-white/80 backdrop-blur ring-1 ring-white/50 shadow-sm p-4 text-center">
+        <div className="text-3xl font-extrabold text-emerald-600">{value}</div>
+        <div className="text-xs uppercase tracking-wider text-gray-500 mt-1">{label}</div>
+    </div>
+);
 
-const Welcome = ({ auth, properties, search = '', initialType = 'All', featured,  }) => {
-    const [searchTerm, setSearchTerm] = useState(search || '');
-    const [selectedType, setSelectedType] = useState(initialType);
+const Feature = ({ title, desc, icon }) => (
+    <div className="group rounded-2xl p-6 ring-1 ring-gray-200 bg-white shadow-sm hover:shadow-md transition hover:-translate-y-0.5">
+        <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-4 group-hover:bg-emerald-100">
+            {icon}
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <p className="text-sm text-gray-600 mt-1">{desc}</p>
+    </div>
+);
 
-    useEffect(() => {
-        if (search) setSearchTerm(search);
-    }, [search]);
+const PropertyCard = ({ p }) => (
+    <div className="rounded-2xl overflow-hidden ring-1 ring-gray-200 bg-white shadow-sm hover:shadow-md transition hover:-translate-y-0.5">
+        <div className="relative">
+            <img src={p.image} alt={p.title} className="h-52 w-full object-cover" />
+            <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-emerald-700 ring-1 ring-emerald-200">{p.badge}</span>
+        </div>
+        <div className="p-4">
+            <h4 className="font-semibold text-gray-900 line-clamp-1">{p.title}</h4>
+            <p className="text-sm text-gray-500 line-clamp-1">{p.location}</p>
+            <div className="mt-3 flex items-center justify-between">
+                <div className="text-emerald-600 font-bold">₱{p.price.toLocaleString()}</div>
+                <div className="text-xs text-gray-500">{p.size} m² • {p.beds} bd</div>
+            </div>
+        </div>
+    </div>
+);
 
-    const fetchProperties = (searchValue = searchTerm, typeValue = selectedType) => {
-        router.get(
-            '/',
-            { search: searchValue, type: typeValue },
-            { preserveState: true, replace: true }
-        );
+export default function LandingPage() {
+    const [q, setQ] = useState({ where: "", type: "Any", min: "", max: "" });
+    const properties = [
+        { id: 1, title: "Modern Eco Home", location: "Tagaytay, Cavite", price: 5200000, size: 180, beds: 3, badge: "Featured", image: "/images/sample/prop1.jpg" },
+        { id: 2, title: "Smart Condo Loft", location: "BGC, Taguig", price: 7800000, size: 65, beds: 2, badge: "Near MRT", image: "/images/sample/prop2.jpg" },
+        { id: 3, title: "Suburban Haven", location: "Santa Rosa, Laguna", price: 3900000, size: 150, beds: 3, badge: "Hot", image: "/images/sample/prop3.jpg" },
+        { id: 4, title: "Beachside Lot", location: "Nasugbu, Batangas", price: 2500000, size: 220, beds: 0, badge: "Lot", image: "/images/sample/prop4.jpg" },
+    ];
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        // Replace with your Inertia route when backend is ready
+        // router.get(route('properties.index'), q)
+        alert(`Searching: ${q.where || 'Anywhere'} • ${q.type} • ₱${q.min || '0'} - ₱${q.max || 'Any'}`);
     };
-
-    const debouncedSearch = useCallback(
-        debounce((value) => fetchProperties(value, selectedType), 500),
-        [selectedType]
-    );
-
-    useEffect(() => {
-        return () => debouncedSearch.cancel();
-    }, [debouncedSearch]);
-
-    const handleSearchTermChange = (e) => {
-        const value = e.target.value;
-        setSearchTerm(value);
-        debouncedSearch(value);
-    };
-
-    const handleTypeChange = (type) => {
-        setSelectedType(type);
-        fetchProperties(searchTerm, type);
-    };
-
-    const sliderRef = useRef(null)
-
-    const scrollLeft = () => {
-        if (sliderRef.current) {
-            sliderRef.current.scrollBy({ left: -320, behavior: "smooth" });
-        }
-    };
-    const scrollRight = () => {
-        if (sliderRef.current) {
-            sliderRef.current.scrollBy({ left: 320, behavior: "smooth" });
-        }
-    };
-
-
-
 
     return (
-        <div className="relative overflow-x-hidden bg-white">
-            <ToastHandler />
+        <main className="min-h-screen bg-gray-50">
+            <Head title="Local Property Finder — Find lots & homes fast" />
 
-            {/* Hero Section */}
-            <div
-                className="relative h-[100vh] bg-cover bg-center bg-no-repeat"
-                style={{ backgroundImage: `url(${backgroundImage})` }}
-            >
-                <div className="relative z-10">
-                    <NavBar />
-                    <Hero
-                        searchTerm={searchTerm}
-                        handleSearchTermChange={handleSearchTermChange}
-                        selectedType={selectedType}
-                        handleTypeChange={handleTypeChange}
-                        setSelectedType={setSelectedType}
-                    />
+            {/* NAV */}
+            <header className="sticky top-0 z-40 supports-[backdrop-filter]:bg-white/70 bg-white shadow/[0_1px_0_#e5e7eb] backdrop-blur">
+                <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-orange-500"></div>
+                        <span className="font-extrabold tracking-tight text-gray-900">Allegance<span className="text-emerald-600">Homes</span></span>
+                    </Link>
+                    <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600">
+                        <a href="#features" className="hover:text-gray-900">Features</a>
+                        <a href="#explore" className="hover:text-gray-900">Explore</a>
+                        <a href="#how" className="hover:text-gray-900">How it works</a>
+                        <a href="#faq" className="hover:text-gray-900">FAQ</a>
+                    </nav>
+                    <div className="hidden md:flex items-center gap-3">
+                        <Link href="/login" className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100">Sign in</Link>
+                        <Link href="/register" className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700">Get Started</Link>
+                    </div>
+                    <button className="md:hidden p-2 rounded-lg ring-1 ring-gray-200">☰</button>
                 </div>
-            </div>
-            <MostViewed  featured={featured}/>
-            <section className="max-w-7xl mx-auto p-4 md:px-0 py-16">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                    {/* Left Content */}
-                    <div className="space-y-6">
-                        <h1 className="text-2xl md:text-4xl font-semibold leading-snug tracking-tight text-gray-900 dark:text-white">
-                            Creating seamless property solutions for a smarter, & more transparent real estate journey
-                        </h1>
+            </header>
 
-                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                            Whether you're searching for your dream home, listing a property for sale,
-                            or exploring investment opportunities, <span className="font-semibold text-primary">Aelo</span>
-                            provides expert guidance every step of the way. With a wide network of properties,
-                            from cozy apartments to luxury estates, and a team of experienced professionals,
-                            we tailor our services to meet your unique needs.
-                        </p>
-                        <Link href={`/all-properties`}>
-                            <span className="relative inline-block px-6 py-2 mt-4 text-sm font-medium text-white bg-primary rounded-full overflow-hidden transition-colors duration-300 hover:text-white group">
-                                <span className="absolute inset-0 w-full h-full bg-secondary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 ease-out z-0"></span>
-                                <span className="relative z-10">About Us</span>
-                            </span>
-                        </Link>
+            {/* HERO */}
+            <Section id="hero" className="bg-gradient-to-br from-emerald-600 via-emerald-500 to-orange-500 text-white">
+                <div className="mx-auto max-w-7xl px-4 py-16 lg:py-24 grid lg:grid-cols-2 gap-10 items-center">
+                    <div>
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/30 px-3 py-1 text-xs mb-4">
+                            <span className="h-2 w-2 rounded-full bg-orange-300"></span>
+                            Modern • Futuristic • Local Listings
+                        </div>
+                        <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight">
+                            Find local lots & homes
+                            <span className="block text-white/90">faster with <span className="text-white">AI-guided search</span>.</span>
+                        </h1>
+                        <p className="mt-4 text-white/90 max-w-xl">A sleek, modern property finder for the Philippines. Real-time listings, verified agents, and a lightning-fast search experience.</p>
+
+                        {/* Search card */}
+                        <form onSubmit={handleSearch} className="mt-8 rounded-2xl bg-white/95 backdrop-blur ring-1 ring-emerald-100 shadow-xl p-4">
+                            <div className="grid md:grid-cols-4 gap-3">
+                                <input
+                                    className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2"
+                                    placeholder="Where to? (city, barangay)"
+                                    value={q.where}
+                                    onChange={(e)=>setQ({ ...q, where: e.target.value })}
+                                />
+                                <select
+                                    className="rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2"
+                                    value={q.type}
+                                    onChange={(e)=>setQ({ ...q, type: e.target.value })}
+                                >
+                                    <option>Any</option>
+                                    <option>Lot</option>
+                                    <option>House & Lot</option>
+                                    <option>Condo</option>
+                                </select>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Min ₱" inputMode="numeric" value={q.min} onChange={(e)=>setQ({ ...q, min: e.target.value })}/>
+                                    <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Max ₱" inputMode="numeric" value={q.max} onChange={(e)=>setQ({ ...q, max: e.target.value })}/>
+                                </div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                                <button type="submit" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700">
+                                    🔎 Search
+                                </button>
+                                <span className="text-xs text-gray-600">Tip: Try “Nasugbu”, “BGC”, or “Santa Rosa”.</span>
+                            </div>
+                        </form>
+
+                        {/* Trust row */}
+                        <div className="mt-6 grid grid-cols-3 gap-3 max-w-lg">
+                            <Stat label="Active listings" value="12,400+" />
+                            <Stat label="Verified agents" value="1,100+" />
+                            <Stat label="Cities covered" value="120+" />
+                        </div>
                     </div>
 
-                    {/* Right Content */}
-                    <div className="space-y-6">
-                        <img
-                            className="rounded-2xl shadow-lg w-full h-72 object-cover"
-                            src="https://cdn.prod.website-files.com/6737264eed7bd3501f835ab4/676a943aa5211faf7c509f0b_about-us.jpg"
-                            alt="About Us"
-                        />
-                        <div className="bg-green-100 rounded-2xl p-6 shadow-sm">
-                            <span className="text-3xl md:text-4xl font-bold text-green-700">5,000+</span>
-                            <p className="mt-2 text-gray-700">
-                                With over <span className="font-semibold">5,000 properties sold</span>, MJVI Realty
-                                continues to deliver trusted solutions to clients worldwide.
-                            </p>
+                    <div className="relative">
+                        <div className="absolute -inset-6 bg-white/10 rounded-[2rem] blur-2xl"/>
+                        <img src="/images/sample/hero-map.jpg" alt="Map preview" className="relative rounded-3xl ring-1 ring-white/40 shadow-2xl" />
+                    </div>
+                </div>
+            </Section>
+
+            {/* FEATURES */}
+            <Section id="features" className="py-16">
+                <div className="mx-auto max-w-7xl px-4">
+                    <div className="max-w-2xl">
+                        <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">Built for speed, trust, and clarity</h2>
+                        <p className="text-gray-600 mt-2">Everything you need to go from browsing to closing — without the noise.</p>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-6 mt-8">
+                        <Feature title="Verified Listings" desc="All properties are vetted; no ghost posts." icon={<span>✅</span>} />
+                        <Feature title="Smart Filters" desc="AI suggests areas, prices, and property types for you." icon={<span>🧠</span>} />
+                        <Feature title="Agent Connect" desc="Chat with certified local agents in a tap." icon={<span>💬</span>} />
+                        <Feature title="Live Map" desc="Explore neighborhoods with an interactive heat map." icon={<span>🗺️</span>} />
+                        <Feature title="Saved Search" desc="Get alerts when new matches appear in your feed." icon={<span>🔔</span>} />
+                        <Feature title="Secure Docs" desc="Handle offers digitally with e-signed paperwork." icon={<span>📄</span>} />
+                    </div>
+                </div>
+            </Section>
+
+            {/* EXPLORE */}
+            <Section id="explore" className="py-4 pb-16">
+                <div className="mx-auto max-w-7xl px-4">
+                    <div className="flex items-end justify-between">
+                        <div>
+                            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Hot picks near you</h2>
+                            <p className="text-gray-600">Curated, modern, and eco-friendly options.</p>
+                        </div>
+                        <Link href="/buyer/properties" className="text-emerald-700 hover:text-emerald-800 font-medium">View all →</Link>
+                    </div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+                        {properties.map((p) => <PropertyCard key={p.id} p={p} />)}
+                    </div>
+                </div>
+            </Section>
+
+            {/* HOW IT WORKS */}
+            <Section id="how" className="py-16 bg-white">
+                <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-3 gap-8 items-start">
+                    <div className="md:col-span-1">
+                        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">From browse to buy — in 3 steps</h2>
+                        <p className="text-gray-600 mt-2">We designed the flow to be ridiculously simple.</p>
+                    </div>
+                    <ol className="md:col-span-2 grid gap-4">
+                        {[
+                            { t: "Search & shortlist", d: "Use AI filters and the live map to save your favorites." },
+                            { t: "Chat & schedule", d: "Message agents, request virtual or on-site tours." },
+                            { t: "Offer & close", d: "Negotiate with confidence and sign securely online." },
+                        ].map((s, i) => (
+                            <li key={i} className="rounded-2xl p-5 ring-1 ring-gray-200 bg-white shadow-sm">
+                                <div className="flex items-start gap-4">
+                                    <div className="h-9 w-9 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold">{i+1}</div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900">{s.t}</h3>
+                                        <p className="text-sm text-gray-600 mt-1">{s.d}</p>
+                                    </div>
+                                </div>
+                            </li>
+                        ))}
+                    </ol>
+                </div>
+            </Section>
+
+            {/* CTA */}
+            <Section className="py-16">
+                <div className="mx-auto max-w-7xl px-4">
+                    <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-600 to-orange-500 p-1">
+                        <div className="rounded-[calc(theme(borderRadius.3xl)-4px)] bg-white px-6 py-10 md:px-10 grid md:grid-cols-2 gap-8 items-center">
+                            <div>
+                                <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900">Let’s find your place today</h3>
+                                <p className="text-gray-600 mt-2">Create a free account to save searches and get instant alerts.</p>
+                                <div className="mt-5 flex flex-wrap gap-3">
+                                    <Link href="/register" className="px-5 py-2.5 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 font-semibold">Get Started</Link>
+                                    <Link href="/buyer/properties" className="px-5 py-2.5 rounded-xl ring-1 ring-gray-200 hover:bg-gray-50 font-semibold text-gray-700">Browse first</Link>
+                                </div>
+                            </div>
+                            <form className="bg-gray-50 rounded-2xl p-4 ring-1 ring-gray-200">
+                                <label className="text-sm font-medium text-gray-700">Get alerts in your inbox</label>
+                                <div className="mt-2 grid grid-cols-3 gap-2">
+                                    <input className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Email address"/>
+                                    <button className="rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600">Subscribe</button>
+                                </div>
+                                <p className="mt-2 text-[11px] text-gray-500">No spam. Unsubscribe anytime.</p>
+                            </form>
                         </div>
                     </div>
                 </div>
-            </section>
+            </Section>
 
-            <WhyChooseUs />
-            <OurProcess />
-            <CTA/>
-            <OurBroker />
+            {/* FAQ */}
+            <Section id="faq" className="py-16 bg-white">
+                <div className="mx-auto max-w-5xl px-4">
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Frequently Asked Questions</h2>
+                    <div className="mt-6 grid md:grid-cols-2 gap-6">
+                        {[{
+                            q: "Are listings verified?",
+                            a: "Yes. Our team and partner agents verify authenticity and availability before publishing."
+                        },{
+                            q: "How do alerts work?",
+                            a: "Save a search and we’ll email you when new matches appear within your criteria."
+                        },{
+                            q: "Is there a fee to use the site?",
+                            a: "Browsing is free. Some premium features for agents/sellers may carry fees."
+                        },{
+                            q: "Do you cover the whole Philippines?",
+                            a: "We’re expanding fast—major cities and growth areas are covered with more added monthly."
+                        }].map((f,i)=> (
+                            <details key={i} className="p-5 rounded-2xl ring-1 ring-gray-200 bg-white shadow-sm">
+                                <summary className="font-semibold cursor-pointer list-none">
+                                    <span className="select-none">{f.q}</span>
+                                </summary>
+                                <p className="text-sm text-gray-600 mt-2">{f.a}</p>
+                            </details>
+                        ))}
+                    </div>
+                </div>
+            </Section>
 
-
-
-
-
-
-            <Footer />
-        </div>
+            {/* FOOTER */}
+            <footer className="border-t bg-white">
+                <div className="mx-auto max-w-7xl px-4 py-10 grid md:grid-cols-4 gap-8 text-sm">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-orange-500"></div>
+                            <span className="font-extrabold tracking-tight text-gray-900">Allegance<span className="text-emerald-600">Homes</span></span>
+                        </div>
+                        <p className="text-gray-600 mt-3">A modern, futuristic local property finder built for speed and trust.</p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-gray-900">Explore</h4>
+                        <ul className="mt-2 space-y-1 text-gray-600">
+                            <li><Link href="/buyer/properties" className="hover:text-gray-900">Listings</Link></li>
+                            <li><a href="#features" className="hover:text-gray-900">Features</a></li>
+                            <li><a href="#how" className="hover:text-gray-900">How it works</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-gray-900">Company</h4>
+                        <ul className="mt-2 space-y-1 text-gray-600">
+                            <li><Link href="/about" className="hover:text-gray-900">About</Link></li>
+                            <li><Link href="/contact" className="hover:text-gray-900">Contact</Link></li>
+                            <li><Link href="/privacy" className="hover:text-gray-900">Privacy</Link></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-gray-900">Get updates</h4>
+                        <form className="mt-2 grid grid-cols-3 gap-2">
+                            <input className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Email address"/>
+                            <button className="rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700">Join</button>
+                        </form>
+                    </div>
+                </div>
+                <div className="border-t py-4 text-center text-xs text-gray-500">© {new Date().getFullYear()} AlleganceHomes. All rights reserved.</div>
+            </footer>
+        </main>
     );
-};
-
-export default Welcome;
+}
