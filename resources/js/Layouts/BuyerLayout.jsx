@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
-import { AlignLeft, LogOut, X, Moon, Sun, Search } from "lucide-react";
+import { AlignLeft, LogOut, X, Moon, Sun, Search, Bell, Info } from "lucide-react";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useMediaQuery } from "react-responsive";
 import Dropdown from "@/Components/Dropdown";
@@ -166,12 +166,11 @@ export default function BuyerLayout({ children }) {
     /* -------- Sidebar state (DEFAULT OPEN) -------- */
     const isMobile = useMediaQuery({ query: "(max-width: 768px)" });
 
-    // Default to true; if nothing saved, it's open on first load.
     const [isOpen, setIsOpen] = useState(true);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     useEffect(() => {
-        const saved = safeLS.get("sidebar-isOpen", true); // default => true
+        const saved = safeLS.get("sidebar-isOpen", true);
         setIsOpen(!!saved);
     }, []);
     useEffect(() => {
@@ -236,7 +235,18 @@ export default function BuyerLayout({ children }) {
         } catch {}
     }, [auth?.user?.id]);
 
-    const headerShift = isMobile ? 0 : isOpen ? "18rem" : "5rem";
+    /* -------- Shared offset for header + content -------- */
+    const SIDEBAR_OPEN = 288;       // 18rem
+    const SIDEBAR_COLLAPSED = 80;   // 5rem
+
+
+    // NEW: uniform content padding (px)
+    const CONTENT_PAD = 24; //
+
+
+    const sidebarOffset = isMobile ? 0 : (isOpen ? SIDEBAR_OPEN : SIDEBAR_COLLAPSED);
+    const contentLeft = isMobile ? CONTENT_PAD : sidebarOffset + CONTENT_PAD;
+
     const headerTransition = prefersReducedMotion
         ? { duration: 0 }
         : { duration: 0.28, ease: "easeInOut" };
@@ -249,7 +259,7 @@ export default function BuyerLayout({ children }) {
             { label: "Toggle Theme", onClick: toggleTheme, keywords: "dark light mode appearance" },
             { label: "Go to Inquiries", href: "/inquiries", keywords: "contact agent leads" },
             { label: "Go to Transactions", href: "/buyer/transactions", keywords: "closed deals payments" },
-            { label: "Profile Settings", href: route("profile.edit"), keywords: "account user profile" },
+            { label: "Profile Settings", href: "/profile", keywords: "account user profile" },
             { label: "Search…", onClick: () => document.getElementById("search_all")?.focus(), kbd: "⌘/Ctrl + K", keywords: "find query" },
         ],
         []
@@ -340,9 +350,9 @@ export default function BuyerLayout({ children }) {
                 {/* Header */}
                 <motion.header
                     initial={false}
-                    animate={{ marginLeft: headerShift }}
+                    animate={{ paddingLeft: sidebarOffset }}
                     transition={headerTransition}
-                    className="fixed top-0 left-0 right-0 z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur border-b border-gray-100 dark:border-slate-800"
+                    className="fixed top-0 left-0 right-0 bg-white/85 dark:bg-slate-900/85 backdrop-blur border-b border-gray-100 dark:border-slate-800"
                 >
                     <div className="flex items-center justify-between px-4 md:px-6 lg:px-8 py-3">
                         <div className="flex items-center gap-2">
@@ -422,13 +432,7 @@ export default function BuyerLayout({ children }) {
                                 aria-label="Open notifications"
                                 aria-haspopup="dialog"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="w-6 h-6 text-gray-700 dark:text-slate-200">
-                                    <path
-                                        opacity="0.4"
-                                        d="M18.75 9v.704c0 .845.24 1.671.692 2.374l1.108 1.723c1.011 1.574.239 3.713-1.52 4.21a25.8 25.8 0 0 1-14.06 0c-1.759-.497-2.531-2.636-1.52-4.21l1.108-1.723a4.4 4.4 0 0 0 .693-2.374V9c0-3.866 3.022-7 6.749-7s6.75 3.134 6.75 7"
-                                    />
-                                    <path d="M12.75 6a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0zM7.243 18.545a5.002 5.002 0 0 0 9.513 0c-3.145.59-6.367.59-9.513 0" />
-                                </svg>
+                                <Bell className="w-6 h-6 text-gray-700 dark:text-slate-200" />
                                 <span
                                     className={`${
                                         unreadNotifications.length ? "flex" : "hidden"
@@ -478,7 +482,7 @@ export default function BuyerLayout({ children }) {
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
                                     <Dropdown.Link
-                                        href={route("profile.edit")}
+                                        href="/profile"
                                         className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-800"
                                     >
                                         Profile
@@ -499,10 +503,15 @@ export default function BuyerLayout({ children }) {
                 </motion.header>
 
                 {/* Content */}
-                <div className="pt-20 px-0 md:px-4 lg:px-8">
+                <motion.div
+                    initial={false}
+                    animate={{ paddingLeft: contentLeft, paddingRight: CONTENT_PAD }}
+                    transition={headerTransition}
+                    className="pt-20 pb-10"
+                >
                     <ToastHandler />
                     {children}
-                </div>
+                </motion.div>
             </main>
 
             {/* Command Palette */}
@@ -559,7 +568,7 @@ export default function BuyerLayout({ children }) {
                                         <div className="p-4">
                                             <div className="flex items-start gap-3">
                                                 <div className="shrink-0 p-2 bg-blue-100 rounded-full" aria-hidden="true">
-                                                    <i className="fas fa-info-circle text-blue-500"></i>
+                                                    <Info className="w-4 h-4 text-blue-500" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex justify-between gap-3">
@@ -604,7 +613,7 @@ export default function BuyerLayout({ children }) {
                                     <div className="p-4">
                                         <div className="flex items-start gap-3">
                                             <div className="shrink-0 p-2 bg-blue-100 rounded-full" aria-hidden="true">
-                                                <i className="fas fa-info-circle text-blue-500"></i>
+                                                <Info className="w-4 h-4 text-blue-500" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between gap-3">

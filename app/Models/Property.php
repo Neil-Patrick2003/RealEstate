@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Property extends Model
 {
+    protected $casts = [
+        'isPresell' => 'boolean',
+    ];
     protected $fillable = [
         'seller_id',
         'title',
@@ -25,6 +28,8 @@ class Property extends Model
         'image_url',
         'allow_multi_agents',
     ];
+
+
 
     public function images(){
         return $this->hasMany(PropertyImage::class);

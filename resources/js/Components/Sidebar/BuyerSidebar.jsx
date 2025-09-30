@@ -1,74 +1,111 @@
-import React, { useState } from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import {
+    ChevronDown,
+    Home,
+    Mail,
+    CalendarDays,
+    Star,
+    MessageSquare,
+    Handshake,
+    BarChart3,
+} from 'lucide-react';
 import logo from '../../../assets/framer_logo.png';
 import { Link, usePage } from '@inertiajs/react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faHouse,
-    faEnvelope,
-    faCalendar,
-    faChartSimple,
-    faStar,
-    faMessage,
-    faHandshakeAngle,
-} from '@fortawesome/free-solid-svg-icons';
+import { createPortal } from "react-dom";
 
+
+/* --------------------------------
+   small utils
+----------------------------------*/
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ');
 }
 
 /* Hover tooltip shown only when the sidebar is collapsed */
-const HoverTooltip = ({ show, label, children }) => (
-    <div className="relative group">
-        {children}
-        {show && (
-            <div
-                role="tooltip"
-                className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 z-[1000]
-                   whitespace-nowrap rounded-md bg-gray-900 text-white text-xs px-2 py-1 shadow-lg
-                   opacity-0 -translate-x-1 transition-all duration-150
-                   group-hover:opacity-100 group-hover:translate-x-0"
-            >
-                {label}
-            </div>
-        )}
-    </div>
-);
+const HoverTooltip = ({ show, label, children }) => {
+    const ref = useRef(null);
+    const [hovered, setHovered] = useState(false);
+    const [pos, setPos] = useState({ x: 0, y: 0 });
 
+    const place = useCallback(() => {
+        if (!ref.current) return;
+        const r = ref.current.getBoundingClientRect();
+        setPos({ x: r.right + 8, y: r.top + r.height / 2 });
+    }, []);
+
+    useEffect(() => {
+        if (!show || !hovered) return;
+        place();
+        const onScroll = () => place();
+        const onResize = () => place();
+        window.addEventListener("scroll", onScroll, true); // capture to catch inner scrollers
+        window.addEventListener("resize", onResize);
+        return () => {
+            window.removeEventListener("scroll", onScroll, true);
+            window.removeEventListener("resize", onResize);
+        };
+    }, [show, hovered, place]);
+
+    return (
+        <span
+            ref={ref}
+            className="relative inline-flex"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
+      {children}
+            {show && hovered &&
+                createPortal(
+                    <div
+                        role="tooltip"
+                        style={{ top: `${pos.y}px`, left: `${pos.x}px`, transform: "translateY(-50%)" }}
+                        className="fixed z-[2000] pointer-events-none whitespace-nowrap rounded-md bg-primary text-white text-xs px-4 py-2 shadow-lg"
+                    >
+                        {label}
+                    </div>,
+                    document.body
+                )}
+    </span>
+    );
+};
+
+/* --------------------------------
+   menu config (lucide icons)
+----------------------------------*/
 const menus = [
-    { name: 'Dashboard', Icon: faHouse, path: '/dashboard' },
-    { name: 'Messages', Icon: faMessage, path: '/chat' },
-    { name: 'Inquiries', Icon: faEnvelope, path: '/inquiries' },
-    { name: 'Tripping', Icon: faCalendar, path: '/trippings' },
-    { name: 'Favourites', Icon: faStar, path: '/favourites' },
-    { name: 'Deal', Icon: faHandshakeAngle, path: '/deals' },
-    { name: 'Transactions', Icon: faChartSimple, path: '/transactions' },
+    { name: 'Dashboard', Icon: Home, path: '/dashboard' },
+    { name: 'Messages', Icon: MessageSquare, path: '/chat' },
+    { name: 'Inquiries', Icon: Mail, path: '/inquiries' },
+    { name: 'Tripping', Icon: CalendarDays, path: '/trippings' },
+    { name: 'Favourites', Icon: Star, path: '/favourites' },
+    { name: 'Deal', Icon: Handshake, path: '/deals' },
+    { name: 'Transactions', Icon: BarChart3, path: '/transactions' },
 ];
 
-const Sidebar_animation = {
+const sidebarAnim = {
     open: { width: '18rem', transition: { duration: 0.3, ease: 'easeInOut' } },
     closed: { width: '5rem', transition: { duration: 0.3, ease: 'easeInOut' } },
 };
 
-const subMenuDrawer = {
+const subMenuAnim = {
     enter: { height: 'auto', opacity: 1, overflow: 'hidden', transition: { duration: 0.2 } },
     exit: { height: 0, opacity: 0, overflow: 'hidden', transition: { duration: 0.2 } },
 };
 
 const BuyerSidebar = ({ isOpen, setIsOpen }) => {
-    const [clicked, setClicked] = useState(null);
+    const [openedIndex, setOpenedIndex] = useState(null);
     const { url } = usePage(); // inertia exposes .url
 
     return (
         <div className="flex" role="navigation" aria-label="Buyer sidebar">
             <motion.div
-                className="bg-white border-r border-gray-100 h-screen z-[999] overflow-hidden md:relative fixed shadow-sm"
-                variants={Sidebar_animation}
+                className="bg-white border-r border-gray-100 h-screen z-[999]    md:fixed fixed shadow-sm"
+                variants={sidebarAnim}
                 animate={isOpen ? 'open' : 'closed'}
                 initial={false}
             >
-                {/* Logo */}
+                {/* Header / Logo */}
                 <div
                     className={classNames(
                         'flex items-center border-b border-gray-200 py-4',
@@ -89,8 +126,8 @@ const BuyerSidebar = ({ isOpen, setIsOpen }) => {
                 {/* Menu List */}
                 <ul className="px-3 pt-4 pb-8 space-y-1 text-sm font-medium overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 h-[calc(100vh-120px)]">
                     {menus.map(({ name, Icon, path, subMenu }, i) => {
-                        const isClicked = clicked === i;
                         const hasSubMenu = Array.isArray(subMenu) && subMenu.length > 0;
+                        const isSectionOpen = openedIndex === i;
                         const isActive =
                             (path && url.startsWith(path)) ||
                             (hasSubMenu && subMenu.some((item) => url.startsWith(item.path)));
@@ -98,6 +135,7 @@ const BuyerSidebar = ({ isOpen, setIsOpen }) => {
                         return (
                             <React.Fragment key={name}>
                                 <li className="relative">
+                                    {/* Simple link (no submenu) */}
                                     {path && !hasSubMenu ? (
                                         <HoverTooltip show={!isOpen} label={name}>
                                             <Link
@@ -112,14 +150,15 @@ const BuyerSidebar = ({ isOpen, setIsOpen }) => {
                                                 title={!isOpen ? name : undefined}
                                                 aria-current={isActive ? 'page' : undefined}
                                             >
-                                                <FontAwesomeIcon icon={Icon} className="w-5 h-5 shrink-0" />
+                                                <Icon className="shrink-0" size={20} aria-hidden="true" />
                                                 {isOpen && <span className="truncate">{name}</span>}
                                             </Link>
                                         </HoverTooltip>
                                     ) : (
+                                        // Button with submenu
                                         <HoverTooltip show={!isOpen} label={name}>
                                             <button
-                                                onClick={() => setClicked(isClicked ? null : i)}
+                                                onClick={() => setOpenedIndex(isSectionOpen ? null : i)}
                                                 className={classNames(
                                                     isActive
                                                         ? 'bg-green-100 text-green-700'
@@ -128,18 +167,19 @@ const BuyerSidebar = ({ isOpen, setIsOpen }) => {
                                                     'w-full flex items-center justify-between py-3 rounded-lg transition-all'
                                                 )}
                                                 title={!isOpen ? name : undefined}
-                                                aria-expanded={isOpen ? isClicked : false}
+                                                aria-expanded={isOpen ? isSectionOpen : false}
                                                 aria-controls={isOpen ? `submenu-${i}` : undefined}
                                                 type="button"
                                             >
                         <span className="flex items-center gap-3">
-                          <FontAwesomeIcon icon={Icon} className="w-5 h-5 shrink-0" />
+                          <Icon className="shrink-0" size={20} aria-hidden="true" />
                             {isOpen && <span className="truncate">{name}</span>}
                         </span>
                                                 {isOpen && hasSubMenu && (
                                                     <ChevronDown
-                                                        className={`transition-transform ${isClicked ? 'rotate-180' : ''}`}
+                                                        className={`transition-transform ${isSectionOpen ? 'rotate-180' : ''}`}
                                                         size={18}
+                                                        aria-hidden="true"
                                                     />
                                                 )}
                                             </button>
@@ -147,13 +187,13 @@ const BuyerSidebar = ({ isOpen, setIsOpen }) => {
                                     )}
                                 </li>
 
-                                {/* Submenu: render only when sidebar is open */}
+                                {/* Submenu (only when sidebar is open) */}
                                 {hasSubMenu && isOpen && (
                                     <motion.ul
                                         id={`submenu-${i}`}
-                                        variants={subMenuDrawer}
+                                        variants={subMenuAnim}
                                         initial="exit"
-                                        animate={isClicked ? 'enter' : 'exit'}
+                                        animate={isSectionOpen ? 'enter' : 'exit'}
                                         className="ml-9 pl-3 pr-1 border-l border-gray-200 text-sm text-gray-500 space-y-1"
                                     >
                                         {subMenu.map(({ name: subName, Icon: SubIcon, path: subPath }) => {
@@ -170,7 +210,7 @@ const BuyerSidebar = ({ isOpen, setIsOpen }) => {
                                                         )}
                                                         aria-current={subActive ? 'page' : undefined}
                                                     >
-                                                        {SubIcon && <FontAwesomeIcon icon={SubIcon} className="w-4 h-4 shrink-0" />}
+                                                        {SubIcon && <SubIcon className="shrink-0" size={16} aria-hidden="true" />}
                                                         <span className="truncate">{subName}</span>
                                                     </Link>
                                                 </li>
