@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { Link, Head } from "@inertiajs/react";
+import React, {useCallback, useEffect, useState} from "react";
+import {Link, Head, router} from "@inertiajs/react";
 import framer_logo from "../../assets/framer_logo.png";
-import map from "../../assets/map.png";
+import backgroundImage from "../../assets/background.jpg";
+import Hero from "@/Pages/LandingPage/Hero.jsx";
+import {debounce} from "lodash";
 
 // Primary: green, Secondary: orange
 // Uses Tailwind utility classes; swap to your project's theme tokens if you already have .text-primary/.bg-secondary.
@@ -27,37 +29,68 @@ const Feature = ({ title, desc, icon }) => (
     </div>
 );
 
-const PropertyCard = ({ p }) => (
+const PropertyCard = ({ p, peso }) => (
     <div className="rounded-2xl overflow-hidden ring-1 ring-gray-200 bg-white shadow-sm hover:shadow-md transition hover:-translate-y-0.5">
         <div className="relative">
-            <img src={p.image} alt={p.title} className="h-52 w-full object-cover" />
+            <img src={`/storage/${p.image_url}`} alt={p.title} className="h-52 w-full object-cover" />
             <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-emerald-700 ring-1 ring-emerald-200">{p.badge}</span>
         </div>
         <div className="p-4">
             <h4 className="font-semibold text-gray-900 line-clamp-1">{p.title}</h4>
             <p className="text-sm text-gray-500 line-clamp-1">{p.location}</p>
             <div className="mt-3 flex items-center justify-between">
-                <div className="text-emerald-600 font-bold">₱{p.price.toLocaleString()}</div>
-                <div className="text-xs text-gray-500">{p.size} m² • {p.beds} bd</div>
+                <div className="text-emerald-600 font-bold">{peso(p?.price)}</div>
+                <div className="text-xs text-gray-500">{p?.lot_area ?? p?.floor_area} m² • {p?.bedrooms} bd</div>
             </div>
         </div>
     </div>
 );
 
-export default function LandingPage() {
+export default function LandingPage({auth, properties, search = '', initialType = 'All', featured}) {
     const [q, setQ] = useState({ where: "", type: "Any", min: "", max: "" });
-    const properties = [
-        { id: 1, title: "Modern Eco Home", location: "Tagaytay, Cavite", price: 5200000, size: 180, beds: 3, badge: "Featured", image: "/images/sample/prop1.jpg" },
-        { id: 2, title: "Smart Condo Loft", location: "BGC, Taguig", price: 7800000, size: 65, beds: 2, badge: "Near MRT", image: "/images/sample/prop2.jpg" },
-        { id: 3, title: "Suburban Haven", location: "Santa Rosa, Laguna", price: 3900000, size: 150, beds: 3, badge: "Hot", image: "/images/sample/prop3.jpg" },
-        { id: 4, title: "Beachside Lot", location: "Nasugbu, Batangas", price: 2500000, size: 220, beds: 0, badge: "Lot", image: "/images/sample/prop4.jpg" },
-    ];
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        // Replace with your Inertia route when backend is ready
-        // router.get(route('properties.index'), q)
-        alert(`Searching: ${q.where || 'Anywhere'} • ${q.type} • ₱${q.min || '0'} - ₱${q.max || 'Any'}`);
+    const [searchTerm, setSearchTerm] = useState(search || '');
+    const [selectedType, setSelectedType] = useState(initialType);
+
+    useEffect(() => {
+        if (search) setSearchTerm(search);
+    }, [search]);
+
+    const peso = (v, fractionDigits = 0) => {
+        const n = typeof v === "string" ? Number(v.replace(/,/g, "")) : Number(v);
+        if (!Number.isFinite(n)) return "₱0";
+        return "₱" + n.toLocaleString("en-PH", {
+            minimumFractionDigits: fractionDigits,
+            maximumFractionDigits: fractionDigits,
+        });
+    };
+
+    const fetchProperties = (searchValue = searchTerm, typeValue = selectedType) => {
+        router.get(
+            '/',
+            { search: searchValue, type: typeValue },
+            { preserveState: true, replace: true }
+        );
+    };
+
+    const debouncedSearch = useCallback(
+        debounce((value) => fetchProperties(value, selectedType), 500),
+        [selectedType]
+    );
+
+    useEffect(() => {
+        return () => debouncedSearch.cancel();
+    }, [debouncedSearch]);
+
+    const handleSearchTermChange = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+        debouncedSearch(value);
+    };
+
+    const handleTypeChange = (type) => {
+        setSelectedType(type);
+        fetchProperties(searchTerm, type);
     };
 
     return (
@@ -86,65 +119,79 @@ export default function LandingPage() {
             </header>
 
             {/* HERO */}
-            <Section id="hero" className="bg-gradient-to-br from-emerald-600 via-primary to-orange-500 text-white">
-                <div className="mx-auto max-w-7xl px-4 py-16 lg:py-24 grid lg:grid-cols-2 gap-10 items-center">
-                    <div>
-                        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/30 px-3 py-1 text-xs mb-4">
-                            <span className="h-2 w-2 rounded-full bg-orange-300"></span>
-                            Modern • Futuristic • Local Listings
-                        </div>
-                        <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight">
-                            Find local lots & homes
-                            <span className="block text-white/90">faster with <span className="text-white">AI-guided search</span>.</span>
-                        </h1>
-                        <p className="mt-4 text-white/90 max-w-xl">A sleek, modern property finder for the Philippines. Real-time listings, verified agents, and a lightning-fast search experience.</p>
+            {/*<Section id="hero" className="bg-gradient-to-br from-emerald-600 via-primary to-orange-500 text-white">*/}
+            {/*    <div className="mx-auto max-w-7xl px-4 py-16 lg:py-24 grid lg:grid-cols-2 gap-10 items-center">*/}
+            {/*        <div>*/}
+            {/*            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/30 px-3 py-1 text-xs mb-4">*/}
+            {/*                <span className="h-2 w-2 rounded-full bg-orange-300"></span>*/}
+            {/*                Modern • Futuristic • Local Listings*/}
+            {/*            </div>*/}
+            {/*            <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight">*/}
+            {/*                Find local lots & homes*/}
+            {/*                <span className="block text-white/90">faster with <span className="text-white">AI-guided search</span>.</span>*/}
+            {/*            </h1>*/}
+            {/*            <p className="mt-4 text-white/90 max-w-xl">A sleek, modern property finder for the Philippines. Real-time listings, verified agents, and a lightning-fast search experience.</p>*/}
 
-                        {/* Search card */}
-                        <form onSubmit={handleSearch} className="mt-8 rounded-2xl bg-white/95 backdrop-blur ring-1 ring-emerald-100 shadow-xl p-4">
-                            <div className="grid md:grid-cols-4 gap-3">
-                                <input
-                                    className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2"
-                                    placeholder="Where to? (city, barangay)"
-                                    value={q.where}
-                                    onChange={(e)=>setQ({ ...q, where: e.target.value })}
-                                />
-                                <select
-                                    className="rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2"
-                                    value={q.type}
-                                    onChange={(e)=>setQ({ ...q, type: e.target.value })}
-                                >
-                                    <option>Any</option>
-                                    <option>Lot</option>
-                                    <option>House & Lot</option>
-                                    <option>Condo</option>
-                                </select>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2" placeholder="Min ₱" inputMode="numeric" value={q.min} onChange={(e)=>setQ({ ...q, min: e.target.value })}/>
-                                    <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2" placeholder="Max ₱" inputMode="numeric" value={q.max} onChange={(e)=>setQ({ ...q, max: e.target.value })}/>
-                                </div>
-                            </div>
-                            <div className="mt-3 flex flex-wrap items-center gap-3">
-                                <button type="submit" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700">
-                                    🔎 Search
-                                </button>
-                                <span className="text-xs text-gray-600">Tip: Try “Nasugbu”, “BGC”, or “Santa Rosa”.</span>
-                            </div>
-                        </form>
+            {/*            /!* Search card *!/*/}
+            {/*            <form onSubmit={handleSearch} className="mt-8 rounded-2xl bg-white/95 backdrop-blur ring-1 ring-emerald-100 shadow-xl p-4">*/}
+            {/*                <div className="grid md:grid-cols-4 gap-3">*/}
+            {/*                    <input*/}
+            {/*                        className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2"*/}
+            {/*                        placeholder="Where to? (city, barangay)"*/}
+            {/*                        value={q.where}*/}
+            {/*                        onChange={(e)=>setQ({ ...q, where: e.target.value })}*/}
+            {/*                    />*/}
+            {/*                    <select*/}
+            {/*                        className="rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2"*/}
+            {/*                        value={q.type}*/}
+            {/*                        onChange={(e)=>setQ({ ...q, type: e.target.value })}*/}
+            {/*                    >*/}
+            {/*                        <option>Any</option>*/}
+            {/*                        <option>Lot</option>*/}
+            {/*                        <option>House & Lot</option>*/}
+            {/*                        <option>Condo</option>*/}
+            {/*                    </select>*/}
+            {/*                    <div className="grid grid-cols-2 gap-2">*/}
+            {/*                        <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2" placeholder="Min ₱" inputMode="numeric" value={q.min} onChange={(e)=>setQ({ ...q, min: e.target.value })}/>*/}
+            {/*                        <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2" placeholder="Max ₱" inputMode="numeric" value={q.max} onChange={(e)=>setQ({ ...q, max: e.target.value })}/>*/}
+            {/*                    </div>*/}
+            {/*                </div>*/}
+            {/*                <div className="mt-3 flex flex-wrap items-center gap-3">*/}
+            {/*                    <button type="submit" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700">*/}
+            {/*                        🔎 Search*/}
+            {/*                    </button>*/}
+            {/*                    <span className="text-xs text-gray-600">Tip: Try “Nasugbu”, “BGC”, or “Santa Rosa”.</span>*/}
+            {/*                </div>*/}
+            {/*            </form>*/}
 
-                        {/* Trust row */}
-                        <div className="mt-6 grid grid-cols-3 gap-3 max-w-lg">
-                            <Stat label="Active listings" value="12,400+" />
-                            <Stat label="Verified agents" value="1,100+" />
-                            <Stat label="Cities covered" value="120+" />
-                        </div>
-                    </div>
+            {/*            /!* Trust row *!/*/}
+            {/*            <div className="mt-6 grid grid-cols-3 gap-3 max-w-lg">*/}
+            {/*                <Stat label="Active listings" value="12,400+" />*/}
+            {/*                <Stat label="Verified agents" value="1,100+" />*/}
+            {/*                <Stat label="Cities covered" value="120+" />*/}
+            {/*            </div>*/}
+            {/*        </div>*/}
 
-                    <div className="relative">
-                        <div className="absolute -inset-6 bg-white/10 rounded-[2rem] blur-2xl"/>
-                        <img src={map} alt="Map preview" className="relative rounded-3xl ring-1 ring-white/40 shadow-2xl" />
-                    </div>
+            {/*        <div className="relative">*/}
+            {/*            <div className="absolute -inset-6 bg-white/10 rounded-[2rem] blur-2xl"/>*/}
+            {/*            <img src={map} alt="Map preview" className="relative rounded-3xl ring-1 ring-white/40 shadow-2xl" />*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*</Section>*/}
+            <div
+                className="relative h-[100vh] bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: `url(${backgroundImage})` }}
+            >
+                <div className="relative z-10">
+                    <Hero
+                        searchTerm={searchTerm}
+                        handleSearchTermChange={handleSearchTermChange}
+                        selectedType={selectedType}
+                        handleTypeChange={handleTypeChange}
+                        setSelectedType={setSelectedType}
+                    />
                 </div>
-            </Section>
+            </div>
 
             {/* FEATURES */}
             <Section id="features" className="py-16">
@@ -179,7 +226,7 @@ export default function LandingPage() {
                         <Link href="/all-properties" className="text-emerald-700 hover:text-emerald-800 font-medium">View all →</Link>
                     </div>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-                        {properties.map((p) => <PropertyCard key={p.id} p={p} />)}
+                        {properties.map((p) => <PropertyCard key={p.id} p={p} peso={peso}/>)}
                     </div>
                 </div>
             </Section>
@@ -272,7 +319,7 @@ export default function LandingPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-secondary"></div>
-                            <span className="font-extrabold tracking-tight text-gray-900">Allegance<span className="text-emerald-600">Homes</span></span>
+                            <span className="font-extrabold tracking-tight text-gray-900">MJVI<span className="text-emerald-600">Realty</span></span>
                         </div>
                         <p className="text-gray-600 mt-3">A modern, futuristic local property finder built for speed and trust.</p>
                     </div>

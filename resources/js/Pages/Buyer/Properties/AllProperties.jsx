@@ -60,8 +60,6 @@ export default function AllProperties({ property_listing }) {
     return (
         <div>
             <ToastHandler />
-            <NavBar/>
-
             {/* Inquiry Modal */}
             <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
                 <div className="p-6 bg-white rounded-xl shadow-lg relative">
@@ -123,7 +121,7 @@ export default function AllProperties({ property_listing }) {
 
             <NavBar />
 
-            <div className="mt-[60px] relative h-[calc(100vh-60px)]">
+            <div className=" relative h-[calc(100vh-60px)]">
                 {/* Map */}
                 <div className="relative w-screen z-0 h-full">
                     <MapView property_listing={property_listing} onMarkerClick={handleMarkerClick} />
