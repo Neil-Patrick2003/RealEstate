@@ -1,47 +1,66 @@
-import React, { useState } from "react";
-import { Link, router } from '@inertiajs/react';
+import React, { useEffect, useState, useCallback } from "react";
+import { Link, router } from "@inertiajs/react";
 import MapView from "@/Pages/Buyer/Properties/MapView.jsx";
 import NavBar from "@/Components/NavBar.jsx";
-import Drawer from "@/Components/Drawer.jsx";
 import Modal from "@/Components/Modal.jsx";
 import ToastHandler from "@/Components/ToastHandler.jsx";
 
 export default function AllProperties({ property_listing }) {
-    const [open, setOpen] = useState(false);
+    const [showCard, setShowCard] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState(null);
+
     const [isOpenModal, setIsOpenModal] = useState(false);
-    const [message, setMessage] = useState('');
+    const [message, setMessage] = useState("");
     const [successSent, setSuccessSent] = useState(false);
 
-    const handleMarkerClick = (property) => {
+    const handleMarkerClick = useCallback((property) => {
         setSelectedProperty(property);
-        setOpen(true);
+        setShowCard(true);
         setSuccessSent(false);
-    };
+    }, []);
 
-    const handleDrawerClose = () => {
-        setOpen(false);
+    const handleCloseCard = () => {
+        setShowCard(false);
         setIsOpenModal(false);
         setSelectedProperty(null);
-        setMessage('');
+        setMessage("");
     };
 
     const handleSubmitInquiry = () => {
-        if (!message.trim()) return;
+        if (!message.trim() || !selectedProperty?.property?.id) return;
 
         router.post(`/properties/${selectedProperty.property.id}`, { message }, {
             preserveScroll: true,
             onSuccess: () => {
-                setMessage('');
+                setMessage("");
                 setIsOpenModal(false);
                 setSuccessSent(true);
-            }
+            },
         });
     };
+
+    // Close on ESC
+    useEffect(() => {
+        const onKey = (e) => {
+            if (e.key === "Escape") handleCloseCard();
+        };
+        if (showCard) window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [showCard]);
+
+    const p = selectedProperty?.property ?? {};
+    const a = selectedProperty?.agent ?? {};
+    const images = Array.isArray(p?.images) ? p.images : [];
+    const price = Number(p?.price || 0).toLocaleString("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        maximumFractionDigits: 0,
+    });
 
     return (
         <div>
             <ToastHandler />
+            <NavBar/>
 
             {/* Inquiry Modal */}
             <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
@@ -55,19 +74,20 @@ export default function AllProperties({ property_listing }) {
                     </button>
 
                     <div className="flex items-center gap-4 mb-6">
-                        {selectedProperty?.agent?.photo_url ? (
+                        {a?.photo_url ? (
                             <img
-                                src={`/storage/${selectedProperty.agent.photo_url}`}
-                                alt={selectedProperty.agent.name}
+                                src={`/storage/${a.photo_url}`}
+                                alt={a?.name || "Agent"}
                                 className="w-12 h-12 rounded-full object-cover shadow"
+                                onError={(e)=> (e.currentTarget.src="/images/placeholder.jpg")}
                             />
                         ) : (
                             <div className="w-12 h-12 rounded-full bg-lightaccent flex items-center justify-center text-primary font-bold text-xl">
-                                {selectedProperty?.agent?.name?.charAt(0).toUpperCase()}
+                                {(a?.name || "A").charAt(0).toUpperCase()}
                             </div>
                         )}
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-800">{selectedProperty?.agent?.name}</h3>
+                            <h3 className="text-lg font-semibold text-gray-800">{a?.name || "Agent"}</h3>
                             <p className="text-sm text-gray-500">Licensed Property Agent</p>
                         </div>
                     </div>
@@ -102,88 +122,141 @@ export default function AllProperties({ property_listing }) {
             </Modal>
 
             <NavBar />
+
             <div className="mt-[60px] relative h-[calc(100vh-60px)]">
-                <div className="relative w-screen z-0">
+                {/* Map */}
+                <div className="relative w-screen z-0 h-full">
                     <MapView property_listing={property_listing} onMarkerClick={handleMarkerClick} />
                 </div>
 
-                {selectedProperty && (
-                    <Drawer open={open} setOpen={handleDrawerClose} title={selectedProperty?.property.title}>
-                        <div className="flex flex-col space-y-6 p-4">
-                            {/* Top image & header */}
-                            <div>
-                                <img
-                                    src={`/storage/${selectedProperty.property.image_url}`}
-                                    alt={selectedProperty.property.title}
-                                    className="w-full h-[200px] object-cover rounded-md"
-                                />
-                                <div className="p-4">
-                                    <p className="text-green-600 font-extrabold text-2xl">
-                                        ₱{parseFloat(selectedProperty.property.price).toLocaleString()}
-                                    </p>
-                                    <p className="text-gray-500 text-sm">{selectedProperty.property.address}</p>
-                                </div>
-                            </div>
+                {/* Floating popup card */}
+                {showCard && selectedProperty && (
+                    <>
+                        {/* Click-away area (does not dim map; click to close) */}
+                        <div
+                            className="fixed inset-0 z-10"
+                            onClick={handleCloseCard}
+                            aria-hidden="true"
+                        />
 
-                            {/* Agent Info */}
-                            <div className="flex items-center gap-4">
-                                {selectedProperty.agent?.photo_url ? (
+                        <div
+                            className="
+                fixed z-20
+                left-1/2 -translate-x-1/2 bottom-4
+                w-[calc(100%-1.5rem)] sm:w-[560px]
+              "
+                            onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+                        >
+                            <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-200 overflow-hidden">
+                                {/* Image */}
+                                <div className="relative">
                                     <img
-                                        src={`/storage/${selectedProperty.agent.photo_url}`}
-                                        alt={selectedProperty.agent.name}
-                                        className="w-12 h-12 rounded-full object-cover shadow"
+                                        src={p?.image_url ? `/storage/${p.image_url}` : "/images/placeholder.jpg"}
+                                        alt={p?.title || "Property"}
+                                        className="w-full h-[200px] object-cover"
+                                        onError={(e)=> (e.currentTarget.src="/images/placeholder.jpg")}
                                     />
-                                ) : (
-                                    <div className="w-12 h-12 rounded-full bg-lightaccent flex items-center justify-center text-primary font-bold text-xl">
-                                        {selectedProperty.agent?.name?.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
-                                <div className="flex justify-between items-center w-full">
-                                    <div>
-                                        <p className="font-semibold text-gray-800">{selectedProperty.agent.name}</p>
-                                        <p className="text-gray-500 text-sm">{selectedProperty.agent.email}</p>
-                                        {selectedProperty.agent?.contact_number && (
-                                            <p className="text-gray-500 text-sm">{selectedProperty.agent.contact_number}</p>
-                                        )}
-                                    </div>
                                     <button
-                                        onClick={() => setIsOpenModal(true)}
-                                        className="bg-secondary px-4 py-2 rounded-md text-white hover:bg-secondary/90"
+                                        onClick={handleCloseCard}
+                                        className="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full w-8 h-8 flex items-center justify-center text-gray-700 shadow"
+                                        aria-label="Close"
                                     >
-                                        Send Inquiry
+                                        ✕
                                     </button>
                                 </div>
-                            </div>
 
-                            {/* Description */}
-                            <div
-                                className="prose max-w-none text-text"
-                                dangerouslySetInnerHTML={{ __html: selectedProperty.property.description }}
-                            />
+                                {/* Content */}
+                                <div className="p-4 space-y-4">
+                                    <div>
+                                        <p className="text-green-600 font-extrabold text-2xl leading-tight">{price}</p>
+                                        <h2 className="text-base font-semibold text-gray-900">{p?.title || "Property"}</h2>
+                                        <p className="text-gray-500 text-sm">{p?.address || "—"}</p>
+                                    </div>
 
-                            {/* Additional Images */}
-                            {selectedProperty.property.images.length > 0 && (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {selectedProperty.property.images.map((image) => (
-                                        <img
-                                            key={image.id}
-                                            src={`/storage/${image.image_url}`}
-                                            alt={selectedProperty.property.title}
-                                            className="w-full h-28 object-cover rounded-xl shadow-sm"
+                                    {/* Agent */}
+                                    <div className="flex items-center gap-4">
+                                        {a?.photo_url ? (
+                                            <img
+                                                src={`/storage/${a.photo_url}`}
+                                                alt={a?.name || "Agent"}
+                                                className="w-12 h-12 rounded-full object-cover shadow"
+                                                onError={(e)=> (e.currentTarget.src="/images/placeholder.jpg")}
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full bg-lightaccent flex items-center justify-center text-primary font-bold text-xl">
+                                                {(a?.name || "A").charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-between items-center w-full">
+                                            <div className="min-w-0">
+                                                <p className="font-semibold text-gray-800 truncate">{a?.name || "Agent"}</p>
+                                                {a?.email && <p className="text-gray-500 text-sm truncate">{a.email}</p>}
+                                                {a?.contact_number && (
+                                                    <p className="text-gray-500 text-sm truncate">{a.contact_number}</p>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                {a?.contact_number && (
+                                                    <a
+                                                        href={`tel:${a.contact_number}`}
+                                                        className="px-3 py-2 rounded-md border text-sm bg-white hover:bg-gray-50"
+                                                    >
+                                                        Call
+                                                    </a>
+                                                )}
+                                                {a?.email && (
+                                                    <a
+                                                        href={`mailto:${a.email}?subject=${encodeURIComponent(`Inquiry: ${p?.title || "Property"}`)}`}
+                                                        className="px-3 py-2 rounded-md border text-sm bg-white hover:bg-gray-50"
+                                                    >
+                                                        Email
+                                                    </a>
+                                                )}
+                                                <button
+                                                    onClick={() => setIsOpenModal(true)}
+                                                    className="bg-secondary px-3 py-2 rounded-md text-white text-sm hover:bg-secondary/90"
+                                                >
+                                                    Send Inquiry
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Description (clamped) */}
+                                    {p?.description && (
+                                        <div
+                                            className="prose max-w-none text-text line-clamp-5"
+                                            dangerouslySetInnerHTML={{ __html: p.description }}
                                         />
-                                    ))}
+                                    )}
+
+                                    {/* Thumbs (horizontal scroll if many) */}
+                                    {images.length > 0 && (
+                                        <div className="flex gap-2 overflow-x-auto pb-1">
+                                            {images.map((img) => (
+                                                <img
+                                                    key={img.id}
+                                                    src={`/storage/${img.image_url}`}
+                                                    alt={p?.title || "Property"}
+                                                    className="w-28 h-20 rounded-lg object-cover ring-1 ring-gray-200 flex-shrink-0"
+                                                    onError={(e)=> (e.currentTarget.src="/images/placeholder.jpg")}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <Link
+                                        href={`/maps/property/${p?.id}`}
+                                        className="text-white w-full block py-2 text-center rounded-md bg-primary font-medium hover:bg-accent transition"
+                                    >
+                                        View Full Details
+                                    </Link>
                                 </div>
-                            )}
-
-                            <Link
-                                href={`/maps/property/${selectedProperty.property.id}`}
-                                className="text-white w-full block py-2 text-center rounded-md bg-primary font-medium hover:bg-accent transition"
-                            >
-                                View Full Details
-                            </Link>
+                            </div>
                         </div>
-                    </Drawer>
-
+                    </>
                 )}
             </div>
         </div>

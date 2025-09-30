@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Link, Head } from "@inertiajs/react";
+import framer_logo from "../../assets/framer_logo.png";
+import map from "../../assets/map.png";
 
 // Primary: green, Secondary: orange
 // Uses Tailwind utility classes; swap to your project's theme tokens if you already have .text-primary/.bg-secondary.
@@ -66,8 +68,8 @@ export default function LandingPage() {
             <header className="sticky top-0 z-40 supports-[backdrop-filter]:bg-white/70 bg-white shadow/[0_1px_0_#e5e7eb] backdrop-blur">
                 <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-orange-500"></div>
-                        <span className="font-extrabold tracking-tight text-gray-900">Allegance<span className="text-emerald-600">Homes</span></span>
+                        <img src={framer_logo} alt="logo" className="w-8 h-8 -ml-1.5 drop-shadow-md" />
+                        <span className="font-extrabold tracking-tight text-gray-900">MJVI<span className="text-emerald-600">Realty</span></span>
                     </Link>
                     <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600">
                         <a href="#features" className="hover:text-gray-900">Features</a>
@@ -84,7 +86,7 @@ export default function LandingPage() {
             </header>
 
             {/* HERO */}
-            <Section id="hero" className="bg-gradient-to-br from-emerald-600 via-emerald-500 to-orange-500 text-white">
+            <Section id="hero" className="bg-gradient-to-br from-emerald-600 via-primary to-orange-500 text-white">
                 <div className="mx-auto max-w-7xl px-4 py-16 lg:py-24 grid lg:grid-cols-2 gap-10 items-center">
                     <div>
                         <div className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/30 px-3 py-1 text-xs mb-4">
@@ -101,13 +103,13 @@ export default function LandingPage() {
                         <form onSubmit={handleSearch} className="mt-8 rounded-2xl bg-white/95 backdrop-blur ring-1 ring-emerald-100 shadow-xl p-4">
                             <div className="grid md:grid-cols-4 gap-3">
                                 <input
-                                    className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2"
+                                    className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2"
                                     placeholder="Where to? (city, barangay)"
                                     value={q.where}
                                     onChange={(e)=>setQ({ ...q, where: e.target.value })}
                                 />
                                 <select
-                                    className="rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2"
+                                    className="rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2"
                                     value={q.type}
                                     onChange={(e)=>setQ({ ...q, type: e.target.value })}
                                 >
@@ -117,8 +119,8 @@ export default function LandingPage() {
                                     <option>Condo</option>
                                 </select>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Min ₱" inputMode="numeric" value={q.min} onChange={(e)=>setQ({ ...q, min: e.target.value })}/>
-                                    <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Max ₱" inputMode="numeric" value={q.max} onChange={(e)=>setQ({ ...q, max: e.target.value })}/>
+                                    <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2" placeholder="Min ₱" inputMode="numeric" value={q.min} onChange={(e)=>setQ({ ...q, min: e.target.value })}/>
+                                    <input className="rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2" placeholder="Max ₱" inputMode="numeric" value={q.max} onChange={(e)=>setQ({ ...q, max: e.target.value })}/>
                                 </div>
                             </div>
                             <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -139,7 +141,7 @@ export default function LandingPage() {
 
                     <div className="relative">
                         <div className="absolute -inset-6 bg-white/10 rounded-[2rem] blur-2xl"/>
-                        <img src="/images/sample/hero-map.jpg" alt="Map preview" className="relative rounded-3xl ring-1 ring-white/40 shadow-2xl" />
+                        <img src={map} alt="Map preview" className="relative rounded-3xl ring-1 ring-white/40 shadow-2xl" />
                     </div>
                 </div>
             </Section>
@@ -153,9 +155,13 @@ export default function LandingPage() {
                     </div>
                     <div className="grid md:grid-cols-3 gap-6 mt-8">
                         <Feature title="Verified Listings" desc="All properties are vetted; no ghost posts." icon={<span>✅</span>} />
-                        <Feature title="Smart Filters" desc="AI suggests areas, prices, and property types for you." icon={<span>🧠</span>} />
+                        <Feature
+                            title="Advance Filters"
+                            desc="Suggests areas, prices, and property types for you."
+                            icon={<span>🔎</span>}
+                        />
                         <Feature title="Agent Connect" desc="Chat with certified local agents in a tap." icon={<span>💬</span>} />
-                        <Feature title="Live Map" desc="Explore neighborhoods with an interactive heat map." icon={<span>🗺️</span>} />
+                        <Feature title="Interactive Map" desc="Explore property with an draw bounderies." icon={<span>🗺️</span>} />
                         <Feature title="Saved Search" desc="Get alerts when new matches appear in your feed." icon={<span>🔔</span>} />
                         <Feature title="Secure Docs" desc="Handle offers digitally with e-signed paperwork." icon={<span>📄</span>} />
                     </div>
@@ -170,7 +176,7 @@ export default function LandingPage() {
                             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Hot picks near you</h2>
                             <p className="text-gray-600">Curated, modern, and eco-friendly options.</p>
                         </div>
-                        <Link href="/buyer/properties" className="text-emerald-700 hover:text-emerald-800 font-medium">View all →</Link>
+                        <Link href="/all-properties" className="text-emerald-700 hover:text-emerald-800 font-medium">View all →</Link>
                     </div>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                         {properties.map((p) => <PropertyCard key={p.id} p={p} />)}
@@ -193,7 +199,7 @@ export default function LandingPage() {
                         ].map((s, i) => (
                             <li key={i} className="rounded-2xl p-5 ring-1 ring-gray-200 bg-white shadow-sm">
                                 <div className="flex items-start gap-4">
-                                    <div className="h-9 w-9 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold">{i+1}</div>
+                                    <div className="h-9 w-9 flex items-center justify-center rounded-full bg-secondary text-white font-bold">{i+1}</div>
                                     <div>
                                         <h3 className="font-semibold text-gray-900">{s.t}</h3>
                                         <p className="text-sm text-gray-600 mt-1">{s.d}</p>
@@ -208,7 +214,7 @@ export default function LandingPage() {
             {/* CTA */}
             <Section className="py-16">
                 <div className="mx-auto max-w-7xl px-4">
-                    <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-600 to-orange-500 p-1">
+                    <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-600 to-secondary p-1">
                         <div className="rounded-[calc(theme(borderRadius.3xl)-4px)] bg-white px-6 py-10 md:px-10 grid md:grid-cols-2 gap-8 items-center">
                             <div>
                                 <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900">Let’s find your place today</h3>
@@ -221,8 +227,8 @@ export default function LandingPage() {
                             <form className="bg-gray-50 rounded-2xl p-4 ring-1 ring-gray-200">
                                 <label className="text-sm font-medium text-gray-700">Get alerts in your inbox</label>
                                 <div className="mt-2 grid grid-cols-3 gap-2">
-                                    <input className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Email address"/>
-                                    <button className="rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600">Subscribe</button>
+                                    <input className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2" placeholder="Email address"/>
+                                    <button className="rounded-xl bg-secondary text-white font-semibold hover:bg-orange-600">Subscribe</button>
                                 </div>
                                 <p className="mt-2 text-[11px] text-gray-500">No spam. Unsubscribe anytime.</p>
                             </form>
@@ -265,7 +271,7 @@ export default function LandingPage() {
                 <div className="mx-auto max-w-7xl px-4 py-10 grid md:grid-cols-4 gap-8 text-sm">
                     <div>
                         <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-orange-500"></div>
+                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-secondary"></div>
                             <span className="font-extrabold tracking-tight text-gray-900">Allegance<span className="text-emerald-600">Homes</span></span>
                         </div>
                         <p className="text-gray-600 mt-3">A modern, futuristic local property finder built for speed and trust.</p>
@@ -289,7 +295,7 @@ export default function LandingPage() {
                     <div>
                         <h4 className="font-semibold text-gray-900">Get updates</h4>
                         <form className="mt-2 grid grid-cols-3 gap-2">
-                            <input className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Email address"/>
+                            <input className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-primary px-3 py-2" placeholder="Email address"/>
                             <button className="rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700">Join</button>
                         </form>
                     </div>

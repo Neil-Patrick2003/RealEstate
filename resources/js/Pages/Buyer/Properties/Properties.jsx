@@ -269,7 +269,8 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
     ]);
 
     return (
-        <div className="bg-[#FAFAFB] min-h-screen pt-[60px]">
+        <div className="bg-[#FAFAFB] min-h-screen">
+            <NavBar/>
 
             {/* Toast */}
             {toast && (
