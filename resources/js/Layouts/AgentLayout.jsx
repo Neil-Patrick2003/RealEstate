@@ -1,142 +1,255 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlignLeft, LogOut, X } from 'lucide-react';
-import { router, usePage } from '@inertiajs/react';
-import { useMediaQuery } from 'react-responsive';
-import Dropdown from '@/Components/Dropdown';
-import Breadcrumb from '@/Components/Breadcrumbs';
-import FlashMessage from '@/Components/FlashMessage.jsx';
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlignLeft, LogOut, X, Bell, Info, Ban, CheckCircle2 } from "lucide-react";
+import { Link, router, usePage } from "@inertiajs/react";
+import { useMediaQuery } from "react-responsive";
+import Dropdown from "@/Components/Dropdown";
+import Breadcrumb from "@/Components/Breadcrumbs";
+import FlashMessage from "@/Components/FlashMessage.jsx";
 import Drawer from "@/Components/Drawer.jsx";
 import AgentSidebar from "@/Components/Sidebar/AgentSidebar.jsx";
-import { Link } from '@inertiajs/react';
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBan, faCircleCheck, faInfo} from "@fortawesome/free-solid-svg-icons";
 
+/* ================================
+   Helpers (normalize + icon map)
+=================================== */
+function normalizeNotif(n) {
+    return {
+        id: n?.id,
+        title: n?.data?.title ?? n?.title ?? "Notification",
+        message: n?.data?.message ?? n?.message ?? "",
+        link: n?.data?.link ?? n?.link ?? "",
+        created_at: n?.data?.created_at ?? n?.created_at ?? "",
+        read_at: n?.read_at ?? null,
+    };
+}
+
+function iconFor(title) {
+    const t = (title || "").toLowerCase();
+    if (t.includes("rejected")) return { Icon: Ban, bg: "bg-red-100", fg: "text-red-600" };
+    if (t.includes("assigned") || t.includes("close a deal"))
+        return { Icon: CheckCircle2, bg: "bg-green-100", fg: "text-green-600" };
+    // property posted, inquiry, tripping request, offer, deal counter, etc.
+    return { Icon: Info, bg: "bg-blue-100", fg: "text-blue-600" };
+}
+
+/* Render one notification item */
+function NotificationItem({ raw, onClickView, onMarkRead, clickable = true }) {
+    const n = normalizeNotif(raw);
+    const { Icon, bg, fg } = iconFor(n.title);
+
+    return (
+        <li
+            key={n.id}
+            className={`rounded-md transition group ${
+                n.read_at === null ? "bg-gray-100 hover:bg-gray-200" : "bg-white hover:bg-gray-50"
+            }`}
+        >
+            <div className="p-4">
+                <div className="flex items-start gap-3">
+                    <div className={`shrink-0 p-2 rounded-full ${bg}`}>
+                        <Icon className={`${fg} w-4 h-4`} aria-hidden="true" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                        <div className="flex justify-between gap-3">
+                            <p className="text-sm font-medium text-gray-900 truncate">{n.title}</p>
+                            <span className="text-xs text-gray-500 shrink-0">{n.created_at}</span>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mt-1">{n.message}</p>
+
+                        <div className="mt-2 flex justify-end gap-3">
+                            {n.link && (
+                                <Link
+                                    href={n.link}
+                                    className="text-blue-600 hover:underline text-sm"
+                                    onClick={(e) => {
+                                        // Allow parent to handle side-effects if needed
+                                        onClickView?.(n);
+                                    }}
+                                >
+                                    View
+                                </Link>
+                            )}
+                            {onMarkRead && (
+                                <button
+                                    type="button"
+                                    onClick={() => onMarkRead(n.id)}
+                                    className="text-gray-500 hover:text-gray-700 text-sm"
+                                >
+                                    Mark as read
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {n.read_at === null && (
+                        <span className="ml-2 text-[10px] font-semibold text-white bg-rose-500 px-1.5 py-0.5 rounded">
+              New
+            </span>
+                    )}
+                </div>
+            </div>
+        </li>
+    );
+}
+
+/* ================================
+   Layout
+=================================== */
 export default function AgentLayout({ children }) {
     const { auth } = usePage().props;
 
-    const [notifications, setNotifications] = useState(auth?.notifications?.all ?? []);
-    const [unreadNotifications, setUnreadNotifications] = useState(auth?.notifications?.unread ?? []);
-    const [openDrawer, setOpenDrawer] = useState(false);
+    // SSR-safe localStorage read
     const [isOpen, setIsOpen] = useState(() => {
-        const saved = localStorage.getItem('sidebar-isOpen');
-        return saved ? JSON.parse(saved) : false;
+        if (typeof window === "undefined") return false;
+        try {
+            const saved = window.localStorage.getItem("sidebar-isOpen");
+            return saved ? JSON.parse(saved) : false;
+        } catch {
+            return false;
+        }
     });
 
-    const [isMobileOpen, setIsMobileOpen] = useState(false);
-    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
-
     useEffect(() => {
-        localStorage.setItem('sidebar-isOpen', JSON.stringify(isOpen));
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.setItem("sidebar-isOpen", JSON.stringify(isOpen));
+            } catch {}
+        }
     }, [isOpen]);
+
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const isMobile = useMediaQuery({ query: "(max-width: 768px)" });
 
     useEffect(() => {
         if (!isMobile) setIsMobileOpen(false);
     }, [isMobile]);
 
     useEffect(() => {
-        document.body.style.overflow = isMobileOpen ? 'hidden' : '';
+        if (typeof document !== "undefined") {
+            document.body.style.overflow = isMobileOpen ? "hidden" : "";
+        }
     }, [isMobileOpen]);
 
-    const markAsRead = (id) => {
-        router.post(`/notifications/${id}/read`, {}, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setUnreadNotifications(prev =>
-                    prev.filter(notif => notif.id !== id)
-                );
-                setNotifications(prev =>
-                    prev.map(notif =>
-                        notif.id === id ? { ...notif, read_at: new Date().toISOString() } : notif
-                    )
-                );
-            },
-            onError: (error) => {
-                console.error('Error marking notification as read:', error);
+    /* Notifications */
+    const [notifications, setNotifications] = useState(auth?.notifications?.all ?? []);
+    const [unreadNotifications, setUnreadNotifications] = useState(auth?.notifications?.unread ?? []);
+    const [openDrawer, setOpenDrawer] = useState(false);
+
+    const markAsRead = useCallback((id) => {
+        if (!id) return;
+        router.post(
+            `/notifications/${id}/read`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setUnreadNotifications((prev) => prev.filter((n) => n.id !== id));
+                    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
+                },
+                onError: (err) => console.error("Error marking notification as read:", err),
             }
-        });
-    };
+        );
+    }, []);
 
+    const markAllAsRead = useCallback(() => {
+        // Simple forEach; for large volumes consider a bulk endpoint
+        unreadNotifications.forEach((n) => markAsRead(n.id));
+    }, [unreadNotifications, markAsRead]);
 
-    const markAllAsRead = () => {
-        unreadNotifications.forEach(notif => markAsRead(notif.id));
-    };
-
+    // Echo guard for client-only environments
     useEffect(() => {
-        Echo.private(`App.Models.User.${auth.user.id}`)
-            .notification((notification) => {
-                console.log('Real-time NOTIFICATION: ', notification);
-                setNotifications(prev => [notification, ...prev]);
-                setUnreadNotifications(prev => [notification, ...prev]);
+        const userId = auth?.user?.id;
+        if (!userId || typeof window === "undefined" || typeof window.Echo === "undefined") return;
+
+        const channel = `App.Models.User.${userId}`;
+        try {
+            window.Echo.private(channel).notification((notification) => {
+                // Prepend new notification
+                setNotifications((prev) => [notification, ...prev]);
+                setUnreadNotifications((prev) => [notification, ...prev]);
             });
+        } catch {}
 
         return () => {
-            Echo.leave(`App.Models.User.${auth.user.id}`);
+            try {
+                window.Echo.leave(channel);
+            } catch {}
         };
-    }, [auth.user.id]);
+    }, [auth?.user?.id]);
+
+    /* Derived lists */
+    const listUnread = unreadNotifications;
+    const listAll = notifications;
 
     return (
-        <div className="h-screen flex overflow-hidden relative">
+        <div className="h-screen flex overflow-hidden relative bg-white">
+            {/* Sidebar (Desktop) */}
             {!isMobile && (
                 <div className="hidden md:block">
                     <AgentSidebar isOpen={isOpen} setIsOpen={setIsOpen} />
                 </div>
             )}
 
+            {/* Sidebar (Mobile Drawer) */}
             <AnimatePresence>
                 {isMobileOpen && (
                     <>
                         <motion.div
-                            initial={{ x: '-100%' }}
+                            initial={{ x: "-100%" }}
                             animate={{ x: 0 }}
-                            exit={{ x: '-100%' }}
-                            transition={{ duration: 0.4 }}
-                            className="fixed top-0 left-0 z-50 w-64 h-full bg-white shadow-2xl border-r rounded-tr-2xl rounded-br-2xl"
+                            exit={{ x: "-100%" }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="fixed top-0 left-0 z-[900] w-64 h-full bg-white shadow-2xl border-r rounded-tr-2xl rounded-br-2xl"
                             role="dialog"
+                            aria-label="Mobile navigation"
                         >
                             <AgentSidebar isOpen={true} setIsOpen={setIsMobileOpen} />
                             <button
                                 onClick={() => setIsMobileOpen(false)}
                                 className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-800"
                                 aria-label="Close sidebar"
+                                type="button"
                             >
-                                <X size={24} />
+                                <X size={20} />
                             </button>
                         </motion.div>
-                        <motion.div
-                            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+
+                        <motion.button
+                            type="button"
+                            className="fixed inset-0 z-[800] bg-black/30 backdrop-blur-sm"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.4 }}
+                            transition={{ duration: 0.2 }}
                             onClick={() => setIsMobileOpen(false)}
+                            aria-label="Close sidebar overlay"
                         />
                     </>
                 )}
             </AnimatePresence>
 
+            {/* Main */}
             <main className="flex-1 h-full overflow-auto pt-14">
+                {/* Header */}
                 <motion.header
                     initial={false}
-                    animate={{
-                        marginLeft: isMobile ? 0 : isOpen ? '18rem' : '5rem',
-                    }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="fixed top-0 left-0 right-0 flex justify-between items-center bg-white px-6 py-3 z-50"
+                    animate={{ marginLeft: isMobile ? 0 : isOpen ? "18rem" : "5rem" }}
+                    transition={{ duration: 0.28, ease: "easeInOut" }}
+                    className="fixed top-0 left-0 right-0 flex justify-between items-center bg-white/90 backdrop-blur border-b border-gray-100 px-6 py-3 z-[500]"
                 >
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => {
-                                if (isMobile) {
-                                    setIsMobileOpen(true); // open drawer sidebar on mobile
-                                } else {
-                                    setIsOpen(!isOpen); // toggle desktop sidebar
-                                }
+                                if (isMobile) setIsMobileOpen(true);
+                                else setIsOpen((s) => !s);
                             }}
-                            className="p-2 rounded-lg border-0 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition"
+                            className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition"
                             aria-label="Toggle sidebar"
+                            type="button"
                         >
-                            <AlignLeft size={20} className="text-gray-500" />
+                            <AlignLeft size={20} className="text-gray-600" />
                         </button>
 
                         <input
@@ -150,10 +263,16 @@ export default function AgentLayout({ children }) {
 
                     <div className="flex items-center gap-2">
                         <div className="hidden sm:flex items-center gap-3">
+                            {/* Language */}
                             <Dropdown>
                                 <Dropdown.Trigger>
-                                    <div className="hover:bg-gray-100 p-2 rounded-full transition" role="button">
-                                        <img loading="lazy" alt="GB" className="w-6 h-6" src="https://purecatamphetamine.github.io/country-flag-icons/3x2/GB.svg" />
+                                    <div className="hover:bg-gray-100 p-2 rounded-full transition" role="button" aria-label="Change language">
+                                        <img
+                                            loading="lazy"
+                                            alt="English"
+                                            className="w-6 h-6"
+                                            src="https://purecatamphetamine.github.io/country-flag-icons/3x2/GB.svg"
+                                        />
                                     </div>
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
@@ -163,34 +282,65 @@ export default function AgentLayout({ children }) {
                                     </ul>
                                 </Dropdown.Content>
                             </Dropdown>
-                            <div className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition cursor-pointer" role="button" aria-label="Notifications">
-                                <button onClick={() => setOpenDrawer(true)} className="relative w-10 h-10 rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="w-6 h-6 text-gray-600">
-                                        <path opacity="0.4" d="M18.75 9v.704c0 .845.24 1.671.692 2.374l1.108 1.723c1.011 1.574.239 3.713-1.52 4.21a25.8 25.8 0 0 1-14.06 0c-1.759-.497-2.531-2.636-1.52-4.21l1.108-1.723a4.4 4.4 0 0 0 .693-2.374V9c0-3.866 3.022-7 6.749-7s6.75 3.134 6.75 7" />
-                                        <path d="M12.75 6a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0zM7.243 18.545a5.002 5.002 0 0 0 9.513 0c-3.145.59-6.367.59-9.513 0" />
-                                    </svg>
-                                    {unreadNotifications.length > 0 && (
-                                        <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                                            {unreadNotifications.length}
-                                        </span>
-                                    )}
-                                </button>
-                            </div>
+
+                            {/* Notifications Button */}
+                            <button
+                                type="button"
+                                onClick={() => setOpenDrawer(true)}
+                                className="relative w-10 h-10 rounded-full hover:bg-gray-100 transition flex items-center justify-center"
+                                aria-label="Open notifications"
+                            >
+                                <Bell className="w-6 h-6 text-gray-700" />
+                                {listUnread.length > 0 && (
+                                    <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                    {listUnread.length}
+                  </span>
+                                )}
+                            </button>
                         </div>
 
+                        {/* Profile */}
                         <Dropdown>
                             <Dropdown.Trigger>
-                                <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition" role="button">
-                                    <img src="https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png" alt="Profile" className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-200" />
-                                    <span className="hidden sm:inline text-sm font-medium text-gray-700">{auth?.user?.name || 'Guest'}</span>
-                                    <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                                <div
+                                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition"
+                                    role="button"
+                                    aria-label="Open profile menu"
+                                >
+                                    <img
+                                        src={
+                                            auth?.user?.avatar_url ||
+                                            "https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
+                                        }
+                                        alt="Profile"
+                                        className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-200"
+                                        onError={(e) => {
+                                            e.currentTarget.src =
+                                                "https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png";
+                                        }}
+                                    />
+                                    <span className="hidden sm:inline text-sm font-medium text-gray-700">
+                    {auth?.user?.name || "Account"}
+                  </span>
+                                    <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                        <path
+                                            fillRule="evenodd"
+                                            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
+                                            clipRule="evenodd"
+                                        />
                                     </svg>
                                 </div>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="48">
-                                <Dropdown.Link href={route('profile.edit')} className="px-4 py-2 hover:bg-gray-100">Profile</Dropdown.Link>
-                                <Dropdown.Link href={route('logout')} method="post" as="button" className="flex items-center justify-between px-4 py-2 hover:bg-gray-100">
+                                <Dropdown.Link href={route("profile.edit")} className="px-4 py-2 hover:bg-gray-100">
+                                    Profile
+                                </Dropdown.Link>
+                                <Dropdown.Link
+                                    href={route("logout")}
+                                    method="post"
+                                    as="button"
+                                    className="flex items-center justify-between px-4 py-2 hover:bg-gray-100"
+                                >
                                     <span>Log Out</span>
                                     <LogOut size={18} className="text-gray-500" />
                                 </Dropdown.Link>
@@ -199,6 +349,7 @@ export default function AgentLayout({ children }) {
                     </div>
                 </motion.header>
 
+                {/* Content */}
                 <div className="pt-0 pb-4 md:pt-14 sm:p-6 lg:p-8">
                     <FlashMessage />
                     <Breadcrumb />
@@ -206,284 +357,54 @@ export default function AgentLayout({ children }) {
                 </div>
             </main>
 
+            {/* Notifications Drawer */}
             <Drawer title="Notifications" setOpen={setOpenDrawer} open={openDrawer}>
-                <div className="py-4  border space-y-6 max-h-[75vh] overflow-y-auto">
+                <div className="py-4 space-y-6 max-h-[75vh] overflow-y-auto">
                     <div className="flex items-center justify-between">
-                        <button onClick={markAllAsRead} className="text-sm text-blue-600 hover:underline">Mark all as read</button>
+                        <button onClick={markAllAsRead} className="text-sm text-blue-600 hover:underline" type="button">
+                            Mark all as read
+                        </button>
                     </div>
 
-                    {unreadNotifications.length > 0 && (
-                        <div>
+                    {/* Unread */}
+                    {listUnread.length > 0 && (
+                        <section>
                             <h3 className="text-md font-semibold mb-2 text-gray-800">Unread</h3>
                             <ul className="space-y-2">
-                                {unreadNotifications.map((notif) => (
-                                    <li key={notif.id}
-                                        // onClick={() => markAsRead(notif.id)}
-                                        className="rounded-md cursor-pointer bg-gray-100 hover:bg-gray-200 transition">
-
-                                        <div
-                                            className="notification-item p-4 hover:bg-gray-50 transition-colors duration-200">
-                                            <div className="flex items-start">
-                                                {notif?.data?.title ===  'New Property Posted' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'New Property Posted' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-                                                {notif?.data?.title ===  'Offer a Deal' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'New Property Posted' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-                                                {notif?.data?.title ===  'New Tripping Request' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'ew Tripping Request' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'New Inquiry' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'New Inquiry' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'Inquiry Rejected' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-red-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faBan} className='text-red-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'Inquiry Rejected' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-red-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faBan} className='text-red-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'New Property Assigned to You' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'New Property Assigned to You' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'Deal Counter' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'Deal Counter' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'Close A Deal' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'Close A Deal' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                <div className="ml-3 flex-1">
-                                                    <div className="flex justify-between">
-                                                        <p className="text-sm font-medium text-gray-900">{notif?.data?.title || notif?.title }</p>
-                                                        <span className="text-xs text-gray-500">{ notif?.data?.created_at || notif?.created_at }</span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-500 mt-1">{notif?.data?.message || notif?.message} </p>
-                                                    <div className='flex justify-end'>
-                                                        <div className="mr-2">
-                                                            {notif?.link && (
-                                                                <Link href={notif?.link} className="text-blue-500 hover:underline text-sm ">View</Link>
-                                                            )}
-
-                                                            {notif?.data?.link && (
-                                                                <Link href={notif?.data?.link} className="text-blue-500 hover:underline text-sm">View</Link>
-                                                            )}
-                                                        </div>
-                                                        <button
-                                                            onClick={() => markAsRead(notif.id)}
-                                                            className="text-gray-400 hover:text-gray-600 text-sm ">
-                                                            Mark as read
-                                                        </button>
-                                                    </div>
-
-
-                                                </div>
-                                                <button className="text-gray-400 hover:text-gray-600">
-                                                    <i className="fas fa-times"></i>
-                                                </button>
-                                                <span className="ml-4 text-xs text-accent">New</span>
-                                            </div>
-                                        </div>
-                                    </li>
+                                {listUnread.map((raw) => (
+                                    <NotificationItem
+                                        key={raw.id}
+                                        raw={raw}
+                                        onClickView={(n) => {
+                                            if (!raw.read_at) markAsRead(n.id);
+                                        }}
+                                        onMarkRead={markAsRead}
+                                    />
                                 ))}
                             </ul>
-                        </div>
+                        </section>
                     )}
 
-                    <div>
+                    {/* All */}
+                    <section>
                         <h3 className="text-md font-semibold mb-2 text-gray-800">All Notifications</h3>
-                        {notifications.length === 0 ? (
+                        {listAll.length === 0 ? (
                             <p className="text-gray-500 text-sm">You have no notifications.</p>
                         ) : (
-                            <ul className="border space-y-2">
-
-                                {notifications.map((notif) => (
-
-                                    <li key={notif.id}
-                                        className={`rounded-md cursor-pointer transition group ${notif.read_at === null ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-50'}`}>
-
-                                        <div
-                                            className="notification-item p-4 hover:bg-gray-50 transition-colors duration-200">
-                                            <div className="flex items-start">
-                                                {notif?.data?.title ===  'New Property Posted' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'New Property Posted' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-                                                {notif?.data?.title ===  'Offer a Deal' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'New Property Posted' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-                                                {notif?.data?.title ===  'New Tripping Request' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'ew Tripping Request' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'New Inquiry' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'New Inquiry' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'Inquiry Rejected' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-red-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faBan} className='text-red-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'Inquiry Rejected' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-red-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faBan} className='text-red-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'New Property Assigned to You' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'New Property Assigned to You' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'Deal Counter' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'Deal Counter' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-blue-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faInfo} className='text-blue-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-
-                                                {notif?.data?.title ===  'Close A Deal' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
-                                                    </div>
-                                                }
-                                                {notif?.title ===  'Close A Deal' &&
-                                                    <div className="shrink-0 py-1 px-2 bg-green-100 rounded-full">
-                                                        <FontAwesomeIcon icon={faCircleCheck} className='text-green-500 h-4 w-4' />
-                                                    </div>
-                                                }
-
-                                                <div className="ml-3 flex-1">
-                                                    <div className="flex justify-between">
-                                                        <p className="text-sm font-medium text-gray-900">{notif?.data?.title}</p>
-                                                        <span className="text-xs text-gray-500">{notif.created_at}</span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-500 mt-1">{notif?.data?.message}</p>
-                                                    <div className="mt-2">
-                                                        {notif?.data?.link && (
-                                                            <Link href={notif?.data?.link} className="text-blue-500 hover:underline">View</Link>
-                                                        ) }
-                                                    </div>
-                                                </div>
-                                                <button className="text-gray-400 hover:text-gray-600">
-                                                    <i className="fas fa-times"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                    </li>
+                            <ul className="space-y-2">
+                                {listAll.map((raw) => (
+                                    <NotificationItem
+                                        key={raw.id}
+                                        raw={raw}
+                                        onClickView={(n) => {
+                                            if (!raw.read_at) markAsRead(n.id);
+                                        }}
+                                        onMarkRead={raw.read_at ? undefined : markAsRead}
+                                    />
                                 ))}
                             </ul>
                         )}
-                    </div>
+                    </section>
                 </div>
             </Drawer>
         </div>

@@ -1,326 +1,408 @@
+// resources/js/Pages/Agents/MyListings.jsx
+import React, { useMemo, useState, useEffect } from "react";
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
-import dayjs from "dayjs";
-import React, { useEffect, useState, useRef } from "react";
 import { Link, router } from "@inertiajs/react";
-import AgentPropertyListingFilterTab from "@/Components/tabs/AgentPropertyListingFIlterTab.jsx";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import { debounce } from "lodash";
+import dayjs from "dayjs";
+import {
+    MapPin,
+    Share2,
+    Eye,
+    Users,
+    BadgeCheck,
+    CheckCircle2,
+    Clock3,
+    Home,
+    Building2,
+    Ruler,
+    Tag,
+    Filter,
+    Search,
+} from "lucide-react";
 
-export default function Properties({
-                                       properties,
-                                       propertiesCount,
-                                       forPublishCount,
-                                       publishedCount,
-                                       soldCount,
-                                       itemsPerPage = 10,
-                                       status = 'All',
-                                       page = 1,
-                                       search = ''
-                                   }) {
-    const statusStyles = {
-        accepted: 'bg-green-100 text-green-700 ring-green-200',
-        rejected: 'bg-red-100 text-red-700 ring-red-200',
-        pending: 'bg-yellow-100 text-yellow-700 ring-yellow-200',
-        cancelled: 'bg-gray-100 text-gray-700 ring-gray-200',
-        default: 'bg-orange-100 text-orange-700 ring-orange-200'
+const cn = (...c) => c.filter(Boolean).join(" ");
+const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 });
+
+/** Normalize listing row to avoid 0/1 vs boolean, mixed types, etc. */
+function normalizeListing(row = {}) {
+    const property = row.property || {};
+    return {
+        ...row,
+        status: row.status || "Published",
+        created_at: row.created_at,
+        property: {
+            ...property,
+            title: property.title || "Property",
+            address: property.address || "",
+            image_url: property.image_url || null,
+            price: Number(property.price ?? 0),
+            property_type: (property.property_type || "").toLowerCase(), // "house" | "condo" | "land" | etc
+            lot_area: property.lot_area,
+            floor_area: property.floor_area,
+            isPresell: typeof property.isPresell === "boolean" ? property.isPresell : !!Number(property.isPresell),
+        },
+        seller: row.seller || null,
+        agents: Array.isArray(row.agents) ? row.agents : [],
     };
+}
 
-    const [selectedStatus, setSelectedStatus] = useState(status);
-    const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
-    const [selectedProperty, setSelectedProperty] = useState('');
+function TypeBadge({ type }) {
+    const t = (type || "").toLowerCase();
+    const map = {
+        house: { icon: Home, cls: "bg-blue-50 text-blue-700 border-blue-200" },
+        condo: { icon: Building2, cls: "bg-violet-50 text-violet-700 border-violet-200" },
+        land:  { icon: Ruler, cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+        default:{ icon: Tag, cls: "bg-gray-50 text-gray-700 border-gray-200" },
+    };
+    const Item = map[t] || map.default;
+    const Icon = Item.icon;
+    return (
+        <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-md border", Item.cls)}>
+      <Icon className="w-3.5 h-3.5" />
+            {type || "Property"}
+    </span>
+    );
+}
 
-    // Filters state
-    const [searchTerm, setSearchTerm] = useState(search || '');
-    const [propertyType, setPropertyType] = useState('');
-    const [subType, setSubType] = useState('');
-    const [location, setLocation] = useState('');
+function StatusBadge({ status }) {
+    const s = (status || "").toLowerCase();
+    if (s === "assigned") {
+        return (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-sky-600 text-white px-2 py-1 rounded-md">
+        <BadgeCheck className="w-3.5 h-3.5" /> Assigned
+      </span>
+        );
+    }
+    if (s === "sold") {
+        return (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-600 text-white px-2 py-1 rounded-md">
+        <CheckCircle2 className="w-3.5 h-3.5" /> Sold
+      </span>
+        );
+    }
+    return (
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-gray-700 text-white px-2 py-1 rounded-md">
+      <Clock3 className="w-3.5 h-3.5" /> Published
+    </span>
+    );
+}
 
-    const imageUrl = '/storage/';
+function SellerChip({ seller }) {
+    if (!seller) return null;
+    const initials = (seller.name || "?").slice(0, 1).toUpperCase();
+    return (
+        <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full border bg-white">
+            {seller.photo_url ? (
+                <img
+                    src={`/storage/${seller.photo_url}`}
+                    alt={seller.name}
+                    className="w-6 h-6 rounded-full object-cover border"
+                    onError={(e)=>{e.currentTarget.src="/placeholder.png";}}
+                />
+            ) : (
+                <div className="w-6 h-6 rounded-full bg-gray-900 text-white text-xs flex items-center justify-center">
+                    {initials}
+                </div>
+            )}
+            <span className="text-xs text-gray-700">{seller.name}</span>
+        </div>
+    );
+}
 
-    // Update searchTerm if prop changes
-    useEffect(() => {
-        if (search) setSearchTerm(search);
-    }, [search]);
+// Small avatar stack for assigned agents
+function AgentsStack({ agents = [] }) {
+    if (!Array.isArray(agents) || agents.length === 0) return null;
 
-    // Debounced filter function to call router.get once filters stop changing
-    const debouncedFilter = useRef(
-        debounce((params) => {
-            router.get('/agents/my-listings', params, {
-                preserveState: true,
-                replace: true,
+    return (
+        <div className="flex -space-x-2">
+            {agents.slice(0, 3).map((a, i) => {
+                const key = a?.id ?? i;
+                const initials = (a?.name || "?").slice(0, 1).toUpperCase();
+
+                // Prefer photo_url, then avatar_url; fall back to initials
+                const src = a?.photo_url
+                    ? `/storage/${a.photo_url}`
+                    : a?.avatar_url
+                        ? `/storage/${a.avatar_url}`
+                        : null;
+
+                return src ? (
+                    <img
+                        key={key}
+                        src={src}
+                        alt={a?.name ? `${a.name} (Agent)` : "Agent"}
+                        title={a?.name || "Agent"}
+                        className="w-7 h-7 rounded-full border object-cover bg-white"
+                        onError={(e) => { e.currentTarget.src = "/placeholder.png"; }}
+                    />
+                ) : (
+                    <div
+                        key={key}
+                        className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs flex items-center justify-center border"
+                        title={a?.name || "Agent"}
+                        aria-label={a?.name || "Agent"}
+                    >
+                        {initials}
+                    </div>
+                );
+            })}
+
+            {agents.length > 3 && (
+                <div className="w-7 h-7 rounded-full bg-gray-100 border flex items-center justify-center text-[11px] text-gray-600">
+                    +{agents.length - 3}
+                </div>
+            )}
+        </div>
+    );
+}
+
+
+function Card({ listing, onView, onShare }) {
+    const p = listing.property;
+    const img = p.image_url ? `/storage/${p.image_url}` : "/placeholder.png";
+    const area = p.property_type === "land" ? p.lot_area : p.floor_area;
+
+    return (
+        <article className="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
+            {/* image */}
+            <div className="relative">
+                <img
+                    src={img}
+                    alt={p.title}
+                    className="w-full aspect-[16/10] object-cover bg-gray-100"
+                    onError={(e)=>{e.currentTarget.src="/placeholder.png";}}
+                    loading="lazy"
+                />
+
+                <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <TypeBadge type={p.property_type} />
+                    <StatusBadge status={listing.status} />
+                </div>
+                <div className="absolute top-3 right-3">
+                    {p.isPresell ? (
+                        <span className="text-[11px] font-semibold bg-orange-500 text-white px-2 py-1 rounded-md">Preselling</span>
+                    ) : (
+                        <span className="text-[11px] font-semibold bg-emerald-600 text-white px-2 py-1 rounded-md">Available</span>
+                    )}
+                </div>
+            </div>
+
+            {/* body */}
+            <div className="p-4 flex flex-col gap-3 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-[15px] font-semibold text-gray-900 leading-tight line-clamp-2">{p.title}</h3>
+                    <div className="text-right shrink-0">
+                        <div className="text-xs text-gray-500">Created</div>
+                        <div className="text-xs font-medium text-gray-700">{dayjs(listing.created_at).format("MMM D, YYYY")}</div>
+                    </div>
+                </div>
+
+                <div className="flex items-start gap-2 text-sm text-gray-600">
+                    <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
+                    <span className="line-clamp-2" title={p.address}>{p.address || "—"}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <p className="text-xl font-bold text-emerald-600">{currency.format(p.price)}</p>
+                    <div className="text-xs text-gray-700">
+                        {area ? `${area} sqm` : "—"}
+                    </div>
+                </div>
+
+                {/* footer: seller + agents */}
+                <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center gap-2">
+                        <SellerChip seller={listing.seller} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-gray-500" />
+                        <AgentsStack agents={listing.agents} />
+                    </div>
+                </div>
+
+                {/* bottom actions for keyboard / mobile */}
+                <div className="mt-auto pt-1 flex items-center gap-2">
+                    <button
+                        onClick={onView}
+                        className="flex-1 text-center py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-black"
+                    >
+                        View Details
+                    </button>
+                    <button
+                        onClick={onShare}
+                        className="px-3 py-2 rounded-md text-sm border hover:bg-gray-50"
+                        title="Share"
+                    >
+                        <Share2 className="h-4 w-4" />
+                    </button>
+                </div>
+            </div>
+        </article>
+    );
+}
+
+export default function MyListings({ listings }) {
+
+    // listings is your paginator payload from controller
+    const normalized = useMemo(() => (listings?.data || []).map(normalizeListing), [listings?.data]);
+
+    // filters/sort/search (client-side for now)
+    const [status, setStatus] = useState("all"); // all | assigned | published | sold
+    const [q, setQ] = useState("");
+    const [sort, setSort] = useState("newest"); // newest | price_asc | price_desc
+
+    const filtered = useMemo(() => {
+        let arr = [...normalized];
+        if (status !== "all") {
+            arr = arr.filter((r) => (r.status || "").toLowerCase() === status);
+        }
+        const query = q.trim().toLowerCase();
+        if (query) {
+            arr = arr.filter((r) => {
+                const p = r.property || {};
+                const hay = `${p.title || ""} ${p.address || ""} ${r.status || ""}`.toLowerCase();
+                return hay.includes(query);
             });
-        }, 500)
-    ).current;
+        }
+        // sort
+        arr.sort((a, b) => {
+            if (sort === "price_asc") return (a.property.price ?? Infinity) - (b.property.price ?? Infinity);
+            if (sort === "price_desc") return (b.property.price ?? -Infinity) - (a.property.price ?? -Infinity);
+            // newest by created_at
+            const A = new Date(a.created_at || 0).valueOf();
+            const B = new Date(b.created_at || 0).valueOf();
+            return B - A;
+        });
+        return arr;
+    }, [normalized, status, q, sort]);
 
-    // Helper to trigger filter with current states merged with any updates
-    const handleFiltersChange = (newFilters = {}) => {
-        const params = {
-            page: 1,
-            items_per_page: selectedItemsPerPage,
-            status: selectedStatus,
-            search: searchTerm,
-            property_type: propertyType,
-            sub_type: subType,
-            location,
-            ...newFilters,
-        };
-        debouncedFilter(params);
-    };
+    // share helper
+    async function shareListing(listing) {
+        const url = `${window.location.origin}/agents/properties/${listing.property.id}`;
+        const title = listing.property.title || "Property";
+        try {
+            if (navigator?.share) {
+                await navigator.share({ title, text: listing.property.address || "", url });
+                return;
+            }
+        } catch {}
+        try {
+            await navigator?.clipboard?.writeText(url);
+            alert("Link copied to clipboard");
+        } catch {
+            prompt("Copy this link:", url);
+        }
+    }
 
-    // Handlers for each filter input
-    const handleSearchTermChange = (value) => {
-        setSearchTerm(value);
-        handleFiltersChange({ search: value });
-    };
-
-    const handlePropertyTypeChange = (e) => {
-        setPropertyType(e.target.value);
-        handleFiltersChange({ property_type: e.target.value });
-    };
-
-    const handleSubTypeChange = (e) => {
-        setSubType(e.target.value);
-        handleFiltersChange({ sub_type: e.target.value });
-    };
-
-    const handleLocationChange = (e) => {
-        setLocation(e.target.value);
-        handleFiltersChange({ location: e.target.value });
-    };
-
-    // Handle items per page change
-    const handleItemsPerPageChange = (e) => {
-        const newItemsPerPage = e.target.value;
-        setSelectedItemsPerPage(newItemsPerPage);
-        router.get('/agents/my-listings', {
-            page: 1,
-            items_per_page: newItemsPerPage,
-            status: selectedStatus,
-            search: searchTerm,
-            property_type: propertyType,
-            sub_type: subType,
-            location,
-        }, { preserveState: true, replace: true });
-    };
-
-    // Cleanup debounce on unmount
-    useEffect(() => {
-        return () => {
-            debouncedFilter.cancel();
-        };
-    }, []);
+    // counts for tabs
+    const counts = useMemo(() => {
+        const c = { all: normalized.length, assigned: 0, published: 0, sold: 0 };
+        normalized.forEach((r) => {
+            const s = (r.status || "").toLowerCase();
+            if (s === "assigned") c.assigned++;
+            else if (s === "sold") c.sold++;
+            else c.published++;
+        });
+        return c;
+    }, [normalized]);
 
     return (
         <AgentLayout>
-            <div className="px-2 py-2   ">
-                <h1 className="text-2xl font-bold mb-4">My Property Listings</h1>
-                <p className="text-gray-700 mb-6 text-sm  md:text-medium font-sans">
-                    This is the agent dashboard page where you can view and manage the property listings you handle for sellers. Keep track of active, pending, or sold properties easily from here.
-                </p>
-                <div className='border border-gray-100 rounded-xl'>
-                    <div className="rounded-t-xl shadow-sm">
-                        <AgentPropertyListingFilterTab
-                            count={[propertiesCount, forPublishCount, publishedCount, soldCount]}
-                            selectedStatus={selectedStatus}
-                            setSelectedStatus={setSelectedStatus}
-                            page={page}
-                            selectedItemsPerPage={selectedItemsPerPage}
-                            search={searchTerm}
-                            propertyType={propertyType}
-                            subType={subType}
-                            location={location}
-                        />
+            <div className="px-4 py-6 space-y-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">My Listings</h1>
+                    <p className="text-gray-500 text-sm">All properties you’re assigned to or handling.</p>
+                </div>
 
-                        {/* Filter Row */}
-                        <div className='p-6 flex flex-wrap md:flex-row gap-4 relative z-30'>
-                            {/* Search Input */}
-                            <div className="relative w-full md:w-1/4">
-                                <input
-                                    value={searchTerm}
-                                    onChange={(e) => handleSearchTermChange(e.target.value)}
-                                    type="text"
-                                    name="search"
-                                    placeholder="Search..."
-                                    className="border border-gray-300 rounded-md h-10 px-4 pl-10 text-sm text-gray-800 w-full"
-                                />
-                                <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                            </div>
+                {/* controls */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+                        <div className="inline-flex rounded-md overflow-hidden border border-gray-200">
+                            {[
+                                ["all", "All"],
+                                ["assigned", "Assigned"],
+                                ["published", "Published"],
+                                ["sold", "Sold"],
+                            ].map(([val, label]) => (
+                                <button
+                                    key={val}
+                                    onClick={() => setStatus(val)}
+                                    className={cn(
+                                        "px-4 py-1.5 text-sm",
+                                        status === val ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+                                    )}
+                                >
+                                    {label} <span className="opacity-70">({counts[val] || 0})</span>
+                                </button>
+                            ))}
+                        </div>
 
-                            {/* Property Type Select */}
+                        <div className="flex-1" />
+
+                        <div className="relative">
+                            <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                                value={q}
+                                onChange={(e) => setQ(e.target.value)}
+                                placeholder="Search title or address…"
+                                className="pl-9 pr-3 py-2 text-sm rounded-md bg-gray-100 focus:bg-white border border-gray-200 focus:ring-2 focus:ring-gray-200 focus:outline-none w-[260px]"
+                            />
+                        </div>
+
+                        <div className="inline-flex items-center gap-2">
+                            <Filter className="w-4 h-4 text-gray-600" />
                             <select
-                                className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
-                                value={propertyType}
-                                onChange={handlePropertyTypeChange}
+                                value={sort}
+                                onChange={(e) => setSort(e.target.value)}
+                                className="px-3 py-2 text-sm rounded-md border bg-white"
                             >
-                                <option value=''>Property Type</option>
-                                <option value='house'>House</option>
-                                <option value='apartment'>Apartment</option>
-                                <option value='condo'>Condo</option>
-                                {/* Add more options as needed */}
+                                <option value="newest">Newest</option>
+                                <option value="price_asc">Price: Low → High</option>
+                                <option value="price_desc">Price: High → Low</option>
                             </select>
-
-                            {/* Property Subtype Select */}
-                            <select
-                                className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
-                                value={subType}
-                                onChange={handleSubTypeChange}
-                            >
-                                <option value=''>Property Subtype</option>
-                                <option value='detached'>Detached</option>
-                                <option value='semi-detached'>Semi-Detached</option>
-                                <option value='townhouse'>Townhouse</option>
-                                {/* Add more options as needed */}
-                            </select>
-
-                            {/* Location Select */}
-                            <select
-                                className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto'
-                                value={location}
-                                onChange={handleLocationChange}
-                            >
-                                <option value=''>Location</option>
-                                <option value='new-york'>New York</option>
-                                <option value='los-angeles'>Los Angeles</option>
-                                <option value='chicago'>Chicago</option>
-                                {/* Add more options as needed */}
-                            </select>
-
-                            {/* Items Per Page Select */}
-
                         </div>
                     </div>
+                </div>
 
-                    {/* Table */}
-                    <div className="overflow-x-auto h-[45vh] bg-white scrollbar-thumb-gray-300 scrollbar-track-transparent   [overflow:scroll]">
-                        <table className="min-w-full text-sm text-left text-gray-700">
-                            <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide hidden md:table-header-group">
-                            <tr>
-                                <th className="p-3 text-center">
-                                    <input id='deleteAll' type="checkbox" className="rounded border-gray-400" />
-                                </th>
-                                <th className="p-3">Image</th>
-                                <th className="p-3">Seller</th>
-                                <th className="p-3">Type</th>
-                                <th className="p-3">Address</th>
-                                <th className="p-3">Price</th>
-                                <th className="p-3">Size(m2)</th>
-                                <th className="p-3">Status</th>
-                                <th className="p-3">Date Inquired</th>
-                                <th className="p-3 text-right">Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-dashed">
-                            {properties?.data.length > 0 ? (
-                                properties.data.map((property) => {
-                                    const statusClass = statusStyles[property.status] || statusStyles.default;
-
-                                    return (
-                                        <tr key={property.id} className="hover:bg-gray-50 flex flex-col md:table-row w-full">
-                                            <td className="p-3 text-center hidden md:table-cell">
-                                                <input id={property.id} type="checkbox" className="rounded border-gray-400" />
-                                            </td>
-                                            <td className="p-3 md:table-cell">
-                                                <div className="flex items-center gap-3">
-                                                    <img
-                                                        src={`${imageUrl}${property.property.image_url}`}
-                                                        onError={(e) => e.target.src = '/placeholder.png'}
-                                                        alt={property.property.title}
-                                                        className="w-14 h-14 object-cover rounded-md"
-                                                    />
-                                                    <div className="flex max-w-[10rem] flex-col">
-                                                        <p className="font-semibold truncate text-gray-800" title={property.property.title}>
-                                                            {property.property.title}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500 truncate" title={`${property.property.property_type} | ${property.property.sub_type}`}>
-                                                            {property.property.property_type} | {property.property.sub_type}
-                                                        </p>
-                                                    </div>
-
-                                                </div>
-                                            </td>
-                                            <td className="p-3 whitespace-nowrap md:table-cell">
-                                                <p className="flex flex-col cursor-pointer font-bold hover:underline text-primary">
-                                                    {property.seller.name}
-                                                    <span className='font-medium text-xs'>{property.seller.email}</span>
-                                                </p>
-                                            </td>
-                                            <td className="p-3 whitespace-nowrap md:table-cell">
-                                                {property.property.property_type} | {property.property.sub_type}
-                                            </td>
-                                            <td className="p-3 whitespace-nowrap md:table-cell">
-                                                {property.property.address}
-                                            </td>
-                                            <td className="p-3 whitespace-nowrap md:table-cell">
-
-                                                ₱ {property.property.price}
-                                            </td>
-                                            <td className="p-3 whitespace-nowrap md:table-cell">
-                                                {property.property?.lot_area} m2
-                                            </td>
-                                            <td className="p-3 whitespace-nowrap md:table-cell">
-                                                <span className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}>
-                                                    {property.status}
-                                                </span>
-                                            </td>
-                                            <td className="p-3 whitespace-nowrap md:table-cell">
-                                                {dayjs(property.created_at).format('MMMM D, YYYY')}
-                                            </td>
-                                            <td className="p-3 text-right md:table-cell">
-                                                <Link href={`/agents/my-listings/${property.id}`}>View</Link>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            ) : (
-                                <tr>
-                                    <td colSpan="10" className="text-center py-6 text-gray-400">
-                                        No properties found.
-                                    </td>
-                                </tr>
-                            )}
-                            </tbody>
-                        </table>
+                {/* grid */}
+                {filtered.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500 bg-white border rounded-lg">No listings match your filters.</div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+                        {filtered.map((listing) => (
+                            <Card
+                                key={listing.id}
+                                listing={listing}
+                                onView={() => router.visit(`/agents/properties/${listing.property.id}`)}
+                                onShare={() => shareListing(listing)}
+                            />
+                        ))}
                     </div>
+                )}
 
-                    {/* Pagination */}
-                    <div className="flex flex-wrap gap-2 justify-end p-4 border-dashed border-t ">
-
-                        {properties?.links.map((link, index) =>
+                {/* pagination (server-driven) */}
+                {Array.isArray(listings?.links) && listings.links.length > 1 && (
+                    <div className="flex flex-wrap gap-2 justify-center items-center p-6">
+                        {listings.links.map((link, idx) =>
                             link.url ? (
                                 <Link
-                                    key={index}
+                                    key={idx}
                                     href={link.url}
-                                    className={`px-4 py-2 text-sm rounded-md border transition ${
-                                        link.active
-                                            ? 'bg-gray-500 text-white font-semibold'
-                                            : 'bg-white text-gray-600 hover:bg-gray-100'
-                                    }`}
+                                    className={cn(
+                                        "px-3 py-2 rounded-md text-sm border transition",
+                                        link.active ? "bg-gray-900 text-white font-semibold" : "bg-white text-gray-700 hover:bg-gray-100"
+                                    )}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             ) : (
                                 <span
-                                    key={index}
-                                    className="px-4 py-2 text-sm text-slate-400 bg-white border rounded-md cursor-not-allowed"
+                                    key={idx}
+                                    className="px-3 py-2 text-sm text-gray-400 bg-white border rounded-md cursor-not-allowed"
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             )
                         )}
-
-                        <select
-                            className='border border-gray-300 rounded-md h-10 text-sm text-gray-800 w-full md:w-auto ml-auto'
-                            value={selectedItemsPerPage}
-                            onChange={handleItemsPerPageChange}
-                        >
-                            <option value="5">5 per page</option>
-                            <option value="10">10 per page</option>
-                            <option value="20">20 per page</option>
-                            <option value="50">50 per page</option>
-                        </select>
                     </div>
-                </div>
-
-
+                )}
             </div>
         </AgentLayout>
     );

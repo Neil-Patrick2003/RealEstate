@@ -125,7 +125,7 @@ class InquiryController extends Controller
             'agent_id' => auth()->id(),
             'seller_id' => $seller->id,
             'property_id' => $property->id,
-            'message' => $request->message,
+            'notes' => $request->message,
             'status' => 'Pending',
         ]);
 

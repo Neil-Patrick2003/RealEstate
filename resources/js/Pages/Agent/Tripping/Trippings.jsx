@@ -1,235 +1,777 @@
+// resources/js/Pages/Agents/TrippingsAgentFull.jsx
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
-import dayjs from "dayjs";
-import MyCalendar from "@/Components/MyCalendar.jsx";
-import { useState } from "react";
 import { router } from "@inertiajs/react";
-import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
+import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import {
+    CalendarDays, Check, X as XIcon, Pencil, Eye, MapPin, Phone, Mail, Download, Clock,
+    Search, Filter, AlertTriangle, ChevronLeft, ChevronRight, Bell, BellRing
+} from "lucide-react";
 
 dayjs.extend(relativeTime);
 
-export default function Trippings({ trippings }) {
-    const today = dayjs().startOf("day");
+/* ================= helpers ================= */
+const cn = (...c) => c.filter(Boolean).join(" ");
+const fmtDate = (d, f = "MMM D, YYYY") => (d ? dayjs(d).format(f) : "—");
+const fmtTime = (t) => (t ? dayjs(`1970-01-01T${t}`).format("h:mm A") : "Time TBD");
+const startOfDay = (d) => dayjs(d).startOf("day");
+const isAfterToday = (d) => dayjs(d).isAfter(startOfDay(dayjs()));
+const isBeforeToday = (d) => dayjs(d).isBefore(startOfDay(dayjs()));
+const statusPill = (s) =>
+    s === "pending" ? "bg-amber-100 text-amber-700"
+        : s === "accepted" ? "bg-green-100 text-green-700"
+            : "bg-gray-100 text-gray-600";
 
-    const pendingTrippings = trippings.filter(trip => trip.status === 'pending');
-    const incomingTrippings = trippings
-        .filter(trip => trip.status === 'accepted' && dayjs(trip.visit_date).isAfter(today))
-        .sort((a, b) => new Date(a.visit_date) - new Date(b.visit_date));
-    const completedTrippings = trippings
-        .filter(trip => trip.status === 'accepted' && dayjs(trip.visit_date).isBefore(today))
-        .sort((a, b) => new Date(b.visit_date) - new Date(a.visit_date));
-    const scheduledTrippings = trippings.filter(trip => trip.status === 'accepted');
+const toMaps = (address) =>
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || "")}`;
 
-    const [selectedTrippingId, setSelectedTrippingId] = useState(null);
-    const [openAcceptModal, setOpenAcceptModal] = useState(false);
-    const [openDeclineModal, setOpenDeclineModal] = useState(false);
-    const [tab, setTab] = useState('incoming'); // incoming | completed | pending
+function icsForTrip(trip) {
+    const title = (trip?.property?.title ?? "Property Visit").replace(/\n/g, " ");
+    const desc = `Buyer: ${trip?.buyer?.name ?? ""}${trip?.buyer?.email ? ` (${trip.buyer.email})` : ""} • ${trip?.property?.address ?? ""}`;
+    const start = dayjs(`${trip.visit_date} ${trip.visit_time || "09:00"}`).utc();
+    const end = start.add(60, "minute");
+    return [
+        "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Agent//Trippings//EN","CALSCALE:GREGORIAN",
+        "BEGIN:VEVENT",
+        `UID:${trip.id}@agent-trippings`,
+        `DTSTAMP:${dayjs().utc().format("YYYYMMDDTHHmmss[Z]")}`,
+        `DTSTART:${start.format("YYYYMMDDTHHmmss[Z]")}`,
+        `DTEND:${end.format("YYYYMMDDTHHmmss[Z]")}`,
+        `SUMMARY:${title}`,
+        `DESCRIPTION:${desc}`,
+        `LOCATION:${(trip?.property?.address ?? "").replace(/[\n,]/g, " ")}`,
+        "END:VEVENT","END:VCALENDAR",
+    ].join("\r\n");
+}
+function downloadICS(trip) {
+    const blob = new Blob([icsForTrip(trip)], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `visit_${trip.id}.ics`; a.click();
+    URL.revokeObjectURL(url);
+}
+function hasConflict(candidate, accepted) {
+    const cDate = dayjs(candidate.visit_date).format("YYYY-MM-DD");
+    const cStart = dayjs(`${candidate.visit_date} ${candidate.visit_time || "09:00"}`);
+    const cEnd = cStart.add(60, "minute");
+    return accepted.some((t) => {
+        const tDate = dayjs(t.visit_date).format("YYYY-MM-DD");
+        if (tDate !== cDate) return false;
+        const tStart = dayjs(`${t.visit_date} ${t.visit_time || "09:00"}`);
+        const tEnd = tStart.add(60, "minute");
+        return cStart.isBefore(tEnd) && tStart.isBefore(cEnd);
+    });
+}
 
-    const handleAccept = () => {
-        if (!selectedTrippingId) return;
-        router.patch(`/agents/trippings/${selectedTrippingId}/accept`, {
-            onSuccess: resetModalState,
+/* =============== reminders hook =============== */
+function useReminders(storageKey = "trip-reminders") {
+    const [reminders, setReminders] = useState(() => {
+        try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch { return {}; }
+    });
+    const timersRef = useRef({});
+
+    useEffect(() => { try { localStorage.setItem(storageKey, JSON.stringify(reminders)); } catch {} }, [reminders, storageKey]);
+    useEffect(() => () => { Object.values(timersRef.current).forEach(clearTimeout); }, []);
+
+    useEffect(() => {
+        Object.values(timersRef.current).forEach(clearTimeout);
+        timersRef.current = {};
+        const schedule = (tripId, whenMs, title, body) => {
+            const delay = whenMs - Date.now(); if (delay <= 0) return;
+            const id = setTimeout(async () => {
+                try {
+                    if ("Notification" in window) {
+                        if (Notification.permission === "granted") {
+                            new Notification(title, { body, tag: `trip-${tripId}` });
+                        } else if (Notification.permission !== "denied") {
+                            const p = await Notification.requestPermission();
+                            if (p === "granted") new Notification(title, { body, tag: `trip-${tripId}` });
+                        }
+                    }
+                } finally {}
+            }, delay);
+            timersRef.current[tripId] = id;
+        };
+        Object.entries(reminders).forEach(([tripId, r]) => {
+            if (!r?.when) return;
+            schedule(tripId, r.when, r.title, r.body);
         });
-    };
+    }, [reminders]);
 
-    const handleDecline = () => {
-        if (!selectedTrippingId) return;
-        router.patch(`/agents/trippings/${selectedTrippingId}/decline`, {
-            onSuccess: resetModalState,
+    const setReminder = async ({ trip, when }) => {
+        if ("Notification" in window && Notification.permission === "default") {
+            try { await Notification.requestPermission(); } catch {}
+        }
+        const title = `Visit at ${fmtTime(trip.visit_time)} on ${fmtDate(trip.visit_date)}`;
+        const body = `${trip?.property?.title ?? "Property"} — ${trip?.property?.address ?? ""}`;
+        setReminders((m) => ({ ...m, [trip.id]: { when, title, body } }));
+    };
+    const clearReminder = (tripId) => {
+        if (timersRef.current[tripId]) { clearTimeout(timersRef.current[tripId]); delete timersRef.current[tripId]; }
+        setReminders((m) => { const n = { ...m }; delete n[tripId]; return n; });
+    };
+    return { reminders, setReminder, clearReminder };
+}
+
+/* ================= main page ================= */
+export default function TrippingsAgentFull({ trippings = [] }) {
+    /* base lists */
+    const pending = useMemo(() => trippings.filter((t) => t.status === "pending"), [trippings]);
+    const upcoming = useMemo(
+        () => trippings.filter((t) => t.status === "accepted" && isAfterToday(t.visit_date))
+            .sort((a, b) => dayjs(a.visit_date) - dayjs(b.visit_date)),
+        [trippings]
+    );
+    const completed = useMemo(
+        () => trippings.filter((t) => t.status === "accepted" && isBeforeToday(t.visit_date))
+            .sort((a, b) => dayjs(b.visit_date) - dayjs(a.visit_date)),
+        [trippings]
+    );
+    const acceptedAll = useMemo(() => trippings.filter((t) => t.status === "accepted"), [trippings]);
+
+    const [tab, setTab] = useState("upcoming"); // pending | upcoming | completed
+    const [q, setQ] = useState("");
+    const [from, setFrom] = useState("");
+    const [to, setTo] = useState("");
+    const [page, setPage] = useState(1);
+    const [size, setSize] = useState(10);
+    const [busy, setBusy] = useState({}); // {[id]: 'accept'|'decline'|'reschedule'}
+    const [confirm, setConfirm] = useState({ type: null, id: null });
+    const [resched, setResched] = useState({ open: false, id: null, date: "", time: "" });
+    const [selected, setSelected] = useState(null);
+
+    const counts = { pending: pending.length, upcoming: upcoming.length, completed: completed.length };
+    const baseList = tab === "pending" ? pending : tab === "upcoming" ? upcoming : completed;
+
+    const filtered = useMemo(() => {
+        const query = q.trim().toLowerCase();
+        return baseList.filter((t) => {
+            const matchQ =
+                !query ||
+                t?.property?.title?.toLowerCase().includes(query) ||
+                t?.property?.address?.toLowerCase().includes(query) ||
+                t?.buyer?.name?.toLowerCase().includes(query) ||
+                t?.buyer?.email?.toLowerCase().includes(query);
+            const inRange =
+                (!from || dayjs(t.visit_date).isSameOrAfter(dayjs(from), "day")) &&
+                (!to || dayjs(t.visit_date).isSameOrBefore(dayjs(to), "day"));
+            return matchQ && inRange;
         });
+    }, [baseList, q, from, to]);
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / size));
+    useEffect(() => { if (page > totalPages) setPage(totalPages); }, [filtered.length, size, totalPages, page]);
+    const paged = useMemo(() => filtered.slice((page - 1) * size, (page - 1) * size + size), [filtered, page, size]);
+
+    const { reminders, setReminder, clearReminder } = useReminders();
+    const reminderOptions = [
+        { label: "24h before", minutes: 24 * 60 },
+        { label: "1h before", minutes: 60 },
+        { label: "15m before", minutes: 15 },
+    ];
+    const scheduleReminder = (trip, mins) => {
+        const when = dayjs(`${trip.visit_date} ${trip.visit_time || "09:00"}`).valueOf() - mins * 60_000;
+        if (when <= Date.now()) return alert("That reminder time is already in the past.");
+        setReminder({ trip, when });
     };
 
-    const resetModalState = () => {
-        setSelectedTrippingId(null);
-        setOpenAcceptModal(false);
-        setOpenDeclineModal(false);
+    /* actions */
+    const patchTrip = useCallback((id, action, payload = {}) => {
+        setBusy((b) => ({ ...b, [id]: action }));
+        router.patch(`/agents/trippings/${id}/${action}`, payload, {
+            preserveScroll: true,
+            onFinish: () => setBusy((b) => { const n = { ...b }; delete n[id]; return n; }),
+        });
+    }, []);
+    const askAccept = (trip) => {
+        if (hasConflict(trip, acceptedAll)) setConfirm({ type: "accept-conflict", id: trip.id });
+        else setConfirm({ type: "accept", id: trip.id });
+    };
+    const askDecline = (id) => setConfirm({ type: "decline", id });
+    const doConfirm = () => {
+        if (!confirm.id) return;
+        patchTrip(confirm.id, confirm.type.startsWith("accept") ? "accept" : "decline");
+        setConfirm({ type: null, id: null });
+    };
+    const openReschedule = (trip) =>
+        setResched({ open: true, id: trip.id, date: dayjs(trip.visit_date).format("YYYY-MM-DD"), time: trip.visit_time || "09:00" });
+    const saveReschedule = () => {
+        patchTrip(resched.id, "reschedule", { visit_date: resched.date, visit_time: resched.time || null });
+        setResched({ open: false, id: null, date: "", time: "" });
     };
 
-    const getTabData = () => {
-        if (tab === 'pending') return pendingTrippings;
-        if (tab === 'completed') return completedTrippings;
-        return incomingTrippings;
+    /* CSV export (current filtered tab) */
+    const exportCSV = () => {
+        const rows = [
+            ["#", "Property", "Address", "Buyer", "Email", "Status", "Visit Date", "Time"],
+            ...filtered.map((t, i) => [
+                i + 1, t?.property?.title ?? "", t?.property?.address ?? "", t?.buyer?.name ?? "",
+                t?.buyer?.email ?? "", t?.status ?? "", fmtDate(t?.visit_date), t?.visit_time ?? "",
+            ]),
+        ].map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(",")).join("\n");
+        const blob = new Blob([rows], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob); const a = document.createElement("a");
+        a.href = url; a.download = `trippings_${tab}_${dayjs().format("YYYYMMDD_HHmmss")}.csv`; a.click();
+        URL.revokeObjectURL(url);
     };
+
+    /* group upcoming by date for “Incoming” list */
+    const incomingGrouped = useMemo(() => {
+        const incoming = trippings.filter((t) => t.status === "accepted" && isAfterToday(t.visit_date))
+            .sort((a, b) => dayjs(a.visit_date) - dayjs(b.visit_date));
+        const m = new Map();
+        for (const t of incoming) {
+            const key = dayjs(t.visit_date).format("YYYY-MM-DD");
+            if (!m.has(key)) m.set(key, []);
+            m.get(key).push(t);
+        }
+        return Array.from(m.entries()).sort(([a], [b]) => (a < b ? -1 : 1));
+    }, [trippings]);
 
     return (
         <AgentLayout>
-            <div className="px-4 py-6 space-y-10">
-
-                {/* Confirm Modals */}
-                <ConfirmDialog
-                    onConfirm={handleAccept}
-                    confirmText="Accept"
-                    cancelText="Cancel"
-                    loading={false}
-                    title="Accept Visit Schedule"
-                    open={openAcceptModal}
-                    setOpen={setOpenAcceptModal}
-                    description="Are you sure you want to accept this visit?"
-                />
-                <ConfirmDialog
-                    onConfirm={handleDecline}
-                    confirmText="Decline"
-                    cancelText="Cancel"
-                    loading={false}
-                    title="Decline Visit Schedule"
-                    open={openDeclineModal}
-                    setOpen={setOpenDeclineModal}
-                    description="Are you sure you want to decline this visit?"
-                />
-
-                {/* Page Title */}
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold text-gray-800">Property Visit Schedule</h1>
-                    <p className="text-gray-500 text-sm">Manage and review all upcoming, pending, and completed property visits.</p>
-                </div>
-
-                {/* Calendar Section */}
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-                    <MyCalendar trippings={scheduledTrippings} />
-                </div>
-
-                {/* Main Content */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                    {/* Visit Management */}
-                    <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-semibold text-gray-800">Manage Visits</h2>
-                            <div className="flex gap-2">
-                                {['pending', 'incoming', 'completed'].map((type) => (
+            {/* confirm banner */}
+            {confirm.type && (
+                <div className="fixed top-[64px] left-0 right-0 z-[600]">
+                    <div className="mx-auto max-w-3xl bg-white border shadow-sm rounded-md p-4">
+                        <div className="flex items-start gap-3">
+                            {confirm.type === "accept-conflict" && <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />}
+                            <div className="flex-1">
+                                <div className="text-sm font-medium">
+                                    {confirm.type === "accept" ? "Accept this visit schedule?"
+                                        : confirm.type === "accept-conflict" ? "This overlaps another accepted visit. Accept anyway?"
+                                            : "Decline this visit schedule?"}
+                                </div>
+                                <div className="mt-3 flex gap-2">
+                                    <button onClick={() => setConfirm({ type: null, id: null })} className="px-3 py-1.5 text-sm rounded-md bg-gray-100 hover:bg-gray-200">Cancel</button>
                                     <button
-                                        key={type}
-                                        onClick={() => setTab(type)}
-                                        className={`px-4 py-2 text-sm rounded-md capitalize transition-all ${
-                                            tab === type ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
+                                        onClick={doConfirm}
+                                        className={cn("px-3 py-1.5 text-sm rounded-md text-white",
+                                            confirm.type.startsWith("accept") ? "bg-green-600 hover:bg-green-700" : "bg-rose-600 hover:bg-rose-700")}
                                     >
-                                        {type}
+                                        Confirm
                                     </button>
-                                ))}
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
 
-                        {/* Visit Table */}
-                        <div className="overflow-auto">
-                            <table className="w-full text-sm text-gray-700">
-                                <thead className="bg-gray-50 hidden md:table-header-group">
-                                <tr className="text-left text-xs text-gray-500 uppercase">
-                                    <th className="p-4">#</th>
-                                    <th className="p-4">Property</th>
-                                    <th className="p-4">Buyer</th>
-                                    <th className="p-4">Status</th>
-                                    <th className="p-4">Visit Date</th>
-                                    <th className="p-4 text-right">Actions</th>
-                                </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                {getTabData().length > 0 ? (
-                                    getTabData().map((trip, index) => (
-                                        <tr key={trip.id} className="hover:bg-gray-50 flex flex-col md:table-row">
-                                            <td className="p-4 hidden md:table-cell">{index + 1}</td>
+            <div className="px-4 py-6 space-y-8">
+                <header className="flex flex-col gap-1">
+                    <h1 className="text-3xl font-bold text-gray-800">Agent Tripping Manager</h1>
+                    <p className="text-gray-500 text-sm">Incoming schedules with reminders, plus full queue management.</p>
+                </header>
 
-                                            {/* Property */}
-                                            <td className="p-4 flex items-center gap-3">
-                                                <img
-                                                    src={`/storage/${trip.property.image_url}`}
-                                                    onError={(e) => (e.target.src = "/placeholder.png")}
-                                                    alt={trip.property.title}
-                                                    className="w-12 h-12 rounded object-cover border border-gray-200"
-                                                />
-                                                <div>
-                                                    <div className="font-medium text-gray-800">{trip.property.title}</div>
-                                                    <div className="text-xs text-gray-500">{trip.property.address}</div>
+                {/* Incoming (Accepted) with reminders */}
+                <section className="bg-white rounded-lg border border-gray-200 shadow-sm">
+                    <div className="px-4 md:px-6 py-4 border-b flex items-center gap-2 text-gray-700">
+                        <CalendarDays className="w-4 h-4" />
+                        <h2 className="font-semibold">Incoming Schedule (Accepted)</h2>
+                        <span className="ml-auto text-xs text-gray-500">Local time</span>
+                    </div>
+
+                    {incomingGrouped.length === 0 ? (
+                        <div className="p-6 text-sm text-gray-500">No upcoming visits.</div>
+                    ) : (
+                        <div className="divide-y">
+                            {incomingGrouped.map(([key, items]) => (
+                                <section key={key} className="p-4 md:p-6">
+                                    <div className="mb-3 font-medium text-gray-800">{fmtDate(key, "MMMM D, YYYY")}</div>
+                                    <ul className="space-y-3">
+                                        {items.map((trip) => {
+                                            const r = reminders[trip.id];
+                                            const hasReminder = !!r;
+                                            return (
+                                                <li key={trip.id} className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition">
+                                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                                        {/* left */}
+                                                        <div className="min-w-0">
+                                                            <div className="font-medium text-gray-900 truncate">
+                                                                {trip?.property?.title ?? "Property"}
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 text-gray-600 text-sm">
+                                                                <Clock className="w-4 h-4" /> {fmtTime(trip.visit_time)}
+                                                                <span aria-hidden>•</span>
+                                                                <a
+                                                                    className="inline-flex items-center gap-1 text-blue-600 hover:underline truncate"
+                                                                    href={toMaps(trip?.property?.address)}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    title={trip?.property?.address}
+                                                                >
+                                                                    <MapPin className="w-4 h-4" /> {trip?.property?.address ?? "Address not set"}
+                                                                </a>
+                                                            </div>
+                                                            {trip?.buyer?.name || trip?.buyer?.email ? (
+                                                                <div className="mt-1 text-xs text-gray-500">
+                                                                    With: <span className="text-gray-700">{trip?.buyer?.name ?? "—"}</span>
+                                                                    {trip?.buyer?.email ? ` • ${trip.buyer.email}` : ""}
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+
+                                                        {/* right actions */}
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            {!hasReminder ? (
+                                                                <div className="relative">
+                                                                    <details className="group">
+                                                                        <summary className="list-none">
+                                                                            <button
+                                                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white hover:bg-black"
+                                                                                type="button"
+                                                                            >
+                                                                                <Bell className="w-4 h-4" /> Remind me
+                                                                            </button>
+                                                                        </summary>
+                                                                        <div className="absolute right-0 mt-2 bg-white border rounded-md shadow-lg p-2 w-44 z-[20]">
+                                                                            {reminderOptions.map((o) => (
+                                                                                <button
+                                                                                    key={o.minutes}
+                                                                                    onClick={() => scheduleReminder(trip, o.minutes)}
+                                                                                    className="w-full text-left text-sm px-2 py-1 rounded hover:bg-gray-50"
+                                                                                    type="button"
+                                                                                >
+                                                                                    {o.label}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    </details>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-2">
+                                  <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                                    <BellRing className="w-3.5 h-3.5" />
+                                    Reminder set {dayjs(r.when).fromNow()}
+                                  </span>
+                                                                    <button
+                                                                        onClick={() => clearReminder(trip.id)}
+                                                                        className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+                                                                        type="button"
+                                                                        title="Remove reminder"
+                                                                    >
+                                                                        Remove
+                                                                    </button>
+                                                                </div>
+                                                            )}
+
+                                                            <button
+                                                                onClick={() => downloadICS(trip)}
+                                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm border hover:bg-gray-50"
+                                                                type="button"
+                                                                title="Add to calendar (.ics)"
+                                                            >
+                                                                <Download className="w-4 h-4" /> .ics
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </section>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                {/* Controls / Table */}
+                <section className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 md:p-6">
+                    {/* Controls */}
+                    <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-4">
+                        <div className="inline-flex rounded-md overflow-hidden border border-gray-200">
+                            {[
+                                ["pending", "Pending"],
+                                ["upcoming", "Upcoming"],
+                                ["completed", "Completed"],
+                            ].map(([val, label]) => (
+                                <button
+                                    key={val}
+                                    onClick={() => { setTab(val); setPage(1); }}
+                                    className={cn(
+                                        "px-4 py-1.5 text-sm",
+                                        tab === val ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+                                    )}
+                                >
+                                    {label} <span className="opacity-70">({counts[val] || 0})</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="relative">
+                                <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <input
+                                    value={q}
+                                    onChange={(e) => { setQ(e.target.value); setPage(1); }}
+                                    placeholder="Search buyer, property, address…"
+                                    className="pl-8 pr-3 py-2 text-sm rounded-md bg-gray-100 focus:bg-white border border-gray-200 focus:ring-2 focus:ring-gray-200 focus:outline-none"
+                                />
+                            </div>
+                            <span className="inline-flex items-center gap-1 text-xs text-gray-600">
+                <Filter className="w-3.5 h-3.5" /> Date
+              </span>
+                            <input
+                                type="date"
+                                value={from}
+                                onChange={(e) => { setFrom(e.target.value); setPage(1); }}
+                                className="px-2 py-2 text-sm rounded-md bg-gray-100 border border-gray-200"
+                            />
+                            <input
+                                type="date"
+                                value={to}
+                                onChange={(e) => { setTo(e.target.value); setPage(1); }}
+                                className="px-2 py-2 text-sm rounded-md bg-gray-100 border border-gray-200"
+                            />
+                            <button
+                                onClick={() => { setQ(""); setFrom(""); setTo(""); setPage(1); }}
+                                className="px-3 py-2 text-sm rounded-md bg-gray-50 hover:bg-gray-100 border"
+                            >
+                                Reset
+                            </button>
+                            <button
+                                onClick={exportCSV}
+                                className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-md bg-gray-900 text-white hover:bg-black"
+                                title="Export current list to CSV"
+                            >
+                                <Download className="w-4 h-4" /> Export
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="overflow-auto border rounded-md">
+                        <table className="w-full text-sm text-gray-700">
+                            <thead className="bg-gray-50">
+                            <tr className="text-left text-xs text-gray-500 uppercase">
+                                <th className="p-3">#</th>
+                                <th className="p-3">Property</th>
+                                <th className="p-3">Buyer</th>
+                                <th className="p-3">Status</th>
+                                <th className="p-3">Visit Date</th>
+                                <th className="p-3 text-right">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                            {paged.length ? (
+                                paged.map((trip, idx) => {
+                                    const isBusy = busy[trip.id];
+                                    const conflict = trip.status !== "accepted" && hasConflict(trip, acceptedAll);
+                                    const i = (page - 1) * size + idx + 1;
+
+                                    return (
+                                        <tr key={trip.id} className="hover:bg-gray-50">
+                                            <td className="p-3">{i}</td>
+
+                                            <td className="p-3">
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={trip?.property?.image_url ? `/storage/${trip.property.image_url}` : "/placeholder.png"}
+                                                        onError={(e) => (e.currentTarget.src = "/placeholder.png")}
+                                                        alt={trip?.property?.title ?? "Property"}
+                                                        className="w-12 h-12 rounded object-cover border border-gray-200"
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <div className="font-medium text-gray-800 truncate">{trip?.property?.title ?? "—"}</div>
+                                                        <div className="text-xs text-gray-500 truncate">{trip?.property?.address ?? "—"}</div>
+                                                        <div className="flex gap-3 mt-1 text-xs">
+                                                            {trip?.property?.address && (
+                                                                <a
+                                                                    href={toMaps(trip.property.address)}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                                                                >
+                                                                    <MapPin className="w-3.5 h-3.5" /> Maps
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </td>
 
-                                            {/* Buyer */}
-                                            <td className="p-4">
-                                                <div className="text-primary font-medium">{trip.buyer?.name}</div>
-                                                <div className="text-xs text-gray-500">{trip.buyer?.email}</div>
+                                            <td className="p-3">
+                                                <div className="text-primary font-medium truncate">{trip?.buyer?.name ?? "—"}</div>
+                                                <div className="text-xs text-gray-500 truncate">{trip?.buyer?.email ?? ""}</div>
+                                                <div className="flex gap-3 mt-1 text-xs">
+                                                    {trip?.buyer?.email && (
+                                                        <a href={`mailto:${trip.buyer.email}`} className="inline-flex items-center gap-1 text-blue-600 hover:underline">
+                                                            <Mail className="w-3.5 h-3.5" /> Email
+                                                        </a>
+                                                    )}
+                                                    {trip?.buyer?.phone && (
+                                                        <a href={`tel:${trip.buyer.phone}`} className="inline-flex items-center gap-1 text-blue-600 hover:underline">
+                                                            <Phone className="w-3.5 h-3.5" /> Call
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </td>
 
-                                            {/* Status */}
-                                            <td className="p-4 capitalize text-sm">{trip.status}</td>
-
-                                            {/* Visit Date */}
-                                            <td className="p-4 whitespace-nowrap">
-                                                {dayjs(trip.visit_date).format("MMM D, YYYY")}
+                                            <td className="p-3 capitalize">
+                          <span className={cn("inline-block px-2 py-0.5 rounded-full text-xs", statusPill(trip.status))}>
+                            {trip.status}
+                          </span>
+                                                {conflict && (
+                                                    <div className="mt-1 inline-flex items-center gap-1 text-xs text-amber-700">
+                                                        <AlertTriangle className="w-3.5 h-3.5" /> conflict risk
+                                                    </div>
+                                                )}
                                             </td>
 
-                                            {/* Actions */}
-                                            <td className="p-4 text-right space-x-2">
-                                                {trip.status === 'pending' ? (
+                                            <td className="p-3 whitespace-nowrap">
+                                                {fmtDate(trip.visit_date)} {trip.visit_time ? `• ${fmtTime(trip.visit_time)}` : ""}
+                                            </td>
+
+                                            <td className="p-3 text-right space-x-2">
+                                                {trip.status === "pending" ? (
                                                     <>
                                                         <button
-                                                            onClick={() => {
-                                                                setSelectedTrippingId(trip.id);
-                                                                setOpenAcceptModal(true);
-                                                            }}
-                                                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-sm transition"
+                                                            onClick={() => askAccept(trip)}
+                                                            disabled={!!isBusy}
+                                                            className={cn(
+                                                                "inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm transition",
+                                                                isBusy && "opacity-60 cursor-not-allowed"
+                                                            )}
+                                                            type="button"
                                                         >
-                                                            Accept
+                                                            {isBusy === "accept" ? (
+                                                                <>
+                                                                    <Clock className="w-4 h-4 animate-pulse" /> Saving…
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Check className="w-4 h-4" /> Accept
+                                                                </>
+                                                            )}
                                                         </button>
                                                         <button
-                                                            onClick={() => {
-                                                                setSelectedTrippingId(trip.id);
-                                                                setOpenDeclineModal(true);
-                                                            }}
-                                                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm transition"
+                                                            onClick={() => askDecline(trip.id)}
+                                                            disabled={!!isBusy}
+                                                            className={cn(
+                                                                "inline-flex items-center gap-1 bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-md text-sm transition",
+                                                                isBusy && "opacity-60 cursor-not-allowed"
+                                                            )}
+                                                            type="button"
                                                         >
-                                                            Decline
+                                                            {isBusy === "decline" ? (
+                                                                <>
+                                                                    <Clock className="w-4 h-4 animate-pulse" /> Saving…
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <XIcon className="w-4 h-4" /> Decline
+                                                                </>
+                                                            )}
                                                         </button>
                                                     </>
                                                 ) : (
-                                                    <button className="border border-primary text-primary px-3 py-1.5 rounded-md hover:bg-primary hover:text-white text-sm transition">
-                                                        View
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            className="inline-flex items-center gap-1 border border-primary text-primary px-3 py-1.5 rounded-md hover:bg-primary hover:text-white text-sm transition"
+                                                            type="button"
+                                                            onClick={() => setSelected(trip)}
+                                                        >
+                                                            <Eye className="w-4 h-4" /> View
+                                                        </button>
+                                                        <button
+                                                            className="inline-flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-md hover:bg-slate-200 text-sm transition"
+                                                            type="button"
+                                                            onClick={() => openReschedule(trip)}
+                                                            disabled={!!isBusy}
+                                                        >
+                                                            <Pencil className="w-4 h-4" /> Reschedule
+                                                        </button>
+                                                        <button
+                                                            className="inline-flex items-center gap-1 bg-gray-900 text-white px-3 py-1.5 rounded-md hover:bg-black text-sm transition"
+                                                            type="button"
+                                                            onClick={() => downloadICS(trip)}
+                                                            title=".ics download"
+                                                        >
+                                                            <Download className="w-4 h-4" /> .ics
+                                                        </button>
+                                                    </>
                                                 )}
                                             </td>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="6" className="text-center py-6 text-gray-400">
-                                            No {tab} visits.
-                                        </td>
-                                    </tr>
-                                )}
-                                </tbody>
-                            </table>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-6 text-gray-400">
+                                        No {tab} visits.
+                                    </td>
+                                </tr>
+                            )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="flex items-center justify-between px-2 sm:px-4 py-3">
+                        <div className="text-xs text-gray-500">
+                            Showing {(page - 1) * size + 1}–{Math.min(page * size, filtered.length)} of {filtered.length}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={size}
+                                onChange={(e) => { setSize(Number(e.target.value)); setPage(1); }}
+                                className="text-sm border rounded-md px-2 py-1 bg-white"
+                            >
+                                {[10, 20, 50].map((n) => (
+                                    <option key={n} value={n}>{n} / page</option>
+                                ))}
+                            </select>
+                            <div className="inline-flex border rounded-md overflow-hidden">
+                                <button
+                                    disabled={page <= 1}
+                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    className={cn("px-2 py-1 hover:bg-gray-50", page <= 1 && "opacity-40 cursor-not-allowed")}
+                                    aria-label="Previous"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <div className="px-3 py-1 text-sm">{page} / {totalPages}</div>
+                                <button
+                                    disabled={page >= totalPages}
+                                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                    className={cn("px-2 py-1 hover:bg-gray-50", page >= totalPages && "opacity-40 cursor-not-allowed")}
+                                    aria-label="Next"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </section>
+            </div>
 
-                    {/* Sidebar - Upcoming Visits */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Upcoming Visits</h3>
-                        {incomingTrippings.length > 0 ? (
-                            incomingTrippings.slice(0, 5).map(trip => (
-                                    <div key={trip.id} className="mb-5 last:mb-0 border-b pb-4">
-                                        <div className="text-sm text-gray-500 mb-1">
-                                            {dayjs(trip.visit_date).format("MMMM D, YYYY")} • {trip.visit_time ?? "Time TBD"}
-                                        </div>
-                                        <div className="font-medium text-gray-800 truncate">{trip.property.title}</div>
-                                        <div className="text-xs text-gray-500">{trip.property.address}</div>
+            {/* Details Drawer */}
+            {selected && (
+                <div className="fixed inset-0 z-[700]">
+                    <button className="absolute inset-0 bg-black/30" onClick={() => setSelected(null)} aria-label="Close" />
+                    <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl border-l p-5 overflow-y-auto">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold">Visit Details</h3>
+                            <button className="p-2 hover:bg-gray-100 rounded-md" onClick={() => setSelected(null)} aria-label="Close">
+                                <XIcon className="w-5 h-5" />
+                            </button>
+                        </div>
 
-                                        {trip.buyer?.name && (
-                                            <div className="text-xs text-gray-400 mt-1">With: {trip.buyer.name}</div>
-                                        )}
+                        <div className="space-y-4 text-sm">
+                            <section className="space-y-2">
+                                <div className="font-medium text-gray-900">{selected?.property?.title}</div>
+                                <div className="flex items-center gap-2 text-gray-600">
+                                    <MapPin className="w-4 h-4" /> {selected?.property?.address || "—"}
+                                </div>
+                                <img
+                                    src={selected?.property?.image_url ? `/storage/${selected.property.image_url}` : "/placeholder.png"}
+                                    onError={(e) => (e.currentTarget.src = "/placeholder.png")}
+                                    className="w-full h-40 object-cover rounded-md border"
+                                    alt="Property"
+                                />
+                            </section>
 
-                                        <div className="mt-2">
-                                            <span className="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                                                {trip.status}
-                                            </span>
-                                        </div>
+                            <section className="space-y-1">
+                                <div className="font-medium text-gray-900">Buyer</div>
+                                {selected?.buyer?.email && (
+                                    <div className="flex items-center gap-2 text-gray-700">
+                                        <Mail className="w-4 h-4" /> {selected?.buyer?.email}
                                     </div>
-                                ))
+                                )}
+                                {selected?.buyer?.phone && (
+                                    <div className="flex items-center gap-2 text-gray-700">
+                                        <Phone className="w-4 h-4" /> {selected?.buyer?.phone}
+                                    </div>
+                                )}
+                            </section>
 
-                        ) : (
-                            <p className="text-sm text-gray-500">No upcoming visits.</p>
-                        )}
+                            <section className="space-y-1">
+                                <div className="font-medium text-gray-900">Schedule</div>
+                                <div className="flex items-center gap-2 text-gray-700">
+                                    <CalendarDays className="w-4 h-4" /> {fmtDate(selected?.visit_date)} {selected?.visit_time ? `• ${fmtTime(selected.visit_time)}` : ""}
+                                </div>
+                                <div className="flex gap-2">
+                                    <a
+                                        href={toMaps(selected?.property?.address)}
+                                        className="inline-flex items-center gap-1 border px-3 py-1.5 rounded-md hover:bg-gray-50"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        <MapPin className="w-4 h-4" /> Open in Maps
+                                    </a>
+                                    <button
+                                        className="inline-flex items-center gap-1 bg-gray-900 text-white px-3 py-1.5 rounded-md hover:bg-black text-sm transition"
+                                        onClick={() => downloadICS(selected)}
+                                    >
+                                        <Download className="w-4 h-4" /> .ics
+                                    </button>
+                                </div>
+                            </section>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* Reschedule Modal */}
+            {resched.open && (
+                <div className="fixed inset-0 z-[750]">
+                    <button className="absolute inset-0 bg-black/30" onClick={() => setResched({ open: false, id: null, date: "", time: "" })} />
+                    <div className="absolute left-1/2 top-[15%] -translate-x-1/2 w-[92vw] max-w-md bg-white border rounded-xl shadow-xl p-5">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="font-semibold">Reschedule Visit</div>
+                            <button className="p-2 hover:bg-gray-100 rounded-md" onClick={() => setResched({ open: false, id: null, date: "", time: "" })}>
+                                <XIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-3">
+                            <label className="block">
+                                <span className="text-xs text-gray-600">New date</span>
+                                <input
+                                    type="date"
+                                    value={resched.date}
+                                    onChange={(e) => setResched((r) => ({ ...r, date: e.target.value }))}
+                                    className="mt-1 w-full border rounded-md px-2 py-2 text-sm"
+                                />
+                            </label>
+                            <label className="block">
+                                <span className="text-xs text-gray-600">New time (optional)</span>
+                                <div className="relative">
+                                    <Clock className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-500" />
+                                    <input
+                                        type="time"
+                                        value={resched.time}
+                                        onChange={(e) => setResched((r) => ({ ...r, time: e.target.value }))}
+                                        className="mt-1 w-full border rounded-md pl-8 pr-2 py-2 text-sm"
+                                    />
+                                </div>
+                            </label>
+
+                            {/* inline conflict indicator */}
+                            {resched.date &&
+                                hasConflict({ visit_date: resched.date, visit_time: resched.time }, acceptedAll) && (
+                                    <div className="flex items-center gap-2 text-amber-700 text-sm">
+                                        <AlertTriangle className="w-4 h-4" /> Warning: this time overlaps another accepted visit.
+                                    </div>
+                                )}
+
+                            <div className="flex justify-end gap-2 pt-1">
+                                <button className="px-3 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200" onClick={() => setResched({ open: false, id: null, date: "", time: "" })}>
+                                    Cancel
+                                </button>
+                                <button
+                                    className="px-3 py-2 text-sm rounded-md bg-gray-900 text-white hover:bg-black"
+                                    onClick={saveReschedule}
+                                    disabled={!resched.date}
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AgentLayout>
     );
 }

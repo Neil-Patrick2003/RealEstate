@@ -60,20 +60,10 @@ class PropertyListingController extends Controller
             ->paginate((int) $request->get('items_per_page', 10))
             ->withQueryString(); // important to keep filters during pagination
 
-        // Stats
-        $propertiesCount = PropertyListing::where('agent_id', auth()->id())->count();
-        $forPublishCount = PropertyListing::where('status', 'for_publish')->count();
-        $publishedCount = PropertyListing::where('status', 'published')->count();
-        $soldCount = PropertyListing::where('status', 'sold')->count();
 
         // Return to Inertia view
         return Inertia::render('Agent/PropertyListing/Properties', [
-            'properties' => $properties,
-            'propertiesCount' => $propertiesCount,
-            'forPublishCount' => $forPublishCount,
-            'publishedCount' => $publishedCount,
-            'soldCount' => $soldCount,
-            'search' => $request->query('search'),
+            'listings' => $properties,
         ]);
     }
 
