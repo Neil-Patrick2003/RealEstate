@@ -1,3 +1,4 @@
+// resources/js/Pages/Buyer/Inquiries.jsx
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import BuyerInquiriesFilterTab from "@/Components/tabs/BuyerInquiriesFilterTab.jsx";
 import {
@@ -10,11 +11,14 @@ import {
     faEnvelope,
     faPhone,
     faFolderOpen,
+    faCircleCheck,
+    faCalendarPlus,
+    faHandshakeSimple,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
 import { Head, Link, router } from "@inertiajs/react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
@@ -26,7 +30,11 @@ const arr = (v) => (Array.isArray(v) ? v : []);
 const peso = (n) => {
     const num = Number(n);
     if (!Number.isFinite(num)) return "—";
-    return num.toLocaleString("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
+    return num.toLocaleString("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        maximumFractionDigits: 0,
+    });
 };
 const cn = (...c) => c.filter(Boolean).join(" ");
 const getStatusBadge = (status) => {
@@ -44,6 +52,25 @@ const getStatusBadge = (status) => {
     }
 };
 
+// progress steps for the mini-tracker
+const steps = [
+    { key: "requested", label: "Requested", icon: faPaperPlane },
+    { key: "accepted", label: "Accepted", icon: faCircleCheck },
+    { key: "visit", label: "Visit", icon: faCalendarPlus },
+    { key: "deal", label: "Deal", icon: faHandshakeSimple },
+];
+
+function computeStepIndex(inquiry) {
+    const s = (inquiry?.status || "").toLowerCase();
+    const hasVisit = arr(inquiry?.trippings).length > 0;
+    if (s === "rejected") return 0; // stays at requested
+    if (s === "pending") return 0;
+    if (s === "accepted" && !hasVisit) return 1;
+    if (s === "accepted" && hasVisit) return 2;
+    if (s === "closed" || s === "completed" || s === "won") return 3;
+    return 0;
+}
+
 export default function Inquiries({
                                       inquiries = { data: [], links: [] },
                                       status = "",
@@ -59,20 +86,37 @@ export default function Inquiries({
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [cancelId, setCancelId] = useState(null);
 
-    const [selectedStatus, setSelectedStatus] = useState(status?.trim() ? status : "All");
+    const [selectedStatus, setSelectedStatus] = useState(
+        status?.trim() ? status : "All"
+    );
 
     const handleCancelInquiry = () => {
         if (!cancelId) return;
-        router.patch(`/inquiries/${cancelId}/cancel`, {}, {
-            onSuccess: () => {
-                setIsCancelModalOpen(false);
-                setCancelId(null);
-            },
-            onError: (errors) => console.error("Failed to cancel inquiry", errors),
-        });
+        router.patch(
+            `/inquiries/${cancelId}/cancel`,
+            {},
+            {
+                onSuccess: () => {
+                    setIsCancelModalOpen(false);
+                    setCancelId(null);
+                },
+                onError: (errors) => console.error("Failed to cancel inquiry", errors),
+            }
+        );
     };
 
     const list = arr(inquiries?.data);
+
+    // counts used for the guide panel
+    const counts = useMemo(
+        () => ({
+            pending: pendingCount,
+            accepted: acceptedCount,
+            cancelled: cancelledCount,
+            rejected: rejectedCount,
+        }),
+        [pendingCount, acceptedCount, cancelledCount, rejectedCount]
+    );
 
     return (
         <BuyerLayout>
@@ -80,7 +124,11 @@ export default function Inquiries({
             <div className="py-6">
                 {/* Modals */}
                 {isAddVisitModal && (
-                    <ScheduleVisitModal open={isAddVisitModal} setOpen={setIsAddVisitModal} visitData={selectedVisitData} />
+                    <ScheduleVisitModal
+                        open={isAddVisitModal}
+                        setOpen={setIsAddVisitModal}
+                        visitData={selectedVisitData}
+                    />
                 )}
                 <ConfirmDialog
                     onConfirm={handleCancelInquiry}
@@ -98,245 +146,433 @@ export default function Inquiries({
                         <FontAwesomeIcon icon={faEnvelope} className="mr-2 text-gray-800" />
                         My Inquiries
                     </h1>
-                    <p className="text-gray-600">Keep track of all your property inquiries and agent communications.</p>
+                    <p className="text-gray-600">
+                        Track all property inquiries and move forward with clear next steps.
+                    </p>
                 </div>
 
-                {/* Tabs */}
-                <div className="flex justify-between items-center mt-6 mb-5">
-                    <BuyerInquiriesFilterTab
-                        setSelectedStatus={setSelectedStatus}
-                        count={[allCount, pendingCount, acceptedCount, cancelledCount, rejectedCount]}
-                        selectedStatus={selectedStatus}
-                    />
-                </div>
+                {/* Tabs + helper panel */}
+                <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <div className="lg:col-span-8">
+                        <BuyerInquiriesFilterTab
+                            setSelectedStatus={setSelectedStatus}
+                            count={[
+                                allCount,
+                                pendingCount,
+                                acceptedCount,
+                                cancelledCount,
+                                rejectedCount,
+                            ]}
+                            selectedStatus={selectedStatus}
+                        />
 
-                {/* Empty state */}
-                {list.length === 0 ? (
-                    <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
-                            <FontAwesomeIcon icon={faFolderOpen} className="text-gray-500" />
-                        </div>
-                        <h2 className="text-xl font-semibold text-gray-900">No inquiries yet</h2>
-                        <p className="mt-2 text-gray-600">When you inquire about a property, it will appear here.</p>
-                    </div>
-                ) : (
-                    list.map((inquiry) => {
-                        const property = inquiry?.property ?? {};
-                        const agent = inquiry?.agent ?? null;
-                        const broker = inquiry?.broker ?? null;
-                        const contact = agent || broker || {};
+                        {/* Empty state */}
+                        {list.length === 0 ? (
+                            <div className="mt-5 rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
+                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
+                                    <FontAwesomeIcon icon={faFolderOpen} className="text-gray-500" />
+                                </div>
+                                <h2 className="text-xl font-semibold text-gray-900">
+                                    No inquiries yet
+                                </h2>
+                                <p className="mt-2 text-gray-600">
+                                    Browse properties and send an inquiry to get started.
+                                </p>
+                                <div className="mt-6 inline-flex gap-2">
+                                    <Link
+                                        href="/properties"
+                                        className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800"
+                                    >
+                                        Explore Properties
+                                    </Link>
+                                    <Link
+                                        href="/favourites"
+                                        className="px-4 py-2 rounded-md border hover:bg-gray-50"
+                                    >
+                                        View Favourites
+                                    </Link>
+                                </div>
+                            </div>
+                        ) : (
+                            list.map((inquiry) => {
+                                const property = inquiry?.property ?? {};
+                                const agent = inquiry?.agent ?? null;
+                                const broker = inquiry?.broker ?? null;
+                                const contact = agent || broker || {};
 
-                        const message = inquiry?.notes || "";
-                        const statusLower = (inquiry?.status || "").toLowerCase();
-                        const isAccepted = statusLower === "accepted";
-                        const isCancelled = statusLower === "cancelled" || statusLower === "cancelled by buyer";
-                        const canScheduleVisit = isAccepted && !isCancelled;
-                        const hasTrippings = arr(inquiry?.trippings).length > 0;
+                                const message = inquiry?.notes || "";
+                                const statusLower = (inquiry?.status || "").toLowerCase();
+                                const isAccepted = statusLower === "accepted";
+                                const isCancelled =
+                                    statusLower === "cancelled" || statusLower === "cancelled by buyer";
+                                const hasTrippings = arr(inquiry?.trippings).length > 0;
+                                const canScheduleVisit = isAccepted && !isCancelled;
 
-                        const imageSrc = property?.image_url ? `/storage/${property.image_url}` : "/placeholder.png";
-                        const createdAgo = inquiry?.created_at ? dayjs(inquiry.created_at).fromNow() : "—";
+                                const imageSrc = property?.image_url
+                                    ? `/storage/${property.image_url}`
+                                    : "/placeholder.png";
+                                const createdAgo = inquiry?.created_at
+                                    ? dayjs(inquiry.created_at).fromNow()
+                                    : "—";
+                                const stepIndex = computeStepIndex(inquiry);
 
-                        return (
-                            <div
-                                key={inquiry?.id ?? Math.random()}
-                                className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6 hover:shadow-md transition-all"
-                            >
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-6 p-6">
-                                    {/* Property Image */}
-                                    <div className="col-span-12 lg:col-span-3">
-                                        <div className="relative rounded-xl overflow-hidden h-48 shadow-sm">
-                                            <img
-                                                src={imageSrc}
-                                                onError={(e) => (e.currentTarget.src = "/placeholder.png")}
-                                                alt={property?.title || "Property Image"}
-                                                className="w-full h-full object-cover transition-transform hover:scale-105"
-                                            />
-                                            <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-3 py-1 rounded-full">
-                                                {peso(property?.price)}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Property Info */}
-                                    <div className="col-span-12 lg:col-span-6 flex flex-col justify-between">
-                                        <div>
-                                            <div className="flex justify-between items-start mb-2 gap-3">
-                                                <h3 className="text-xl font-semibold text-gray-900 leading-tight">
-                                                    {property?.title ?? "Unknown Property"}
-                                                </h3>
-                                                <span
-                                                    className={cn(
-                                                        "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
-                                                        getStatusBadge(inquiry?.status)
-                                                    )}
-                                                >
-                          <FontAwesomeIcon icon={faClock} className="mr-1" />
-                                                    {inquiry?.status ?? "Pending"}
-                        </span>
-                                            </div>
-
-                                            <p className="text-gray-700 text-sm mb-1">
-                                                <FontAwesomeIcon icon={faLocationDot} className="mr-1 text-gray-500" />
-                                                {property?.address ?? "No address provided"}
-                                            </p>
-
-                                            <p className="text-xs text-gray-500 mb-3">
-                                                <FontAwesomeIcon icon={faHouseChimney} className="mr-1" />
-                                                {property?.property_type ?? "Type"} <span className="text-gray-400">•</span>{" "}
-                                                {property?.sub_type ?? "Sub-type"}
-                                            </p>
-
-                                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
-                                                <p className="text-sm text-gray-800 line-clamp-2">
-                                                    <strong>Your message: </strong>
-                                                    {message || "No message provided."}
-                                                </p>
-                                            </div>
-
-                                            <p className="text-xs text-gray-400">
-                                                <FontAwesomeIcon icon={faClock} className="mr-1" />
-                                                Sent {createdAgo}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Agent Info & Actions */}
-                                    <div className="col-span-12 lg:col-span-3 flex flex-col justify-between">
-                                        <div className="flex items-center mb-4">
-                                            <div className="w-11 h-11 rounded-full overflow-hidden mr-3 border border-gray-200 bg-white">
-                                                {contact?.photo_url ? (
+                                return (
+                                    <div
+                                        key={inquiry?.id ?? Math.random()}
+                                        className="bg-white rounded-2xl shadow-sm border border-gray-200 mt-5 hover:shadow-md transition-all focus-within:ring-2 focus-within:ring-gray-300"
+                                        tabIndex={-1}
+                                        aria-label={`Inquiry for ${property?.title || "property"}`}
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-6 p-6">
+                                            {/* Property Image */}
+                                            <div className="col-span-12 lg:col-span-3">
+                                                <div className="relative rounded-xl overflow-hidden h-48 shadow-sm">
                                                     <img
-                                                        src={`/storage/${contact.photo_url}`}
-                                                        alt={contact?.name ?? "Contact"}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => (e.currentTarget.style.display = "none")}
+                                                        src={imageSrc}
+                                                        onError={(e) => (e.currentTarget.src = "/placeholder.png")}
+                                                        alt={property?.title || "Property Image"}
+                                                        className="w-full h-full object-cover transition-transform hover:scale-105"
                                                     />
-                                                ) : (
-                                                    <div className="flex items-center justify-center w-full h-full bg-gray-800 text-white font-semibold text-base">
-                                                        {(contact?.name || "?").charAt(0).toUpperCase()}
+                                                    <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-3 py-1 rounded-full">
+                                                        {peso(property?.price)}
                                                     </div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900">{contact?.name ?? "Contact"}</p>
-                                                <p className="text-xs text-gray-500">4.8 ⭐ (76 reviews)</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="text-xs text-gray-600 mb-4 space-y-1">
-                                            <p>
-                                                <FontAwesomeIcon icon={faEnvelope} className="mr-1 text-gray-500" />
-                                                {contact?.email ?? "N/A"}
-                                            </p>
-                                            <p>
-                                                <FontAwesomeIcon icon={faPhone} className="mr-1 text-gray-500" />
-                                                {contact?.phone ?? "+63 912 345 6789"}
-                                            </p>
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex flex-col gap-2">
-                                            {/* Schedule Visit / Scheduled / Status */}
-                                            {canScheduleVisit ? (
-                                                hasTrippings ? (
-                                                    <div
-                                                        className="w-full flex items-center justify-center px-4 py-2 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium"
-                                                        aria-label="Visit Scheduled"
-                                                    >
-                                                        <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                        Scheduled!
-                                                    </div>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        className="w-full px-4 py-2 rounded-md border border-gray-300 text-gray-800 hover:bg-gray-50 font-medium transition"
-                                                        onClick={() => {
-                                                            setSelectedVisitData({
-                                                                property,
-                                                                agentId: agent?.id ?? null,
-                                                                brokerId: broker?.id ?? null,
-                                                                inquiryId: inquiry?.id ?? null,
-                                                            });
-                                                            setIsAddVisitModal(true);
-                                                        }}
-                                                    >
-                                                        <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                        Schedule Visit
-                                                    </button>
-                                                )
-                                            ) : (
-                                                <div
-                                                    className="w-full flex items-center justify-center px-4 py-2 rounded-md bg-gray-50 text-gray-700 border border-gray-200 font-medium"
-                                                    aria-label="Visit Status"
-                                                >
-                                                    <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                    {inquiry?.status ?? "Pending"}
                                                 </div>
-                                            )}
+                                            </div>
 
-                                            {/* View / Cancel */}
-                                            <div className="flex gap-2">
-                                                <Link
-                                                    href={`/inquiries/${property?.id ?? inquiry?.id}`}
-                                                    className={cn(
-                                                        "w-full text-center px-4 py-2 rounded-md text-sm font-medium transition",
-                                                        isCancelled ? "bg-gray-300 text-white cursor-not-allowed" : "bg-gray-900 text-white hover:bg-gray-800"
-                                                    )}
-                                                    aria-disabled={isCancelled}
-                                                >
-                                                    <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
-                                                    View
-                                                </Link>
-
-                                                {isCancelled ? (
-                                                    <div className="w-full py-2 rounded-md bg-gray-100 text-center text-gray-500 font-medium border border-gray-200">
-                                                        Cancelled
+                                            {/* Property Info + Progress */}
+                                            <div className="col-span-12 lg:col-span-6 flex flex-col justify-between">
+                                                <div>
+                                                    <div className="flex justify-between items-start mb-2 gap-3">
+                                                        <h3 className="text-xl font-semibold text-gray-900 leading-tight">
+                                                            {property?.title ?? "Unknown Property"}
+                                                        </h3>
+                                                        <span
+                                                            className={cn(
+                                                                "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
+                                                                getStatusBadge(inquiry?.status)
+                                                            )}
+                                                            title={`Status: ${inquiry?.status ?? "Pending"}`}
+                                                        >
+                              <FontAwesomeIcon icon={faClock} className="mr-1" />
+                                                            {inquiry?.status ?? "Pending"}
+                            </span>
                                                     </div>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        className="w-full px-4 py-2 rounded-md text-sm font-medium transition bg-rose-600 hover:bg-rose-500 text-white"
-                                                        onClick={() => {
-                                                            setCancelId(inquiry?.id ?? null);
-                                                            setIsCancelModalOpen(true);
-                                                        }}
-                                                    >
-                                                        <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
-                                                        Cancel
-                                                    </button>
-                                                )}
+
+                                                    <p className="text-gray-700 text-sm mb-1">
+                                                        <FontAwesomeIcon
+                                                            icon={faLocationDot}
+                                                            className="mr-1 text-gray-500"
+                                                        />
+                                                        {property?.address ?? "No address provided"}
+                                                    </p>
+
+                                                    <p className="text-xs text-gray-500 mb-3">
+                                                        <FontAwesomeIcon icon={faHouseChimney} className="mr-1" />
+                                                        {property?.property_type ?? "Type"}{" "}
+                                                        <span className="text-gray-400">•</span>{" "}
+                                                        {property?.sub_type ?? "Sub-type"}
+                                                    </p>
+
+                                                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
+                                                        <p className="text-sm text-gray-800 line-clamp-2">
+                                                            <strong>Your message: </strong>
+                                                            {message || "No message provided."}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* progress tracker */}
+                                                    <div className="mt-3">
+                                                        <ol className="flex items-center gap-3">
+                                                            {steps.map((st, i) => {
+                                                                const active = i <= stepIndex;
+                                                                return (
+                                                                    <li key={st.key} className="flex items-center">
+                                                                        <div
+                                                                            className={cn(
+                                                                                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border",
+                                                                                active
+                                                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                                                    : "bg-gray-50 text-gray-600 border-gray-200"
+                                                                            )}
+                                                                            title={st.label}
+                                                                        >
+                                                                            <FontAwesomeIcon icon={st.icon} className="w-3.5 h-3.5" />
+                                                                            {st.label}
+                                                                        </div>
+                                                                        {i !== steps.length - 1 && (
+                                                                            <span className="mx-2 h-px w-6 bg-gray-200" />
+                                                                        )}
+                                                                    </li>
+                                                                );
+                                                            })}
+                                                        </ol>
+                                                        <p className="text-[11px] text-gray-500 mt-1">
+                                                            Sent {createdAgo}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Contact + Actions */}
+                                            <div className="col-span-12 lg:col-span-3 flex flex-col justify-between">
+                                                <div className="flex items-center mb-4">
+                                                    <div className="w-11 h-11 rounded-full overflow-hidden mr-3 border border-gray-200 bg-white">
+                                                        {contact?.photo_url ? (
+                                                            <img
+                                                                src={`/storage/${contact.photo_url}`}
+                                                                alt={contact?.name ?? "Contact"}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => (e.currentTarget.style.display = "none")}
+                                                            />
+                                                        ) : (
+                                                            <div className="flex items-center justify-center w-full h-full bg-gray-800 text-white font-semibold text-base">
+                                                                {(contact?.name || "?").charAt(0).toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">
+                                                            {contact?.name ?? "Contact"}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">4.8 ⭐ (76 reviews)</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-xs text-gray-600 mb-4 space-y-1">
+                                                    <p title="Email">
+                                                        <FontAwesomeIcon
+                                                            icon={faEnvelope}
+                                                            className="mr-1 text-gray-500"
+                                                        />
+                                                        {contact?.email ?? "N/A"}
+                                                    </p>
+                                                    <p title="Phone">
+                                                        <FontAwesomeIcon
+                                                            icon={faPhone}
+                                                            className="mr-1 text-gray-500"
+                                                        />
+                                                        {contact?.phone ?? "+63 912 345 6789"}
+                                                    </p>
+                                                </div>
+
+                                                {/* Actions */}
+                                                <div className="flex flex-col gap-2">
+                                                    {/* Schedule Visit / Scheduled / Status */}
+                                                    {isAccepted ? (
+                                                        hasTrippings ? (
+                                                            <div
+                                                                className="w-full flex items-center justify-center px-4 py-2 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium"
+                                                                aria-label="Visit Scheduled"
+                                                                title="Your visit is already scheduled"
+                                                            >
+                                                                <FontAwesomeIcon
+                                                                    icon={faCalendarCheck}
+                                                                    className="mr-2"
+                                                                />
+                                                                Scheduled
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                className="w-full px-4 py-2 rounded-md border border-gray-300 text-gray-800 hover:bg-gray-50 font-medium transition"
+                                                                onClick={() => {
+                                                                    setSelectedVisitData({
+                                                                        property,
+                                                                        agentId: agent?.id ?? null,
+                                                                        brokerId: broker?.id ?? null,
+                                                                        inquiryId: inquiry?.id ?? null,
+                                                                    });
+                                                                    setIsAddVisitModal(true);
+                                                                }}
+                                                                title="Pick a date/time to visit"
+                                                            >
+                                                                <FontAwesomeIcon
+                                                                    icon={faCalendarCheck}
+                                                                    className="mr-2"
+                                                                />
+                                                                Schedule Visit
+                                                            </button>
+                                                        )
+                                                    ) : (
+                                                        <div
+                                                            className="w-full flex items-center justify-center px-4 py-2 rounded-md bg-gray-50 text-gray-700 border border-gray-200 font-medium"
+                                                            aria-label="Visit Status"
+                                                            title="Wait for the agent/broker to accept your inquiry to schedule a visit"
+                                                        >
+                                                            <FontAwesomeIcon icon={faClock} className="mr-2" />
+                                                            {inquiry?.status ?? "Pending"}
+                                                        </div>
+                                                    )}
+
+                                                    {/* View / Cancel */}
+                                                    <div className="flex gap-2">
+                                                        <Link
+                                                            href={`/inquiries/${property?.id ?? inquiry?.id}`}
+                                                            className={cn(
+                                                                "w-full text-center px-4 py-2 rounded-md text-sm font-medium transition",
+                                                                isCancelled
+                                                                    ? "bg-gray-300 text-white cursor-not-allowed"
+                                                                    : "bg-gray-900 text-white hover:bg-gray-800"
+                                                            )}
+                                                            aria-disabled={isCancelled}
+                                                            title="Open conversation/details"
+                                                        >
+                                                            <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
+                                                            View
+                                                        </Link>
+
+                                                        {isCancelled ? (
+                                                            <div className="w-full py-2 rounded-md bg-gray-100 text-center text-gray-500 font-medium border border-gray-200">
+                                                                Cancelled
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                className="w-full px-4 py-2 rounded-md text-sm font-medium transition bg-rose-600 hover:bg-rose-500 text-white"
+                                                                onClick={() => {
+                                                                    setCancelId(inquiry?.id ?? null);
+                                                                    setIsCancelModalOpen(true);
+                                                                }}
+                                                                title="Cancel this inquiry"
+                                                            >
+                                                                <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
+                                                                Cancel
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
+                                    </div>
+                                );
+                            })
+                        )}
+
+                        {/* Pagination */}
+                        <div
+                            className="flex flex-wrap gap-2 justify-end mt-6"
+                            aria-label="Pagination navigation"
+                        >
+                            {arr(inquiries?.links).map((link, i) =>
+                                link?.url ? (
+                                    <Link
+                                        key={i}
+                                        href={link.url}
+                                        className={cn(
+                                            "px-3 md:px-4 py-2 text-sm md:text-base rounded-md border transition",
+                                            link.active
+                                                ? "bg-gray-900 text-white font-semibold border-gray-900"
+                                                : "bg-white text-gray-700 hover:bg-gray-100 border-gray-200"
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                        aria-current={link.active ? "page" : undefined}
+                                    />
+                                ) : (
+                                    <span
+                                        key={i}
+                                        className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 bg-white border border-gray-200 rounded-md cursor-not-allowed"
+                                        dangerouslySetInnerHTML={{ __html: link?.label ?? "" }}
+                                        aria-disabled="true"
+                                    />
+                                )
+                            )}
+                        </div>
+                    </div>
+
+                    {/* NEXT STEPS GUIDE (sticky) */}
+                    <aside className="lg:col-span-4">
+                        <div className="sticky top-24">
+                            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    Next steps
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1 mb-4">
+                                    A quick guide for where you are in the process.
+                                </p>
+
+                                <ul className="space-y-3 text-sm">
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-1 h-2 w-2 rounded-full bg-amber-500" />
+                                        <div>
+                                            <p className="font-medium text-gray-800">
+                                                Waiting for acceptance
+                                            </p>
+                                            <p className="text-gray-600">
+                                                You’ll be able to schedule a property visit once the
+                                                agent/broker accepts your inquiry.
+                                            </p>
+                                        </div>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500" />
+                                        <div>
+                                            <p className="font-medium text-gray-800">
+                                                Accepted — schedule a visit
+                                            </p>
+                                            <p className="text-gray-600">
+                                                Pick a date/time that works for you. You’ll get a reminder
+                                                24h before your trip.
+                                            </p>
+                                        </div>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-1 h-2 w-2 rounded-full bg-sky-500" />
+                                        <div>
+                                            <p className="font-medium text-gray-800">
+                                                After your visit
+                                            </p>
+                                            <p className="text-gray-600">
+                                                Ready to proceed? Discuss offers or request another visit.
+                                            </p>
+                                        </div>
+                                    </li>
+                                </ul>
+
+                                <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
+                                    <Link
+                                        href="/properties"
+                                        className="px-3 py-2 rounded-md border hover:bg-gray-50 text-center"
+                                    >
+                                        Browse more homes
+                                    </Link>
+                                    <Link
+                                        href="/chat"
+                                        className="px-3 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800 text-center"
+                                    >
+                                        Message center
+                                    </Link>
+                                </div>
+
+                                {/* quick stats */}
+                                <div className="mt-6 grid grid-cols-2 gap-2 text-xs">
+                                    <div className="rounded-lg bg-gray-50 border border-gray-200 p-3">
+                                        <p className="text-gray-500">Pending</p>
+                                        <p className="text-lg font-semibold text-gray-900">
+                                            {counts.pending ?? 0}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3">
+                                        <p className="text-emerald-600">Accepted</p>
+                                        <p className="text-lg font-semibold text-emerald-700">
+                                            {counts.accepted ?? 0}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-lg bg-gray-50 border border-gray-200 p-3">
+                                        <p className="text-gray-500">Cancelled</p>
+                                        <p className="text-lg font-semibold text-gray-900">
+                                            {counts.cancelled ?? 0}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-lg bg-rose-50 border border-rose-200 p-3">
+                                        <p className="text-rose-600">Rejected</p>
+                                        <p className="text-lg font-semibold text-rose-700">
+                                            {counts.rejected ?? 0}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        );
-                    })
-                )}
-
-                {/* Pagination */}
-                <div className="flex flex-wrap gap-2 justify-end mt-6" aria-label="Pagination navigation">
-                    {arr(inquiries?.links).map((link, i) =>
-                        link?.url ? (
-                            <Link
-                                key={i}
-                                href={link.url}
-                                className={cn(
-                                    "px-3 md:px-4 py-2 text-sm md:text-base rounded-md border transition",
-                                    link.active ? "bg-gray-900 text-white font-semibold border-gray-900" : "bg-white text-gray-700 hover:bg-gray-100 border-gray-200"
-                                )}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                aria-current={link.active ? "page" : undefined}
-                            />
-                        ) : (
-                            <span
-                                key={i}
-                                className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 bg-white border border-gray-200 rounded-md cursor-not-allowed"
-                                dangerouslySetInnerHTML={{ __html: link?.label ?? "" }}
-                                aria-disabled="true"
-                            />
-                        )
-                    )}
+                        </div>
+                    </aside>
                 </div>
             </div>
         </BuyerLayout>

@@ -1,316 +1,158 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage, Link } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
-import React from 'react';
-import { motion } from 'framer-motion';
-import dayjs from "dayjs";
-import ProfileProgress from "@/Components/ProfileProgress.jsx";
+// resources/js/Pages/Seller/Dashboard.jsx
+import React from "react";
+import AgentLayout from "@/Layouts/AgentLayout.jsx"; // reuse theme shell
+import { Link } from "@inertiajs/react";
+import {
+    AreaChart, Area, BarChart, Bar, XAxis, YAxis,
+    CartesianGrid, Tooltip, ResponsiveContainer
+} from "recharts";
+import { Home, MessageSquare, Eye, ShoppingBag, MapPin } from "lucide-react";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 
+// helpers
+const money = (n=0) =>
+    new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }).format(n||0);
+const fmtInt = (n=0) =>
+    new Intl.NumberFormat("en-PH", { maximumFractionDigits: 0 }).format(n||0);
 
-export default function Dashboard({ total_properties, total_inquiries, total_views, sold_properties, recent_properties, recent_inquiries, auth_user }) {
-    const { t } = useTranslation();
-    const auth = usePage().props?.auth?.user ?? null;
+const Kpi = ({ icon: Icon, label, value, sub }) => (
+    <div className="rounded-xl bg-white ring-1 ring-gray-200 p-4 flex items-center gap-3">
+        <div className="rounded-lg bg-green-50 p-2 text-primary"><Icon size={20} /></div>
+        <div className="min-w-0">
+            <p className="text-xs text-gray-500">{label}</p>
+            <p className="text-lg font-semibold text-gray-900 truncate">{value}</p>
+            {sub && <p className="text-[11px] text-gray-500">{sub}</p>}
+        </div>
+    </div>
+);
 
-    const cards = [
-        {
-            label: total_properties === 0 ? 'No Listings' : 'Total Listings',
-            count: total_properties,
-            icon: total_properties === 0 ? '❌' : '🏘️',
-            from: 'from-green-200',
-            to: 'to-green-100',
-            text: 'text-green-900',
-        },
-        {
-            label: sold_properties === 0 ? 'No Published Listings' : 'Published',
-            count: sold_properties,
-            icon: sold_properties === 0 ? '🚫' : '📢',
-            from: 'from-purple-200',
-            to: 'to-purple-100',
-            text: 'text-purple-900',
-        },
-        {
-            label: 'Total Inquiries',
-            count: total_inquiries,
-            icon: total_inquiries === 0 ? '📭' : '⏳',
-            from: 'from-yellow-200',
-            to: 'to-yellow-100',
-            text: 'text-yellow-900',
-        },
-        {
-            label: 'Total Views',
-            count: total_views,
-            icon:  '👁️‍🗨️' ,
-            from: 'from-orange-200',
-            to: 'to-orange-100',
-            text: 'text-orange-900',
-        },
-    ];
+function EmptyChart() {
+    return (
+        <div className="h-full w-full flex items-center justify-center text-sm text-gray-500">
+            No data for the selected range.
+        </div>
+    );
+}
+function EmptyList({ text }) {
+    return <p className="text-sm text-gray-500 py-2">{text}</p>;
+}
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.2,
-            },
-        },
-    };
+export default function Dashboard({ kpi = {}, charts = {}, queues = {} }) {
+    const propsSeries = (charts?.propertiesByMonth || []).map(d => ({ name: d.ym, value: Number(d.total||0) }));
+    const inquiriesSeries = (charts?.inquiriesByMonth || []).map(d => ({ name: d.ym, value: Number(d.total||0) }));
 
-    const cardVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0 },
-    };
-
-    const statusColors = {
-        Accepted: 'bg-green-100 text-green-800 ring-green-300',
-        Cancelled: 'bg-red-100 text-red-800 ring-red-300',
-        Pending: 'bg-yellow-100 text-yellow-800 ring-yellow-300',
-        default: 'bg-gray-100 text-gray-700 ring-gray-300',
-    };
-
-    const fadeInUp = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-    };
-
-    const hoverScale = {
-        whileHover: { scale: 1.05 },
-        transition: { type: 'spring', stiffness: 300 },
-    };
+    const recentProps = Array.isArray(queues?.recent_properties) ? queues.recent_properties : [];
+    const recentInqs  = Array.isArray(queues?.recent_inquiries) ? queues.recent_inquiries : [];
 
     return (
         <AuthenticatedLayout>
-            <Head title="Dashboard" />
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
+                <p className="text-sm text-gray-600">Your listings, interest and traction at a glance.</p>
+            </div>
 
-            {/* Stats Cards */}
-            <motion.div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 py-6"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-            >
-                {cards.map((card, i) => (
-                    <motion.div
-                        key={i}
-                        variants={cardVariants}
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ type: 'spring', stiffness: 100 }}
-                        className={`relative overflow-hidden flex flex-col gap-4 p-6 rounded-xl shadow-md bg-gradient-to-tl ${card.from} ${card.to} cursor-pointer`}
-                    >
-                        <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center text-2xl shadow">
-                            {card.icon}
-                        </div>
+            {/* KPI */}
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+                <Kpi icon={Home}         label="Total Properties" value={fmtInt(kpi?.total_properties)} sub={`${fmtInt(kpi?.sold_properties)} sold`} />
+                <Kpi icon={MessageSquare}label="Inquiries"       value={fmtInt(kpi?.total_inquiries)} />
+                <Kpi icon={Eye}          label="Total Views"     value={fmtInt(kpi?.total_views)} />
+                <Kpi icon={ShoppingBag}  label="Sold"            value={fmtInt(kpi?.sold_properties)} />
+                <Kpi icon={MapPin}       label="Accepted Inquiries" value={fmtInt(kpi?.inquiries_status?.Accepted)} sub={`${fmtInt(kpi?.inquiries_status?.Pending)} pending`} />
+            </div>
 
-                        <div className="mt-2">
-                            <p className={`text-sm font-medium ${card.text}`}>{card.label}</p>
-                            <p className={`text-3xl font-bold ${card.text}`}>{card.count}</p>
-                        </div>
-
-                        <div className="absolute right-2 bottom-2 text-6xl opacity-10 pointer-events-none select-none">
-                            {card.icon}
-                        </div>
-                    </motion.div>
-                ))}
-            </motion.div>
-
-            {/* Recent Properties */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.8 }}
-                className="mt-10 px-4"
-            >
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-800">Recent Properties</h2>
-
-                    <motion.div {...hoverScale}>
-                        <Link
-                            href="/properties/create"
-                            className="text-sm bg-primary text-white px-4 py-2 rounded-lg shadow hover:bg-accent transition duration-200"
-                        >
-                            + Add Property
-                        </Link>
-                    </motion.div>
-
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div className="lg:col-span-2 rounded-xl bg-white ring-1 ring-gray-200 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-gray-800">Properties added (last 12 months)</h3>
+                    </div>
+                    <div className="h-64">
+                        {propsSeries.length ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={propsSeries}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" fontSize={12} />
+                                    <YAxis fontSize={12} allowDecimals={false}/>
+                                    <Tooltip />
+                                    <Area type="monotone" dataKey="value" fill="#22c55e33" stroke="#16a34a" strokeWidth={2} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : <EmptyChart />}
+                    </div>
                 </div>
 
-                {recent_properties.length === 0 ? (
-                    <motion.div
-                        variants={fadeInUp}
-                        initial="hidden"
-                        animate="visible"
-                        className="flex items-center justify-center h-40 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300"
-                    >
-                        <p>No recent properties. Start by adding one!</p>
-                    </motion.div>
+                <div className="rounded-xl bg-white ring-1 ring-gray-200 p-4">
+                    <h3 className="font-semibold text-gray-800 mb-2">Inquiries received (last 12 months)</h3>
+                    <div className="h-64">
+                        {inquiriesSeries.length ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={inquiriesSeries}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" fontSize={12} />
+                                    <YAxis fontSize={12} allowDecimals={false} />
+                                    <Tooltip />
+                                    <Bar dataKey="value" fill="#0ea5e9" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : <EmptyChart />}
+                    </div>
+                </div>
+            </div>
 
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {recent_properties.slice(0, 5).map((property) => (
-                            <motion.div
-                                key={property.id}
-                                whileHover={{ scale: 1.04 }}
-                                className="rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-200 overflow-hidden flex flex-col"
-                            >
-                                <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
-                                    <img
-                                        src={`/storage/${property.image_url}`}
-                                        alt={property.title}
-                                        className="object-cover opacity-90 w-full h-full transform transition-transform duration-500 hover:scale-105"
-                                    />
-                                    <span className="absolute top-3 left-3 bg-primary text-white text-xs font-semibold px-2 py-1 rounded-md shadow">
-                                        {property.sub_type}
-                                    </span>
-                                    <span className={`absolute top-3 right-3 text-xs font-semibold px-2 py-1 rounded-md shadow
-                                        ${property.status === 'Unassigned' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
-                                        {property.status}
-                                    </span>
+            {/* Recent activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent Properties */}
+                <div className="rounded-xl bg-white ring-1 ring-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-gray-800">Recent Properties</h3>
+                        <Link href="/seller/properties" className="text-sm text-primary">View all</Link>
+                    </div>
+                    <ul className="divide-y mt-2">
+                        {recentProps.map(p => (
+                            <li key={p.id} className="py-3 flex items-start gap-3">
+                                <img
+                                    src={p?.image_url ? `/storage/${p.image_url}` : "/images/placeholder.jpg"}
+                                    onError={e => e.currentTarget.src="/images/placeholder.jpg"}
+                                    className="w-12 h-12 rounded object-cover ring-1 ring-gray-200"
+                                    alt=""
+                                />
+                                <div className="min-w-0">
+                                    <p className="text-sm font-medium text-gray-800 truncate">{p?.title || "—"}</p>
+                                    <p className="text-xs text-gray-500 truncate">{p?.address || "—"}</p>
+                                    <p className="text-[11px] text-gray-500">{p?.status} • {p?.created_at ? new Date(p.created_at).toLocaleDateString() : "—"}</p>
                                 </div>
-
-                                <div className="p-6 flex flex-col flex-grow">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-xl font-semibold text-gray-900 truncate max-w-[70%]" title={property.title}>
-                                            {property.title}
-                                        </h3>
-                                        <p className="text-primary font-bold text-xl whitespace-nowrap">
-                                            ₱{Number(property.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center justify-between mt-5">
-                                        <div className="flex flex-col max-w-[75%]">
-                                            <p className="text-gray-600 text-sm truncate" title={property.address}>
-                                                {property.address}
-                                            </p>
-                                            <p className="text-gray-400 text-xs italic mt-1">
-                                                Posted on {new Date(property.created_at).toLocaleDateString()}
-                                            </p>
-                                        </div>
-
-                                        <Link
-                                            href={`/seller/properties/${property.id}`}
-                                            className="text-primary font-semibold hover:text-accent transition-colors duration-200 whitespace-nowrap"
-                                        >
-                                            View Details &rarr;
-                                        </Link>
-                                    </div>
-                                </div>
-                            </motion.div>
+                                <Link href={`/seller/properties/${p.id}`} className="ml-auto text-sm text-primary">Open</Link>
+                            </li>
                         ))}
-                    </div>
-                )}
-            </motion.div>
-
-            {/* Recent Inquiries */}
-            <section className="mt-12 px-4">
-                <h2 className="text-xl font-bold mb-6 text-gray-800">Recent Inquiries</h2>
-
-                {recent_inquiries.length === 0 ? (
-
-                    <motion.div
-                        variants={fadeInUp}
-                        initial="hidden"
-                        animate="visible"
-                        className="flex items-center justify-center h-40 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300"
-                    >
-                        <p>No recent inquiries yet.</p>
-                    </motion.div>
-                ) : (
-                    <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
-                        <table className="min-w-full text-sm text-left text-gray-700">
-                            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
-                            <tr>
-                                <th className="p-4">Property</th>
-                                <th className="p-4">Agent</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4">Date Inquired</th>
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-dashed">
-                            {recent_inquiries.map((inquiry) => {
-                                const statusClass = statusColors[inquiry.status] || statusColors.default;
-                                return (
-                                    <tr key={inquiry.id} className="hover:bg-gray-50 transition duration-150">
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-3">
-                                                <img
-                                                    src={`/storage/${inquiry.property?.image_url}`}
-                                                    alt={inquiry.property?.title || 'Property'}
-                                                    className="w-14 h-14 object-cover rounded-md"
-                                                />
-                                                <div>
-                                                    <p className="font-medium text-gray-800 truncate max-w-[200px]">{inquiry.property?.title ?? 'Unknown Property'}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {inquiry.property?.property_type} | {inquiry.property?.sub_type}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <p className="text-primary font-medium">{inquiry.agent?.name ?? 'Unknown Agent'}</p>
-                                            <p className="text-xs text-gray-500">{inquiry.agent?.email}</p>
-                                        </td>
-                                        <td className="p-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ring-1 ${statusClass}`}>
-                                                    {inquiry.status}
-                                                </span>
-                                        </td>
-                                        <td className="p-4 text-sm text-gray-600">
-                                            {dayjs(inquiry.created_at).format('MMMM D, YYYY')}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </section>
-
-            {/* Support + Profile Progress */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 px-4">
-                <div className="col-span-1 md:col-span-2">
-                    <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-md p-6 h-full flex flex-col justify-between transition-all hover:shadow-lg">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-800 mb-3">💬 Contact Support</h2>
-                            <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                                Need assistance with managing properties, inquiries, or your account? Our support team is ready to help you.
-                            </p>
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="bg-indigo-100 text-indigo-600 p-2 rounded-full text-xl">📧</div>
-                                    <a href="mailto:support@realestate.com" className="text-sm text-gray-800 hover:text-indigo-600 font-medium">
-                                        support@realestate.com
-                                    </a>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="bg-green-100 text-green-600 p-2 rounded-full text-xl">📞</div>
-                                    <p className="text-sm text-gray-800 font-medium">+63 912 345 6789</p>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="bg-blue-100 text-blue-600 p-2 rounded-full text-xl">💻</div>
-                                    <a href="#" className="text-sm text-gray-800 hover:text-blue-600 font-medium">
-                                        Live Chat (Coming Soon)
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-8">
-                            <a
-                                href="mailto:support@realestate.com"
-                                className="inline-block w-full text-center bg-primary text-white text-sm font-semibold px-6 py-3 rounded-lg shadow hover:bg-indigo-700 transition duration-200"
-                            >
-                                Contact Support
-                            </a>
-                        </div>
-                    </div>
+                        {recentProps.length === 0 && <EmptyList text="No recent properties." />}
+                    </ul>
                 </div>
 
-                <div className="col-span-1">
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 h-full transition-all hover:shadow-lg">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-4">👤 Profile Progress</h2>
-                        <ProfileProgress user={auth_user} />
+                {/* Recent Inquiries */}
+                <div className="rounded-xl bg-white ring-1 ring-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-gray-800">Recent Inquiries</h3>
+                        <Link href="/seller/inquiries" className="text-sm text-primary">View all</Link>
                     </div>
+                    <ul className="divide-y mt-2">
+                        {recentInqs.map(i => (
+                            <li key={i.id} className="py-3 flex items-start gap-3">
+                                <img
+                                    src={i?.property?.image_url ? `/storage/${i.property.image_url}` : "/images/placeholder.jpg"}
+                                    onError={e => e.currentTarget.src="/images/placeholder.jpg"}
+                                    className="w-12 h-12 rounded object-cover ring-1 ring-gray-200"
+                                    alt=""
+                                />
+                                <div className="min-w-0">
+                                    <p className="text-sm font-medium text-gray-800 truncate">{i?.property?.title || "—"}</p>
+                                    <p className="text-xs text-gray-500 truncate">{i?.agent?.name ? `Agent: ${i.agent.name}` : "—"}</p>
+                                    <p className="text-[11px] text-gray-500">{i?.status} • {i?.created_at ? new Date(i.created_at).toLocaleString() : "—"}</p>
+                                </div>
+                                <Link href="/seller/inquiries" className="ml-auto text-sm text-primary">Reply</Link>
+                            </li>
+                        ))}
+                        {recentInqs.length === 0 && <EmptyList text="No recent inquiries." />}
+                    </ul>
                 </div>
             </div>
         </AuthenticatedLayout>
