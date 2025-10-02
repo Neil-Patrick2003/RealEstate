@@ -9,8 +9,9 @@ import {
     Building2,
     LandPlot,
     Star,
-    Eye,
+    Eye, Heart,
 } from "lucide-react";
+import { Link } from '@inertiajs/react';
 
 const cn = (...c) => c.filter(Boolean).join(" ");
 const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 });
@@ -64,6 +65,8 @@ export default function PropertyCard({
                                          onView,        // () => void
                                          onInquiry,     // () => void
                                          onShare,       // () => void
+                                         onToggleFavorite,
+                                         isFavorite
                                      }) {
     const [imgErr, setImgErr] = useState(false);
     const imgSrc = !imgErr && property?.image_url ? `/storage/${property.image_url}` : "/placeholder.png";
@@ -150,19 +153,19 @@ export default function PropertyCard({
 
                 {/* Bottom actions (for keyboard users / non-hover) */}
                 <div className="mt-auto pt-1 flex items-center gap-2">
-                    <button
-                        onClick={onView}
+                    <Link
+                        href={`/properties/${property.id}`}
                         className="flex-1 text-center py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-300"
                     >
                         View Details
-                    </button>
+                    </Link>
                     <button
-                        onClick={onInquiry}
+                        onClick={onToggleFavorite}
                         className="px-3 py-2 rounded-md text-sm border border-primary text-primary hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/30"
                         aria-label="Send inquiry"
                         title="Send inquiry"
                     >
-                        <Send className="h-4 w-4" />
+                        <Heart className="h-4 w-4" />
                     </button>
                     <button
                         onClick={onShare}

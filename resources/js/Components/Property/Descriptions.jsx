@@ -31,10 +31,6 @@ export default function Descriptions({price, lot_area, floor_area, description, 
                                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium">
                                 <i className="fas fa-calendar-alt mr-2"></i> Schedule Tour
                             </button>
-                            <button
-                                className="border border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors font-medium">
-                                <i className="fas fa-file-signature mr-2"></i> Make Offer
-                            </button>
                             {
                                 property?.property_listing && <PrimaryButton  onClick={() => setIsOpenDealForm(true)}>
                                     {deal ? 'View My Offer': 'Make Offer'}

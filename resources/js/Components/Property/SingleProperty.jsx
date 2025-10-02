@@ -1,6 +1,6 @@
 // resources/js/Components/Property/SingleProperty.jsx
-import React, { useState, useMemo } from "react";
-import { useForm } from "@inertiajs/react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useForm, router } from "@inertiajs/react";
 import PropertyHeader from "@/Components/Property/PropertyHeader.jsx";
 import MainImage from "@/Components/Property/MainImage.jsx";
 import Thumbnail from "@/Components/Property/Thumbnail.jsx";
@@ -12,10 +12,33 @@ import Modal from "@/Components/Modal.jsx";
 import ToastHandler from "@/Components/ToastHandler.jsx";
 import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
 import InquiryForm from "@/Components/Inquiry/InquiryForm.jsx";
+import { Heart, Share2 } from "lucide-react";
 
 /* small utils */
 const cn = (...c) => c.filter(Boolean).join(" ");
 const isTruthy = (v) => v === true || v === 1 || v === "1";
+
+/* Tiny toast (local) */
+function InlineToast({ toast, onClose }) {
+    useEffect(() => {
+        if (!toast) return;
+        const t = setTimeout(onClose, 2200);
+        return () => clearTimeout(t);
+    }, [toast, onClose]);
+    if (!toast) return null;
+    return (
+        <div className="fixed bottom-5 right-5 z-50">
+            <div
+                className={cn(
+                    "px-4 py-3 rounded-xl shadow-lg backdrop-blur text-white",
+                    toast.type === "error" ? "bg-red-600/95" : "bg-emerald-600/95"
+                )}
+            >
+                {toast.msg}
+            </div>
+        </div>
+    );
+}
 
 /* Seller Contact Modal */
 const SellerModal = ({ show, onClose, seller, message, onChangeMessage, onSubmit, processing }) => (
@@ -80,7 +103,7 @@ const SellerModal = ({ show, onClose, seller, message, onChangeMessage, onSubmit
     </Modal>
 );
 
-export default function SingleProperty({ property, auth, agents, broker, seller, deal }) {
+export default function SingleProperty({ property, auth, agents, broker, seller, deal, initialFavorites = [] }) {
     const { data, setData, post, processing } = useForm({
         message: "",
         person: "",
@@ -91,7 +114,13 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
     const [isOpenDealForm, setIsOpenDealForm] = useState(false);
     const [isContactSeller, setIsContactSeller] = useState(false);
 
-    /* optional: normalize flags once for header chips */
+    // favorites + share
+    const [favoriteIds, setFavoriteIds] = useState(
+        Array.isArray(initialFavorites) ? initialFavorites : []
+    );
+    const isFavorite = favoriteIds.includes(property?.id);
+    const [toast, setToast] = useState(null);
+
     const normalized = useMemo(
         () => ({
             ...property,
@@ -104,11 +133,9 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
         const msg = data.message?.trim();
         if (!msg) return;
 
-        // Decide endpoint: if reaching a specific person (agent/broker), use /properties/:id (your existing logic)
-        // Otherwise, default to property owner/seller endpoint.
         const url = selectedPerson
-            ? `/properties/${property.id}`
-            : `/agents/properties/${property.id}/sent-inquiry`;
+            ? `/properties/${property.id}` // agent/broker inquiry
+            : `/agents/properties/${property.id}/sent-inquiry`; // seller inquiry
 
         if (selectedPerson) {
             setData("person", selectedPerson?.id);
@@ -125,9 +152,57 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
         });
     };
 
+    const toggleFavorite = (id) => {
+        const willAdd = !favoriteIds.includes(id);
+        setFavoriteIds((prev) => (willAdd ? [...prev, id] : prev.filter((x) => x !== id)));
+
+        router.post(
+            `/properties/${id}/favorites`,
+            { id },
+            {
+                preserveScroll: true,
+                onSuccess: () =>
+                    setToast({
+                        type: "success",
+                        msg: willAdd ? "Added to favorites" : "Removed from favorites",
+                    }),
+                onError: () => {
+                    // revert
+                    setFavoriteIds((prev) => (willAdd ? prev.filter((x) => x !== id) : [...prev, id]));
+                    setToast({ type: "error", msg: "Failed to update favorites" });
+                },
+            }
+        );
+    };
+
+    const shareProperty = async () => {
+        const url = `${window.location.origin}/properties/${property?.id}`;
+        const title = property?.title || "Property";
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title,
+                    text: property?.address || "",
+                    url,
+                });
+                return;
+            }
+        } catch {
+            // fall through to clipboard
+        }
+        try {
+            await navigator.clipboard.writeText(url);
+            setToast({ type: "success", msg: "Link copied to clipboard" });
+        } catch {
+            // old school
+            prompt("Copy this link:", url);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-4 mt-4">
             <ToastHandler />
+            <InlineToast toast={toast} onClose={() => setToast(null)} />
 
             {/* Deal Form */}
             <DealFormModal
@@ -166,8 +241,36 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
                     address={normalized.address}
                     isPresell={normalized.isPresell}
                 />
+
+                {/* Media with action overlays */}
                 <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2">
+                    <div className="relative lg:col-span-2">
+                        {/* overlay actions */}
+                        <div className="absolute z-10 top-3 right-3 flex items-center gap-2">
+                            <button
+                                onClick={shareProperty}
+                                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/90 backdrop-blur ring-1 ring-gray-200 hover:bg-white"
+                                title="Share"
+                                aria-label="Share"
+                            >
+                                <Share2 className="w-5 h-5 text-gray-700" />
+                            </button>
+
+                            <button
+                                onClick={() => toggleFavorite(property?.id)}
+                                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/90 backdrop-blur ring-1 ring-gray-200 hover:bg-white"
+                                title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                                aria-label="Toggle favorite"
+                            >
+                                <Heart
+                                    className={cn(
+                                        "w-5 h-5",
+                                        isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-700"
+                                    )}
+                                />
+                            </button>
+                        </div>
+
                         <MainImage image_url={normalized.image_url} title={normalized.title} />
                     </div>
                     <div className="lg:col-span-1">
@@ -211,7 +314,7 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
                 {/* Right */}
                 <div className="lg:col-span-1 flex flex-col gap-6">
                     {Array.isArray(agents) && agents.length > 0 ? (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="bg-white ">
                             <AssignedAgents
                                 agents={agents}
                                 auth={auth}
@@ -220,7 +323,7 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
                             />
                         </div>
                     ) : broker ? (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="bg-whitE">
                             <ContactBroker
                                 broker={broker}
                                 setIsOpenModal={setIsOpenModal}
@@ -230,22 +333,6 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
                         </div>
                     ) : null}
 
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Location Preview</h3>
-                        <img
-                            src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/dc012d9f-6137-4d25-a18d-115e68b96429.png"
-                            alt="Map preview"
-                            className="w-full rounded-lg border border-gray-200"
-                            onError={(e) => (e.currentTarget.src = "/placeholder.png")}
-                        />
-                        <button
-                            type="button"
-                            className="mt-3 w-full text-primary hover:text-accent font-medium text-sm"
-                            aria-label="Open full map"
-                        >
-                            View Full Map
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

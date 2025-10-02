@@ -16,7 +16,7 @@ export default function ShowProperty({property, deal}) {
     return (
         <div>
             <NavBar/>
-            <div className='max-w-7xl mx-4 lg:mx-auto mt-20'>
+            <div className='max-w-7xl mx-4 lg:mx-auto'>
                 <Breadcrumb pages={pages} />
                 <SingleProperty property={property} agents={property?.property_listing?.agents} auth={auth} broker={property?.property_listing?.broker} deal={deal}/>
             </div>
