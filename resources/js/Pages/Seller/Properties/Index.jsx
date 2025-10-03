@@ -1,294 +1,471 @@
-import Dropdown from '@/Components/Dropdown';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { EllipsisVertical, Search as SearchIcon } from 'lucide-react';
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Link, router } from '@inertiajs/react';
-import { debounce } from 'lodash';
-import SellerPropertiesFilterTab from "@/Components/tabs/SellerPropetiesFilterTab.jsx";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPenToSquare, faExpand, faTrashCan } from '@fortawesome/free-solid-svg-icons';
-import ConfirmDialog from '@/Components/modal/ConfirmDialog';
+// resources/js/Pages/Seller/Properties/Index.jsx
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link, router } from "@inertiajs/react";
+import { debounce } from "lodash";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Breadcrumbs from "@/Components/Breadcrumbs.jsx";
+import SellerPropertiesFilterTab from "@/Components/tabs/SellerPropetiesFilterTab.jsx";
+import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 
-const Index = ({
-                   properties,
-                   search = '',
-                   page = 1,
-                   itemsPerPage = 10,
-                   status = '',
-                   all,
-                   assigned,
-                   rejected,
-                   unassigned,
-                   published,
-               }) => {
-    // Local state for search, pagination, status
-    const [searchTerm, setSearchTerm] = useState(search || '');
+import {
+    EllipsisVertical,
+    Search as SearchIcon,
+    Filter as FilterIcon,
+    Trash2,
+    Pencil,
+    ExternalLink,
+    UploadCloud,
+    Eye,
+    X,
+} from "lucide-react";
+import Dropdown from "@/Components/Dropdown";
+
+const peso = (n) =>
+    Number(n).toLocaleString("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
+const cn = (...c) => c.filter(Boolean).join(" ");
+
+const STATUS_MAP = {
+    "to published": "bg-amber-50 text-amber-700 border border-amber-200",
+    published: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    rejected: "bg-rose-50 text-rose-700 border border-rose-200",
+    sold: "bg-gray-50 text-gray-700 border border-gray-200",
+    default: "bg-sky-50 text-sky-700 border border-sky-200",
+};
+
+function StatusBadge({ status }) {
+    const key = String(status || "").toLowerCase();
+    return (
+        <span
+            className={cn(
+                "inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold",
+                STATUS_MAP[key] || STATUS_MAP.default
+            )}
+        >
+      {status || "—"}
+    </span>
+    );
+}
+
+function HeaderBar({ pages, onAdd }) {
+    return (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <Breadcrumbs pages={pages} />
+                <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
+                <p className="text-sm text-gray-600">Manage your listings, publishing, and updates.</p>
+            </div>
+            <button
+                onClick={onAdd}
+                className="inline-flex items-center gap-2 bg-primary text-white px-4 md:px-5 py-2 rounded-md text-sm md:text-base font-medium hover:bg-accent shadow-sm transition"
+            >
+                <UploadCloud className="h-4 w-4" />
+                Add Property
+            </button>
+        </div>
+    );
+}
+
+function Toolbar({
+                     selectedStatus,
+                     setSelectedStatus,
+                     searchTerm,
+                     setSearchTerm,
+                     selectedItemsPerPage,
+                     onItemsPerPage,
+                     counts,
+                     onClearSearch,
+                 }) {
+    return (
+        <div className="bg-white border border-gray-100 rounded-xl p-4 md:p-6 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                {/* Status Tabs */}
+                <div className="w-full lg:w-auto overflow-x-auto">
+                    <SellerPropertiesFilterTab
+                        count={counts}
+                        selectedStatus={selectedStatus}
+                        setSelectedStatus={setSelectedStatus}
+                        searchTerm={searchTerm}
+                        selectedItemsPerPage={selectedItemsPerPage}
+                    />
+                </div>
+
+                <div className="flex-1" />
+
+                {/* Search */}
+                <div className="relative w-full md:w-80">
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <input
+                        type="search"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search properties…"
+                        className="w-full h-10 pl-9 pr-9 rounded-md border border-gray-200 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-gray-200 focus:outline-none"
+                    />
+                    {searchTerm && (
+                        <button
+                            onClick={onClearSearch}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100"
+                            aria-label="Clear search"
+                        >
+                            <X className="h-4 w-4 text-gray-500" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Per-page */}
+                <div className="flex items-center gap-2">
+                    <FilterIcon className="h-4 w-4 text-gray-500" />
+                    <label htmlFor="perPage" className="text-sm text-gray-600">
+                        Items/page
+                    </label>
+                    <select
+                        id="perPage"
+                        value={selectedItemsPerPage}
+                        onChange={(e) => onItemsPerPage(Number(e.target.value))}
+                        className="border border-gray-300 rounded-md text-sm px-2 py-1 bg-white"
+                    >
+                        {[5, 10, 15, 20, 30].map((v) => (
+                            <option key={v} value={v}>
+                                {v}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function BulkBar({ selectedCount, onPublish, onUnpublish, onDelete, disable }) {
+    if (selectedCount === 0) return null;
+    return (
+        <div className="sticky top-14 z-10 bg-white border rounded-xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
+      <span className="text-sm text-gray-700">
+        {selectedCount} selected
+      </span>
+            <div className="flex items-center gap-2 ml-auto">
+                <button
+                    onClick={onPublish}
+                    disabled={disable}
+                    className="px-3 py-1.5 rounded-md text-sm border bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
+                >
+                    Publish
+                </button>
+                <button
+                    onClick={onUnpublish}
+                    disabled={disable}
+                    className="px-3 py-1.5 rounded-md text-sm border bg-gray-800 text-white hover:bg-black disabled:opacity-50"
+                >
+                    Unpublish
+                </button>
+                <button
+                    onClick={onDelete}
+                    disabled={disable}
+                    className="px-3 py-1.5 rounded-md text-sm border bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-50"
+                >
+                    Delete
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export default function Index({
+                                  properties,
+                                  search = "",
+                                  page = 1,
+                                  itemsPerPage = 10,
+                                  status = "",
+                                  all,
+                                  assigned,
+                                  rejected,
+                                  unassigned,
+                                  published,
+                              }) {
+    // filters
+    const [searchTerm, setSearchTerm] = useState(search || "");
     const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(Number(itemsPerPage));
-    const [selectedStatus, setSelectedStatus] = useState(status || 'All');
+    const [selectedStatus, setSelectedStatus] = useState(status || "All");
 
-    // State for delete dialog
+    // selection
+    const [selected, setSelected] = useState({}); // { [id]: true }
+    const selectedIds = useMemo(() => Object.keys(selected).filter((k) => selected[k]), [selected]);
+
+    // delete dialog
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
-    const [loading, setLoading] = useState(false); // Loading state
+    const [loading, setLoading] = useState(false);
 
-    // Debounced filter function
+    // debounced fetch
     const debouncedFilter = useRef(
-        debounce(params => {
+        debounce((params) => {
             router.get("/seller/properties", params, { preserveState: true, replace: true });
-        }, 500)
+        }, 450)
     ).current;
-
-    useEffect(() => {
-        if (search) setSearchTerm(search);
-    }, [search]);
 
     useEffect(() => () => debouncedFilter.cancel(), []);
 
-    const handleFiltersChange = newFilters => {
+    // whenever filters change (status / search / per page)
+    useEffect(() => {
         debouncedFilter({
             page,
             items_per_page: selectedItemsPerPage,
             status: selectedStatus,
             search: searchTerm,
-            ...newFilters
         });
-    };
+    }, [selectedItemsPerPage, selectedStatus, searchTerm]); // eslint-disable-line
 
-    // Delete dialog handlers
-    const handleOpenDeleteDialog = (id) => {
-        setOpenDeleteDialog(true);
+    const pages = [{ name: "Properties", href: "/seller/properties", current: true }];
+
+    const counts = [all, published, unassigned, assigned, rejected];
+
+    const toggleAll = (checked) => {
+        const map = {};
+        (properties?.data || []).forEach((p) => {
+            map[p.id] = checked;
+        });
+        setSelected(map);
+    };
+    const toggleOne = (id, checked) => setSelected((s) => ({ ...s, [id]: checked }));
+
+    const openDelete = (id) => {
         setDeletingId(id);
+        setOpenDeleteDialog(true);
     };
 
-    const handleDelete = () => {
-        if (!deletingId) return;
-
-        setLoading(true); // Set loading state
-        router.delete(`/seller/properties/${deletingId}`, {
-            onSuccess: () => {
-                setDeletingId(null);
-                setOpenDeleteDialog(false);
-                setLoading(false); // Reset loading state
-            },
-            onError: () => {
-                setLoading(false); // Reset loading state on error
+    const doDelete = () => {
+        const ids = deletingId ? [deletingId] : selectedIds;
+        if (!ids.length) return;
+        setLoading(true);
+        router.post(
+            "/seller/properties/bulk-delete",
+            { ids }, // create this route; or loop delete
+            {
+                onFinish: () => {
+                    setOpenDeleteDialog(false);
+                    setDeletingId(null);
+                    setLoading(false);
+                    setSelected({});
+                },
             }
-        });
+        );
     };
 
-    // Styling classes for status badges
-    const getStatusClasses = (status) => {
-        switch (status.toLowerCase()) {
-            case 'to published':
-                return 'bg-lightaccent text-yellow-700';
-            case 'published':
-                return 'bg-green-100 text-green-700';
-            case 'rejected':
-                return 'bg-red-100 text-red-700';
-            case 'sold':
-                return 'bg-gray-100 text-gray-700';
-            default:
-                return 'bg-orange-100 text-orange-700';
-        }
+    const bulkPublish = () => {
+        if (!selectedIds.length) return;
+        setLoading(true);
+        router.post(
+            "/seller/properties/bulk-status",
+            { ids: selectedIds, status: "Published" },
+            {
+                onFinish: () => {
+                    setLoading(false);
+                    setSelected({});
+                },
+            }
+        );
+    };
+    const bulkUnpublish = () => {
+        if (!selectedIds.length) return;
+        setLoading(true);
+        router.post(
+            "/seller/properties/bulk-status",
+            { ids: selectedIds, status: "To Published" },
+            {
+                onFinish: () => {
+                    setLoading(false);
+                    setSelected({});
+                },
+            }
+        );
     };
 
-    const imageUrl = '/storage/';
-
-    const pages = [
-        { name: 'Properties', href: '/seller/properties', current: true },
-    ];
+    const onClearSearch = () => setSearchTerm("");
 
     return (
         <AuthenticatedLayout>
+            {/* Delete dialog (single or bulk) */}
             <ConfirmDialog
                 open={openDeleteDialog}
                 setOpen={setOpenDeleteDialog}
                 title="Delete Property"
-                description="Are you sure you want to delete this property?"
+                description="Are you sure you want to delete the selected property/properties? This action cannot be undone."
                 confirmText="Delete"
                 cancelText="Cancel"
-                onConfirm={handleDelete}
-                loading={loading} // Show loading state in dialog
+                onConfirm={doDelete}
+                loading={loading}
             />
 
-
-
             <div className="px-6 space-y-6">
-                {/* Page Heading */}
-                <Breadcrumbs pages={pages} />
+                {/* Header */}
+                <HeaderBar pages={pages} onAdd={() => router.visit("/post-property")} />
 
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <h1 className="text-2xl font-bold text-primary">Properties</h1>
-                    <Link href="/post-property">
-                        <button
-                            className="inline-flex items-center gap-2 bg-primary text-white px-4 md:px-5 py-2 rounded-md text-sm md:text-base font-medium hover:bg-accent shadow-sm transition duration-200"
-                            aria-label="Add Property"
-                        >
-                            <FontAwesomeIcon icon={faPlus} /> Add Property
-                        </button>
-                    </Link>
-                </div>
+                {/* Filters / search */}
+                <Toolbar
+                    selectedStatus={selectedStatus}
+                    setSelectedStatus={setSelectedStatus}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    selectedItemsPerPage={selectedItemsPerPage}
+                    onItemsPerPage={(v) => setSelectedItemsPerPage(v)}
+                    counts={counts}
+                    onClearSearch={onClearSearch}
+                />
 
-                {/* Filters & Search */}
-                <div className="flex flex-col mt-6 shadow bg-white rounded-xl">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-gray-100 rounded-t-xl p-4 md:p-6">
-                        <div className="w-full md:w-auto overflow-x-auto">
-                            <SellerPropertiesFilterTab
-                                count={[all, published, unassigned, assigned, rejected]}
-                                selectedStatus={selectedStatus}
-                                setSelectedStatus={setSelectedStatus}
-                                searchTerm={searchTerm}
-                                page={page}
-                                selectedItemsPerPage={selectedItemsPerPage}
-                            />
-                        </div>
-                        <div className="relative w-full md:w-96 mt-4 md:mt-0">
-                            <input
-                                type="search"
-                                id='search'
-                                value={searchTerm}
-                                name="searchProperty"
-                                onChange={e => {
-                                    setSearchTerm(e.target.value);
-                                    handleFiltersChange({ search: e.target.value });
-                                }}
-                                placeholder="Search properties..."
-                                className="w-full h-10 pl-10 pr-4 rounded-md border border-gray-200 text-sm md:text-base text-gray-700 placeholder-gray-400 focus:ring-primary focus:outline-none transition duration-200"
-                                aria-label="Search properties"
-                            />
-                            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" aria-hidden="true" />
-                        </div>
-                    </div>
+                {/* Bulk actions */}
+                <BulkBar
+                    selectedCount={selectedIds.length}
+                    onPublish={bulkPublish}
+                    onUnpublish={bulkUnpublish}
+                    onDelete={() => {
+                        setDeletingId(null); // means bulk
+                        setOpenDeleteDialog(true);
+                    }}
+                    disable={loading}
+                />
 
-                    {/* Properties Table */}
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full text-sm text-left text-gray-700">
-                            <thead className="bg-gray-100 sticky top-0 z-10">
-                            <tr>
-                                <th className="p-3 text-center">
-                                    <input type="checkbox" id='allId' className="rounded border-gray-400" aria-label="Select all properties" />
-                                </th>
-                                <th className="p-3">Title</th>
-                                <th className="p-3">Type</th>
-                                <th className="p-3">Description</th>
-                                <th className="p-3">Price</th>
-                                <th className="p-3">Status</th>
-                                <th className="p-3">
-                                    Size <span className="lowercase">(m²)</span>
-                                </th>
-                                <th className="p-3 text-right">Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-dashed">
-                            {properties.data.length > 0 ? (
-                                properties.data.map((property) => (
-                                    <tr key={property.id} className="hover:bg-gray-50">
-                                        <td className="p-3 text-center">
-                                            <input id={property.id} type="checkbox" className="rounded border-gray-400" />
+                {/* Table */}
+                <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-100">
+                    <table className="min-w-full text-sm text-left text-gray-700">
+                        <thead className="bg-gray-50 sticky top-14 z-[5]">
+                        <tr>
+                            <th className="p-3 text-center w-10">
+                                <input
+                                    type="checkbox"
+                                    aria-label="Select all"
+                                    className="rounded border-gray-400"
+                                    onChange={(e) => toggleAll(e.target.checked)}
+                                    checked={
+                                        (properties?.data || []).length > 0 &&
+                                        selectedIds.length === (properties?.data || []).length
+                                    }
+                                    indeterminate={
+                                        selectedIds.length > 0 &&
+                                        selectedIds.length < (properties?.data || []).length
+                                    }
+                                />
+                            </th>
+                            <th className="p-3">Title</th>
+                            <th className="p-3">Type</th>
+                            <th className="p-3">Description</th>
+                            <th className="p-3">Price</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3">
+                                Size <span className="lowercase">(m²)</span>
+                            </th>
+                            <th className="p-3 text-right">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody className="divide-y divide-dashed">
+                        {(properties?.data || []).length > 0 ? (
+                            properties.data.map((p) => {
+                                const size =
+                                    p.property_type === "Land" ? p.lot_area : p.floor_area;
+
+                                return (
+                                    <tr key={p.id} className="hover:bg-gray-50">
+                                        <td className="p-3 text-center w-10">
+                                            <input
+                                                type="checkbox"
+                                                className="rounded border-gray-400"
+                                                checked={!!selected[p.id]}
+                                                onChange={(e) => toggleOne(p.id, e.target.checked)}
+                                                aria-label={`Select ${p.title}`}
+                                            />
                                         </td>
-                                        <td className="p-3">
+
+                                        {/* Title + address + image */}
+                                        <td className="p-3 min-w-[260px]">
                                             <div className="flex items-center py-2 gap-3">
                                                 <img
-                                                    src={property.image_url ? `${imageUrl}${property.image_url}` : '/fallback-image.png'}
-                                                    alt={property.title}
-                                                    className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-md"
-                                                    onError={(e) => (e.currentTarget.src = '/fallback-image.png')}
+                                                    src={p.image_url ? `/storage/${p.image_url}` : "/placeholder.png"}
+                                                    alt={p.title || "Property"}
+                                                    className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-md ring-1 ring-gray-200 bg-white"
+                                                    onError={(e) => (e.currentTarget.src = "/placeholder.png")}
                                                 />
-                                                <div>
-                                                    <p className="font-semibold text-gray-800">{property.title}</p>
-                                                    <p className="text-xs md:text-sm text-gray-500">{property.address}</p>
+                                                <div className="min-w-0">
+                                                    <p className="font-semibold text-gray-900 truncate">{p.title || "—"}</p>
+                                                    <p className="text-xs md:text-sm text-gray-500 truncate">{p.address || "—"}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="p-3">{property.property_type}, {property.sub_type}</td>
-                                        <td className="p-3">
-                                            <div className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] md:max-w-[250px]">
-                                                <div>
-                                                    {property.description.replace(/<[^>]+>/g, '').slice(0, 100)}...
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap">₱ {Number(property.price).toLocaleString()}</td>
-                                        <td className="p-3">
-                                                <span className={`inline-block font-semibold px-3 py-1 rounded-md text-xs ${getStatusClasses(property.status)}`}>
-                                                    {property.status}
-                                                </span>
-                                        </td>
+
                                         <td className="p-3 whitespace-nowrap">
-                                            {property.property_type === 'Land' ? property.lot_area : property.floor_area} m²
+                                            {p.property_type || "—"}, {p.sub_type || "—"}
                                         </td>
+
+                                        {/* Description (clean HTML) */}
+                                        <td className="p-3">
+                                            <div className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[220px] md:max-w-[320px] text-gray-600">
+                                                {(p.description || "").replace(/<[^>]+>/g, "").slice(0, 120)}
+                                                {p.description && p.description.length > 120 ? "…" : ""}
+                                            </div>
+                                        </td>
+
+                                        <td className="p-3 whitespace-nowrap">{peso(p.price || 0)}</td>
+
+                                        <td className="p-3">
+                                            <StatusBadge status={p.status} />
+                                        </td>
+
+                                        <td className="p-3 whitespace-nowrap">{size ? `${size} m²` : "—"}</td>
+
                                         <td className="p-3 text-right">
                                             <Dropdown>
                                                 <Dropdown.Trigger>
-                                                    <div className="p-2 w-9 rounded-full hover:bg-gray-200 cursor-pointer">
-                                                        <EllipsisVertical size={20} className="text-gray-600" />
+                                                    <div className="p-2 w-9 rounded-full hover:bg-gray-100 cursor-pointer inline-flex items-center justify-center">
+                                                        <EllipsisVertical size={18} className="text-gray-600" />
                                                     </div>
                                                 </Dropdown.Trigger>
-                                                <Dropdown.Content className="absolute right-0 top-10 w-36 bg-white shadow-md rounded-md z-50 text-sm">
-                                                    <ul className="divide-y divide-gray-100">
-                                                        <Link href={`/seller/properties/${property.id}`}>
-                                                            <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
-                                                                <FontAwesomeIcon icon={faExpand} /> View
+                                                <Dropdown.Content width="48">
+                                                    <ul className="divide-y divide-gray-100 text-sm">
+                                                        <Link href={`/seller/properties/${p.id}`}>
+                                                            <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50">
+                                                                <Eye className="h-4 w-4" /> View
                                                             </li>
                                                         </Link>
-                                                        <Link href={`/seller/properties/${property.id}/edit`}>
-                                                            <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
-                                                                <FontAwesomeIcon icon={faPenToSquare} /> Edit
+                                                        <Link href={`/seller/properties/${p.id}/edit`}>
+                                                            <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50">
+                                                                <Pencil className="h-4 w-4" /> Edit
                                                             </li>
                                                         </Link>
                                                         <li
-                                                            onClick={() => handleOpenDeleteDialog(property.id)}
-                                                            className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-100 cursor-pointer"
+                                                            onClick={() => openDelete(p.id)}
+                                                            className="flex items-center gap-2 px-4 py-2 text-rose-600 hover:bg-rose-50 cursor-pointer"
                                                         >
-                                                            <FontAwesomeIcon icon={faTrashCan} /> Delete
+                                                            <Trash2 className="h-4 w-4" /> Delete
                                                         </li>
                                                     </ul>
                                                 </Dropdown.Content>
                                             </Dropdown>
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="8" className="text-center py-6 text-gray-400">
-                                        No properties found.
-                                    </td>
-                                </tr>
-                            )}
-                            </tbody>
-                        </table>
-                    </div>
+                                );
+                            })
+                        ) : (
+                            <tr>
+                                <td colSpan="8" className="text-center py-10">
+                                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 mb-3">
+                                        <ExternalLink className="text-gray-500" />
+                                    </div>
+                                    <p className="text-gray-700 font-medium">No properties found</p>
+                                    <p className="text-gray-500 text-sm">
+                                        Try adjusting your filters or add a new property.
+                                    </p>
+                                </td>
+                            </tr>
+                        )}
+                        </tbody>
+                    </table>
 
-                    {/* Pagination + Items per page */}
+                    {/* Footer: pagination + per-page (kept, styled) */}
                     <div className="flex flex-col md:flex-row items-center justify-between border-t border-gray-100 rounded-b-xl p-4 gap-4">
-                        <div className="flex items-center gap-2">
-                            <label htmlFor="selectedItemsPerPage" className="text-sm text-gray-600">
-                                Items per page:
-                            </label>
-                            <select
-                                id="selectedItemsPerPage"
-                                value={selectedItemsPerPage}
-                                onChange={e => {
-                                    setSelectedItemsPerPage(e.target.value);
-                                    router.get("/seller/properties", {
-                                        page: 1,
-                                        items_per_page: e.target.value,
-                                        status: selectedStatus,
-                                        search: searchTerm,
-                                    }, {
-                                        preserveState: true,
-                                        replace: true
-                                    });
-                                }}
-                                className="border border-gray-300 rounded-md text-sm"
-                            >
-                                {[5, 10, 15, 20].map((val) => (
-                                    <option key={val} value={val}>
-                                        {val}
-                                    </option>
-                                ))}
-                            </select>
+                        <div className="text-sm text-gray-600">
+                            Showing{" "}
+                            <span className="font-medium">
+                {properties.from}–{properties.to}
+              </span>{" "}
+                            of <span className="font-medium">{properties.total}</span>
                         </div>
 
                         <div className="flex flex-wrap gap-2 justify-end" aria-label="Pagination navigation">
@@ -298,22 +475,25 @@ const Index = ({
                                     status: selectedStatus,
                                     items_per_page: selectedItemsPerPage,
                                 });
-                                const urlWithParams = link.url ? `${link.url}&${query.toString()}` : null;
+                                const href = link.url ? `${link.url}&${query.toString()}` : null;
 
                                 return link.url ? (
                                     <Link
                                         key={i}
-                                        href={urlWithParams}
-                                        className={`px-3 md:px-4 py-2 text-sm md:text-base rounded-md border transition ${
-                                            link.active ? 'bg-primary text-white font-semibold' : 'bg-white text-gray-600 hover:bg-gray-100'
-                                        }`}
+                                        href={href}
+                                        className={cn(
+                                            "px-3 md:px-4 py-2 text-sm md:text-base rounded-md border transition",
+                                            link.active
+                                                ? "bg-primary text-white font-semibold border-primary"
+                                                : "bg-white text-gray-700 hover:bg-gray-100 border-gray-200"
+                                        )}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
-                                        aria-current={link.active ? 'page' : undefined}
+                                        aria-current={link.active ? "page" : undefined}
                                     />
                                 ) : (
                                     <span
                                         key={i}
-                                        className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 bg-white border rounded-md cursor-not-allowed"
+                                        className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 bg-white border border-gray-200 rounded-md cursor-not-allowed"
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                         aria-disabled="true"
                                     />
@@ -325,6 +505,4 @@ const Index = ({
             </div>
         </AuthenticatedLayout>
     );
-};
-
-export default Index;
+}

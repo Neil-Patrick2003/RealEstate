@@ -20,14 +20,16 @@ class InquiryController extends Controller
     public function index(Request $request)
     {
         $inquiries = Inquiry::where('buyer_id', auth()->id())
-            ->with('property', 'agent', 'messages', 'trippings', 'broker')
+            ->with('property', 'agent', 'messages', 'trippings', 'broker', 'agent.agent_trippings')
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 return $q->status($request->status);
             })
             ->latest()
             ->paginate(10);
 
-        
+
+//        dd($inquiries->toArray());
+
 
         $allCount = Inquiry::where('buyer_id', auth()->id())->count();
         $pendingCount = Inquiry::where('buyer_id', auth()->id())->where('status', 'Pending')->count();
