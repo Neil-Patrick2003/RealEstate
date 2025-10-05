@@ -3,14 +3,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, router } from "@inertiajs/react";
 import { debounce } from "lodash";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import Breadcrumbs from "@/Components/Breadcrumbs.jsx";
 import SellerPropertiesFilterTab from "@/Components/tabs/SellerPropetiesFilterTab.jsx";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
-
 import {
     EllipsisVertical,
     Search as SearchIcon,
-    Filter as FilterIcon,
     Trash2,
     Pencil,
     ExternalLink,
@@ -21,15 +18,19 @@ import {
 import Dropdown from "@/Components/Dropdown";
 
 const peso = (n) =>
-    Number(n).toLocaleString("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
+    Number(n || 0).toLocaleString("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        maximumFractionDigits: 0,
+    });
 const cn = (...c) => c.filter(Boolean).join(" ");
 
 const STATUS_MAP = {
-    "to published": "bg-amber-50 text-amber-700 border border-amber-200",
-    published: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-    rejected: "bg-rose-50 text-rose-700 border border-rose-200",
-    sold: "bg-gray-50 text-gray-700 border border-gray-200",
-    default: "bg-sky-50 text-sky-700 border border-sky-200",
+    "to published": "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+    published: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    rejected: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
+    sold: "bg-gray-50 text-gray-700 ring-1 ring-gray-200",
+    default: "bg-sky-50 text-sky-700 ring-1 ring-sky-200",
 };
 
 function StatusBadge({ status }) {
@@ -37,7 +38,7 @@ function StatusBadge({ status }) {
     return (
         <span
             className={cn(
-                "inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold",
+                "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
                 STATUS_MAP[key] || STATUS_MAP.default
             )}
         >
@@ -46,17 +47,16 @@ function StatusBadge({ status }) {
     );
 }
 
-function HeaderBar({ pages, onAdd }) {
+function HeaderBar({ onAdd }) {
     return (
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <Breadcrumbs pages={pages} />
-                <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <div className="space-y-1">
+                <h1 className="text-xl md:text-2xl font-semibold text-gray-900">Properties</h1>
                 <p className="text-sm text-gray-600">Manage your listings, publishing, and updates.</p>
             </div>
             <button
                 onClick={onAdd}
-                className="inline-flex items-center gap-2 bg-primary text-white px-4 md:px-5 py-2 rounded-md text-sm md:text-base font-medium hover:bg-accent shadow-sm transition"
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-white shadow-sm transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
                 <UploadCloud className="h-4 w-4" />
                 Add Property
@@ -73,11 +73,12 @@ function Toolbar({
                      selectedItemsPerPage,
                      onItemsPerPage,
                      counts,
-                     onClearSearch,
                  }) {
+    const inputRef = useRef(null);
+
     return (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 md:p-6 shadow-sm">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 md:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                 {/* Status Tabs */}
                 <div className="w-full lg:w-auto overflow-x-auto">
                     <SellerPropertiesFilterTab
@@ -93,36 +94,39 @@ function Toolbar({
 
                 {/* Search */}
                 <div className="relative w-full md:w-80">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <input
+                        ref={inputRef}
                         type="search"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search properties…"
-                        className="w-full h-10 pl-9 pr-9 rounded-md border border-gray-200 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-gray-200 focus:outline-none"
+                        className="w-full h-10 rounded-md border border-gray-300 bg-white pl-9 pr-9 text-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-200 focus:outline-none"
                     />
                     {searchTerm && (
                         <button
-                            onClick={onClearSearch}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100"
+                            onClick={() => {
+                                setSearchTerm("");
+                                inputRef.current?.focus();
+                            }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:bg-gray-100"
                             aria-label="Clear search"
                         >
-                            <X className="h-4 w-4 text-gray-500" />
+                            <X className="h-4 w-4" />
                         </button>
                     )}
                 </div>
 
                 {/* Per-page */}
                 <div className="flex items-center gap-2">
-                    <FilterIcon className="h-4 w-4 text-gray-500" />
                     <label htmlFor="perPage" className="text-sm text-gray-600">
-                        Items/page
+                        Rows
                     </label>
                     <select
                         id="perPage"
                         value={selectedItemsPerPage}
                         onChange={(e) => onItemsPerPage(Number(e.target.value))}
-                        className="border border-gray-300 rounded-md text-sm px-2 py-1 bg-white"
+                        className="h-10 rounded-md border border-gray-300 bg-white px-2 text-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
                     >
                         {[5, 10, 15, 20, 30].map((v) => (
                             <option key={v} value={v}>
@@ -139,32 +143,32 @@ function Toolbar({
 function BulkBar({ selectedCount, onPublish, onUnpublish, onDelete, disable }) {
     if (selectedCount === 0) return null;
     return (
-        <div className="sticky top-14 z-10 bg-white border rounded-xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
-      <span className="text-sm text-gray-700">
-        {selectedCount} selected
-      </span>
-            <div className="flex items-center gap-2 ml-auto">
-                <button
-                    onClick={onPublish}
-                    disabled={disable}
-                    className="px-3 py-1.5 rounded-md text-sm border bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
-                >
-                    Publish
-                </button>
-                <button
-                    onClick={onUnpublish}
-                    disabled={disable}
-                    className="px-3 py-1.5 rounded-md text-sm border bg-gray-800 text-white hover:bg-black disabled:opacity-50"
-                >
-                    Unpublish
-                </button>
-                <button
-                    onClick={onDelete}
-                    disabled={disable}
-                    className="px-3 py-1.5 rounded-md text-sm border bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-50"
-                >
-                    Delete
-                </button>
+        <div className="sticky top-14 z-10 rounded-xl border bg-white p-3 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-gray-700">{selectedCount} selected</span>
+                <div className="ml-auto flex items-center gap-2">
+                    <button
+                        onClick={onPublish}
+                        disabled={disable}
+                        className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-500 disabled:opacity-50"
+                    >
+                        Publish
+                    </button>
+                    <button
+                        onClick={onUnpublish}
+                        disabled={disable}
+                        className="rounded-md bg-gray-800 px-3 py-1.5 text-sm text-white hover:bg-black disabled:opacity-50"
+                    >
+                        Unpublish
+                    </button>
+                    <button
+                        onClick={onDelete}
+                        disabled={disable}
+                        className="rounded-md bg-rose-600 px-3 py-1.5 text-sm text-white hover:bg-rose-500 disabled:opacity-50"
+                    >
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -203,7 +207,7 @@ export default function Index({
         }, 450)
     ).current;
 
-    useEffect(() => () => debouncedFilter.cancel(), []);
+    useEffect(() => () => debouncedFilter.cancel(), []); // cleanup
 
     // whenever filters change (status / search / per page)
     useEffect(() => {
@@ -213,9 +217,8 @@ export default function Index({
             status: selectedStatus,
             search: searchTerm,
         });
-    }, [selectedItemsPerPage, selectedStatus, searchTerm]); // eslint-disable-line
-
-    const pages = [{ name: "Properties", href: "/seller/properties", current: true }];
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedItemsPerPage, selectedStatus, searchTerm]);
 
     const counts = [all, published, unassigned, assigned, rejected];
 
@@ -239,7 +242,7 @@ export default function Index({
         setLoading(true);
         router.post(
             "/seller/properties/bulk-delete",
-            { ids }, // create this route; or loop delete
+            { ids },
             {
                 onFinish: () => {
                     setOpenDeleteDialog(false);
@@ -280,7 +283,14 @@ export default function Index({
         );
     };
 
-    const onClearSearch = () => setSearchTerm("");
+    // indeterminate checkbox handling
+    const allCount = (properties?.data || []).length;
+    const allChecked = allCount > 0 && selectedIds.length === allCount;
+    const someChecked = selectedIds.length > 0 && selectedIds.length < allCount;
+    const masterRef = useRef(null);
+    useEffect(() => {
+        if (masterRef.current) masterRef.current.indeterminate = someChecked;
+    }, [someChecked]);
 
     return (
         <AuthenticatedLayout>
@@ -296,9 +306,9 @@ export default function Index({
                 loading={loading}
             />
 
-            <div className="px-6 space-y-6">
+            <div className="space-y-6">
                 {/* Header */}
-                <HeaderBar pages={pages} onAdd={() => router.visit("/post-property")} />
+                <HeaderBar onAdd={() => router.visit("/post-property")} />
 
                 {/* Filters / search */}
                 <Toolbar
@@ -309,7 +319,6 @@ export default function Index({
                     selectedItemsPerPage={selectedItemsPerPage}
                     onItemsPerPage={(v) => setSelectedItemsPerPage(v)}
                     counts={counts}
-                    onClearSearch={onClearSearch}
                 />
 
                 {/* Bulk actions */}
@@ -324,142 +333,141 @@ export default function Index({
                     disable={loading}
                 />
 
-                {/* Table */}
-                <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-100">
-                    <table className="min-w-full text-sm text-left text-gray-700">
-                        <thead className="bg-gray-50 sticky top-14 z-[5]">
-                        <tr>
-                            <th className="p-3 text-center w-10">
-                                <input
-                                    type="checkbox"
-                                    aria-label="Select all"
-                                    className="rounded border-gray-400"
-                                    onChange={(e) => toggleAll(e.target.checked)}
-                                    checked={
-                                        (properties?.data || []).length > 0 &&
-                                        selectedIds.length === (properties?.data || []).length
-                                    }
-                                    indeterminate={
-                                        selectedIds.length > 0 &&
-                                        selectedIds.length < (properties?.data || []).length
-                                    }
-                                />
-                            </th>
-                            <th className="p-3">Title</th>
-                            <th className="p-3">Type</th>
-                            <th className="p-3">Description</th>
-                            <th className="p-3">Price</th>
-                            <th className="p-3">Status</th>
-                            <th className="p-3">
-                                Size <span className="lowercase">(m²)</span>
-                            </th>
-                            <th className="p-3 text-right">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody className="divide-y divide-dashed">
-                        {(properties?.data || []).length > 0 ? (
-                            properties.data.map((p) => {
-                                const size =
-                                    p.property_type === "Land" ? p.lot_area : p.floor_area;
-
-                                return (
-                                    <tr key={p.id} className="hover:bg-gray-50">
-                                        <td className="p-3 text-center w-10">
-                                            <input
-                                                type="checkbox"
-                                                className="rounded border-gray-400"
-                                                checked={!!selected[p.id]}
-                                                onChange={(e) => toggleOne(p.id, e.target.checked)}
-                                                aria-label={`Select ${p.title}`}
-                                            />
-                                        </td>
-
-                                        {/* Title + address + image */}
-                                        <td className="p-3 min-w-[260px]">
-                                            <div className="flex items-center py-2 gap-3">
-                                                <img
-                                                    src={p.image_url ? `/storage/${p.image_url}` : "/placeholder.png"}
-                                                    alt={p.title || "Property"}
-                                                    className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-md ring-1 ring-gray-200 bg-white"
-                                                    onError={(e) => (e.currentTarget.src = "/placeholder.png")}
-                                                />
-                                                <div className="min-w-0">
-                                                    <p className="font-semibold text-gray-900 truncate">{p.title || "—"}</p>
-                                                    <p className="text-xs md:text-sm text-gray-500 truncate">{p.address || "—"}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        <td className="p-3 whitespace-nowrap">
-                                            {p.property_type || "—"}, {p.sub_type || "—"}
-                                        </td>
-
-                                        {/* Description (clean HTML) */}
-                                        <td className="p-3">
-                                            <div className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[220px] md:max-w-[320px] text-gray-600">
-                                                {(p.description || "").replace(/<[^>]+>/g, "").slice(0, 120)}
-                                                {p.description && p.description.length > 120 ? "…" : ""}
-                                            </div>
-                                        </td>
-
-                                        <td className="p-3 whitespace-nowrap">{peso(p.price || 0)}</td>
-
-                                        <td className="p-3">
-                                            <StatusBadge status={p.status} />
-                                        </td>
-
-                                        <td className="p-3 whitespace-nowrap">{size ? `${size} m²` : "—"}</td>
-
-                                        <td className="p-3 text-right">
-                                            <Dropdown>
-                                                <Dropdown.Trigger>
-                                                    <div className="p-2 w-9 rounded-full hover:bg-gray-100 cursor-pointer inline-flex items-center justify-center">
-                                                        <EllipsisVertical size={18} className="text-gray-600" />
-                                                    </div>
-                                                </Dropdown.Trigger>
-                                                <Dropdown.Content width="48">
-                                                    <ul className="divide-y divide-gray-100 text-sm">
-                                                        <Link href={`/seller/properties/${p.id}`}>
-                                                            <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50">
-                                                                <Eye className="h-4 w-4" /> View
-                                                            </li>
-                                                        </Link>
-                                                        <Link href={`/seller/properties/${p.id}/edit`}>
-                                                            <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50">
-                                                                <Pencil className="h-4 w-4" /> Edit
-                                                            </li>
-                                                        </Link>
-                                                        <li
-                                                            onClick={() => openDelete(p.id)}
-                                                            className="flex items-center gap-2 px-4 py-2 text-rose-600 hover:bg-rose-50 cursor-pointer"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" /> Delete
-                                                        </li>
-                                                    </ul>
-                                                </Dropdown.Content>
-                                            </Dropdown>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        ) : (
-                            <tr>
-                                <td colSpan="8" className="text-center py-10">
-                                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 mb-3">
-                                        <ExternalLink className="text-gray-500" />
-                                    </div>
-                                    <p className="text-gray-700 font-medium">No properties found</p>
-                                    <p className="text-gray-500 text-sm">
-                                        Try adjusting your filters or add a new property.
-                                    </p>
-                                </td>
+                {/* Table Card */}
+                <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-left text-sm text-gray-700">
+                            <thead className=" rounded-t bg-gray-200 ">
+                            <tr className="border-b border-gray-200">
+                                <th className="p-3 text-center w-10">
+                                    <input
+                                        ref={masterRef}
+                                        type="checkbox"
+                                        aria-label="Select all"
+                                        className="h-4 w-4 rounded border-gray-400"
+                                        onChange={(e) => toggleAll(e.target.checked)}
+                                        checked={allChecked}
+                                    />
+                                </th>
+                                <th className="p-3">Title</th>
+                                <th className="p-3">Type</th>
+                                <th className="p-3">Description</th>
+                                <th className="p-3">Price</th>
+                                <th className="p-3">Status</th>
+                                <th className="p-3">
+                                    Size <span className="lowercase">(m²)</span>
+                                </th>
+                                <th className="p-3 text-right">Actions</th>
                             </tr>
-                        )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="[&>tr:hover]:bg-gray-50 divide-y divide-gray-100">
+                            {(properties?.data || []).length > 0 ? (
+                                properties.data.map((p) => {
+                                    const size = p.property_type === "Land" ? p.lot_area : p.floor_area;
 
-                    {/* Footer: pagination + per-page (kept, styled) */}
-                    <div className="flex flex-col md:flex-row items-center justify-between border-t border-gray-100 rounded-b-xl p-4 gap-4">
+                                    return (
+                                        <tr key={p.id} className="align-middle">
+                                            <td className="p-3 text-center w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    className="h-4 w-4 rounded border-gray-400"
+                                                    checked={!!selected[p.id]}
+                                                    onChange={(e) => toggleOne(p.id, e.target.checked)}
+                                                    aria-label={`Select ${p.title || "property"}`}
+                                                />
+                                            </td>
+
+                                            {/* Title + address + image */}
+                                            <td className="p-3 min-w-[260px]">
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={p.image_url ? `/storage/${p.image_url}` : "/placeholder.png"}
+                                                        alt={p.title || "Property"}
+                                                        className="h-14 w-14 md:h-16 md:w-16 rounded-md bg-white object-cover ring-1 ring-gray-200"
+                                                        onError={(e) => (e.currentTarget.src = "/placeholder.png")}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="truncate font-medium text-gray-900">
+                                                            {p.title || "—"}
+                                                        </p>
+                                                        <p className="truncate text-xs md:text-sm text-gray-500">
+                                                            {p.address || "—"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <td className="p-3 whitespace-nowrap">
+                                                {p.property_type || "—"}
+                                                {p.sub_type ? `, ${p.sub_type}` : ""}
+                                            </td>
+
+                                            {/* Description (clean HTML) */}
+                                            <td className="p-3">
+                                                <div className="max-w-[320px] overflow-hidden text-ellipsis whitespace-nowrap text-gray-600">
+                                                    {(p.description || "").replace(/<[^>]+>/g, "")}
+                                                </div>
+                                            </td>
+
+                                            <td className="p-3 whitespace-nowrap">{peso(p.price)}</td>
+
+                                            <td className="p-3">
+                                                <StatusBadge status={p.status} />
+                                            </td>
+
+                                            <td className="p-3 whitespace-nowrap">{size ? `${size} m²` : "—"}</td>
+
+                                            <td className="p-3 text-right space-x-2">
+                                                <Link
+                                                    href={`/seller/properties/${p.id}`}
+                                                    className="inline-flex items-center justify-center rounded-full p-2 text-gray-600 hover:bg-gray-100"
+                                                    aria-label="View"
+                                                    title="View"
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </Link>
+
+                                                <Link
+                                                    href={`/seller/properties/${p.id}/edit`}
+                                                    className="inline-flex items-center justify-center rounded-full p-2 text-gray-600 hover:bg-gray-100"
+                                                    aria-label="Edit"
+                                                    title="Edit"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Link>
+
+                                                <button
+                                                    onClick={() => openDelete(p.id)}
+                                                    className="inline-flex items-center justify-center rounded-full p-2 text-rose-600 hover:bg-rose-50"
+                                                    aria-label="Delete"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </td>
+
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan="8" className="py-12 text-center">
+                                        <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
+                                            <ExternalLink className="text-gray-500" />
+                                        </div>
+                                        <p className="font-medium text-gray-800">No properties found</p>
+                                        <p className="text-sm text-gray-500">
+                                            Try adjusting your filters or add a new property.
+                                        </p>
+                                    </td>
+                                </tr>
+                            )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Footer: pagination */}
+                    <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-200 p-4 md:flex-row">
                         <div className="text-sm text-gray-600">
                             Showing{" "}
                             <span className="font-medium">
@@ -468,7 +476,7 @@ export default function Index({
                             of <span className="font-medium">{properties.total}</span>
                         </div>
 
-                        <div className="flex flex-wrap gap-2 justify-end" aria-label="Pagination navigation">
+                        <div className="flex flex-wrap justify-end gap-2" aria-label="Pagination navigation">
                             {properties.links.map((link, i) => {
                                 const query = new URLSearchParams({
                                     search: searchTerm,
@@ -482,10 +490,10 @@ export default function Index({
                                         key={i}
                                         href={href}
                                         className={cn(
-                                            "px-3 md:px-4 py-2 text-sm md:text-base rounded-md border transition",
+                                            "rounded-md border px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
                                             link.active
-                                                ? "bg-primary text-white font-semibold border-primary"
-                                                : "bg-white text-gray-700 hover:bg-gray-100 border-gray-200"
+                                                ? "border-primary bg-primary font-semibold text-white"
+                                                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-100"
                                         )}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                         aria-current={link.active ? "page" : undefined}
@@ -493,7 +501,7 @@ export default function Index({
                                 ) : (
                                     <span
                                         key={i}
-                                        className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 bg-white border border-gray-200 rounded-md cursor-not-allowed"
+                                        className="cursor-not-allowed rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-400"
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                         aria-disabled="true"
                                     />

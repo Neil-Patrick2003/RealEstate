@@ -31,39 +31,6 @@ class InquiryController extends Controller
             ->orderByDesc('created_at')
             ->paginate($request->get('items_per_page', 10));
 
-        $inquiries->getCollection()->transform(function ($inquiry) {
-            $property = $inquiry->property;
-            if ($property) {
-                $chatChannel = \App\Models\ChatChannel::where('subject_type', \App\Models\Property::class)
-                    ->where('subject_id', $property->id)
-                    ->first();
-
-                if ($chatChannel) {
-                    $firstMessage = $chatChannel->messages()->oldest('created_at')->first();
-
-                    $inquiry->chat_channel = [
-                        'id' => $chatChannel->id,
-                        'created_at' => $chatChannel->created_at,
-                        // You can add other chat channel fields here if needed
-                    ];
-
-                    $inquiry->first_message = $firstMessage ? [
-                        'id' => $firstMessage->id,
-                        'message' => $firstMessage->content,
-                        'created_at' => $firstMessage->created_at,
-                    ] : null;
-                } else {
-                    $inquiry->chat_channel = null;
-                    $inquiry->first_message = null;
-                }
-            } else {
-                $inquiry->chat_channel = null;
-                $inquiry->first_message = null;
-            }
-
-            return $inquiry;
-        });
-
         $buyerInquiryCount = Inquiry::whereNotNull('buyer_id')->count();
         $sellerInquiryCount = Inquiry::whereNotNull('seller_id')->count();
 

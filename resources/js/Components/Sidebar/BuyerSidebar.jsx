@@ -60,7 +60,7 @@ const HoverTooltip = ({ show, label, children }) => {
                     <div
                         role="tooltip"
                         style={{ top: `${pos.y}px`, left: `${pos.x}px`, transform: "translateY(-50%)" }}
-                        className="fixed z-[2000] pointer-events-none whitespace-nowrap rounded-md bg-primary text-white text-xs px-4 py-2 shadow-lg"
+                        className="fixed z-[2000] border pointer-events-none whitespace-nowrap rounded-md bg-primary text-white text-xs px-4 py-2 shadow-lg"
                     >
                         {label}
                     </div>,
@@ -134,58 +134,58 @@ const BuyerSidebar = ({ isOpen, setIsOpen }) => {
 
                         return (
                             <React.Fragment key={name}>
-                                <li className="relative">
-                                    {/* Simple link (no submenu) */}
-                                    {path && !hasSubMenu ? (
-                                        <HoverTooltip show={!isOpen} label={name}>
-                                            <Link
-                                                href={path}
-                                                className={classNames(
-                                                    isActive
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'text-gray-600 hover:bg-green-50 hover:text-green-700',
-                                                    isOpen ? 'px-4' : 'px-5',
-                                                    'flex items-center gap-3 py-3 rounded-lg transition-all'
-                                                )}
-                                                title={!isOpen ? name : undefined}
-                                                aria-current={isActive ? 'page' : undefined}
-                                            >
-                                                <Icon className="shrink-0" size={20} aria-hidden="true" />
-                                                {isOpen && <span className="truncate">{name}</span>}
-                                            </Link>
-                                        </HoverTooltip>
-                                    ) : (
-                                        // Button with submenu
-                                        <HoverTooltip show={!isOpen} label={name}>
-                                            <button
-                                                onClick={() => setOpenedIndex(isSectionOpen ? null : i)}
-                                                className={classNames(
-                                                    isActive
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'text-gray-600 hover:bg-green-50 hover:text-green-700',
-                                                    isOpen ? 'px-4' : 'px-5',
-                                                    'w-full flex items-center justify-between py-3 rounded-lg transition-all'
-                                                )}
-                                                title={!isOpen ? name : undefined}
-                                                aria-expanded={isOpen ? isSectionOpen : false}
-                                                aria-controls={isOpen ? `submenu-${i}` : undefined}
-                                                type="button"
-                                            >
-                        <span className="flex items-center gap-3">
-                          <Icon className="shrink-0" size={20} aria-hidden="true" />
-                            {isOpen && <span className="truncate">{name}</span>}
-                        </span>
-                                                {isOpen && hasSubMenu && (
-                                                    <ChevronDown
-                                                        className={`transition-transform ${isSectionOpen ? 'rotate-180' : ''}`}
-                                                        size={18}
-                                                        aria-hidden="true"
-                                                    />
-                                                )}
-                                            </button>
-                                        </HoverTooltip>
-                                    )}
-                                </li>
+                                    <li className="relative ">
+                                        {/* Simple link (no submenu) */}
+                                        {path && !hasSubMenu ? (
+                                            <HoverTooltip show={!isOpen} label={name}>
+                                                <Link
+                                                    href={path}
+                                                    className={classNames(
+                                                        isActive
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'text-gray-600 hover:bg-green-50 hover:text-green-700',
+                                                        isOpen ? 'px-4' : 'px-5',
+                                                        ' flex items-center gap-3 py-3 rounded-lg transition-all'
+                                                    )}
+                                                    title={!isOpen ? name : undefined}
+                                                    aria-current={isActive ? 'page' : undefined}
+                                                >
+                                                    <Icon className="shrink-0" size={20} aria-hidden="true" />
+                                                    {isOpen && <span className="truncate">{name}</span>}
+                                                </Link>
+                                            </HoverTooltip>
+                                        ) : (
+                                            // Button with submenu
+                                            <HoverTooltip show={!isOpen} label={name}>
+                                                <button
+                                                    onClick={() => setOpenedIndex(isSectionOpen ? null : i)}
+                                                    className={classNames(
+                                                        isActive
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'text-gray-600 hover:bg-green-50 hover:text-green-700',
+                                                        isOpen ? 'px-4' : 'px-5',
+                                                        'w-full flex items-center justify-between py-3 rounded-lg transition-all'
+                                                    )}
+                                                    title={!isOpen ? name : undefined}
+                                                    aria-expanded={isOpen ? isSectionOpen : false}
+                                                    aria-controls={isOpen ? `submenu-${i}` : undefined}
+                                                    type="button"
+                                                >
+                                                <span className="flex items-center gap-3">
+                                                  <Icon className="shrink-0" size={20} aria-hidden="true" />
+                                                    {isOpen && <span className="truncate">{name}</span>}
+                                                </span>
+                                                    {isOpen && hasSubMenu && (
+                                                        <ChevronDown
+                                                            className={`transition-transform ${isSectionOpen ? 'rotate-180' : ''}`}
+                                                            size={18}
+                                                            aria-hidden="true"
+                                                        />
+                                                    )}
+                                                </button>
+                                            </HoverTooltip>
+                                        )}
+                                    </li>
 
                                 {/* Submenu (only when sidebar is open) */}
                                 {hasSubMenu && isOpen && (

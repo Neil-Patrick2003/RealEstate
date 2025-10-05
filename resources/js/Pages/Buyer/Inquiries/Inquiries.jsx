@@ -396,7 +396,7 @@ export default function Inquiries({
                                                         ) : (
                                                             <button
                                                                 type="button"
-                                                                className="w-full px-4 py-2 rounded-md border border-gray-300 text-gray-800 hover:bg-gray-50 font-medium transition"
+                                                                className="w-full px-4 py-2 rounded-md border bg-primary text-white hover:bg-accent font-medium transition"
                                                                 onClick={() => {
                                                                     setSelectedVisitData({
                                                                         property,
@@ -409,7 +409,7 @@ export default function Inquiries({
                                                                 title="Pick a date/time to visit"
                                                             >
                                                                 <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
-                                                                Schedule Visit
+                                                                Schedule Visit Now!
                                                             </button>
                                                         )
                                                     ) : (
@@ -426,17 +426,27 @@ export default function Inquiries({
                                                     {/* View / Cancel */}
                                                     <div className="flex gap-2">
                                                         <Link
-                                                            href={`/inquiries/${property?.id ?? inquiry?.id}`}
+                                                            href={
+                                                                isCancelled
+                                                                    ? "#" // prevents navigation
+                                                                    : `/inquiries/${property?.id ?? inquiry?.id}`
+                                                            }
+                                                            onClick={(e) => {
+                                                                if (isCancelled) e.preventDefault(); // block click
+                                                            }}
                                                             className={cn(
                                                                 "w-full text-center px-4 py-2 rounded-md text-sm font-medium transition",
-                                                                isCancelled ? "bg-gray-300 text-white cursor-not-allowed" : "bg-gray-900 text-white hover:bg-gray-800"
+                                                                isCancelled
+                                                                    ? "bg-gray-300 text-white cursor-not-allowed"
+                                                                    : "bg-white border border-gray-900 text-gray-900 hover:bg-gray-800 hover:text-white"
                                                             )}
                                                             aria-disabled={isCancelled}
-                                                            title="Open conversation/details"
+                                                            title={isCancelled ? "This inquiry is cancelled" : "Open conversation/details"}
                                                         >
                                                             <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
                                                             View
                                                         </Link>
+
 
                                                         {isCancelled ? (
                                                             <div className="w-full py-2 rounded-md bg-gray-100 text-center text-gray-500 font-medium border border-gray-200">

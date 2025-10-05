@@ -81,6 +81,8 @@ export default function AuthenticatedLayout({ children }) {
         };
     }, [auth.user.id]);
 
+    console.log(notifications);
+
     return (
         <div className="h-screen flex overflow-hidden relative">
             {/* Sidebar */}

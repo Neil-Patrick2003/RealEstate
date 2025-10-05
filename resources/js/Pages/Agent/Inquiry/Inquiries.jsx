@@ -75,7 +75,7 @@ function Avatar({ name, photo_url, size = 40, altSuffix = '' }) {
     }
     return (
         <div
-            className={cn('rounded-full bg-secondary text-white border flex items-center justify-center', px)}
+            className={cn('rounded-full bg-secondary text-white border flex items-center justify-center w-8 h-8' ,  )}
             title={name || 'User'}
         >
             <span className="text-xs">{initials}</span>
@@ -216,7 +216,6 @@ export default function Inquiries({
                                 loading="lazy"
                             />
                             <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                                <FontAwesomeIcon icon={faPesoSign} />
                                 {price}
                             </div>
                         </div>
@@ -247,7 +246,7 @@ export default function Inquiries({
                         <div className="bg-primary/5 border border-primary/20 rounded-md p-3">
                             <p className="text-sm text-gray-800">
                                 <strong className="text-primary">Message: </strong>
-                                {inquiry?.first_message?.message || 'No message provided.'}
+                                {inquiry?.notes || 'No message provided.'}
                             </p>
                         </div>
 
@@ -424,25 +423,12 @@ export default function Inquiries({
                                 aria-label="Search inquiries"
                             />
                         </div>
+
                         <div className="inline-flex items-center gap-2">
-                            <Filter className="w-4 h-4 text-secondary" />
-                            <select
-                                value={sort}
-                                onChange={(e) => setSort(e.target.value)}
-                                className="px-3 py-2 text-sm rounded-md border border-gray-200 bg-white focus:ring-2 focus:ring-primary/30"
-                                title="Sort"
-                            >
-                                <option value="newest">Newest</option>
-                                <option value="price_asc">Price: Low → High</option>
-                                <option value="price_desc">Price: High → Low</option>
-                            </select>
-                        </div>
-                        <div className="inline-flex items-center gap-2">
-                            <ArrowUpDown className="w-4 h-4 text-secondary" />
                             <select
                                 value={selectedItemsPerPage}
                                 onChange={handleItemsPerPageChange}
-                                className="px-3 py-2 text-sm rounded-md border border-gray-200 bg-white focus:ring-2 focus:ring-primary/30"
+                                className=" py-2 text-sm rounded-md border border-gray-200 bg-white focus:ring-2 focus:ring-primary/30"
                                 title="Items per page"
                             >
                                 {[10, 20, 30, 50].map((n) => (
