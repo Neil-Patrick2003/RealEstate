@@ -156,6 +156,8 @@ export default function Inquiries({
     const [cancelId, setCancelId] = useState(null);
     const [selectedStatus, setSelectedStatus] = useState(status?.trim() ? status : "All");
 
+    console.log(selectedVisitData);
+
     const handleCancelInquiry = () => {
         if (!cancelId) return;
         router.patch(`/inquiries/${cancelId}/cancel`, {}, {

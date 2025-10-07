@@ -164,7 +164,7 @@ export default function LandingPage({ auth, properties = [], search = "", initia
                     {/* Desktop nav */}
                     <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600" aria-label="Primary">
                         <a href="#features" className="hover:text-gray-900">Features</a>
-                        <a href="#explore" className="hover:text-gray-900">Explore</a>
+                        <a href="/all-properties" className="hover:text-gray-900">Explore</a>
                         <a href="#how" className="hover:text-gray-900">How it works</a>
                         <a href="#testimonials" className="hover:text-gray-900">Stories</a>
                         <a href="#faq" className="hover:text-gray-900">FAQ</a>

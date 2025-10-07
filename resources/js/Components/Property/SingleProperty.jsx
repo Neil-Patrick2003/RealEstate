@@ -202,7 +202,6 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
     return (
         <div className="flex flex-col gap-4 mt-4">
             <ToastHandler />
-            <InlineToast toast={toast} onClose={() => setToast(null)} />
 
             {/* Deal Form */}
             <DealFormModal

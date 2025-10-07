@@ -12,6 +12,7 @@ use App\Models\Property;
 use App\Models\PropertyTripping;
 use App\Models\User;
 use App\Notifications\NewInquiry;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -143,34 +144,100 @@ class InquiryController extends Controller
 
     public function show(Property $property)
     {
-        $deal = null;
-        $inquiry = null;
+        $userId = auth()->id();
+        $tz = 'Asia/Manila';
+        $now = Carbon::now($tz);
 
-        $property->load('images', 'features', 'coordinate', 'seller', 'property_listing.agent', );
-
-        if ($property->property_listing) {
-            $deal = Deal::where('property_listing_id', $property->property_listing->id)
-                ->where('buyer_id', auth()->user()->id)
-                ->first();
-        }
-
-        if ($property->property_listing) {
-            $inquiry = Inquiry::where('property_id', $property->property_listing->property_id)
-                ->where('buyer_id', auth()->user()->id)
-                ->first();
-
-        }
-
-
-        return Inertia::render('Buyer/Inquiries/ShowInquiry', [
-            'property' => $property,
-            'deal' => $deal,
-            'inquiry' => $inquiry,
+        $property->load([
+            'images',
+            'features',
+            'coordinate',
+            'seller',
+            'property_listing.deals' => fn ($q) => $q->where('buyer_id', $userId)->latest()->limit(1),
+            // Load only the buyer's latest inquiry, with agent & broker
+            'inquiries' => fn ($q) => $q
+                ->where('buyer_id', $userId)
+                ->with(['agent', 'broker'])
+                ->latest()
+                ->limit(1),
         ]);
 
 
 
+        // May be null if the buyer has not inquired yet
+        $inquiry = optional($property->inquiries)->first(); // will be null or model
+        unset($property->inquiries);
+        $deal    = optional(optional($property->property_listing)->deals)->first();
 
+        // Null-safe enums with sensible defaults
+        $iStatus = strtolower($inquiry->status ?? 'pending');                  // pending|accepted|rejected
+        $appt    = strtolower($inquiry->appointment_status ?? 'none');         // none|requested|scheduled|done|cancelled
+        $dStatus = strtolower($deal->status ?? 'draft');                       // draft|sent|countered|accepted|rejected|expired
 
+        // Null-safe visit window
+        $visitStart = $inquiry?->appointment_at
+            ? Carbon::parse($inquiry->appointment_at, $tz)
+            : null;
+
+        $visitEnd = $inquiry?->appointment_end
+            ? Carbon::parse($inquiry->appointment_end, $tz)
+            : null;
+
+        // Offer unlock rule: after visit START (or change to 'end')
+        $unlockOfferOn   = 'start'; // or 'end'
+        $visitStarted    = $visitStart && $now->gte($visitStart);
+        $visitFinished   = $visitEnd ? $now->gte($visitEnd) : $visitStarted; // if no end, treat start as finish
+        $canUnlockByTime = $unlockOfferOn === 'end' ? $visitFinished : $visitStarted;
+
+        $canUnlockOffer =
+            $iStatus === 'accepted'
+            && !in_array($appt, ['none','cancelled'], true)
+            && $canUnlockByTime;
+
+        // Build steps defensively (works even when $inquiry is null)
+        $steps = [
+            'inquiry' => match ($iStatus) {
+                'accepted' => 'complete',
+                'rejected' => 'locked',
+                default    => 'current', // no inquiry yet or pending → current
+            },
+
+            'appointment' => $iStatus !== 'accepted'
+                ? 'locked'
+                : (in_array($appt, ['done'], true)
+                    ? 'complete'
+                    : (in_array($appt, ['scheduled','requested'], true)
+                        ? 'current'
+                        : 'upcoming')),
+
+            'offer' => $iStatus !== 'accepted'
+                ? 'locked'
+                : ($canUnlockOffer
+                    ? ($dStatus === 'accepted' ? 'complete' : 'upcoming')
+                    : 'locked'),
+
+            'payment' => $dStatus === 'accepted' ? 'upcoming' : 'locked',
+        ];
+
+        // Clean payload
+        unset($property->inquiries);
+        if (isset($property->property_listing)) {
+            unset($property->property_listing->deals);
+        }
+
+        return Inertia::render('Buyer/Inquiries/ShowInquiry', [
+            'property'  => $property,
+            'inquiry'   => $inquiry, // may be null — frontend uses optional chaining
+            'deal'      => $deal,
+            'steps'     => $steps,
+            'visitGate' => [
+                'unlockOn'   => $unlockOfferOn,
+                'visitStart' => $visitStart?->toIso8601String(),
+                'visitEnd'   => $visitEnd?->toIso8601String(),
+                'now'        => $now->toIso8601String(),
+                'isStarted'  => (bool) $visitStarted,
+                'isFinished' => (bool) $visitFinished,
+            ],
+        ]);
     }
 }
