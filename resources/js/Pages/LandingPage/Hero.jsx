@@ -67,13 +67,13 @@ const Hero = ({
                             variants={rise}
                             className="text-white text-2xl md:text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-4"
                         >
-                            Find Your Perfect Home
+                            Find Your Perfect Property
                         </motion.h1>
                         <motion.p
                             variants={rise}
                             className="text-gray-200 text-md md:text-lg lg:text-xl xl:text-2xl font-light max-w-3xl mx-auto"
                         >
-                            Discover exceptional properties and make your dream home a reality with our premium real estate platform
+                            Explore verified listings with clear map boundaries — making property search simple, visual, and transparent.
                         </motion.p>
                     </motion.div>
 
