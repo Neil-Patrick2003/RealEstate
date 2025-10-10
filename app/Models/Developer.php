@@ -8,7 +8,7 @@ class Developer extends Model
 {
     protected $guarded = [];
 
-    public function property(){
+    public function properties(){
         return $this->hasMany(Property::class);
     }
 
