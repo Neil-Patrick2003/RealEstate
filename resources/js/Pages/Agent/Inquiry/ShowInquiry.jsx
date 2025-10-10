@@ -5,6 +5,7 @@ export default function ShowInquiry({property}){
         <div>
             <NavBar />
 
+
         </div>
     );
 }
