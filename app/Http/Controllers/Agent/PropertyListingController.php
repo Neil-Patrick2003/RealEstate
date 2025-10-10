@@ -61,6 +61,7 @@ class PropertyListingController extends Controller
             ->withQueryString(); // important to keep filters during pagination
 
 
+
         // Return to Inertia view
         return Inertia::render('Agent/PropertyListing/Properties', [
             'listings' => $properties,

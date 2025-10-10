@@ -17,7 +17,7 @@ import { createPortal } from "react-dom";
 /* --------------------------------
    small utils
 ----------------------------------*/
-const canUseDOM = typeof window !== "undefined" && typeof document !== "undefined";
+const canUseDOM = typeof window !== "undefined" && typeof document !== "undefined"
 const classNames = (...c) => c.filter(Boolean).join(" ");
 const fmtCount = (n) =>
     n > 0

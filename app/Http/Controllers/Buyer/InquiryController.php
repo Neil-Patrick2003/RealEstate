@@ -142,11 +142,14 @@ class InquiryController extends Controller
         return redirect()->back()->with('success', 'Inquiry cancelled successfully.');
     }
 
-    public function show(Property $property)
+    public function show(Inquiry $inquiry)
     {
         $userId = auth()->id();
         $tz = 'Asia/Manila';
         $now = Carbon::now($tz);
+
+
+        $property = Property::findOrFail($inquiry->property_id);
 
         $property->load([
             'images',

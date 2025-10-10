@@ -3,17 +3,24 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { router } from "@inertiajs/react";
 import dayjs from "dayjs";
-import {
-    CalendarDays,
-    Clock,
-    AlertCircle,
-    CheckCircle2,
-} from "lucide-react";
+import { CalendarDays, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
 
 const SLOTS = ["09:00:00", "11:00:00", "13:00:00", "15:00:00", "17:00:00"];
+const WORK_START = "09:00";
+const WORK_END = "18:00";
+
 const cn = (...c) => c.filter(Boolean).join(" ");
 const fmtDate = (d) => dayjs(d).format("MMM D, YYYY");
 const fmtTime = (t) => (t && t !== "00:00:00" ? t.slice(0, 5) : "TBD");
+const tToMin = (t) => {
+    if (!t || !/^\d{2}:\d{2}(:\d{2})?$/.test(t)) return null;
+    const [hh, mm] = t.slice(0, 5).split(":").map(Number);
+    return hh * 60 + mm;
+};
+const isWithinWindow = (t) => {
+    const v = tToMin(t);
+    return v !== null && v >= tToMin(WORK_START) && v <= tToMin(WORK_END);
+};
 
 export default function ScheduleVisitModal({ open, setOpen, visitData }) {
     // --------- Form State ---------
@@ -28,41 +35,36 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [timeError, setTimeError] = useState("");
 
-    // --------- Source Data (robust derivation) ---------
-    const agent    = visitData?.agent ?? null;
-    const broker   = visitData?.broker ?? null;
+    // --------- Source Data ---------
+    const agent = visitData?.agent ?? null;
+    const broker = visitData?.broker ?? null;
     const property = visitData?.property ?? null;
 
-    // prefer explicit IDs; fall back to object.id
     const propertyId = visitData?.propertyId ?? property?.id ?? null;
-    const agentIdVD  = visitData?.agentId ?? agent?.id ?? null;
+    const agentIdVD = visitData?.agentId ?? agent?.id ?? null;
     const brokerIdVD = visitData?.brokerId ?? broker?.id ?? null;
-    const inquiryId  = visitData?.inquiryId ?? null;
+    const inquiryId = visitData?.inquiryId ?? null;
 
     // Agent’s upcoming bookings (safe)
-    const trips = useMemo(
-        () =>
-            Array.isArray(agent?.agent_trippings) ? agent.agent_trippings : [],
-        [agent]
-    );
+    const trips = useMemo(() => (Array.isArray(agent?.agent_trippings) ? agent.agent_trippings : []), [agent]);
 
     // Buyer already scheduled for THIS inquiry?
     const buyerAlreadyScheduled = useMemo(() => {
         if (!inquiryId) return false;
         return trips.some((t) => {
-            const sameInquiry =
-                String(t.inquiry_id ?? "") === String(inquiryId ?? "");
+            const sameInquiry = String(t.inquiry_id ?? "") === String(inquiryId ?? "");
             const status = String(t.status || "").toLowerCase();
             return sameInquiry && !["cancelled", "declined"].includes(status);
         });
     }, [trips, inquiryId]);
 
-    // Booked map: date -> Set(times) (00:00:00 blocks whole day)
+    // Booked map: date -> Set(times)
     const bookedByDate = useMemo(() => {
         const map = new Map();
         for (const t of trips) {
-            const d = t.visit_date; // "YYYY-MM-DD"
+            const d = t.visit_date;
             if (!d) continue;
             const time = (t.visit_time || "00:00:00").slice(0, 8);
             if (!map.has(d)) map.set(d, new Set());
@@ -100,7 +102,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
         return SLOTS.map((s) => ({ time: s, disabled: isSlotBlocked(form.date, s) }));
     }, [form.date, bookedByDate]);
 
-    // Pre-fill IDs when modal opens or visitData changes
+    // Pre-fill IDs
     useEffect(() => {
         if (!visitData) return;
         setForm((prev) => ({
@@ -118,24 +120,45 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
             setForm((f) => ({ ...f, time: "" }));
         }
         setError("");
+        setTimeError("");
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [form.date]);
 
+    // --------- Handlers ---------
     const onChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setForm((f) => ({ ...f, [name]: value }));
+        if (name === "time") {
+            // live validate manual input
+            if (value && !isWithinWindow(value)) {
+                setTimeError("Please choose a time between 09:00 and 18:00.");
+            } else {
+                setTimeError("");
+            }
+        }
         setError("");
     };
 
     const onPickDate = (d) => {
         if (isDateFullyBlocked(d)) return;
         setForm((f) => ({ ...f, date: d, time: "" }));
+        setTimeError("");
         setError("");
     };
 
     const onPickTime = (t) => {
         if (!form.date) return;
         if (isSlotBlocked(form.date, t)) return;
+
+        // slots are HH:mm:ss; still validate window for safety
+        const hhmm = t.slice(0, 5);
+        if (!isWithinWindow(hhmm)) {
+            setTimeError("Please choose a time between 09:00 and 18:00.");
+            return;
+        }
+
         setForm((f) => ({ ...f, time: t }));
+        setTimeError("");
         setError("");
     };
 
@@ -143,7 +166,6 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
         e?.preventDefault?.();
         setError("");
 
-        // Basic validations
         if (buyerAlreadyScheduled) {
             setError("You already have a pending/accepted schedule for this inquiry.");
             return;
@@ -164,7 +186,17 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
             setError("Please select your preferred time.");
             return;
         }
-        if (isSlotBlocked(form.date, form.time)) {
+
+        // Validate window for both slot time ("HH:mm:ss") and manual input ("HH:mm")
+        const hhmm = form.time.length >= 5 ? form.time.slice(0, 5) : form.time;
+        if (!isWithinWindow(hhmm)) {
+            setTimeError("Please choose a time between 09:00 and 18:00.");
+            return;
+        }
+
+        // Slot conflict re-check
+        const canonical = form.time.length === 5 ? `${form.time}:00` : form.time; // normalize to HH:mm:ss
+        if (isSlotBlocked(form.date, canonical)) {
             setError("That time slot has just been booked. Pick another slot.");
             return;
         }
@@ -179,7 +211,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                 agent_id: form.agentId,
                 broker_id: form.brokerId, // may be null (ok)
                 date: form.date,
-                time: form.time,
+                time: canonical, // send HH:mm:ss
                 notes: form.notes,
             },
             {
@@ -230,7 +262,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                     Schedule a Property Visit
                                 </Dialog.Title>
                                 <p className="text-sm text-gray-500 mt-1 mb-4">
-                                    Choose your preferred date and time. The agent will confirm your request.
+                                    Choose your preferred date and time between <b>09:00</b> and <b>18:00</b>. The agent will confirm your request.
                                 </p>
 
                                 {/* Property Summary */}
@@ -242,13 +274,9 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                         onError={(e) => (e.currentTarget.src = "/placeholder.png")}
                                     />
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-gray-800 truncate">
-                                            {property?.title || "Property"}
-                                        </h4>
+                                        <h4 className="font-semibold text-gray-800 truncate">{property?.title || "Property"}</h4>
                                         <p className="text-sm text-gray-500 truncate">{property?.address || "—"}</p>
-                                        <p className="text-sm font-bold text-primary mt-1">
-                                            ₱ {(Number(property?.price || 0)).toLocaleString()}
-                                        </p>
+                                        <p className="text-sm font-bold text-primary mt-1">₱ {Number(property?.price || 0).toLocaleString()}</p>
                                     </div>
                                 </div>
 
@@ -270,24 +298,13 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                             <ul className="max-h-28 overflow-auto divide-y">
                                                 {trips
                                                     .slice()
-                                                    .sort((a, b) =>
-                                                        (a.visit_date + (a.visit_time || ""))?.localeCompare(
-                                                            b.visit_date + (b.visit_time || "")
-                                                        )
-                                                    )
+                                                    .sort((a, b) => (a.visit_date + (a.visit_time || "")).localeCompare(b.visit_date + (b.visit_time || "")))
                                                     .map((t) => (
-                                                        <li
-                                                            key={t.id}
-                                                            className="px-3 py-2 text-sm flex items-center justify-between"
-                                                        >
+                                                        <li key={t.id} className="px-3 py-2 text-sm flex items-center justify-between">
                               <span className="text-gray-700">
-                                {fmtDate(t.visit_date)} •{" "}
-                                  <Clock className="inline h-3.5 w-3.5 -mt-0.5" />{" "}
-                                  {fmtTime(t.visit_time)}
+                                {fmtDate(t.visit_date)} • <Clock className="inline h-3.5 w-3.5 -mt-0.5" /> {fmtTime(t.visit_time)}
                               </span>
-                                                            <span className="text-xs text-gray-500 capitalize">
-                                {t.status || "pending"}
-                              </span>
+                                                            <span className="text-xs text-gray-500 capitalize">{t.status || "pending"}</span>
                                                         </li>
                                                     ))}
                                             </ul>
@@ -297,9 +314,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
 
                                 {/* Quick suggestions */}
                                 <div className="mb-5">
-                                    <h5 className="text-sm font-semibold text-gray-800 mb-2">
-                                        Quick pick dates
-                                    </h5>
+                                    <h5 className="text-sm font-semibold text-gray-800 mb-2">Quick pick dates</h5>
                                     <div className="flex flex-wrap gap-2">
                                         {suggestedDates.map((d) => {
                                             const blocked = isDateFullyBlocked(d);
@@ -330,9 +345,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">
-                                                Preferred Date
-                                            </label>
+                                            <label className="block text-sm font-medium text-gray-700">Preferred Date</label>
                                             <input
                                                 type="date"
                                                 name="date"
@@ -344,16 +357,12 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                                 className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary disabled:bg-gray-100"
                                             />
                                             {form.date && isDateFullyBlocked(form.date) && (
-                                                <p className="mt-1 text-xs text-amber-700">
-                                                    That day is fully booked. Pick another date.
-                                                </p>
+                                                <p className="mt-1 text-xs text-amber-700">That day is fully booked. Pick another date.</p>
                                             )}
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">
-                                                Preferred Time
-                                            </label>
+                                            <label className="block text-sm font-medium text-gray-700">Preferred Time</label>
 
                                             {/* Slot buttons */}
                                             <div className="mt-1 flex flex-wrap gap-2">
@@ -363,9 +372,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                                             key={time}
                                                             type="button"
                                                             onClick={() => onPickTime(time)}
-                                                            disabled={
-                                                                disabled || buyerAlreadyScheduled || !form.date
-                                                            }
+                                                            disabled={disabled || buyerAlreadyScheduled || !form.date}
                                                             className={cn(
                                                                 "px-3 py-1.5 rounded-md text-sm border",
                                                                 form.time === time
@@ -380,29 +387,34 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                                         </button>
                                                     ))
                                                 ) : (
-                                                    <span className="text-xs text-gray-500">
-                            Pick a date to see available times.
-                          </span>
+                                                    <span className="text-xs text-gray-500">Pick a date to see available times.</span>
                                                 )}
                                             </div>
 
-                                            {/* Fallback time input (keeps form valid if you want freeform) */}
+                                            {/* Manual time input (kept for flexibility, with window guard) */}
                                             <input
                                                 type="time"
                                                 name="time"
-                                                value={form.time}
-                                                onChange={onChange}
+                                                value={form.time.length === 8 ? form.time.slice(0, 5) : form.time} // show HH:mm
+                                                onChange={(e) => {
+                                                    // keep internal as HH:mm (we normalize on submit)
+                                                    onChange(e);
+                                                }}
+                                                min={WORK_START}
+                                                max={WORK_END}
                                                 required
                                                 disabled={buyerAlreadyScheduled}
-                                                className="mt-2 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary disabled:bg-gray-100"
+                                                className={cn(
+                                                    "mt-2 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary disabled:bg-gray-100",
+                                                    timeError && "border-rose-300"
+                                                )}
                                             />
+                                            {timeError && <p className="mt-1 text-xs text-rose-600">{timeError}</p>}
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Additional Notes
-                                        </label>
+                                        <label className="block text-sm font-medium text-gray-700">Additional Notes</label>
                                         <textarea
                                             name="notes"
                                             rows={3}
@@ -414,18 +426,13 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                         />
                                     </div>
 
-                                    {/* Error */}
+                                    {/* General error */}
                                     {error && (
                                         <div className="rounded-md bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 text-sm flex items-start gap-2">
                                             <AlertCircle className="h-4 w-4 mt-0.5" />
                                             {error}
                                         </div>
                                     )}
-
-                                    {/* Hidden IDs for debugging (optional) */}
-                                    {/* <pre className="text-xs text-gray-400">
-                    {JSON.stringify(form, null, 2)}
-                  </pre> */}
 
                                     {/* Actions */}
                                     <div className="mt-6 flex justify-end gap-3">
@@ -441,9 +448,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                             type="submit"
                                             className={cn(
                                                 "px-5 py-2 rounded-md text-sm font-medium transition",
-                                                buyerAlreadyScheduled
-                                                    ? "bg-gray-300 text-white cursor-not-allowed"
-                                                    : "bg-primary hover:bg-primary-dark text-white"
+                                                buyerAlreadyScheduled ? "bg-gray-300 text-white cursor-not-allowed" : "bg-primary hover:bg-primary-dark text-white"
                                             )}
                                             disabled={isSubmitting || buyerAlreadyScheduled}
                                         >

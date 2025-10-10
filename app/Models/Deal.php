@@ -10,7 +10,7 @@ class Deal extends Model
 
     public function property_listing(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(PropertyListing::class);
+        return $this->belongsTo(PropertyListing::class, 'property_listing_id', );
     }
 
     public function buyer(): \Illuminate\Database\Eloquent\Relations\BelongsTo

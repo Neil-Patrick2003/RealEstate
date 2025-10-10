@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Laravel\Sanctum\HasApiTokens;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,20 +19,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
-        'contact_number',
-        'address',
-        'bio',
-        'photo_url',
-        'broker_id',
-        'status',
-        'last_login'
-
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -123,7 +111,13 @@ class User extends Authenticatable
 
     public function property_listings()
     {
-        return $this->belongsToMany(PropertyListing::class, 'property_listing_agents', 'agent_id', 'property_listing_id');
+        return $this->belongsToMany(
+            PropertyListing::class,
+            'property_listing_agents',
+            'agent_id',
+            'property_listing_id');
+
+
     }
 
 
@@ -159,6 +153,50 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\PropertyListing::class, 'broker_id');
     }
+
+    public function broker() { return $this->belongsTo(User::class, 'broker_id'); }
+
+
+    public function active_listings()
+    {
+        return $this->hasMany(\App\Models\PropertyListing::class, 'agent_id')
+            ->where('status', 'Published');
+    }
+
+    public function averageFeedback(): Attribute
+    {
+        return Attribute::get(function () {
+            // SQL average (fast) — returns null if no rows
+            $avg = $this->feedbackAsReceiver()
+                ->selectRaw('(
+                AVG(communication) +
+                AVG(negotiation) +
+                AVG(professionalism) +
+                AVG(knowledge)
+            ) / 4 as overall')
+                ->value('overall');
+
+            return round((float) ($avg ?? 0), 2);
+        });
+    }
+
+
+    public function propertiesHandled()
+    {
+        return $this->belongsToMany(\App\Models\Property::class, 'property_listings', 'user_id', 'property_id')
+            ->withTimestamps();
+
+    }
+
+    public function listingAssignments()
+    {
+        return $this->belongsToMany(\App\Models\PropertyListing::class, 'property_listing_agents', 'agent_id', 'property_listing_id')
+            ->withTimestamps();
+    }
+
+
+
+
 
 
 

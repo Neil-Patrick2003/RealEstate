@@ -29,7 +29,6 @@ class PropertyTrippingController extends Controller
     public function store(Request $request){
 
 
-
         //validate
         $validated = request()->validate([
             'property_id' => 'required',

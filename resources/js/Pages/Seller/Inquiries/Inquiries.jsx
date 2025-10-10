@@ -151,7 +151,7 @@
                         inquiries.data.map((inquiry) => {
                             const property = inquiry.property ?? {};
                             const agent = inquiry.agent ?? {};
-                            const message = inquiry?.first_message?.message || null;
+                            const message = inquiry?.notes || null;
                             const statusLower = inquiry.status.toLowerCase();
                             const isAccepted = statusLower === "accepted";
                             const isCancelled = statusLower === "cancelled" || statusLower === "cancelled by buyer";

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use function Pest\Laravel\get;
 
+
 Route::get('/', function (Request $request) {
 
     $featured = \App\Models\Property::with('features', 'images', 'property_listing.agents', 'property_listing.broker')
@@ -210,7 +211,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Buyer\BuyerController::class, 'index'])->name('dashboard');
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
-    Route::get('/inquiries/{property}', [\App\Http\Controllers\Buyer\InquiryController::class, 'show']);
+    Route::get('/inquiries/{inquiry}', [\App\Http\Controllers\Buyer\InquiryController::class, 'show']);
     Route::patch('/inquiries/{id}/cancel', [\App\Http\Controllers\Buyer\InquiryController::class, 'cancel']);
     Route::get('/chat', [\App\Http\Controllers\Buyer\ChatController::class, 'index'])->name('buyer.chat.index');
     Route::get('/chat/channels/{channel}', [\App\Http\Controllers\Buyer\ChannelController::class, 'show'])->name('buyer.chat.channels.show');
@@ -299,18 +300,20 @@ Route::get('/agents/{agent}', [\App\Http\Controllers\Agent\AgentController::clas
 Route::get('properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 Route::post('/properties/{id}/favorites', [\App\Http\Controllers\Property\PropertyController::class, 'favourite'])->name('properties.favourite');
 
+//
+//Route::middleware(['auth'])->group(function () {
+//    Route::get('/admin/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'index'])->name('admin.dashboard');
+//    Route::get('/admin/properties', [\App\Http\Controllers\Admin\PropertyController::class, 'index'])->name('admin.properties');
+//
+//    Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users');
+//    Route::get('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('admin.users.create');
+//    Route::post('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
+//    Route::get('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit');
+//    Route::patch('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
+//    Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
+//});
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'index'])->name('admin.dashboard');
-    Route::get('/admin/properties', [\App\Http\Controllers\Admin\PropertyController::class, 'index'])->name('admin.properties');
 
-    Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users');
-    Route::get('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('admin.users.create');
-    Route::post('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
-    Route::get('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit');
-    Route::patch('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
-    Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
-});
 
 
 
