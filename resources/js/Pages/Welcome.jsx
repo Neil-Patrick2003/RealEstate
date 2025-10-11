@@ -2,7 +2,7 @@
     import { Link, Head, router } from "@inertiajs/react";
     import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
     import { debounce } from "lodash";
-
+    import Chatbot from "@/Components/Chatbot/Chatbot";
     // Assets
     import logo from "../../assets/framer_logo.png";
     import backgroundImage from "../../assets/background.jpg";
@@ -485,6 +485,8 @@
                     </div>
                     <div className="border-t py-4 text-center text-xs text-gray-500">© {new Date().getFullYear()} AlleganceHomes. All rights reserved.</div>
                 </footer>
+                <Chatbot />
             </main>
+
         );
     }
