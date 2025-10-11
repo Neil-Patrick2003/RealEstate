@@ -20,8 +20,8 @@ return new class extends Migration
             $table->foreign('property_listing_id')->references('id')->on('property_listings')->onDelete('cascade');
             $table->foreign('buyer_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
-            $table->timestamp('amount_last_updated_at');
-            $table->unsignedBigInteger('amount_last_updated_by');
+            $table->timestamp('amount_last_updated_at')->nullable();
+            $table->unsignedBigInteger('amount_last_updated_by')->nullable();
         });
     }
 
