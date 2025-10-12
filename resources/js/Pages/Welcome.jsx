@@ -1,492 +1,406 @@
-    import React, { useCallback, useEffect, useMemo, useState } from "react";
-    import { Link, Head, router } from "@inertiajs/react";
-    import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-    import { debounce } from "lodash";
-    import Chatbot from "@/Components/Chatbot/Chatbot";
-    // Assets
-    import logo from "../../assets/framer_logo.png";
-    import backgroundImage from "../../assets/background.jpg";
-    import Hero from "@/Pages/LandingPage/Hero.jsx";
+// MJVI Realty — Luxe Green & Gold Landing (Refined v2)
+// - Accessibility: semantic landmarks, skip link, aria labels
+// - Mobile nav: accessible toggle, focus states
+// - Performance: responsive images, preconnect, decoding, lazy; reduced DOM depth
+// - Consistency: unified spacing, shadows, gradients; polished hover states
+// - DX: fewer magic values; clear section components
+// - SEO: basic meta + JSON-LD org markup
 
-    /**
-     * MJVI Realty — Landing Page (Enhanced)
-     * - Framer Motion animations (prefers-reduced-motion respected)
-     * - Better a11y & semantics
-     * - Mobile nav with motion
-     * - New sections: Testimonials, Partners, Safety/Trust, Value Props
-     * - Reusable variants & section wrappers
-     * - Tiny perf wins: image lazy-loading, CSS containment, smaller box-shadows
-     */
+import React, { useState } from 'react';
+import { Head } from '@inertiajs/react';
+import {
+    Home,
+    Building2,
+    Landmark,
+    ShieldCheck,
+    CheckCircle2,
+    PhoneCall,
+    Timer,
+    Star,
+    Quote,
+    MapPin,
+    ArrowRight,
+    Users,
+    Award,
+    Search,
+    Mail, // fix: lucide uses Mail (not MailIcon)
+    Menu,
+    X,
+} from 'lucide-react';
 
-    /* ------------------------------ Helpers ------------------------------ */
-    const Section = ({ id, className = "", children }) => (
-        <section id={id} className={`relative w-full ${className}`}>{children}</section>
-    );
+import Hero from '@/Pages/LandingPage/Hero.jsx';
+import Chatbot from "@/Components/Chatbot/Chatbot.jsx";
 
-    const peso = (v, fractionDigits = 0) => {
-        const n = typeof v === "string" ? Number(v.replace(/,/g, "")) : Number(v);
-        if (!Number.isFinite(n)) return "₱0";
-        return (
-            "₱" +
-            n.toLocaleString("en-PH", {
-                minimumFractionDigits: fractionDigits,
-                maximumFractionDigits: fractionDigits,
-            })
-        );
-    };
+/* ------------------------------ Theme & Layout Helpers ------------------------------ */
+const PAGE_BG = 'bg-gradient-to-br from-gray-50 via-white to-gray-50';
 
-    /* ------------------------------ Variants ----------------------------- */
-    const fade = {
-        hidden: { opacity: 0 },
-        show: { opacity: 1, transition: { duration: 0.5 } },
-    };
-
-    const fadeUp = {
-        hidden: { opacity: 0, y: 16 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-    };
-
-    const stagger = {
-        hidden: {},
-        show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
-    };
-
-    /* ------------------------------ Small UI ----------------------------- */
-    const Chip = ({ children }) => (
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/30 px-3 py-1 text-xs">
+const Section = ({ id, className = '', children, divider = true }) => (
+    <section id={id} className={`relative w-full ${className}`}>
         {children}
-      </span>
-    );
+        {divider && (
+            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent hidden lg:block" />
+        )}
+    </section>
+);
 
-    const Stat = ({ label, value }) => (
-        <motion.div variants={fadeUp} className="rounded-2xl bg-white/80 backdrop-blur ring-1 ring-white/50 shadow-sm p-4 text-center">
-            <div className="text-3xl font-extrabold text-emerald-600">{value}</div>
-            <div className="text-xs uppercase tracking-wider text-gray-500 mt-1">{label}</div>
-        </motion.div>
-    );
+const Container = ({ children, className = '' }) => (
+    <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</div>
+);
 
-    const Feature = ({ title, desc, icon }) => (
-        <motion.div variants={fadeUp} className="group rounded-2xl p-6 ring-1 ring-gray-200 bg-white shadow-sm hover:shadow-md transition hover:-translate-y-0.5">
-            <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-4 group-hover:bg-emerald-100">
-                {icon}
+/* ------------------------------ Navbar ------------------------------ */
+const Navbar = () => {
+    const [open, setOpen] = useState(false);
+    const toggle = () => setOpen(v => !v);
+    const close = () => setOpen(false);
+
+    return (
+        <header className="fixed inset-x-0 top-0 z-50 bg-white/98 backdrop-blur-xl border-b border-gray-100/50 shadow-lg shadow-emerald-500/10">
+            <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:inset-x-0 focus:top-0 focus:m-4 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:shadow">
+                Skip to content
+            </a>
+            <Container className="h-20 flex items-center justify-between">
+                <a href="#top" className="flex items-center gap-3 text-emerald-900" onClick={close}>
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 ring-2 ring-emerald-200/50 flex items-center justify-center transition-all duration-200">
+                        <Home className="h-6 w-6 text-emerald-700" strokeWidth={2.5} />
+                    </div>
+                    <span className="text-2xl font-black tracking-tight">MJVI Realty</span>
+                </a>
+
+                {/* Desktop Nav */}
+                <nav className="hidden md:flex items-center gap-10 text-base font-semibold text-gray-700" aria-label="Primary">
+                    {[
+                        ['#features', 'Features'],
+                        ['#how', 'Process'],
+                        ['#listings', 'Listings'],
+                        ['#testimonials', 'Reviews'],
+                        ['#contact', 'Contact'],
+                    ].map(([href, label]) => (
+                        <a key={href} href={href} className="relative hover:text-emerald-700 transition-colors duration-200 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-emerald-600 after:scale-x-0 after:origin-left after:transition-transform after:duration-200 hover:after:scale-x-100">
+                            {label}
+                        </a>
+                    ))}
+                    <a
+                        href="#search"
+                        className="inline-flex items-center rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-3 font-bold text-white hover:from-emerald-700 hover:to-emerald-800 shadow-xl shadow-emerald-500/25 transition-all duration-200 hover:shadow-emerald-600/40 hover:scale-105"
+                    >
+                        <MapPin className="mr-2 h-4 w-4" aria-hidden /> Find Properties
+                    </a>
+                </nav>
+
+                {/* Mobile toggle */}
+                <button
+                    onClick={toggle}
+                    className="md:hidden inline-flex items-center justify-center rounded-xl p-2 text-gray-700 hover:bg-gray-100"
+                    aria-label="Toggle menu"
+                    aria-expanded={open}
+                >
+                    {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                </button>
+            </Container>
+
+            {/* Mobile Drawer */}
+            <div className={`md:hidden overflow-hidden transition-[max-height] duration-300 ${open ? 'max-h-96' : 'max-h-0'}`} aria-hidden={!open}>
+                <Container className="pb-4">
+                    <nav className="flex flex-col gap-2 text-base font-medium text-gray-700" aria-label="Mobile">
+                        {[
+                            ['#features', 'Features'],
+                            ['#how', 'Process'],
+                            ['#listings', 'Listings'],
+                            ['#testimonials', 'Reviews'],
+                            ['#contact', 'Contact'],
+                        ].map(([href, label]) => (
+                            <a key={href} href={href} onClick={close} className="rounded-lg px-3 py-2 hover:bg-gray-100">{label}</a>
+                        ))}
+                        <a
+                            href="#search"
+                            onClick={close}
+                            className="mt-2 inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-2.5 font-semibold text-white hover:bg-emerald-700 shadow"
+                        >
+                            <MapPin className="mr-2 h-4 w-4" aria-hidden /> Find Properties
+                        </a>
+                    </nav>
+                </Container>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            <p className="text-sm text-gray-600 mt-1">{desc}</p>
-        </motion.div>
+        </header>
     );
+};
 
-    const PropertyCard = ({ p }) => (
-        <motion.div
-            variants={fadeUp}
-            className="rounded-2xl overflow-hidden ring-1 ring-gray-200 bg-white shadow-sm hover:shadow-md transition hover:-translate-y-0.5"
-        >
-            <div className="relative">
-                <img
-                    src={`/storage/${p.image_url}`}
-                    alt={p.title}
-                    className="h-52 w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                />
-                {p?.badge && (
-                    <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-emerald-700 ring-1 ring-emerald-200">
-              {p.badge}
-            </span>
-                )}
+/* ------------------------------ Feature Card ------------------------------ */
+const FeatureCard = ({ icon: Icon, title, desc }) => (
+    <div className="group rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-8 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:border-emerald-200/50 hover:bg-white hover:shadow-emerald-500/10 hover:scale-[1.02]">
+        <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 ring-2 ring-emerald-200/30 group-hover:from-emerald-100 group-hover:to-emerald-200 transition-colors duration-200">
+            <Icon className="h-8 w-8 text-emerald-700" strokeWidth={2.5} aria-hidden />
+        </div>
+        <h3 className="mb-3 text-2xl font-black text-gray-900 group-hover:text-emerald-900 transition-colors duration-200">{title}</h3>
+        <p className="text-base text-gray-600 leading-relaxed">{desc}</p>
+    </div>
+);
+
+/* ------------------------------ Property Card ------------------------------ */
+const PropertyCard = ({ image, title, tag, price, meta }) => (
+    <article className="group overflow-hidden rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm shadow-2xl shadow-gray-900/10 transition-all duration-300 hover:border-emerald-200/50 hover:shadow-emerald-500/20 hover:scale-[1.02]">
+        <div className="relative aspect-[4/3] overflow-hidden">
+            <img
+                src={`${image}&auto=format&fit=crop`}
+                srcSet={`${image}&w=640 640w, ${image}&w=960 960w, ${image}&w=1280 1280w, ${image}&w=1600 1600w`}
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                alt={title}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                loading="lazy"
+                decoding="async"
+            />
+            {tag && (
+                <span className="absolute left-4 top-4 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xl shadow-emerald-500/40 backdrop-blur-sm">
+          {tag}
+        </span>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </div>
+        <div className="p-6">
+            <h4 className="line-clamp-2 text-xl font-black text-gray-900 mb-2 group-hover:text-emerald-900 transition-colors duration-200">{title}</h4>
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">{meta}</p>
+            <div className="flex items-center justify-between border-t border-gray-100/50 pt-4">
+                <span className="text-2xl font-black text-emerald-700 tracking-tight">{price}</span>
+                <a href="#contact" className="inline-flex items-center text-sm font-bold text-amber-600 hover:text-amber-700 transition-all duration-200 group-hover:translate-x-1">
+                    Inquire <ArrowRight className="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
+                </a>
             </div>
-            <div className="p-4">
-                <h4 className="font-semibold text-gray-900 line-clamp-1">{p.title}</h4>
-                <p className="text-sm text-gray-500 line-clamp-1">{p.location}</p>
-                <div className="mt-3 flex items-center justify-between">
-                    <div className="text-emerald-600 font-bold">{peso(p?.price)}</div>
-                    <div className="text-xs text-gray-500">{p?.lot_area ?? p?.floor_area} m² • {p?.bedrooms} bd</div>
+        </div>
+    </article>
+);
+
+/* ------------------------------ Testimonial ------------------------------ */
+const Testimonial = ({ quote, name, role, rating = 5 }) => (
+    <figure className="group rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-8 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:border-amber-200/50 hover:shadow-amber-500/10 hover:scale-[1.02]">
+        <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 ring-2 ring-amber-200/30 group-hover:from-amber-100 group-hover:to-amber-200 transition-colors duration-200">
+            <Quote className="h-7 w-7 text-amber-700" strokeWidth={2} aria-hidden />
+        </div>
+        <blockquote className="text-xl italic text-gray-700 leading-relaxed mb-6">“{quote}”</blockquote>
+        <figcaption>
+            <div className="flex items-center gap-1 mb-4 text-amber-500" aria-label={`Rating: ${rating} out of 5`}>
+                {Array.from({ length: rating }).map((_, i) => (
+                    <Star key={i} className="h-5 w-5 fill-amber-400 stroke-amber-600" aria-hidden />
+                ))}
+            </div>
+            <div className="text-base">
+                <span className="font-black text-gray-900 group-hover:text-amber-900 transition-colors duration-200">{name}</span>
+                <span className="text-gray-500"> · {role}</span>
+            </div>
+        </figcaption>
+    </figure>
+);
+
+/* ------------------------------ Page ------------------------------ */
+export default function LandingPage() {
+    return (
+        <>
+            <Head title="Find Homes & Properties | MJVI Realty">
+                <meta name="description" content="Search verified PH property listings with boundary-aware maps. Book trippings, compare details, and close confidently with licensed agents." />
+                <link rel="preconnect" href="https://images.unsplash.com" />
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'Organization',
+                        name: 'MJVI Realty',
+                        url: 'https://mjvirealty.ph',
+                        address: {
+                            '@type': 'PostalAddress',
+                            addressLocality: 'Metro Manila',
+                            addressCountry: 'PH'
+                        },
+                        contactPoint: [{ '@type': 'ContactPoint', telephone: '+639000000000', contactType: 'customer support' }]
+                    }) }} />
+            </Head>
+
+            <div id="top" className={`${PAGE_BG} text-gray-900`}>
+                <Navbar />
+
+                {/* ------------------------------ HERO ------------------------------ */}
+                <div
+                    className="relative min-h-screen bg-cover bg-center pt-20"
+                    style={{
+                        backgroundImage: "url('https://www.shutterstock.com/image-photo/aerial-drone-bird-eye-view-260nw-2453933885.jpg')", // lush green aerial
+                    }}
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/70 via-emerald-800/60 to-black/80" aria-hidden />
+                    $1
+                    {/* Subtle boundary grid overlay to suggest lots/parcels */}
+                    <div
+                        className="pointer-events-none absolute inset-0 opacity-[0.10] mix-blend-overlay"
+                        style={{
+                            backgroundImage:
+                                'linear-gradient(to right, rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.6) 1px, transparent 1px)',
+                            backgroundSize: '56px 56px',
+                        }}
+                        aria-hidden
+                    />
+
+                    <Hero
+                        onSearch={() => {
+                            document.getElementById('listings')?.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        selectedType="All"
+                        handleTypeChange={() => {}}
+                        searchTerm=""
+                        handleSearchTermChange={() => {}}
+                    />
                 </div>
+
+                {/* ------------------------------ FEATURES ------------------------------ */}
+                <Section id="features" className="py-28 bg-white/80 backdrop-blur-sm">
+                    <Container>
+                        <div className="mx-auto max-w-4xl text-center">
+                            <p className="text-sm font-bold text-amber-600 uppercase tracking-widest mb-2">Why Choose MJVI</p>
+                            <h2 className="text-5xl md:text-6xl font-black tracking-tight text-gray-900 mb-6">Simple, Transparent, Trusted.</h2>
+                            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">Verified listings with boundary-aware maps and licensed guidance for seamless, confident purchases.</p>
+                        </div>
+
+                        <div className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+                            <FeatureCard icon={Building2} title="Verified Listings" desc="Vetted for accuracy and availability with developers and brokers." />
+                            <FeatureCard icon={Landmark} title="Boundary Mapping" desc="Village, subdivision, and barangay limits visible for context." />
+                            <FeatureCard icon={ShieldCheck} title="Transparent Details" desc="Specs, fees, and requirements disclosed upfront—no surprises." />
+                            <FeatureCard icon={Users} title="Licensed Support" desc="Agents assist trippings, offers, and closing with expertise." />
+                        </div>
+                    </Container>
+                </Section>
+
+                {/* ------------------------------ HOW IT WORKS ------------------------------ */}
+                <Section id="how" className={`py-28 ${PAGE_BG}`}>
+                    <Container>
+                        <div className="mx-auto max-w-3xl text-center">
+                            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6">Your Seamless Journey</h2>
+                            <p className="text-xl text-gray-600">From search to keys in hand—effortless and efficient.</p>
+                        </div>
+
+                        <div className="mt-16 grid grid-cols-1 gap-12 md:grid-cols-3">
+                            <div className="relative rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-10 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:shadow-emerald-500/15 hover:scale-[1.02]">
+                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 h-12 w-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-black text-xl shadow-xl shadow-emerald-500/30">1</div>
+                                <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 ring-2 ring-emerald-200/30">
+                                    <Search className="h-8 w-8 text-emerald-700" strokeWidth={2.5} aria-hidden />
+                                </div>
+                                <h3 className="text-2xl font-black text-gray-900 mb-3">Search & Shortlist</h3>
+                                <p className="text-base text-gray-600 leading-relaxed">Filter by location, type, budget, and amenities to find the right match.</p>
+                            </div>
+
+                            <div className="relative rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-10 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:shadow-amber-500/15 hover:scale-[1.02]">
+                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 h-12 w-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-amber-600 to-amber-700 text-white font-black text-xl shadow-xl shadow-amber-500/30">2</div>
+                                <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 ring-2 ring-amber-200/30">
+                                    <Timer className="h-8 w-8 text-amber-700" strokeWidth={2.5} aria-hidden />
+                                </div>
+                                <h3 className="text-2xl font-black text-gray-900 mb-3">Schedule Viewing</h3>
+                                <p className="text-base text-gray-600 leading-relaxed">Book site visits with maps, reminders, and a personalized checklist.</p>
+                            </div>
+
+                            <div className="relative rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-10 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:shadow-emerald-500/15 hover:scale-[1.02]">
+                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 h-12 w-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-black text-xl shadow-xl shadow-emerald-500/30">3</div>
+                                <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 ring-2 ring-emerald-200/30">
+                                    <Award className="h-8 w-8 text-emerald-700" strokeWidth={2.5} aria-hidden />
+                                </div>
+                                <h3 className="text-2xl font-black text-gray-900 mb-3">Close Securely</h3>
+                                <p className="text-base text-gray-600 leading-relaxed">Navigate offers, finances, and legalities with licensed support.</p>
+                            </div>
+                        </div>
+                    </Container>
+                </Section>
+
+                {/* ------------------------------ FEATURED LISTINGS ------------------------------ */}
+                <Section id="listings" className="py-28 bg-white/80 backdrop-blur-sm">
+                    <Container>
+                        <div className="flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-end mb-12">
+                            <div className="max-w-2xl">
+                                <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-4">Curated Properties</h2>
+                                <p className="text-xl text-gray-600">Premium selections across NCR and CALABARZON—tailored for you.</p>
+                            </div>
+                            <a href="#top" className="inline-flex items-center rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-8 py-4 text-lg font-bold text-white hover:from-amber-600 hover:to-amber-700 shadow-xl shadow-amber-500/25 transition-all duration-200">
+                                Explore All <ArrowRight className="ml-2 h-5 w-5" aria-hidden />
+                            </a>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                            <PropertyCard image="https://images.unsplash.com/photo-1502005229762-cf1b2da7c8e2?q=80" title="Modern 2BR Condo in BGC" tag="Condo" price="₱12.5M" meta="2 Bed · 2 Bath · 68 sqm · BGC, Taguig" />
+                            <PropertyCard image="https://images.unsplash.com/photo-1494526585095-c41746248156?q=80" title="Family House with Garden" tag="House & Lot" price="₱9.8M" meta="3 Bed · 2 Bath · 180 sqm lot · Imus, Cavite" />
+                            <PropertyCard image="https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80" title="New Townhome Near EDSA" tag="Townhouse" price="₱6.2M" meta="3 Bed · 2.5 Bath · 95 sqm · Quezon City" />
+                        </div>
+                    </Container>
+                </Section>
+
+                {/* ------------------------------ TESTIMONIALS ------------------------------ */}
+                <Section id="testimonials" className={`py-28 ${PAGE_BG}`}>
+                    <Container>
+                        <div className="mx-auto max-w-3xl text-center">
+                            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6">What Our Clients Say</h2>
+                            <p className="text-xl text-gray-600">Real experiences from satisfied buyers and investors.</p>
+                        </div>
+
+                        <div className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-3">
+                            <Testimonial quote="The entire process was seamless—from initial search to closing. Transparent fees and exceptional agent support made all the difference." name="Angela D." role="Homeowner, Cavite" />
+                            <Testimonial quote="Boundary mapping feature was a game-changer for evaluating investment opportunities. Quick decisions, great results." name="Mark R." role="Investor, Quezon City" />
+                            <Testimonial quote="As a first-time buyer, I felt supported every step. Easy bookings and clear documentation—highly recommend!" name="Jessa P." role="Buyer, Taguig" />
+                        </div>
+                    </Container>
+                </Section>
+
+                {/* ------------------------------ CTA ------------------------------ */}
+                <Section id="search" className="py-28 bg-gradient-to-br from-emerald-50 via-amber-50 to-white" divider={false}>
+                    <Container>
+                        <div className="relative overflow-hidden rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-12 md:p-20 shadow-2xl shadow-emerald-900/10">
+                            <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-gradient-to-br from-amber-300/20 to-emerald-300/20 blur-3xl" aria-hidden />
+                            <div className="absolute -left-32 -bottom-32 h-80 w-80 rounded-full bg-gradient-to-br from-emerald-300/20 to-amber-300/20 blur-3xl" aria-hidden />
+
+                            <div className="relative max-w-4xl mx-auto text-center">
+                                <h3 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">Ready to Discover Your Dream Property?</h3>
+                                <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">Begin your search by location or type, and connect with an expert for personalized guidance.</p>
+                                <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
+                                    <a href="#top" className="inline-flex items-center rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-4 text-lg font-bold text-white hover:from-emerald-700 hover:to-emerald-800 shadow-xl shadow-emerald-500/25 transition-all duration-200">
+                                        <MapPin className="mr-2 h-5 w-5" aria-hidden /> Search Now
+                                    </a>
+                                    <a href="#contact" className="inline-flex items-center rounded-2xl border-2 border-emerald-300 bg-white px-8 py-4 text-lg font-bold text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-800 transition-all duration-200">
+                                        Speak to an Agent
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </Container>
+                </Section>
+
+                {/* ------------------------------ CONTACT / FOOTER ------------------------------ */}
+                <Section id="contact" className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-gray-100" divider={false}>
+                    <Container>
+                        <div className="grid grid-cols-1 gap-12 md:grid-cols-4 lg:gap-20">
+                            <div className="md:col-span-2">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 ring-2 ring-emerald-400/30 flex items-center justify-center">
+                                        <Home className="h-6 w-6 text-emerald-300" strokeWidth={2.5} aria-hidden />
+                                    </div>
+                                    <span className="text-2xl font-black tracking-tight text-emerald-100">MJVI Realty</span>
+                                </div>
+                                <p className="text-gray-300 text-base leading-relaxed max-w-md">Elevating Philippine real estate with innovative tools, verified listings, and licensed expertise for your peace of mind.</p>
+                            </div>
+
+                            <div>
+                                <h4 className="text-lg font-bold tracking-wider text-emerald-100 uppercase mb-4">Get in Touch</h4>
+                                <ul className="space-y-3 text-gray-300">
+                                    <li className="flex items-center gap-3 hover:text-emerald-300 transition-colors duration-200"><PhoneCall className="h-4 w-4" aria-hidden /> +63 900 000 0000</li>
+                                    <li className="flex items-center gap-3 hover:text-emerald-300 transition-colors duration-200"><Mail className="h-4 w-4" aria-hidden /> support@mjvirealty.ph</li>
+                                    <li className="flex items-center gap-3 hover:text-emerald-300 transition-colors duration-200"><MapPin className="h-4 w-4" aria-hidden /> Metro Manila, Philippines</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 className="text-lg font-bold tracking-wider text-emerald-100 uppercase mb-4">Quick Links</h4>
+                                <ul className="space-y-3 text-gray-300">
+                                    <li><a href="#features" className="hover:text-emerald-300 transition-colors duration-200">Features</a></li>
+                                    <li><a href="#how" className="hover:text-emerald-300 transition-colors duration-200">Process</a></li>
+                                    <li><a href="#listings" className="hover:text-emerald-300 transition-colors duration-200">Listings</a></li>
+                                    <li><a href="#testimonials" className="hover:text-emerald-300 transition-colors duration-200">Reviews</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="mt-16 border-t border-gray-700 pt-8 text-center text-sm text-gray-400">© {new Date().getFullYear()} MJVI Realty. All rights reserved. Licensed Real Estate Broker in the Philippines.</div>
+                    </Container>
+                </Section>
             </div>
-        </motion.div>
+            <Chatbot/>
+        </>
     );
-
-    /* ------------------------------ Component --------------------------- */
-    export default function LandingPage({ auth, properties = [], search = "", initialType = "All", featured = [] }) {
-        const [searchTerm, setSearchTerm] = useState(search || "");
-        const [selectedType, setSelectedType] = useState(initialType);
-        const [menuOpen, setMenuOpen] = useState(false);
-        const prefersReducedMotion = useReducedMotion();
-
-        useEffect(() => {
-            if (search) setSearchTerm(search);
-        }, [search]);
-
-        // Remote filter call (Inertia router)
-        const fetchProperties = (searchValue = searchTerm, typeValue = selectedType) => {
-            router.get(
-                "/",
-                { search: searchValue, type: typeValue },
-                { preserveState: true, replace: true }
-            );
-        };
-
-        const debouncedSearch = useCallback(
-            debounce((value) => fetchProperties(value, selectedType), 500),
-            [selectedType]
-        );
-
-        useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch]);
-
-        const handleSearchTermChange = (e) => {
-            const value = e.target.value;
-            setSearchTerm(value);
-            debouncedSearch(value);
-        };
-
-        const handleTypeChange = (type) => {
-            setSelectedType(type);
-            fetchProperties(searchTerm, type);
-        };
-
-        // Mobile nav keyboard support
-        const toggleMenu = () => setMenuOpen((v) => !v);
-
-        /* ------------------------------ Render ------------------------------ */
-        return (
-            <main className="min-h-screen bg-gray-50 [contain:paint_size_layout]">
-                <Head title="MJVI Realty — Find lots & homes fast" />
-
-                {/* NAV */}
-                <header className="sticky top-0 z-40 supports-[backdrop-filter]:bg-white/70 bg-white shadow/[0_1px_0_#e5e7eb] backdrop-blur">
-                    <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-                        <Link href="/" className="flex items-center gap-2" aria-label="Go to home">
-                            <img src={logo} alt="MJVI Realty" className="w-8 h-8 -ml-1.5 drop-shadow-md" />
-                            <span className="font-extrabold tracking-tight text-gray-900">
-                  MJVI<span className="text-emerald-600">Realty</span>
-                </span>
-                        </Link>
-
-                        {/* Desktop nav */}
-                        <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600" aria-label="Primary">
-                            <a href="#features" className="hover:text-gray-900">Features</a>
-                            <a href="/all-properties" className="hover:text-gray-900">Explore</a>
-                            <a href="#how" className="hover:text-gray-900">How it works</a>
-                            <a href="#testimonials" className="hover:text-gray-900">Stories</a>
-                            <a href="#faq" className="hover:text-gray-900">FAQ</a>
-                        </nav>
-
-                        <div className="hidden md:flex items-center gap-3">
-                            <Link href="/login" className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100">Sign in</Link>
-                            <Link href="/register" className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700">Get Started</Link>
-                        </div>
-
-                        {/* Mobile menu button */}
-                        <button
-                            onClick={toggleMenu}
-                            className="md:hidden p-2 rounded-lg ring-1 ring-gray-200"
-                            aria-label="Open menu"
-                            aria-expanded={menuOpen}
-                        >
-                            ☰
-                        </button>
-                    </div>
-
-                    {/* Mobile panel */}
-                    <AnimatePresence initial={false}>
-                        {menuOpen && (
-                            <motion.nav
-                                key="mobile-nav"
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.25 }}
-                                className="md:hidden border-t bg-white"
-                                aria-label="Mobile"
-                            >
-                                <div className="mx-auto max-w-7xl px-4 py-3 flex flex-col gap-2 text-sm text-gray-700">
-                                    <a href="#features" onClick={() => setMenuOpen(false)} className="py-2">Features</a>
-                                    <a href="#explore" onClick={() => setMenuOpen(false)} className="py-2">Explore</a>
-                                    <a href="#how" onClick={() => setMenuOpen(false)} className="py-2">How it works</a>
-                                    <a href="#testimonials" onClick={() => setMenuOpen(false)} className="py-2">Stories</a>
-                                    <a href="#faq" onClick={() => setMenuOpen(false)} className="py-2">FAQ</a>
-                                    <div className="pt-2 flex gap-2">
-                                        <Link href="/login" className="flex-1 px-4 py-2 rounded-xl ring-1 ring-gray-200 text-center">Sign in</Link>
-                                        <Link href="/register" className="flex-1 px-4 py-2 rounded-xl text-white bg-emerald-600 text-center">Get Started</Link>
-                                    </div>
-                                </div>
-                            </motion.nav>
-                        )}
-                    </AnimatePresence>
-                </header>
-
-                {/*/!* HERO *!/*/}
-                {/*<div*/}
-                {/*    className="relative h-[92vh] bg-cover bg-center bg-no-repeat"*/}
-                {/*    style={{ backgroundImage: `url(${backgroundImage})` }}*/}
-                {/*    role="img"*/}
-                {/*    aria-label="City skyline background visual"*/}
-                {/*>*/}
-                {/*    <div className="relative z-10">*/}
-                {/*        <Hero*/}
-                {/*            searchTerm={searchTerm}*/}
-                {/*            handleSearchTermChange={handleSearchTermChange}*/}
-                {/*            selectedType={selectedType}*/}
-                {/*            handleTypeChange={handleTypeChange}*/}
-                {/*            setSelectedType={setSelectedType}*/}
-                {/*        />*/}
-                {/*    </div>*/}
-                {/*</div>*/}
-
-                {/* FEATURES */}
-                <Section id="features" className="py-16">
-                    <div className="mx-auto max-w-7xl px-4">
-                        <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }} variants={stagger}>
-                            <motion.div variants={fadeUp} className="max-w-2xl">
-                                <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">Built for speed, trust, and clarity</h2>
-                                <p className="text-gray-600 mt-2">Everything you need to go from browsing to closing — without the noise.</p>
-                            </motion.div>
-
-                            <motion.div variants={stagger} className="grid md:grid-cols-3 gap-6 mt-8">
-                                <Feature title="Verified Listings" desc="All properties are vetted; no ghost posts." icon={<span role="img" aria-label="verified">✅</span>} />
-                                <Feature title="Advanced Filters" desc="Area, price, and type suggestions as you type." icon={<span role="img" aria-label="search">🔎</span>} />
-                                <Feature title="Agent Connect" desc="Chat with certified local agents in a tap." icon={<span role="img" aria-label="chat">💬</span>} />
-                                <Feature title="Interactive Map" desc="Draw boundaries and explore neighborhoods." icon={<span role="img" aria-label="map">🗺️</span>} />
-                                <Feature title="Saved Search" desc="Get alerts when new matches appear." icon={<span role="img" aria-label="bell">🔔</span>} />
-                                <Feature title="Secure Docs" desc="E-signed paperwork. Faster, safer closing." icon={<span role="img" aria-label="doc">📄</span>} />
-                            </motion.div>
-
-                            {/* Trust row */}
-                            <motion.div variants={stagger} className="mt-8 grid grid-cols-3 gap-3 max-w-lg">
-                                <Stat label="Active listings" value="12,400+" />
-                                <Stat label="Verified agents" value="1,100+" />
-                                <Stat label="Cities covered" value="120+" />
-                            </motion.div>
-                        </motion.div>
-                    </div>
-                </Section>
-
-                {/* VALUE PROPS / SAFETY */}
-                <Section id="value" className="py-16 bg-white">
-                    <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-3 gap-8 items-start">
-                        <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}>
-                            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Why choose MJVI Realty?</h2>
-                            <p className="text-gray-600 mt-2">Designed with Filipino buyers and sellers in mind—transparent pricing, responsive agents, and modern tools to make every step simple.</p>
-                        </motion.div>
-                        <motion.ul variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="md:col-span-2 grid gap-4">
-                            {[
-                                { t: "Transparent Pricing", d: "Clear property prices with estimated fees—no last-minute surprises." },
-                                { t: "Verified Documentation", d: "Uploaded titles and deeds checked by our partner brokers." },
-                                { t: "Anti-Scam Controls", d: "Multi-step listing review + report-a-listing tools keep the marketplace clean." },
-                                { t: "Human Support", d: "Local support team available 7 days a week." },
-                            ].map((i, idx) => (
-                                <motion.li key={idx} variants={fadeUp} className="rounded-2xl p-5 ring-1 ring-gray-200 bg-white shadow-sm">
-                                    <div className="flex items-start gap-4">
-                                        <div className="h-9 w-9 flex items-center justify-center rounded-full bg-emerald-50">{idx + 1}</div>
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900">{i.t}</h3>
-                                            <p className="text-sm text-gray-600 mt-1">{i.d}</p>
-                                        </div>
-                                    </div>
-                                </motion.li>
-                            ))}
-                        </motion.ul>
-                    </div>
-                </Section>
-
-                {/* EXPLORE */}
-                <Section id="explore" className="py-4 pb-16">
-                    <div className="mx-auto max-w-7xl px-4">
-                        <div className="flex items-end justify-between">
-                            <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}>
-                                <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Hot picks near you</h2>
-                                <p className="text-gray-600">Curated, modern, and eco-friendly options.</p>
-                            </motion.div>
-                            <Link href="/all-properties" className="text-emerald-700 hover:text-emerald-800 font-medium">View all →</Link>
-                        </div>
-                        <motion.div
-                            initial="hidden"
-                            whileInView="show"
-                            viewport={{ once: true, margin: "-80px" }}
-                            variants={stagger}
-                            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6"
-                        >
-                            {properties.map((p) => (
-                                <PropertyCard key={p.id} p={p} />
-                            ))}
-                        </motion.div>
-                    </div>
-                </Section>
-
-                {/* HOW IT WORKS */}
-                <Section id="how" className="py-16 bg-white">
-                    <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-3 gap-8 items-start">
-                        <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="md:col-span-1">
-                            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">From browse to buy — in 3 steps</h2>
-                            <p className="text-gray-600 mt-2">We designed the flow to be ridiculously simple.</p>
-                        </motion.div>
-                        <motion.ol variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="md:col-span-2 grid gap-4">
-                            {[
-                                { t: "Search & shortlist", d: "Use AI filters and the live map to save your favorites." },
-                                { t: "Chat & schedule", d: "Message agents, request virtual or on-site tours." },
-                                { t: "Offer & close", d: "Negotiate with confidence and sign securely online." },
-                            ].map((s, i) => (
-                                <motion.li key={i} variants={fadeUp} className="rounded-2xl p-5 ring-1 ring-gray-200 bg-white shadow-sm">
-                                    <div className="flex items-start gap-4">
-                                        <div className="h-9 w-9 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold">{i + 1}</div>
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900">{s.t}</h3>
-                                            <p className="text-sm text-gray-600 mt-1">{s.d}</p>
-                                        </div>
-                                    </div>
-                                </motion.li>
-                            ))}
-                        </motion.ol>
-                    </div>
-                </Section>
-
-                {/* PARTNERS */}
-                <Section id="partners" className="py-12">
-                    <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fade} className="mx-auto max-w-7xl px-4">
-                        <div className="rounded-2xl ring-1 ring-gray-200 bg-white p-6">
-                            <p className="text-center text-xs uppercase tracking-wider text-gray-500">Trusted by teams at</p>
-                            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 opacity-80">
-                                {Array.from({ length: 6 }).map((_, i) => (
-                                    <div key={i} className="h-10 rounded-md bg-gray-100" aria-hidden />
-                                ))}
-                            </div>
-                        </div>
-                    </motion.div>
-                </Section>
-
-                {/* TESTIMONIALS */}
-                <Section id="testimonials" className="py-16 bg-white">
-                    <div className="mx-auto max-w-7xl px-4">
-                        <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger}>
-                            <motion.h2 variants={fadeUp} className="text-2xl md:text-3xl font-extrabold text-gray-900">What buyers & sellers say</motion.h2>
-                            <motion.div variants={stagger} className="mt-6 grid md:grid-cols-3 gap-6">
-                                {[
-                                    {
-                                        q: "We sold in 12 days at asking price!",
-                                        a: "The listing flow and agent chat made everything fast and transparent.",
-                                        p: "Jessa • Seller, Cavite",
-                                    },
-                                    {
-                                        q: "Found our first home in Tagaytay",
-                                        a: "Saved search alerts were spot on. We booked a tour the same day.",
-                                        p: "Mico & Rhea • Buyers",
-                                    },
-                                    {
-                                        q: "Smooth paperwork & secure",
-                                        a: "Digital offers and e-signing saved countless trips. Highly recommended.",
-                                        p: "Engr. Allan • Buyer, Laguna",
-                                    },
-                                ].map((t, i) => (
-                                    <motion.blockquote key={i} variants={fadeUp} className="rounded-2xl p-6 ring-1 ring-gray-200 bg-white shadow-sm">
-                                        <p className="font-semibold text-gray-900">{t.q}</p>
-                                        <p className="text-sm text-gray-600 mt-2">“{t.a}”</p>
-                                        <footer className="mt-3 text-xs text-gray-500">{t.p}</footer>
-                                    </motion.blockquote>
-                                ))}
-                            </motion.div>
-                        </motion.div>
-                    </div>
-                </Section>
-
-                {/* CTA */}
-                <Section className="py-16">
-                    <div className="mx-auto max-w-7xl px-4">
-                        <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-600 to-orange-500 p-1">
-                            <div className="rounded-[calc(theme(borderRadius.3xl)-4px)] bg-white px-6 py-10 md:px-10 grid md:grid-cols-2 gap-8 items-center">
-                                <div>
-                                    <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900">Let’s find your place today</h3>
-                                    <p className="text-gray-600 mt-2">Create a free account to save searches and get instant alerts.</p>
-                                    <div className="mt-5 flex flex-wrap gap-3">
-                                        <Link href="/register" className="px-5 py-2.5 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 font-semibold">Get Started</Link>
-                                        <Link href="/buyer/properties" className="px-5 py-2.5 rounded-xl ring-1 ring-gray-200 hover:bg-gray-50 font-semibold text-gray-700">Browse first</Link>
-                                    </div>
-                                </div>
-                                <form className="bg-gray-50 rounded-2xl p-4 ring-1 ring-gray-200">
-                                    <label className="text-sm font-medium text-gray-700">Get alerts in your inbox</label>
-                                    <div className="mt-2 grid grid-cols-3 gap-2">
-                                        <input className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Email address" />
-                                        <button type="button" className="rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 px-4">Subscribe</button>
-                                    </div>
-                                    <p className="mt-2 text-[11px] text-gray-500">No spam. Unsubscribe anytime.</p>
-                                </form>
-                            </div>
-                        </motion.div>
-                    </div>
-                </Section>
-
-                {/* FAQ */}
-                <Section id="faq" className="py-16 bg-white">
-                    <div className="mx-auto max-w-5xl px-4">
-                        <motion.h2 initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="text-2xl md:text-3xl font-extrabold text-gray-900">Frequently Asked Questions</motion.h2>
-                        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mt-6 grid md:grid-cols-2 gap-6">
-                            {[
-                                {
-                                    q: "Are listings verified?",
-                                    a: "Yes. Our team and partner agents verify authenticity and availability before publishing.",
-                                },
-                                {
-                                    q: "How do alerts work?",
-                                    a: "Save a search and we’ll email you when new matches appear within your criteria.",
-                                },
-                                {
-                                    q: "Is there a fee to use the site?",
-                                    a: "Browsing is free. Some premium features for agents/sellers may carry fees.",
-                                },
-                                {
-                                    q: "Do you cover the whole Philippines?",
-                                    a: "We’re expanding fast—major cities and growth areas are covered with more added monthly.",
-                                },
-                            ].map((f, i) => (
-                                <motion.details key={i} variants={fadeUp} className="p-5 rounded-2xl ring-1 ring-gray-200 bg-white shadow-sm">
-                                    <summary className="font-semibold cursor-pointer list-none">
-                                        <span className="select-none">{f.q}</span>
-                                    </summary>
-                                    <p className="text-sm text-gray-600 mt-2">{f.a}</p>
-                                </motion.details>
-                            ))}
-                        </motion.div>
-                    </div>
-                </Section>
-
-                {/* FOOTER */}
-                <footer className="border-t bg-white">
-                    <div className="mx-auto max-w-7xl px-4 py-10 grid md:grid-cols-4 gap-8 text-sm">
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-600 to-orange-500" aria-hidden />
-                                <span className="font-extrabold tracking-tight text-gray-900">
-                    MJVI<span className="text-emerald-600">Realty</span>
-                  </span>
-                            </div>
-                            <p className="text-gray-600 mt-3">A modern, futuristic local property finder built for speed and trust.</p>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold text-gray-900">Explore</h4>
-                            <ul className="mt-2 space-y-1 text-gray-600">
-                                <li><Link href="/buyer/properties" className="hover:text-gray-900">Listings</Link></li>
-                                <li><a href="#features" className="hover:text-gray-900">Features</a></li>
-                                <li><a href="#how" className="hover:text-gray-900">How it works</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold text-gray-900">Company</h4>
-                            <ul className="mt-2 space-y-1 text-gray-600">
-                                <li><Link href="/about" className="hover:text-gray-900">About</Link></li>
-                                <li><Link href="/contact" className="hover:text-gray-900">Contact</Link></li>
-                                <li><Link href="/privacy" className="hover:text-gray-900">Privacy</Link></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold text-gray-900">Get updates</h4>
-                            <form className="mt-2 grid grid-cols-3 gap-2">
-                                <input className="col-span-2 rounded-xl border-gray-300 focus:ring-2 focus:ring-emerald-500 px-3 py-2" placeholder="Email address" />
-                                <button type="button" className="rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700">Join</button>
-                            </form>
-                        </div>
-                    </div>
-                    <div className="border-t py-4 text-center text-xs text-gray-500">© {new Date().getFullYear()} AlleganceHomes. All rights reserved.</div>
-                </footer>
-                <Chatbot />
-            </main>
-
-        );
-    }
+}
