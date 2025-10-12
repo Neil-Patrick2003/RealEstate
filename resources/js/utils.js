@@ -55,41 +55,49 @@ export const Menus = [
         name: "Markplace",
         desc: "Browse templates",
         icon: ShoppingBag,
+        url: "/marketplace"
       },
       {
         name: "Meetups",
         desc: "Upcoming events",
         icon: MapPin,
+        url: "/meetups"
       },
       {
         name: "Updates",
         desc: "Changelog",
         icon: BellDot,
+        url: "/updates"
       },
       {
         name: "Academy",
         desc: "Watch lessions",
         icon: Play,
+        url: "/academy"
       },
       {
         name: "Blog",
         desc: "Posts",
         icon: BookOpenText,
+        url: "/blog"
       },
       {
         name: "Figma",
         desc: "Plugin",
         icon: Figma,
+        url: "/figma"
       },
       {
         name: "Experts",
         desc: "Jobs",
         icon: BriefcaseBusiness,
+        url: "/experts"
       },
       {
         name: "Gallery",
         desc: "Images",
         icon: Images,
+        url: "/gallery"
       },
     ],
     gridCols: 3,
@@ -101,16 +109,19 @@ export const Menus = [
         name: "Help",
         desc: "Center",
         icon: CircleHelp,
+        url: "/help"
       },
       {
         name: "Community",
         desc: "Project help",
         icon: MessageCircle,
+        url: "/community"
       },
       {
         name: "Emergency",
         desc: "Urgent issues",
         icon: TriangleAlert,
+        url: "/emergency"
       },
     ],
     gridCols: 1,
@@ -123,29 +134,35 @@ export const Menus = [
         name: "Enterprise",
         desc: "Overview",
         icon: ShieldPlus,
+        url: "/enterprise"
       },
       {
         name: "Collaboration",
         desc: "Design together",
         icon: Users,
+        url: "/collaboration"
       },
       {
         name: "Customers",
         desc: "Stories",
         icon: Dessert,
+        url: "/customers"
       },
       {
         name: "Security",
         desc: "Your site secured",
         icon: Lock,
+        url: "/security"
       },
     ],
     gridCols: 2,
   },
   {
     name: "Find Agent",
+    url: "/findagent"
   },
   {
     name: "Contact",
+    url: "/contact"
   },
 ];

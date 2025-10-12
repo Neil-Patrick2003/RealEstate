@@ -1,9 +1,11 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import {motion} from 'framer-motion';
+import { Link } from "@inertiajs/react";
+
 
 export default function DesktopMenu({menu}) {
-    
+
     const [ isHover, setIsHover] = useState(false);
 
 
@@ -17,7 +19,7 @@ export default function DesktopMenu({menu}) {
             opacity: 1,
             rotateX: 0,
             transition: {
-                duration: 0.3 
+                duration: 0.3
             },
             display: "block"
 
@@ -35,12 +37,17 @@ export default function DesktopMenu({menu}) {
     // checking if the menu has submenu
     const hasSubMenu = menu.subMenu?.length > 0;
     return (
-        <motion.li className="group/link" onHoverStart={toggleHoverMenu} onHoverEnd={toggleHoverMenu}>
-            <span className="flex-center text-primary gap-1 cursor-pointer px-3 py-1 rounded-md hover:bg-accent duration-200">
-                {menu.name}
+        <motion.ul className="group/link" onHoverStart={toggleHoverMenu} onHoverEnd={toggleHoverMenu}>
+            <span>
+                <Link 
+                 className="flex-center gap-1 cursor-pointer px-3 py-1 rounded-xl hover:bg-lightaccent"
+                href={menu.url}>
+                    {menu.name}
                 {hasSubMenu && (
                     <ChevronDown className="mt-[0.6px] group-hover/link:rotate-180 duration-200" />
                 )}
+                </Link>
+                
             </span>
             {hasSubMenu && (
                 <motion.div className="sub-menu"
@@ -54,7 +61,7 @@ export default function DesktopMenu({menu}) {
                         { menu?.subMenu?.map((subMenu, i) => (
                             <div key={i} className="relative cursor-pointer">
                                 <div className="flex-center gap-x-4 group/menubox">
-                                    <div className="bg-green-100 w-fit p-2 rounded-md group-hover/menubox:bg-accent group-hover/menubox:text-white duration-300">
+                                    <div className="bg-lightaccent w-fit p-2 rounded-md group-hover/menubox:bg-primary group-hover/menubox:text-white duration-300">
                                         {subMenu?.icon && <subMenu.icon/>}
                                     </div>
                                     <div>
@@ -67,7 +74,7 @@ export default function DesktopMenu({menu}) {
                     </div>
                 </motion.div>
             )}
-            
-        </motion.li>
+
+        </motion.ul>
     );
 }

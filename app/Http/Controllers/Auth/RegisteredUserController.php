@@ -38,15 +38,16 @@ class RegisteredUserController extends Controller
             'address' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:500',
             'photo_url' => 'nullable|url|max:255',
-            'role' => 'required|in:Seller,Buyer,Agent',
+            'role' => 'nullable|in:Seller,Buyer,Agent',
         ]);
 
+
         $user = User::create([
-            'name' => $request->name,       
+            'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role, 
-            'contact_numer' => $request->contact_number ?? null,
+            'role' => $request->role,
+            'contact_number' => $request->contact_number ?? null,
             'address' => $request->address ?? null,
             'bio' => $request->bio ?? null,
         ]);
@@ -55,6 +56,11 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return match ($user->role) {
+            'Seller' => redirect()->intended(route('seller.dashboard')),
+            'Agent'  => redirect()->intended(route('agent.dashboard')),
+            'Admin'  => redirect()->intended(route('admin.dashboard')),
+            default  => redirect()->intended(route('dashboard')),
+        };
     }
 }

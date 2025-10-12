@@ -7,8 +7,7 @@ import Button from '@mui/material/Button';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import { Link } from '@inertiajs/react';
-import { t } from 'i18next'; // or from wherever you globally expose it
-
+import { t } from 'i18next';
 
 const steps = [
   {
@@ -29,7 +28,6 @@ const steps = [
   },
 ];
 
-
 export default function ListingRequirements({ closeModal }) {
   const theme = useTheme();
   const [activeStep, setActiveStep] = React.useState(0);
@@ -37,7 +35,7 @@ export default function ListingRequirements({ closeModal }) {
   const maxSteps = steps.length;
 
   React.useEffect(() => {
-    setCountdown(5);
+    setCountdown(3);
     if (activeStep === maxSteps) return;
 
     const timer = setInterval(() => {
@@ -69,10 +67,9 @@ export default function ListingRequirements({ closeModal }) {
         bgcolor: 'background.paper',
         display: 'flex',
         flexDirection: 'column',
-        px: { xs: 2, sm: 4 },
-        py: { xs: 2, sm: 3 },
+        px: { xs: 3, sm: 5 },
+        py: { xs: 4, sm: 5 },
         boxSizing: 'border-box',
-        overflow: 'hidden',
       }}
     >
       {/* Header */}
@@ -81,23 +78,23 @@ export default function ListingRequirements({ closeModal }) {
         component="h1"
         sx={{
           fontWeight: 700,
-          color: 'primary.main',
+          color: 'text.primary',
           mb: 1,
           textAlign: 'center',
         }}
       >
-         {t(steps[activeStep].label)}
+        {t(steps[activeStep].label)}
       </Typography>
 
       {/* Divider */}
       <Box
         sx={{
-          height: 3,
+          height: 4,
           width: 60,
           mx: 'auto',
           bgcolor: 'primary.main',
-          borderRadius: 10,
-          mb: 2,
+          borderRadius: 2,
+          mb: 3,
         }}
       />
 
@@ -105,19 +102,19 @@ export default function ListingRequirements({ closeModal }) {
       <Box
         sx={{
           flexGrow: 1,
-          px: { xs: 0, sm: 1 },
-          py: 1,
           overflowY: 'auto',
-          fontSize: '1rem',
-          textAlign: 'justify', // ✅ add this line
-
-          color: 'text.secondary',
-          lineHeight: 1.8,
+          mb: 4,
         }}
       >
         <Typography
           variant="body1"
-          sx={{ whiteSpace: 'pre-line', fontSize: '1rem' }}
+          sx={{
+            color: 'text.primary',
+            fontSize: '1.05rem',
+            lineHeight: 1.9,
+            whiteSpace: 'pre-line',
+            textAlign: 'justify',
+          }}
         >
           {t(steps[activeStep].description)}
         </Typography>
@@ -131,7 +128,6 @@ export default function ListingRequirements({ closeModal }) {
         activeStep={activeStep}
         sx={{
           justifyContent: 'space-between',
-          mt: 3,
           px: 0,
           bgcolor: 'transparent',
         }}
@@ -141,43 +137,55 @@ export default function ListingRequirements({ closeModal }) {
               variant="contained"
               color="primary"
               onClick={closeModal}
-              sx={{ fontWeight: 600, textTransform: 'none' }}
+              sx={{
+                fontWeight: 600,
+                textTransform: 'none',
+                px: 3,
+              }}
             >
               {t('Continue')}
             </Button>
           ) : (
             <Button
-              size="small"
+              size="medium"
               onClick={handleNext}
               disabled={countdown > 0}
               endIcon={
                 theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />
               }
-              sx={{ fontWeight: 600, textTransform: 'none' }}
+              sx={{
+                fontWeight: 600,
+                textTransform: 'none',
+                px: 2,
+              }}
             >
-              {countdown > 0 ? `${t("Next")} (${countdown})` : t("Next")}
-
+              {countdown > 0 ? `${t('Next')} (${countdown})` : t('Next')}
             </Button>
           )
         }
         backButton={
           activeStep === 0 ? (
             <Link
-              href={'/'}
-              className='text-red-600 text-sm font-semibold'
+              href="/"
+              className="text-red-600 text-sm font-semibold"
+              style={{ paddingTop: 8 }}
             >
               {t('Exit')}
             </Link>
           ) : (
             <Button
-              size="small"
+              size="medium"
               onClick={handleBack}
               startIcon={
                 theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />
               }
-              sx={{ fontWeight: 500, textTransform: 'none' }}
+              sx={{
+                fontWeight: 500,
+                textTransform: 'none',
+                px: 2,
+              }}
             >
-              Back
+              {t('Back')}
             </Button>
           )
         }

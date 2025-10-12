@@ -1,59 +1,76 @@
 import { Transition } from '@headlessui/react';
 import { Link } from '@inertiajs/react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useRef, useState, useEffect } from 'react';
 
 const DropDownContext = createContext();
 
 const Dropdown = ({ children }) => {
     const [open, setOpen] = useState(false);
+    const dropdownRef = useRef();
 
-    const toggleOpen = () => {
-        setOpen((previousState) => !previousState);
-    };
+    const toggleOpen = () => setOpen((prev) => !prev);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target)
+            ) {
+                setOpen(false);
+            }
+        };
+
+        if (open) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [open]);
 
     return (
         <DropDownContext.Provider value={{ open, setOpen, toggleOpen }}>
-            <div className="relative">{children}</div>
+            <div className="relative" ref={dropdownRef}>
+                {children}
+            </div>
         </DropDownContext.Provider>
     );
 };
 
 const Trigger = ({ children }) => {
-    const { open, setOpen, toggleOpen } = useContext(DropDownContext);
+    const { toggleOpen } = useContext(DropDownContext);
 
     return (
-        <>
-            <div onClick={toggleOpen}>{children}</div>
-
-            {open && (
-                <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setOpen(false)}
-                ></div>
-            )}
-        </>
+        <div onClick={toggleOpen} className="cursor-pointer">
+            {children}
+        </div>
     );
 };
 
 const Content = ({
-    align = 'right',
-    width = 'auto', // default to auto
-    contentClasses = 'py-1 bg-white dark:bg-gray-700',
-    children,
-}) => {
-    const { open, setOpen } = useContext(DropDownContext);
+                     align = 'right',
+                     width = 'auto',
+                     contentClasses = 'py-1 bg-white dark:bg-gray-700',
+                     children,
+                 }) => {
+    const { open } = useContext(DropDownContext);
 
-    let alignmentClasses = {
-        left: 'ltr:origin-top-left rtl:origin-top-right start-0',
-        right: 'ltr:origin-top-right rtl:origin-top-left end-0',
+    const alignmentClasses = {
+        left: 'ltr:origin-top-left rtl:origin-top-right left-0',
+        right: 'ltr:origin-top-right rtl:origin-top-left right-0',
         center: 'left-1/2 -translate-x-1/2 origin-top',
-    }[align] || 'end-0';
+    }[align] || 'right-0';
 
     const widthClass = {
         auto: 'w-auto',
         full: 'w-full',
         48: 'w-48',
         64: 'w-64',
+        80: 'w-80',
     }[width] || 'w-auto';
 
     return (
@@ -68,7 +85,6 @@ const Content = ({
         >
             <div
                 className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClass}`}
-                onClick={() => setOpen(false)}
             >
                 <div
                     className={`rounded-md ring-1 ring-black ring-opacity-5 ${contentClasses}`}

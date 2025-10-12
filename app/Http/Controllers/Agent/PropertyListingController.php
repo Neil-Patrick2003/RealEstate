@@ -1,0 +1,99 @@
+<?php
+
+namespace App\Http\Controllers\Agent;
+
+use App\Http\Controllers\Controller;
+use App\Models\Property;
+use App\Models\PropertyListing;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class PropertyListingController extends Controller
+{
+    public function index(Request $request)
+    {
+        $properties = PropertyListing::with(['property', 'seller', 'agents'])
+            ->whereHas('agents', function ($query) {
+                $query->where('agent_id', auth()->id());
+            })
+
+
+        // Search filter
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $searchTerm = trim($request->search);
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->orWhereHas('property', function ($subQuery) use ($searchTerm) {
+                        $subQuery->where('title', 'like', "%{$searchTerm}%");
+                    })->orWhereHas('seller', function ($subQuery) use ($searchTerm) {
+                        $subQuery->where('name', 'like', "%{$searchTerm}%");
+                    });
+                });
+            })
+
+            // Status filter (excluding "All")
+            ->when($request->filled('status') && $request->status !== 'All', function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+
+            // Property Type filter
+            ->when($request->filled('property_type'), function ($query) use ($request) {
+                $query->whereHas('property', function ($subQuery) use ($request) {
+                    $subQuery->where('property_type', $request->property_type);
+                });
+            })
+
+            // Sub Type filter
+            ->when($request->filled('sub_type'), function ($query) use ($request) {
+                $query->whereHas('property', function ($subQuery) use ($request) {
+                    $subQuery->where('sub_type', $request->sub_type);
+                });
+            })
+
+            // Location filter
+            ->when($request->filled('location'), function ($query) use ($request) {
+                $query->whereHas('property', function ($subQuery) use ($request) {
+                    $subQuery->where('address', 'like', '%' . $request->location . '%');
+                });
+            })
+
+            ->orderByDesc('created_at')
+            ->paginate((int) $request->get('items_per_page', 10))
+            ->withQueryString(); // important to keep filters during pagination
+
+
+
+        // Return to Inertia view
+        return Inertia::render('Agent/PropertyListing/Properties', [
+            'listings' => $properties,
+        ]);
+    }
+
+    public function show(PropertyListing $propertyListing)
+    {
+        $propertyListing->load(['property.coordinate', 'seller', 'property.images', 'property.features', 'agents']);
+
+        return Inertia::render('Agent/PropertyListing/ShowProperty', [
+            'propertyListing' => $propertyListing,
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+
+        $property = Property::findOrFail($id);
+
+        $property->update([
+            'status' => $request->status,
+        ]);
+
+        // Update the related property_listing (assuming one-to-one)
+        if ($property->property_listing) {
+            $property->property_listing->update([
+                'status' => $request->status,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Property Published Successfully');
+    }
+
+}
