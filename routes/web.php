@@ -293,7 +293,7 @@ Route::middleware('auth')->group(function () {
     })->name('post-property');
 
     //store
-    Route::post('/post-property', [PropertyController::class, 'store'])->name('post-property');
+//    Route::post('/post-property', [PropertyController::class, 'store'])->name('post-property');
 
     Route::get('/all-agents', [\App\Http\Controllers\Agent\AgentController::class, 'loadAgents'])->name('get-all-agents');
 });
