@@ -48,6 +48,34 @@ class PropertyTrippingController extends Controller
 
     }
 
+
+    public function complete(Request $request, $id)
+    {
+        $tripping = PropertyTripping::find($id);
+
+
+        $tripping->update([
+            'status' => 'completed',
+        ]);
+
+        $buyer = $tripping->buyer;
+
+        $property = $tripping->property;
+        $agent = $tripping->agent;
+
+        $buyer->notify(new TrippingResponse([
+            'agent_name' => $agent->name,
+            'property_title' => $property->title,
+            'status' => 'Accepted',
+            'property_id' => $property->id,
+            'buyer_id' => $tripping->buyer_id,
+        ]));
+
+        return redirect()->back()->with('success', 'Tripping accepted');
+
+    }
+
+
     public function decline(Request $request, $id){
         $tripping = PropertyTripping::find($id);
         $tripping->update([

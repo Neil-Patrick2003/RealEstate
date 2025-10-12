@@ -12,4 +12,9 @@ class Developer extends Model
         return $this->hasMany(Property::class);
     }
 
+    public function broker()
+    {
+        return $this->belongsTo(User::class, 'broker_id');
+    }
+
 }

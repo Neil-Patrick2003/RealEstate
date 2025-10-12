@@ -59,6 +59,15 @@ class DeveloperResource extends Resource
                             ->default('pending')
                             ->native(false),
 
+                        // ✅ Added Broker Selection
+                        Select::make('broker_id')
+                            ->label('Assigned Broker')
+                            ->relationship('broker', 'name') // assumes Developer belongsTo Broker model
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->helperText('Select the main broker responsible for this developer.'),
+
                         TextInput::make('registration_number')
                             ->label('Registration #')
                             ->required()
@@ -82,12 +91,12 @@ class DeveloperResource extends Resource
                             ->label('Company Logo')
                             ->image()
                             ->directory('developers/logos')
-                            ->imageEditor()                // crop/rotate
-                            ->imageCropAspectRatio('1:1')  // square logos
+                            ->imageEditor()
+                            ->imageCropAspectRatio('1:1')
                             ->imageResizeTargetWidth('512')
                             ->imageResizeTargetHeight('512')
                             ->imageResizeMode('contain')
-                            ->maxSize(1024)                // 1 MB
+                            ->maxSize(1024)
                             ->downloadable()
                             ->openable()
                             ->columnSpanFull()
@@ -115,6 +124,7 @@ class DeveloperResource extends Resource
                     ]),
             ]);
     }
+
 
     public static function table(Table $table): Table
     {
@@ -174,6 +184,11 @@ class DeveloperResource extends Resource
                     ->dateTime('Y-m-d H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('broker.name')
+                    ->label('Broker')
+                    ->sortable()
+                    ->searchable(),
             ])
             ->filters([
                 SelectFilter::make('status')

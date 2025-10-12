@@ -17,8 +17,12 @@ class InquiryController extends Controller
 {
     public function index(Request $request)
     {
-        $inquiries = Inquiry::with('seller', 'agent', 'property', 'buyer')
-            ->where('agent_id', auth()->id())
+
+
+        $inquiries = Inquiry::with('seller', 'agent', 'property', 'buyer', 'property.property_listing')
+            ->whereHas('property.property_listing.agents', function ($query) {
+                $query->where('id', auth()->id());
+            })
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 $q->where('status', $request->status);
             })
@@ -30,6 +34,12 @@ class InquiryController extends Controller
             })
             ->orderByDesc('created_at')
             ->paginate($request->get('items_per_page', 10));
+
+
+
+
+
+
 
         $buyerInquiryCount = Inquiry::whereNotNull('buyer_id')->count();
         $sellerInquiryCount = Inquiry::whereNotNull('seller_id')->count();
@@ -133,24 +143,33 @@ class InquiryController extends Controller
     // Accept inquiry (Buyer side)
     public function accept(Inquiry $inquiry)
     {
+        $inquiry->update(['status' => 'Accepted']);
 
-        $inquiry->update([
+        $inquiry->load(['property.property_listing.agents', 'buyer']);
+
+        // Example: pick the currently authenticated agent (if applicable)
+        $agent = $inquiry->property
+            ? $inquiry->property->property_listing
+                ? $inquiry->property->property_listing->agents
+                    ->firstWhere('id', auth()->id())
+                : null
+            : null;
+
+        // Fallback: use the first agent on the listing
+        $agent = $agent ?? optional($inquiry->property->property_listing->agents)->first();
+
+        $agentName = optional($agent)->name ?? 'Unknown agent';
+
+        $inquiry->buyer->notify(new InquiryResponse([
             'status' => 'Accepted',
-        ]);
-
-        $inquiry->load(['property', 'buyer', 'agent']);
-
-        $buyer = $inquiry->buyer;
-
-        $buyer->notify(new InquiryResponse([
-            'status' => 'accepted',
-            'seller_name' => $inquiry->agent->name,
-            'property_title' => $inquiry->property->title,
+            'seller_name' => $agentName,
+            'property_title' => optional($inquiry->property)->title ?? 'Unknown property',
             'link' => '/inquiries'
         ]));
 
         return back()->with('success', 'Inquiry accepted successfully.');
     }
+
 
     // Reject inquiry (Buyer side)
     public function reject(Inquiry $inquiry)

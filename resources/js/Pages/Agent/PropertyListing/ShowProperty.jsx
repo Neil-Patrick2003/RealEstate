@@ -114,7 +114,7 @@ export default function ShowProperty({ propertyListing }) {
                 />
 
                 {/* Content shell with subtle border to match theme */}
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+                <div className="bg-white ">
                     <SingleProperty property={propertyListing.property} />
                 </div>
             </div>

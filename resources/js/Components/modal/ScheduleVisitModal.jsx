@@ -23,6 +23,9 @@ const isWithinWindow = (t) => {
 };
 
 export default function ScheduleVisitModal({ open, setOpen, visitData }) {
+
+
+    // console.log(visitData);
     // --------- Form State ---------
     const [form, setForm] = useState({
         date: "",

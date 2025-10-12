@@ -259,7 +259,6 @@ const SignupForm = ({buttonClasses, buttonForGFT}) => {
                     onChange={(e) => setData('role', e.target.value)}
                 >
                     <option value="Seller">Seller</option>
-                    <option value="Agent">Agent</option>
                     <option value="Buyer">Buyer</option>
                 </select>
             </div>

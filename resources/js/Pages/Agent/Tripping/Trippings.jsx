@@ -45,11 +45,10 @@ const statusLc = (t) => String(t?.status || "").toLowerCase();
 
 const statusPill = (s) => {
     const v = String(s || "").toLowerCase();
-    return v === "pending"
-        ? "bg-amber-100 text-amber-700"
-        : v === "accepted"
-            ? "bg-green-100 text-green-700"
-            : "bg-gray-100 text-gray-600";
+    if (v === "pending") return "bg-amber-100 text-amber-700";
+    if (v === "accepted") return "bg-green-100 text-green-700";
+    if (v === "completed") return "bg-indigo-100 text-indigo-700";
+    return "bg-gray-100 text-gray-600";
 };
 
 function icsForTrip(trip) {
@@ -167,7 +166,6 @@ function useReminders(storageKey = "trip-reminders") {
 
 /* ================= main page ================= */
 export default function TrippingsAgentFull({ trippings = [] }) {
-    // If you want optimistic UI, uncomment the next two lines and use `localTrips` instead of `trippings` below.
     // const [localTrips, setLocalTrips] = useState(trippings);
     // useEffect(() => setLocalTrips(trippings), [trippings]);
 
@@ -185,10 +183,11 @@ export default function TrippingsAgentFull({ trippings = [] }) {
         [trippings]
     );
 
+    // Completed is now a TRUE status, not inferred by time
     const completed = useMemo(
         () =>
             trippings
-                .filter((t) => statusLc(t) === "accepted" && isBeforeNow(t))
+                .filter((t) => statusLc(t) === "completed")
                 .sort((a, b) => visitMoment(b).valueOf() - visitMoment(a).valueOf()),
         [trippings]
     );
@@ -204,7 +203,7 @@ export default function TrippingsAgentFull({ trippings = [] }) {
     const [to, setTo] = useState("");
     const [page, setPage] = useState(1);
     const [size, setSize] = useState(10);
-    const [busy, setBusy] = useState({}); // {[id]: 'accept'|'decline'|'reschedule'}
+    const [busy, setBusy] = useState({}); // {[id]: 'accept'|'decline'|'reschedule'|'complete'}
     const [confirm, setConfirm] = useState({ type: null, id: null });
     const [resched, setResched] = useState({ open: false, id: null, date: "", time: "" });
     const [selected, setSelected] = useState(null);
@@ -258,13 +257,10 @@ export default function TrippingsAgentFull({ trippings = [] }) {
     const patchTrip = useCallback((id, action, payload = {}) => {
         setBusy((b) => ({ ...b, [id]: action }));
 
-        // If you want optimistic UI, uncomment:
-        // if (action === "accept") {
-        //   setLocalTrips((arr) => arr.map((t) => (t.id === id ? { ...t, status: "accepted" } : t)));
-        // }
-        // if (action === "decline") {
-        //   setLocalTrips((arr) => arr.map((t) => (t.id === id ? { ...t, status: "declined" } : t)));
-        // }
+        // optimistic UI ideas (optional)
+        // if (action === "accept") { setLocalTrips((arr) => arr.map((t) => (t.id === id ? { ...t, status: "accepted" } : t))); }
+        // if (action === "decline") { setLocalTrips((arr) => arr.map((t) => (t.id === id ? { ...t, status: "declined" } : t))); }
+        // if (action === "complete") { setLocalTrips((arr) => arr.map((t) => (t.id === id ? { ...t, status: "completed" } : t))); }
 
         router.patch(`/agents/trippings/${id}/${action}`, payload, {
             preserveScroll: true,
@@ -282,9 +278,22 @@ export default function TrippingsAgentFull({ trippings = [] }) {
         else setConfirm({ type: "accept", id: trip.id });
     };
     const askDecline = (id) => setConfirm({ type: "decline", id });
+    const askComplete = (trip) => {
+        if (isAfterNow(trip)) {
+            setConfirm({ type: "complete-future", id: trip.id }); // visit hasn't started yet
+        } else {
+            setConfirm({ type: "complete", id: trip.id });
+        }
+    };
     const doConfirm = () => {
         if (!confirm.id) return;
-        patchTrip(confirm.id, confirm.type.startsWith("accept") ? "accept" : "decline");
+        if (confirm.type.startsWith("accept")) {
+            patchTrip(confirm.id, "accept");
+        } else if (confirm.type === "decline") {
+            patchTrip(confirm.id, "decline");
+        } else if (confirm.type.startsWith("complete")) {
+            patchTrip(confirm.id, "complete"); // backend should set status=completed (and completed_at=now())
+        }
         setConfirm({ type: null, id: null });
     };
     const openReschedule = (trip) =>
@@ -359,7 +368,11 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                         ? "Accept this visit schedule?"
                                         : confirm.type === "accept-conflict"
                                             ? "This overlaps another accepted visit. Accept anyway?"
-                                            : "Decline this visit schedule?"}
+                                            : confirm.type === "complete"
+                                                ? "Mark this visit as completed?"
+                                                : confirm.type === "complete-future"
+                                                    ? "This visit time hasn’t started yet. Are you sure you want to mark it completed?"
+                                                    : "Decline this visit schedule?"}
                                 </div>
                                 <div className="mt-3 flex gap-2">
                                     <button
@@ -374,7 +387,9 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                             "px-3 py-1.5 text-sm rounded-md text-white",
                                             confirm.type.startsWith("accept")
                                                 ? "bg-green-600 hover:bg-green-700"
-                                                : "bg-rose-600 hover:bg-rose-700"
+                                                : confirm.type.startsWith("complete")
+                                                    ? "bg-indigo-600 hover:bg-indigo-700"
+                                                    : "bg-rose-600 hover:bg-rose-700"
                                         )}
                                     >
                                         Confirm
@@ -659,7 +674,7 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                             </td>
 
                                             <td className="p-3">
-                                                <div className="truncate font-medium text-primary">
+                                                <div className="truncate font-medium text-gray-800">
                                                     {trip?.buyer?.name ?? "—"}
                                                 </div>
                                                 <div className="truncate text-xs text-gray-500">
@@ -751,17 +766,37 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                                 ) : (
                                                     <>
                                                         <button
-                                                            className="inline-flex items-center gap-1 rounded-md border border-primary px-3 py-1.5 text-sm text-primary transition hover:bg-primary hover:text-white"
+                                                            className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-900 hover:text-white"
                                                             type="button"
                                                             onClick={() => setSelected(trip)}
                                                         >
                                                             <Eye className="h-4 w-4" /> View
                                                         </button>
+                                                        {statusLc(trip) === "accepted" && (
+                                                            <button
+                                                                className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white transition hover:bg-indigo-700"
+                                                                type="button"
+                                                                onClick={() => askComplete(trip)}
+                                                                disabled={!!isBusy}
+                                                                title="Mark this visit as completed"
+                                                            >
+                                                                {isBusy === "complete" ? (
+                                                                    <>
+                                                                        <Clock className="h-4 w-4 animate-pulse" /> Saving…
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <Check className="h-4 w-4" /> Mark as completed
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        )}
                                                         <button
                                                             className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-3 py-1.5 text-sm transition hover:bg-slate-200"
                                                             type="button"
                                                             onClick={() => openReschedule(trip)}
-                                                            disabled={!!isBusy}
+                                                            disabled={!!isBusy || statusLc(trip) === "completed"}
+                                                            title={statusLc(trip) === "completed" ? "Already completed" : "Reschedule"}
                                                         >
                                                             <Pencil className="h-4 w-4" /> Reschedule
                                                         </button>
@@ -793,8 +828,7 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                     {/* Pagination */}
                     <div className="flex items-center justify-between px-2 py-3 sm:px-4">
                         <div className="text-xs text-gray-500">
-                            Showing {(page - 1) * size + 1}–
-                            {Math.min(page * size, filtered.length)} of {filtered.length}
+                            Showing {(page - 1) * size + 1}–{Math.min(page * size, filtered.length)} of {filtered.length}
                         </div>
                         <div className="flex items-center gap-2">
                             <select
@@ -815,10 +849,7 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                 <button
                                     disabled={page <= 1}
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                    className={cn(
-                                        "px-2 py-1 hover:bg-gray-50",
-                                        page <= 1 && "cursor-not-allowed opacity-40"
-                                    )}
+                                    className={cn("px-2 py-1 hover:bg-gray-50", page <= 1 && "cursor-not-allowed opacity-40")}
                                     aria-label="Previous"
                                 >
                                     <ChevronLeft className="h-4 w-4" />
@@ -829,10 +860,7 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                 <button
                                     disabled={page >= totalPages}
                                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                    className={cn(
-                                        "px-2 py-1 hover:bg-gray-50",
-                                        page >= totalPages && "cursor-not-allowed opacity-40"
-                                    )}
+                                    className={cn("px-2 py-1 hover:bg-gray-50", page >= totalPages && "cursor-not-allowed opacity-40")}
                                     aria-label="Next"
                                 >
                                     <ChevronRight className="h-4 w-4" />
@@ -865,9 +893,7 @@ export default function TrippingsAgentFull({ trippings = [] }) {
 
                         <div className="space-y-4 text-sm">
                             <section className="space-y-2">
-                                <div className="font-medium text-gray-900">
-                                    {selected?.property?.title}
-                                </div>
+                                <div className="font-medium text-gray-900">{selected?.property?.title}</div>
                                 <div className="flex items-center gap-2 text-gray-600">
                                     <MapPin className="h-4 w-4" /> {selected?.property?.address || "—"}
                                 </div>
@@ -967,13 +993,9 @@ export default function TrippingsAgentFull({ trippings = [] }) {
 
                             {/* inline conflict indicator */}
                             {resched.date &&
-                                hasConflict(
-                                    { visit_date: resched.date, visit_time: resched.time },
-                                    acceptedAll
-                                ) && (
+                                hasConflict({ visit_date: resched.date, visit_time: resched.time }, acceptedAll) && (
                                     <div className="flex items-center gap-2 text-sm text-amber-700">
-                                        <AlertTriangle className="h-4 w-4" /> Warning: this time overlaps
-                                        another accepted visit.
+                                        <AlertTriangle className="h-4 w-4" /> Warning: this time overlaps another accepted visit.
                                     </div>
                                 )}
 

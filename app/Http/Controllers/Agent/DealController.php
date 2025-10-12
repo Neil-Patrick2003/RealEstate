@@ -27,16 +27,16 @@ class DealController extends Controller
             ->whereHas('agents', function ($query) {
                 $query->where('id', auth()->id());
             })
-            ->whereHas('deal', function ($q) {
-                $q->whereNotIn('status', ['sold', 'cancelled', 'rejected']);
-            })
+
             ->latest()
             ->paginate(15);
+
 
         return Inertia::render('Agent/Deal/Deal', [
             'property_listings' => $propertyListings,
         ]);
     }
+
 
 
 

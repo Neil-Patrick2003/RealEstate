@@ -106,6 +106,7 @@ class DealController extends Controller
 
     public function handleUpdate(Request $request, $id, $status)
     {
+
         $deal = Deal::find($id);
         if (!$deal) {
             return redirect()->back()->with('error', 'Deal not found');

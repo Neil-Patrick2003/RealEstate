@@ -87,6 +87,8 @@ class InquiryController extends Controller
 
     public function updateStatus(Request $request, Inquiry $inquiry, $action)
     {
+
+
         if (!in_array($action, ['accept', 'reject'])) {
             abort(400, 'Invalid action');
         }

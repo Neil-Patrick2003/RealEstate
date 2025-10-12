@@ -29,12 +29,12 @@ class UserResource extends Resource
                     Forms\Components\TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
                     Forms\Components\Select::make('role')
                         ->options([
-                            'superadmin' => 'Super Admin',
-                            'admin'      => 'Admin',
-                            'broker'     => 'Broker',
-                            'agent'      => 'Agent',
-                            'seller'     => 'Seller',
-                            'buyer'      => 'Buyer',
+                            'SuperAdmin' => 'Super Admin',
+                            'Admin'      => 'Admin',
+                            'Broker'     => 'Broker',
+                            'Agent'      => 'Agent',
+                            'Seller'     => 'Seller',
+                            'Buyer'      => 'Buyer',
                         ])
                         ->required()
                         ->native(false),

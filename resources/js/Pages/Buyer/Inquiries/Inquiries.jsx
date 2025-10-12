@@ -24,15 +24,21 @@ const peso = (n) => {
     return num.toLocaleString("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
 };
 const statusBadge = (status) => {
-    const s = (status ?? "").toLowerCase();
+    const s = (status ?? "").toLowerCase().trim();
+    if (s.includes("closed")) return "bg-emerald-50 text-emerald-700 border-emerald-200"; // both with/no deal
+    if (s === "sold")         return "bg-emerald-50 text-emerald-700 border-emerald-200";
     switch (s) {
         case "accepted": return "bg-emerald-50 text-emerald-700 border-emerald-200";
         case "rejected": return "bg-rose-50 text-rose-700 border-rose-200";
         case "cancelled":
-        case "cancelled by buyer": return "bg-gray-50 text-gray-700 border-gray-200";
-        default: return "bg-amber-50 text-amber-700 border-amber-200";
+        case "cancelled by buyer":
+        case "canceled":
+            return "bg-gray-50 text-gray-700 border-gray-200";
+        default:
+            return "bg-amber-50 text-amber-700 border-amber-200"; // pending/others
     }
 };
+
 
 /* ---------- progress ---------- */
 const steps = [
@@ -42,16 +48,59 @@ const steps = [
     { key: "deal",      label: "Deal",      icon: faHandshakeSimple },
 ];
 
+function normalizeInquiryStatus(raw) {
+    const s = (raw || "").toLowerCase().replace(/\s+/g, " ").trim();
+    // Collapse common variants -> keys we care about
+    if (s.includes("closed with deal")) return "closed_with_deal";
+    if (s.includes("closed no deal") || s.includes("closed without deal")) return "closed_no_deal";
+    if (s === "sold") return "sold";
+    if (s === "accepted") return "accepted";
+    if (s === "rejected") return "rejected";
+    if (s === "pending")  return "pending";
+    if (s === "cancelled" || s === "canceled") return "cancelled";
+    return s; // passthrough (e.g., "won", "completed", etc.)
+}
+
+
+
+function hasAnyVisit(inquiry) {
+    const trips = arr(inquiry?.trippings);
+    return trips.length > 0;
+}
+
 function computeStepIndex(inquiry) {
-    const s = (inquiry?.status || "").toLowerCase();
-    const hasVisit = arr(inquiry?.trippings).length > 0;
-    if (s === "rejected") return 0;
-    if (s === "pending")  return 0;
-    if (s === "accepted" && !hasVisit) return 1;
-    if (s === "accepted" &&  hasVisit) return 2;
-    if (["closed", "completed", "won"].includes(s)) return 3;
+    const sKey = normalizeInquiryStatus(inquiry?.status);
+    const hasVisit = hasAnyVisit(inquiry);
+
+    // If listing/deal already sold/closed, force final step
+    const listingStatus = (inquiry?.property?.property_listing?.status || "").toLowerCase().trim();
+    const dealArr = arr(inquiry?.property?.property_listing?.deal);
+    const deal = dealArr[0] || null;
+    const dealStatus = (deal?.status || "").toLowerCase().trim();
+
+    const isSold =
+        listingStatus === "sold" ||
+        dealStatus === "sold" ||
+        sKey === "sold";
+
+    const isClosedFinal =
+        sKey === "closed_with_deal" ||
+        sKey === "closed_no_deal" ||
+        ["closed", "completed", "won"].includes(sKey) ||
+        isSold;
+
+    if (isClosedFinal) return 3;
+
+    if (sKey === "rejected") return 0;
+    if (sKey === "pending")  return 0;
+
+    if (sKey === "accepted" && !hasVisit) return 1;
+    if (sKey === "accepted" &&  hasVisit) return 2;
+
+    // Default: keep conservative
     return 0;
 }
+
 
 function parseVisitDT(t) {
     const date = t?.visit_date || "";
@@ -206,6 +255,36 @@ export default function Inquiries({
         });
     };
 
+
+    const getAgentAvgRating = (agent) => {
+        const list = arr(agent?.feedback_received);
+        // Prefer computed feedback; fallback to agent.rating if present
+        if (list.length) {
+            let sum = 0;
+            let n = 0;
+            for (const f of list) {
+                const vals = [
+                    Number(f?.communication ?? 0),
+                    Number(f?.negotiation ?? 0),
+                    Number(f?.professionalism ?? 0),
+                    Number(f?.knowledge ?? 0),
+                ].filter((x) => Number.isFinite(x) && x > 0);
+                if (vals.length) {
+                    sum += vals.reduce((a, b) => a + b, 0) / vals.length; // avg of the 4 metrics
+                    n += 1; // count one review
+                }
+            }
+            if (n > 0) return { rating: sum / n, reviews: n };
+        }
+
+        const fallback = Number(agent?.rating);
+        if (Number.isFinite(fallback) && fallback > 0) {
+            return { rating: fallback, reviews: 0 };
+        }
+        return { rating: null, reviews: 0 };
+    };
+
+
     return (
         <BuyerLayout>
             <Head title="Inquiries" />
@@ -265,6 +344,8 @@ export default function Inquiries({
                             const hasTrips    = arr(inquiry?.trippings).length > 0;
                             const img         = property?.image_url ? `/storage/${property.image_url}` : "/placeholder.png";
                             const stepIndex   = computeStepIndex(inquiry);
+                            const { rating: avgRating, reviews: reviewCount } = getAgentAvgRating(agent);
+
 
                             return (
                                 <li key={`inq-${inquiry?.id}`} className="group bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow focus-within:ring-2 focus-within:ring-gray-300">
@@ -369,7 +450,11 @@ export default function Inquiries({
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-medium text-gray-900 truncate">{contact?.name ?? "Contact"}</p>
-                                                    <p className="text-xs text-gray-500">4.8 ⭐ (76 reviews)</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {avgRating
+                                                            ? `${avgRating.toFixed(2)} ⭐ (${reviewCount} ${reviewCount === 1 ? "review" : "reviews"})`
+                                                            : "No ratings yet"}
+                                                    </p>
                                                 </div>
                                             </div>
 
@@ -418,12 +503,17 @@ export default function Inquiries({
                                                     )
                                                 ) : (
                                                     <div
-                                                        className="w-full flex items-center justify-center px-4 py-2 rounded-md bg-gray-50 text-gray-700 border border-gray-200 font-medium"
+                                                        className="w-full flex items-center text-sm justify-center px-4 py-2 rounded-md bg-gray-50 text-gray-700 border border-gray-200 font-medium"
                                                         aria-label="Visit Status"
                                                         title="Wait for the agent/broker to accept your inquiry to schedule a visit"
                                                     >
                                                         <FontAwesomeIcon icon={faClock} className="mr-2" aria-hidden />
-                                                        {inquiry?.status ?? "Pending"}
+                                                        {(() => {
+                                                            const raw = inquiry?.status ?? "Pending";
+                                                            const s = raw.toLowerCase().trim();
+                                                            if (s.includes("closed")) return "Closed";
+                                                            return raw;
+                                                        })()}
                                                     </div>
                                                 )}
 

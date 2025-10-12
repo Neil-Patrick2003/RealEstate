@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Buyer\FeedbackController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Seller\ChannelController;
@@ -189,6 +190,8 @@ Route::get('/agents/transaction', [\App\Http\Controllers\Agent\TransactionContro
 Route::get('/agents/trippings', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'index']);
 Route::patch('/agents/trippings/{id}/accept', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'accept']);
 Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'decline']);
+Route::patch('/agents/trippings/{tripping}/reschedule', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'reschedule']);
+Route::patch('/agents/trippings/{tripping}/complete', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'complete']);
 
 Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::class, 'feedback']);
 
@@ -223,6 +226,8 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/deals', [DealController::class, 'index']);
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
+    Route::get('/deals/{deal}/feedback', [FeedbackController::class, 'create'])->name('deals.feedback.create');
+    Route::post('/deals/{deal}/feedback', [FeedbackController::class, 'store'])->name('deals.feedback.store');
 });
 
 

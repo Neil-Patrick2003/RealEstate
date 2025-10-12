@@ -63,7 +63,7 @@ class AgentResource extends Resource
                         ->afterStateUpdated(fn ($state, callable $set) => $set('email', Str::lower($state))), // normalize
 
                     Forms\Components\Hidden::make('role')
-                        ->default('agent')
+                        ->default('Agent')
                         ->dehydrated(),
 
                     Forms\Components\TextInput::make('password')

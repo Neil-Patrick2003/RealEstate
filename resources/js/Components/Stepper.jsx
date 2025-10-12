@@ -204,17 +204,20 @@ export default function Stepper({
 
                     // Default button labels by state
                     const defaultLabel = {
-                        inquiry: state === "complete" ? undefined : state === "current" ? "Resend" : "Send",
-                        appointment:
+                        // 🔧 inquiry: no action when 'current' (pending), only show "Send" when 'upcoming'
+                        inquiry:
                             state === "complete"
-                                ? "View"
+                                ? undefined
                                 : state === "current"
-                                    ? "View"
-                                    : "Schedule",
+                                    ? undefined     // <-- removed "Resend"
+                                    : "Send",
+
+                        appointment:
+                            state === "complete" ? "View" : state === "current" ? "View" : "Schedule",
+
                         offer:
-                            state === "complete"
-                                ? (showViewOnComplete ? "View" : undefined)
-                                : "Make Offer",
+                            state === "complete" ? (showViewOnComplete ? "View" : undefined) : "Make Offer",
+
                         payment:
                             state === "complete"
                                 ? (showViewOnComplete ? "View" : undefined)

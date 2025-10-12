@@ -113,9 +113,9 @@ const menus = [
     { name: "Dashboard", Icon: Home, path: "/dashboard" },
     { name: "Messages", Icon: MessageSquare, path: "/chat" },
     { name: "Inquiries", Icon: Mail, path: "/inquiries" },
-    { name: "Tripping", Icon: CalendarDays, path: "/trippings" },
+    // { name: "Tripping", Icon: CalendarDays, path: "/trippings" },
     { name: "Favourites", Icon: Star, path: "/favourites" },
-    { name: "Deal", Icon: Handshake, path: "/deals" },
+    // { name: "Deal", Icon: Handshake, path: "/deals" },
     { name: "Transactions", Icon: BarChart3, path: "/transactions" },
 ];
 

@@ -11,6 +11,7 @@ class BuyerController extends Controller
 {
     public function index()
     {
+
         $properties = \App\Models\Property::with('coordinate')
             ->where('status', 'Published')
             ->latest()

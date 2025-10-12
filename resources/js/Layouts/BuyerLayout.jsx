@@ -7,8 +7,8 @@ import Dropdown from "@/Components/Dropdown";
 import BuyerSidebar from "@/Components/Sidebar/BuyerSidebar.jsx";
 import ToastHandler from "@/Components/ToastHandler.jsx";
 import Drawer from "@/Components/Drawer.jsx";
-import { buildSidebarCounts } from "@/utils/sidebarCounts.js"; // <- wherever you put it
-
+import { buildSidebarCounts } from "@/utils/sidebarCounts.js";
+import FeedbackReminder from "@/Components/reminder/FeedbackReminder.jsx";
 
 /* ================================
    Small Utils
@@ -117,6 +117,7 @@ function CommandPalette({ open, setOpen, actions }) {
         <AnimatePresence>
             {open && (
                 <>
+                    {/* overlay stays above header */}
                     <motion.button
                         aria-label="Close command palette"
                         className="fixed inset-0 z-[90] bg-black/30"
@@ -267,7 +268,6 @@ export default function BuyerLayout({ children }) {
         auth?.notifications?.unread ?? []
     );
 
-    console.log(unreadNotifications);
     const [openDrawer, setOpenDrawer] = useState(false);
     const [notifTab, setNotifTab] = useState("unread"); // 'unread' | 'all'
 
@@ -290,7 +290,6 @@ export default function BuyerLayout({ children }) {
     }, []);
 
     const markAllAsRead = useCallback(() => {
-        // batch to avoid rapid router.post loops; rely on endpoint that supports "mark all"
         if (!unreadNotifications.length) return;
         router.post(
             `/notifications/read-all`,
@@ -302,7 +301,6 @@ export default function BuyerLayout({ children }) {
                     setUnreadNotifications([]);
                 },
                 onError: () => {
-                    // fallback: mark one-by-one locally if server lacks bulk route
                     unreadNotifications.forEach((n) => markAsRead(n.id));
                 },
             }
@@ -407,6 +405,9 @@ export default function BuyerLayout({ children }) {
 
     const counts = buildSidebarCounts(unreadNotifications);
 
+    const { pendingFeedback = [] } = usePage().props;
+
+
     return (
         <div className="h-screen bg-white dark:bg-slate-900 flex overflow-hidden relative">
             {/* Sidebar Desktop */}
@@ -417,7 +418,6 @@ export default function BuyerLayout({ children }) {
                         setIsOpen={setIsOpen}
                         counts={counts}
                     />
-
                 </div>
             )}
 
@@ -457,12 +457,12 @@ export default function BuyerLayout({ children }) {
 
             {/* Main */}
             <main className="w-full h-full overflow-auto">
-                {/* Header */}
+                {/* Header — now above everything except palette/drawer */}
                 <motion.header
                     initial={false}
                     animate={{ paddingLeft: isMobile ? 0 : sidebarOffset }}
                     transition={headerTransition}
-                    className="fixed top-0 left-0 right-0 bg-white/85 dark:bg-slate-900/85 backdrop-blur border-b border-gray-100 dark:border-slate-800 supports-[backdrop-filter]:backdrop-blur-md"
+                    className="fixed top-0 left-0 right-0 z-[70] bg-white/85 dark:bg-slate-900/85 backdrop-blur border-b border-gray-100 dark:border-slate-800 supports-[backdrop-filter]:backdrop-blur-md"
                 >
                     <div className="flex items-center justify-between px-4 md:px-6 lg:px-8 py-3">
                         <div className="flex items-center gap-2 min-w-0">
@@ -527,7 +527,8 @@ export default function BuyerLayout({ children }) {
                                         />
                                     </div>
                                 </Dropdown.Trigger>
-                                <Dropdown.Content width="48">
+                                {/* add z-index so menu overlays content while scrolling */}
+                                <Dropdown.Content width="48" className="z-[75]">
                                     <ul className="py-1 px-2 text-sm text-gray-700 dark:text-slate-200">
                                         <li className="hover:bg-gray-100 dark:hover:bg-slate-800 rounded px-2 py-1 cursor-pointer">
                                             English
@@ -597,7 +598,8 @@ export default function BuyerLayout({ children }) {
                                         </svg>
                                     </div>
                                 </Dropdown.Trigger>
-                                <Dropdown.Content width="48">
+                                {/* ensure menu is above content */}
+                                <Dropdown.Content width="48" className="z-[75]">
                                     <Dropdown.Link
                                         href="/profile"
                                         className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-800"
@@ -624,9 +626,10 @@ export default function BuyerLayout({ children }) {
                     initial={false}
                     animate={{ paddingLeft: contentLeft, paddingRight: CONTENT_PAD }}
                     transition={headerTransition}
-                    className="pt-20 pb-10"
+                    className="pt-20 pb-10 relative z-0"
                 >
                     <ToastHandler />
+                    <FeedbackReminder items={pendingFeedback} />
                     {children}
                 </motion.div>
             </main>
@@ -634,12 +637,13 @@ export default function BuyerLayout({ children }) {
             {/* Command Palette */}
             <CommandPalette open={paletteOpen} setOpen={setPaletteOpen} actions={actions} />
 
-            {/* Notifications Drawer */}
+            {/* Notifications Drawer — keep above header */}
             <Drawer
                 id="notifications-drawer"
                 title="Notifications"
                 setOpen={setOpenDrawer}
                 open={openDrawer}
+                className="z-[80]" // if Drawer accepts className; otherwise add in its component root
             >
                 <div className="py-4 space-y-6 max-h-[75vh] overflow-y-auto">
                     {/* Tabs */}

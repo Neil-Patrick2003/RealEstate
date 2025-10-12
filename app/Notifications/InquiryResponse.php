@@ -48,7 +48,7 @@ class InquiryResponse extends Notification
 
           // Set title dynamically based on status
           $title = $status === 'Accepted'
-              ? 'New Property Assigned to You'
+              ? 'Inquiry Accepted'
               : 'Inquiry Rejected';
 
           return [

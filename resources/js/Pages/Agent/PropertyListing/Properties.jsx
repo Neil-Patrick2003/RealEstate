@@ -372,7 +372,7 @@ export default function MyListings({ listings }) {
                             <Card
                                 key={listing.id}
                                 listing={listing}
-                                onView={() => router.visit(`/agents/my-listings/${listing.property.id}`)}
+                                onView={() => router.visit(`/agents/my-listings/${listing.id}`)}
                                 onShare={() => shareListing(listing)}
                             />
                         ))}
