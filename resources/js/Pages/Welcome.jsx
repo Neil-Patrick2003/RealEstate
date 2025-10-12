@@ -1,123 +1,75 @@
-// MJVI Realty — Luxe Green & Gold Landing (Refined v2)
-// - Accessibility: semantic landmarks, skip link, aria labels
-// - Mobile nav: accessible toggle, focus states
-// - Performance: responsive images, preconnect, decoding, lazy; reduced DOM depth
-// - Consistency: unified spacing, shadows, gradients; polished hover states
-// - DX: fewer magic values; clear section components
-// - SEO: basic meta + JSON-LD org markup
+// Sand & Sun — Stunning Landing Page
+// Tech: React + Tailwind (no external libs required)
+// Aesthetic: warm sand + terracotta + ocean teal accents
+// Accessibility: semantic landmarks, skip link, focus-visible rings
+// Performance: responsive images (srcSet/sizes), lazy + async decoding
 
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
-import {
-    Home,
-    Building2,
-    Landmark,
-    ShieldCheck,
-    CheckCircle2,
-    PhoneCall,
-    Timer,
-    Star,
-    Quote,
-    MapPin,
-    ArrowRight,
-    Users,
-    Award,
-    Search,
-    Mail, // fix: lucide uses Mail (not MailIcon)
-    Menu,
-    X,
-} from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { Menu, X, Compass, Sun, Droplets, Leaf, MapPin, ArrowRight, Home, CheckCircle2, PhoneCall, Mail } from 'lucide-react';
 
-import Hero from '@/Pages/LandingPage/Hero.jsx';
-import Chatbot from "@/Components/Chatbot/Chatbot.jsx";
+/* --------------------------------- Theme --------------------------------- */
+// Tailwind suggestion (optional):
+// colors: { sand: '#F5EEE6', dune: '#E8DFD6', terracotta: '#D97742', teal: '#1E7A78', ink: '#1F2937' }
 
-/* ------------------------------ Theme & Layout Helpers ------------------------------ */
-const PAGE_BG = 'bg-gradient-to-br from-gray-50 via-white to-gray-50';
-
-const Section = ({ id, className = '', children, divider = true }) => (
+const Section = ({ id, children, className = '', divider = true }) => (
     <section id={id} className={`relative w-full ${className}`}>
         {children}
-        {divider && (
-            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent hidden lg:block" />
-        )}
+        {divider && <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-200/50 to-transparent hidden md:block" />}
     </section>
 );
 
-const Container = ({ children, className = '' }) => (
+const Container = ({ className = '', children }) => (
     <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</div>
 );
 
-/* ------------------------------ Navbar ------------------------------ */
+/* -------------------------------- Navbar -------------------------------- */
 const Navbar = () => {
     const [open, setOpen] = useState(false);
     const toggle = () => setOpen(v => !v);
     const close = () => setOpen(false);
 
     return (
-        <header className="fixed inset-x-0 top-0 z-50 bg-white/98 backdrop-blur-xl border-b border-gray-100/50 shadow-lg shadow-emerald-500/10">
-            <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:inset-x-0 focus:top-0 focus:m-4 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:shadow">
-                Skip to content
-            </a>
-            <Container className="h-20 flex items-center justify-between">
-                <a href="#top" className="flex items-center gap-3 text-emerald-900" onClick={close}>
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 ring-2 ring-emerald-200/50 flex items-center justify-center transition-all duration-200">
-                        <Home className="h-6 w-6 text-emerald-700" strokeWidth={2.5} />
+        <header className="fixed top-0 inset-x-0 z-50 border-b border-amber-200/50 bg-white/90 backdrop-blur-xl">
+            <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:m-4 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:shadow">Skip to content</a>
+            <Container className="h-16 md:h-20 flex items-center justify-between">
+                <a href="#top" className="flex items-center gap-3" onClick={close}>
+                    <div className="h-10 w-10 rounded-xl bg-amber-200/50 ring-1 ring-amber-300/60 flex items-center justify-center">
+                        <Home className="h-5 w-5 text-amber-700" />
                     </div>
-                    <span className="text-2xl font-black tracking-tight">MJVI Realty</span>
+                    <span className="text-xl md:text-2xl font-black tracking-tight text-slate-900">Sand & Sun</span>
                 </a>
 
-                {/* Desktop Nav */}
-                <nav className="hidden md:flex items-center gap-10 text-base font-semibold text-gray-700" aria-label="Primary">
-                    {[
-                        ['#features', 'Features'],
-                        ['#how', 'Process'],
-                        ['#listings', 'Listings'],
-                        ['#testimonials', 'Reviews'],
-                        ['#contact', 'Contact'],
-                    ].map(([href, label]) => (
-                        <a key={href} href={href} className="relative hover:text-emerald-700 transition-colors duration-200 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-emerald-600 after:scale-x-0 after:origin-left after:transition-transform after:duration-200 hover:after:scale-x-100">
-                            {label}
-                        </a>
-                    ))}
-                    <a
-                        href="#search"
-                        className="inline-flex items-center rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-3 font-bold text-white hover:from-emerald-700 hover:to-emerald-800 shadow-xl shadow-emerald-500/25 transition-all duration-200 hover:shadow-emerald-600/40 hover:scale-105"
-                    >
-                        <MapPin className="mr-2 h-4 w-4" aria-hidden /> Find Properties
+                {/* Desktop nav */}
+                <nav aria-label="Primary" className="hidden md:flex items-center gap-8 text-slate-700 font-medium">
+                    <a href="#features" className="hover:text-amber-700">Features</a>
+                    <a href="#collections" className="hover:text-amber-700">Collections</a>
+                    <a href="#amenities" className="hover:text-amber-700">Amenities</a>
+                    <a href="#contact" className="hover:text-amber-700">Contact</a>
+
+                    <a href="/login" className="inline-flex items-center rounded-xl border-2 border-amber-300 bg-white px-4 py-2 font-semibold text-amber-800 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/40">
+                        Log in
+                    </a>
+                    <a href="#book" className="inline-flex items-center rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 px-5 py-2 text-white font-semibold shadow-md hover:from-amber-700 hover:to-amber-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/60">
+                        Book a Viewing <ArrowRight className="ml-2 h-4 w-4" />
                     </a>
                 </nav>
 
-                {/* Mobile toggle */}
-                <button
-                    onClick={toggle}
-                    className="md:hidden inline-flex items-center justify-center rounded-xl p-2 text-gray-700 hover:bg-gray-100"
-                    aria-label="Toggle menu"
-                    aria-expanded={open}
-                >
+                {/* Mobile */}
+                <button aria-label="Toggle menu" aria-expanded={open} onClick={toggle} className="md:hidden rounded-lg p-2 hover:bg-amber-100">
                     {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </button>
             </Container>
-
-            {/* Mobile Drawer */}
-            <div className={`md:hidden overflow-hidden transition-[max-height] duration-300 ${open ? 'max-h-96' : 'max-h-0'}`} aria-hidden={!open}>
+            <div className={`md:hidden overflow-hidden transition-[max-height] duration-300 ${open ? 'max-h-96' : 'max-h-0'}`}>
                 <Container className="pb-4">
-                    <nav className="flex flex-col gap-2 text-base font-medium text-gray-700" aria-label="Mobile">
+                    <nav aria-label="Mobile" className="flex flex-col gap-2 text-slate-700 font-medium">
                         {[
-                            ['#features', 'Features'],
-                            ['#how', 'Process'],
-                            ['#listings', 'Listings'],
-                            ['#testimonials', 'Reviews'],
-                            ['#contact', 'Contact'],
-                        ].map(([href, label]) => (
-                            <a key={href} href={href} onClick={close} className="rounded-lg px-3 py-2 hover:bg-gray-100">{label}</a>
+                            ['#features','Features'],['#collections','Collections'],['#amenities','Amenities'],['#contact','Contact']
+                        ].map(([href,label]) => (
+                            <a key={href} href={href} onClick={close} className="rounded-lg px-3 py-2 hover:bg-amber-100">{label}</a>
                         ))}
-                        <a
-                            href="#search"
-                            onClick={close}
-                            className="mt-2 inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-2.5 font-semibold text-white hover:bg-emerald-700 shadow"
-                        >
-                            <MapPin className="mr-2 h-4 w-4" aria-hidden /> Find Properties
-                        </a>
+                        <a href="/login" onClick={close} className="rounded-xl border-2 border-amber-300 bg-white px-4 py-2 font-semibold text-amber-800 hover:bg-amber-50">Log in</a>
+                        <a href="#book" onClick={close} className="rounded-xl bg-amber-600 px-4 py-2 font-semibold text-white hover:bg-amber-700">Book a Viewing</a>
                     </nav>
                 </Container>
             </div>
@@ -125,282 +77,228 @@ const Navbar = () => {
     );
 };
 
-/* ------------------------------ Feature Card ------------------------------ */
-const FeatureCard = ({ icon: Icon, title, desc }) => (
-    <div className="group rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-8 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:border-emerald-200/50 hover:bg-white hover:shadow-emerald-500/10 hover:scale-[1.02]">
-        <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 ring-2 ring-emerald-200/30 group-hover:from-emerald-100 group-hover:to-emerald-200 transition-colors duration-200">
-            <Icon className="h-8 w-8 text-emerald-700" strokeWidth={2.5} aria-hidden />
-        </div>
-        <h3 className="mb-3 text-2xl font-black text-gray-900 group-hover:text-emerald-900 transition-colors duration-200">{title}</h3>
-        <p className="text-base text-gray-600 leading-relaxed">{desc}</p>
+/* ---------------------------------- Hero ---------------------------------- */
+const Hero = () => (
+    <div
+        className="relative min-h-[92vh] pt-24 md:pt-28 text-white"
+        style={{
+            backgroundImage:
+                "url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1920&auto=format&fit=crop')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 55%'
+        }}
+    >
+        {/* Warm sand wash + vignette */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-amber-900/20 to-black/60" aria-hidden />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 70% at 50% 20%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 65%, rgba(0,0,0,0.35) 100%)' }} aria-hidden />
+
+        <Container className="relative z-10">
+            <div className="max-w-3xl">
+                <h1 className="text-4xl md:text-6xl font-black leading-tight">Desert Luxury, Coastal Calm</h1>
+                <p className="mt-4 text-lg md:text-xl text-amber-50/90">A modern oasis of villas and retreats inspired by dunes, sun, and sea—crafted for slow mornings and golden hours.</p>
+                <div className="mt-8 flex flex-wrap gap-4">
+                    <a href="#collections" className="inline-flex items-center rounded-xl bg-amber-600 px-6 py-3 text-white font-semibold shadow-md hover:bg-amber-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/60">
+                        Explore Homes <ArrowRight className="ml-2 h-4 w-4" />
+                    </a>
+                    <a href="#book" className="inline-flex items-center rounded-xl border-2 border-amber-200 bg-white/10 px-6 py-3 font-semibold text-amber-50 backdrop-blur hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-100/40">
+                        Book a Viewing
+                    </a>
+                </div>
+            </div>
+
+            {/* Stat bar */}
+            <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl">
+                {[['Residences','120+'],['Beachfront','2km'],['Avg. Lot','450㎡'],['Occupancy','90%']].map(([label,value]) => (
+                    <div key={label} className="rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-4 text-center">
+                        <div className="text-2xl md:text-3xl font-extrabold">{value}</div>
+                        <div className="text-xs md:text-sm text-amber-50/90">{label}</div>
+                    </div>
+                ))}
+            </div>
+        </Container>
     </div>
 );
 
-/* ------------------------------ Property Card ------------------------------ */
-const PropertyCard = ({ image, title, tag, price, meta }) => (
-    <article className="group overflow-hidden rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm shadow-2xl shadow-gray-900/10 transition-all duration-300 hover:border-emerald-200/50 hover:shadow-emerald-500/20 hover:scale-[1.02]">
-        <div className="relative aspect-[4/3] overflow-hidden">
+/* ------------------------------ Feature Card ------------------------------ */
+const Feature = ({ icon: Icon, title, desc }) => (
+    <div className="group rounded-3xl border border-amber-200/50 bg-white/80 backdrop-blur-sm p-8 shadow-xl shadow-amber-900/5 transition hover:bg-white hover:shadow-amber-500/10">
+        <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 ring-1 ring-amber-200">
+            <Icon className="h-7 w-7 text-amber-700" />
+        </div>
+        <h3 className="text-xl font-extrabold text-slate-900 mb-2">{title}</h3>
+        <p className="text-slate-600 leading-relaxed">{desc}</p>
+    </div>
+);
+
+/* ----------------------------- Gallery Card ----------------------------- */
+const Card = ({ image, title, meta }) => (
+    <article className="group overflow-hidden rounded-3xl border border-amber-200/50 bg-white/80 backdrop-blur-sm shadow-xl shadow-amber-900/5">
+        <div className="relative aspect-[4/3]">
             <img
                 src={`${image}&auto=format&fit=crop`}
                 srcSet={`${image}&w=640 640w, ${image}&w=960 960w, ${image}&w=1280 1280w, ${image}&w=1600 1600w`}
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
                 alt={title}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
                 decoding="async"
             />
-            {tag && (
-                <span className="absolute left-4 top-4 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xl shadow-emerald-500/40 backdrop-blur-sm">
-          {tag}
-        </span>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
         <div className="p-6">
-            <h4 className="line-clamp-2 text-xl font-black text-gray-900 mb-2 group-hover:text-emerald-900 transition-colors duration-200">{title}</h4>
-            <p className="text-sm text-gray-600 mb-4 leading-relaxed">{meta}</p>
-            <div className="flex items-center justify-between border-t border-gray-100/50 pt-4">
-                <span className="text-2xl font-black text-emerald-700 tracking-tight">{price}</span>
-                <a href="#contact" className="inline-flex items-center text-sm font-bold text-amber-600 hover:text-amber-700 transition-all duration-200 group-hover:translate-x-1">
-                    Inquire <ArrowRight className="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
-                </a>
-            </div>
+            <h4 className="text-lg font-extrabold text-slate-900">{title}</h4>
+            <p className="text-sm text-slate-600 mt-1">{meta}</p>
         </div>
     </article>
 );
 
-/* ------------------------------ Testimonial ------------------------------ */
-const Testimonial = ({ quote, name, role, rating = 5 }) => (
-    <figure className="group rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-8 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:border-amber-200/50 hover:shadow-amber-500/10 hover:scale-[1.02]">
-        <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 ring-2 ring-amber-200/30 group-hover:from-amber-100 group-hover:to-amber-200 transition-colors duration-200">
-            <Quote className="h-7 w-7 text-amber-700" strokeWidth={2} aria-hidden />
-        </div>
-        <blockquote className="text-xl italic text-gray-700 leading-relaxed mb-6">“{quote}”</blockquote>
-        <figcaption>
-            <div className="flex items-center gap-1 mb-4 text-amber-500" aria-label={`Rating: ${rating} out of 5`}>
-                {Array.from({ length: rating }).map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-amber-400 stroke-amber-600" aria-hidden />
-                ))}
-            </div>
-            <div className="text-base">
-                <span className="font-black text-gray-900 group-hover:text-amber-900 transition-colors duration-200">{name}</span>
-                <span className="text-gray-500"> · {role}</span>
-            </div>
-        </figcaption>
-    </figure>
-);
-
-/* ------------------------------ Page ------------------------------ */
-export default function LandingPage() {
+/* --------------------------------- Page --------------------------------- */
+export default function SandSunLanding() {
     return (
         <>
-            <Head title="Find Homes & Properties | MJVI Realty">
-                <meta name="description" content="Search verified PH property listings with boundary-aware maps. Book trippings, compare details, and close confidently with licensed agents." />
+            <Head title="Sand & Sun — Desert Luxury Retreats">
+                <meta name="description" content="A stunning coastal-desert community. Explore villas inspired by dunes and sea, with sustainable amenities and golden-hour living." />
                 <link rel="preconnect" href="https://images.unsplash.com" />
-                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-                        '@context': 'https://schema.org',
-                        '@type': 'Organization',
-                        name: 'MJVI Realty',
-                        url: 'https://mjvirealty.ph',
-                        address: {
-                            '@type': 'PostalAddress',
-                            addressLocality: 'Metro Manila',
-                            addressCountry: 'PH'
-                        },
-                        contactPoint: [{ '@type': 'ContactPoint', telephone: '+639000000000', contactType: 'customer support' }]
-                    }) }} />
             </Head>
 
-            <div id="top" className={`${PAGE_BG} text-gray-900`}>
+            <div id="top" className="bg-gradient-to-b from-amber-50 via-amber-50 to-white text-slate-900">
                 <Navbar />
+                <main id="main" role="main">
+                    {/* Hero */}
+                    <Hero />
 
-                {/* ------------------------------ HERO ------------------------------ */}
-                <div
-                    className="relative min-h-screen bg-cover bg-center pt-20"
-                    style={{
-                        backgroundImage: "url('https://www.shutterstock.com/image-photo/aerial-drone-bird-eye-view-260nw-2453933885.jpg')", // lush green aerial
-                    }}
-                >
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/70 via-emerald-800/60 to-black/80" aria-hidden />
-                    $1
-                    {/* Subtle boundary grid overlay to suggest lots/parcels */}
-                    <div
-                        className="pointer-events-none absolute inset-0 opacity-[0.10] mix-blend-overlay"
-                        style={{
-                            backgroundImage:
-                                'linear-gradient(to right, rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.6) 1px, transparent 1px)',
-                            backgroundSize: '56px 56px',
-                        }}
-                        aria-hidden
-                    />
+                    {/* Features */}
+                    <Section id="features" className="py-20 md:py-28 bg-white/80 backdrop-blur-sm">
+                        <Container>
+                            <div className="mx-auto max-w-3xl text-center">
+                                <p className="text-xs font-bold tracking-[0.2em] text-amber-700 uppercase">Why you'll love it</p>
+                                <h2 className="mt-2 text-4xl md:text-5xl font-black">Soft, warm, and sustainable by design</h2>
+                                <p className="mt-3 text-lg text-slate-600">Crafted for calm living with natural palettes, breathable spaces, and earth-friendly amenities.</p>
+                            </div>
 
-                    <Hero
-                        onSearch={() => {
-                            document.getElementById('listings')?.scrollIntoView({ behavior: 'smooth' });
-                        }}
-                        selectedType="All"
-                        handleTypeChange={() => {}}
-                        searchTerm=""
-                        handleSearchTermChange={() => {}}
-                    />
-                </div>
+                            <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                                <Feature icon={Sun} title="Golden Hours" desc="Wide terraces and west-facing lounges to soak in sunsets every day." />
+                                <Feature icon={Droplets} title="Cooling Pools" desc="Lagoon-style pools and shaded cabanas to balance the desert warmth." />
+                                <Feature icon={Leaf} title="Eco Materials" desc="Clay, limewash, and reclaimed wood—beautiful and sustainable." />
+                                <Feature icon={Compass} title="Smart Masterplan" desc="Wind corridors, native plants, and walkable paths designed for comfort." />
+                            </div>
+                        </Container>
+                    </Section>
 
-                {/* ------------------------------ FEATURES ------------------------------ */}
-                <Section id="features" className="py-28 bg-white/80 backdrop-blur-sm">
-                    <Container>
-                        <div className="mx-auto max-w-4xl text-center">
-                            <p className="text-sm font-bold text-amber-600 uppercase tracking-widest mb-2">Why Choose MJVI</p>
-                            <h2 className="text-5xl md:text-6xl font-black tracking-tight text-gray-900 mb-6">Simple, Transparent, Trusted.</h2>
-                            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">Verified listings with boundary-aware maps and licensed guidance for seamless, confident purchases.</p>
-                        </div>
-
-                        <div className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
-                            <FeatureCard icon={Building2} title="Verified Listings" desc="Vetted for accuracy and availability with developers and brokers." />
-                            <FeatureCard icon={Landmark} title="Boundary Mapping" desc="Village, subdivision, and barangay limits visible for context." />
-                            <FeatureCard icon={ShieldCheck} title="Transparent Details" desc="Specs, fees, and requirements disclosed upfront—no surprises." />
-                            <FeatureCard icon={Users} title="Licensed Support" desc="Agents assist trippings, offers, and closing with expertise." />
-                        </div>
-                    </Container>
-                </Section>
-
-                {/* ------------------------------ HOW IT WORKS ------------------------------ */}
-                <Section id="how" className={`py-28 ${PAGE_BG}`}>
-                    <Container>
-                        <div className="mx-auto max-w-3xl text-center">
-                            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6">Your Seamless Journey</h2>
-                            <p className="text-xl text-gray-600">From search to keys in hand—effortless and efficient.</p>
-                        </div>
-
-                        <div className="mt-16 grid grid-cols-1 gap-12 md:grid-cols-3">
-                            <div className="relative rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-10 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:shadow-emerald-500/15 hover:scale-[1.02]">
-                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 h-12 w-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-black text-xl shadow-xl shadow-emerald-500/30">1</div>
-                                <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 ring-2 ring-emerald-200/30">
-                                    <Search className="h-8 w-8 text-emerald-700" strokeWidth={2.5} aria-hidden />
+                    {/* Collections */}
+                    <Section id="collections" className="py-20 md:py-28 bg-white">
+                        <Container>
+                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                                <div>
+                                    <h2 className="text-4xl md:text-5xl font-black">Signature Collections</h2>
+                                    <p className="mt-2 text-lg text-slate-600">Handpicked villas and lots with curated views and privacy.</p>
                                 </div>
-                                <h3 className="text-2xl font-black text-gray-900 mb-3">Search & Shortlist</h3>
-                                <p className="text-base text-gray-600 leading-relaxed">Filter by location, type, budget, and amenities to find the right match.</p>
+                                <a href="#book" className="inline-flex items-center rounded-xl bg-amber-600 px-5 py-3 text-white font-semibold shadow-md hover:bg-amber-700">
+                                    View availability <ArrowRight className="ml-2 h-4 w-4" />
+                                </a>
                             </div>
 
-                            <div className="relative rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-10 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:shadow-amber-500/15 hover:scale-[1.02]">
-                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 h-12 w-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-amber-600 to-amber-700 text-white font-black text-xl shadow-xl shadow-amber-500/30">2</div>
-                                <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 ring-2 ring-amber-200/30">
-                                    <Timer className="h-8 w-8 text-amber-700" strokeWidth={2.5} aria-hidden />
-                                </div>
-                                <h3 className="text-2xl font-black text-gray-900 mb-3">Schedule Viewing</h3>
-                                <p className="text-base text-gray-600 leading-relaxed">Book site visits with maps, reminders, and a personalized checklist.</p>
+                            <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                <Card image="https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80" title="Dune Villas" meta="3–5BR · Courtyard · Sea glimpse" />
+                                <Card image="https://images.unsplash.com/photo-1501644898242-cfea317dcd2a?q=80" title="Adobe Homes" meta="2–3BR · Rooftop deck · Patio" />
+                                <Card image="https://images.unsplash.com/photo-1533941637-47c01e64c7f6?q=80" title="Palm Residences" meta="2–4BR · Pool access · Garden" />
                             </div>
+                        </Container>
+                    </Section>
 
-                            <div className="relative rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-10 shadow-2xl shadow-gray-900/5 transition-all duration-300 hover:shadow-emerald-500/15 hover:scale-[1.02]">
-                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 h-12 w-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-black text-xl shadow-xl shadow-emerald-500/30">3</div>
-                                <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 ring-2 ring-emerald-200/30">
-                                    <Award className="h-8 w-8 text-emerald-700" strokeWidth={2.5} aria-hidden />
-                                </div>
-                                <h3 className="text-2xl font-black text-gray-900 mb-3">Close Securely</h3>
-                                <p className="text-base text-gray-600 leading-relaxed">Navigate offers, finances, and legalities with licensed support.</p>
-                            </div>
-                        </div>
-                    </Container>
-                </Section>
-
-                {/* ------------------------------ FEATURED LISTINGS ------------------------------ */}
-                <Section id="listings" className="py-28 bg-white/80 backdrop-blur-sm">
-                    <Container>
-                        <div className="flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-end mb-12">
-                            <div className="max-w-2xl">
-                                <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-4">Curated Properties</h2>
-                                <p className="text-xl text-gray-600">Premium selections across NCR and CALABARZON—tailored for you.</p>
-                            </div>
-                            <a href="#top" className="inline-flex items-center rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-8 py-4 text-lg font-bold text-white hover:from-amber-600 hover:to-amber-700 shadow-xl shadow-amber-500/25 transition-all duration-200">
-                                Explore All <ArrowRight className="ml-2 h-5 w-5" aria-hidden />
-                            </a>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                            <PropertyCard image="https://images.unsplash.com/photo-1502005229762-cf1b2da7c8e2?q=80" title="Modern 2BR Condo in BGC" tag="Condo" price="₱12.5M" meta="2 Bed · 2 Bath · 68 sqm · BGC, Taguig" />
-                            <PropertyCard image="https://images.unsplash.com/photo-1494526585095-c41746248156?q=80" title="Family House with Garden" tag="House & Lot" price="₱9.8M" meta="3 Bed · 2 Bath · 180 sqm lot · Imus, Cavite" />
-                            <PropertyCard image="https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80" title="New Townhome Near EDSA" tag="Townhouse" price="₱6.2M" meta="3 Bed · 2.5 Bath · 95 sqm · Quezon City" />
-                        </div>
-                    </Container>
-                </Section>
-
-                {/* ------------------------------ TESTIMONIALS ------------------------------ */}
-                <Section id="testimonials" className={`py-28 ${PAGE_BG}`}>
-                    <Container>
-                        <div className="mx-auto max-w-3xl text-center">
-                            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6">What Our Clients Say</h2>
-                            <p className="text-xl text-gray-600">Real experiences from satisfied buyers and investors.</p>
-                        </div>
-
-                        <div className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-3">
-                            <Testimonial quote="The entire process was seamless—from initial search to closing. Transparent fees and exceptional agent support made all the difference." name="Angela D." role="Homeowner, Cavite" />
-                            <Testimonial quote="Boundary mapping feature was a game-changer for evaluating investment opportunities. Quick decisions, great results." name="Mark R." role="Investor, Quezon City" />
-                            <Testimonial quote="As a first-time buyer, I felt supported every step. Easy bookings and clear documentation—highly recommend!" name="Jessa P." role="Buyer, Taguig" />
-                        </div>
-                    </Container>
-                </Section>
-
-                {/* ------------------------------ CTA ------------------------------ */}
-                <Section id="search" className="py-28 bg-gradient-to-br from-emerald-50 via-amber-50 to-white" divider={false}>
-                    <Container>
-                        <div className="relative overflow-hidden rounded-3xl border border-gray-100/50 bg-white/80 backdrop-blur-sm p-12 md:p-20 shadow-2xl shadow-emerald-900/10">
-                            <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-gradient-to-br from-amber-300/20 to-emerald-300/20 blur-3xl" aria-hidden />
-                            <div className="absolute -left-32 -bottom-32 h-80 w-80 rounded-full bg-gradient-to-br from-emerald-300/20 to-amber-300/20 blur-3xl" aria-hidden />
-
-                            <div className="relative max-w-4xl mx-auto text-center">
-                                <h3 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">Ready to Discover Your Dream Property?</h3>
-                                <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">Begin your search by location or type, and connect with an expert for personalized guidance.</p>
-                                <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-                                    <a href="#top" className="inline-flex items-center rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-4 text-lg font-bold text-white hover:from-emerald-700 hover:to-emerald-800 shadow-xl shadow-emerald-500/25 transition-all duration-200">
-                                        <MapPin className="mr-2 h-5 w-5" aria-hidden /> Search Now
-                                    </a>
-                                    <a href="#contact" className="inline-flex items-center rounded-2xl border-2 border-emerald-300 bg-white px-8 py-4 text-lg font-bold text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-800 transition-all duration-200">
-                                        Speak to an Agent
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </Container>
-                </Section>
-
-                {/* ------------------------------ CONTACT / FOOTER ------------------------------ */}
-                <Section id="contact" className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-gray-100" divider={false}>
-                    <Container>
-                        <div className="grid grid-cols-1 gap-12 md:grid-cols-4 lg:gap-20">
-                            <div className="md:col-span-2">
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 ring-2 ring-emerald-400/30 flex items-center justify-center">
-                                        <Home className="h-6 w-6 text-emerald-300" strokeWidth={2.5} aria-hidden />
+                    {/* Amenities */}
+                    <Section id="amenities" className="py-20 md:py-28 bg-gradient-to-b from-white to-amber-50">
+                        <Container>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                                <div>
+                                    <h2 className="text-4xl md:text-5xl font-black">Everything you need, within dunes</h2>
+                                    <p className="mt-3 text-lg text-slate-600">A walkable spine connects your home to cafes, yoga decks, co-work nooks, and artisan markets—shaded by palms and pergolas.</p>
+                                    <ul className="mt-6 space-y-3 text-slate-700">
+                                        {["Sunset boardwalk","Clubhouse & spa","Co-working lounge","Garden kitchens","Kids' playscape"].map(item => (
+                                            <li key={item} className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-amber-600 mt-0.5" /> {item}</li>
+                                        ))}
+                                    </ul>
+                                    <div className="mt-8 flex flex-wrap gap-3">
+                                        <a href="#book" className="inline-flex items-center rounded-xl bg-amber-600 px-5 py-3 text-white font-semibold shadow-md hover:bg-amber-700">Book a tour</a>
+                                        <a href="#contact" className="inline-flex items-center rounded-xl border-2 border-amber-300 px-5 py-3 font-semibold text-amber-800 hover:bg-amber-50">Ask an agent</a>
                                     </div>
-                                    <span className="text-2xl font-black tracking-tight text-emerald-100">MJVI Realty</span>
                                 </div>
-                                <p className="text-gray-300 text-base leading-relaxed max-w-md">Elevating Philippine real estate with innovative tools, verified listings, and licensed expertise for your peace of mind.</p>
+                                <div className="relative overflow-hidden rounded-3xl border border-amber-200/60 shadow-xl">
+                                    <img
+                                        src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=1600&auto=format&fit=crop"
+                                        srcSet="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=800 800w, https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=1200 1200w, https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=1600 1600w"
+                                        sizes="(min-width:1024px) 50vw, 100vw"
+                                        alt="Shaded pergola and pool with terracotta textures"
+                                        className="h-full w-full object-cover"
+                                        loading="lazy"
+                                        decoding="async"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-amber-900/10 to-transparent" />
+                                </div>
+                            </div>
+                        </Container>
+                    </Section>
+
+                    {/* CTA */}
+                    <Section id="book" className="py-20 md:py-28">
+                        <Container>
+                            <div className="relative overflow-hidden rounded-3xl border border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-amber-50 p-10 md:p-14 shadow-xl">
+                                <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-300/20 blur-3xl" aria-hidden />
+                                <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-amber-200/20 blur-3xl" aria-hidden />
+
+                                <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                                    <div className="lg:col-span-2">
+                                        <h3 className="text-3xl md:text-4xl font-black">Ready for golden-hour living?</h3>
+                                        <p className="mt-2 text-lg text-slate-600">Tell us what you’re looking for—our team will curate options and schedule a private tour.</p>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                                        <a href="#contact" className="inline-flex items-center rounded-xl bg-amber-600 px-6 py-3 text-white font-semibold shadow-md hover:bg-amber-700">Talk to an expert</a>
+                                        <a href="/login" className="inline-flex items-center rounded-xl border-2 border-amber-300 px-6 py-3 font-semibold text-amber-800 hover:bg-amber-50">Log in</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </Container>
+                    </Section>
+
+                    {/* Contact / Footer */}
+                    <Section id="contact" className="py-16 md:py-20 bg-gradient-to-b from-white to-amber-100/40" divider={false}>
+                        <Container>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                                <div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-xl bg-amber-200/60 ring-1 ring-amber-300 flex items-center justify-center">
+                                            <Home className="h-5 w-5 text-amber-800" />
+                                        </div>
+                                        <span className="text-xl font-black">Sand & Sun</span>
+                                    </div>
+                                    <p className="mt-3 text-slate-600 max-w-sm">A coastal-desert community that blends natural textures with modern comforts—made for slow days and starry nights.</p>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold tracking-[0.2em] text-amber-700 uppercase">Contact</h4>
+                                    <ul className="mt-3 space-y-2 text-slate-700">
+                                        <li className="flex items-center gap-2"><PhoneCall className="h-4 w-4" /> +63 900 000 0000</li>
+                                        <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> hello@sandandsun.ph</li>
+                                        <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> San Vicente, Palawan</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold tracking-[0.2em] text-amber-700 uppercase">Explore</h4>
+                                    <ul className="mt-3 space-y-2 text-slate-700">
+                                        <li><a href="#features" className="hover:text-amber-700">Features</a></li>
+                                        <li><a href="#collections" className="hover:text-amber-700">Collections</a></li>
+                                        <li><a href="#amenities" className="hover:text-amber-700">Amenities</a></li>
+                                        <li><a href="#book" className="hover:text-amber-700">Book a Viewing</a></li>
+                                    </ul>
+                                </div>
                             </div>
 
-                            <div>
-                                <h4 className="text-lg font-bold tracking-wider text-emerald-100 uppercase mb-4">Get in Touch</h4>
-                                <ul className="space-y-3 text-gray-300">
-                                    <li className="flex items-center gap-3 hover:text-emerald-300 transition-colors duration-200"><PhoneCall className="h-4 w-4" aria-hidden /> +63 900 000 0000</li>
-                                    <li className="flex items-center gap-3 hover:text-emerald-300 transition-colors duration-200"><Mail className="h-4 w-4" aria-hidden /> support@mjvirealty.ph</li>
-                                    <li className="flex items-center gap-3 hover:text-emerald-300 transition-colors duration-200"><MapPin className="h-4 w-4" aria-hidden /> Metro Manila, Philippines</li>
-                                </ul>
+                            <div className="mt-10 border-t border-amber-200/60 pt-6 text-center text-sm text-slate-500">
+                                © {new Date().getFullYear()} Sand & Sun. All rights reserved.
                             </div>
-
-                            <div>
-                                <h4 className="text-lg font-bold tracking-wider text-emerald-100 uppercase mb-4">Quick Links</h4>
-                                <ul className="space-y-3 text-gray-300">
-                                    <li><a href="#features" className="hover:text-emerald-300 transition-colors duration-200">Features</a></li>
-                                    <li><a href="#how" className="hover:text-emerald-300 transition-colors duration-200">Process</a></li>
-                                    <li><a href="#listings" className="hover:text-emerald-300 transition-colors duration-200">Listings</a></li>
-                                    <li><a href="#testimonials" className="hover:text-emerald-300 transition-colors duration-200">Reviews</a></li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div className="mt-16 border-t border-gray-700 pt-8 text-center text-sm text-gray-400">© {new Date().getFullYear()} MJVI Realty. All rights reserved. Licensed Real Estate Broker in the Philippines.</div>
-                    </Container>
-                </Section>
+                        </Container>
+                    </Section>
+                </main>
             </div>
-            <Chatbot/>
         </>
     );
 }

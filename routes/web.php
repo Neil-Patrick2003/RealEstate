@@ -192,6 +192,7 @@ Route::patch('/agents/trippings/{id}/accept', [\App\Http\Controllers\Agent\Prope
 Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'decline']);
 Route::patch('/agents/trippings/{tripping}/reschedule', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'reschedule']);
 Route::patch('/agents/trippings/{tripping}/complete', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'complete']);
+Route::get('/agents/calendar', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'calendar']);
 
 Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::class, 'feedback']);
 
