@@ -158,13 +158,8 @@ class PropertyResource extends Resource
                         ->minValue(0)
                         ->prefix('₱')
                         ->nullable(),
+                        
 
-                    Forms\Components\TextInput::make('monthly_amortization')
-                        ->label('Est. Monthly')
-                        ->numeric()
-                        ->minValue(0)
-                        ->prefix('₱')
-                        ->nullable(),
                 ]),
 
             Forms\Components\Section::make('Location')
@@ -365,7 +360,7 @@ class PropertyResource extends Resource
         return [
             ImagesRelationManager::class,
             FeaturesRelationManager::class,
-            AgentsRelationManager::class
+    //            AgentsRelationManager::class
 
         ];
     }

@@ -46,7 +46,9 @@ export default function Create({developers}) {
         pin: null,
         image_preview: '',
         agent_ids: [],
-        allowMultipleAgent: false
+        allowMultipleAgent: false,
+        developer_id: '',
+
     });
 
     const authId = usePage().props.auth.user.id;
@@ -216,6 +218,57 @@ export default function Create({developers}) {
                             <Toggle data={data} setData={setData}/>
                         </div>
                     </div>
+
+                    <div className="space-y-2">
+                        <label htmlFor="developer_id" className="text-sm font-semibold text-gray-800">
+                            Developer
+                        </label>
+
+                        <div className="flex items-center gap-3">
+                            {/* Selected pill w/ logo preview (optional) */}
+                            {data.developer_id && (
+                                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 border">
+                                    {(() => {
+                                        const selected = developers.find(d => String(d.id) === String(data.developer_id));
+                                        if (!selected) return null;
+                                        return (
+                                            <>
+                                                {selected.company_logo ? (
+                                                    <img
+                                                        src={`/storage/${selected.company_logo}`}
+                                                        alt={selected.name}
+                                                        className="w-6 h-6 rounded-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-6 h-6 rounded-full bg-gray-300" />
+                                                )}
+                                                <span className="text-sm text-gray-700">{selected.name}</span>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+
+                            {/* Native select for simplicity/reliability */}
+                            <select
+                                id="developer_id"
+                                name="developer_id"
+                                className="flex-1 rounded-md border-gray-300 focus:border-primary focus:ring-primary"
+                                value={data.developer_id}
+                                onChange={(e) => setData('developer_id', e.target.value)}
+                            >
+                                <option value="">— Select a developer —</option>
+                                {developers?.map((dev) => (
+                                    <option key={dev.id} value={dev.id}>
+                                        {dev.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <InputError message={errors.developer_id} className="text-sm text-red-500" />
+                    </div>
+
 
                     {/* Property Title */}
                     <div className="space-y-2">
