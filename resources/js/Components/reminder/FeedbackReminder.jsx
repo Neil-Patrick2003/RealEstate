@@ -81,7 +81,7 @@ export default function FeedbackReminder({ items = [] }) {
 
                 <div className="mt-5 flex flex-col sm:flex-row gap-2">
                     <Link
-                        href={feedback_link}
+                        href='/transaction'
                         className="w-full inline-flex items-center justify-center rounded-md bg-primary text-white px-4 py-2 text-sm font-medium hover:bg-accent"
                         onClick={() => dismissOne(id)}
                     >
