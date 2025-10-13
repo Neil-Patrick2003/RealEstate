@@ -291,7 +291,7 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Seller/ListProperty', [
             'agents' => $agents,
         ]);
-    })->name('post-property');
+    });
 
     //store
     Route::post('/post-property', [PropertyController::class, 'store'])->name('post-property');

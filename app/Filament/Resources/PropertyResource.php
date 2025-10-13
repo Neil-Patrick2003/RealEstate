@@ -158,7 +158,7 @@ class PropertyResource extends Resource
                         ->minValue(0)
                         ->prefix('₱')
                         ->nullable(),
-                        
+
 
                 ]),
 
