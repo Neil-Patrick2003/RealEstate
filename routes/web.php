@@ -118,9 +118,11 @@ Route::get('/markplace', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
-    })->name('post-property');
+    });
 
     Route::post('/feedback', [\App\Http\Controllers\Buyer\FeedbackController::class,'store']);
+
+    Route::post('/post-property', [\App\Http\Controllers\Seller\PropertyController::class,'store'])->name('post-property');
 
 });
 
