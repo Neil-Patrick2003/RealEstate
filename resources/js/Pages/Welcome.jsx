@@ -12,14 +12,22 @@ import PropertyList from "@/Pages/LandingPage/PropertyList.jsx";
 import Footer from "@/Pages/LandingPage/Footer.jsx";
 
 /**
- * MJVI Realty — Landing Page (Enhanced)
- * - Framer Motion animations (prefers-reduced-motion respected)
- * - Better a11y & semantics
- * - Mobile nav with motion
- * - New sections: Testimonials, Partners, Safety/Trust, Value Props
- * - Reusable variants & section wrappers
- * - Tiny perf wins: image lazy-loading, CSS containment, smaller box-shadows
+ * MJVI Realty — Landing Page
+ * Keep layout as-is; only navbar shows role-based Dashboard when logged in.
  */
+
+/* ---------------- Dashboard Role Routing ---------------- */
+const DASHBOARD_ROUTES = {
+    agent: "/agents/dashboard",
+    broker: "/broker/dashboard", // change to /brokers/dashboard if that's your route
+    buyer: "/dashboard",
+    seller: "/sellers/dashboard",
+};
+const getDashboardPath = (user) => {
+    if (!user) return null;
+    const role = String(user.role || "").toLowerCase();
+    return DASHBOARD_ROUTES[role] || "/dashboard";
+};
 
 /* ------------------------------ Helpers ------------------------------ */
 const Section = ({ id, className = "", children }) => (
@@ -57,8 +65,8 @@ const stagger = {
 /* ------------------------------ Small UI ----------------------------- */
 const Chip = ({ children }) => (
     <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/30 px-3 py-1 text-xs">
-        {children}
-      </span>
+    {children}
+  </span>
 );
 
 const Stat = ({ label, value }) => (
@@ -93,8 +101,8 @@ const PropertyCard = ({ p }) => (
             />
             {p?.badge && (
                 <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-emerald-700 ring-1 ring-emerald-200">
-              {p.badge}
-            </span>
+          {p.badge}
+        </span>
             )}
         </div>
         <div className="p-4">
@@ -102,7 +110,9 @@ const PropertyCard = ({ p }) => (
             <p className="text-sm text-gray-500 line-clamp-1">{p.location}</p>
             <div className="mt-3 flex items-center justify-between">
                 <div className="text-emerald-600 font-bold">{peso(p?.price)}</div>
-                <div className="text-xs text-gray-500">{p?.lot_area ?? p?.floor_area} m² • {p?.bedrooms} bd</div>
+                <div className="text-xs text-gray-500">
+                    {p?.lot_area ?? p?.floor_area} m² • {p?.bedrooms} bd
+                </div>
             </div>
         </div>
     </motion.div>
@@ -164,8 +174,8 @@ export default function LandingPage({ auth, properties = [], search = "", initia
                     <Link href="/" className="flex items-center gap-2" aria-label="Go to home">
                         <img src={logo} alt="MJVI Realty" className="w-8 h-8 -ml-1.5 drop-shadow-md" />
                         <span className="font-extrabold tracking-tight text-gray-900">
-                  MJVI<span className="text-emerald-600">Realty</span>
-                </span>
+              MJVI<span className="text-emerald-600">Realty</span>
+            </span>
                     </Link>
 
                     {/* Desktop nav */}
@@ -177,9 +187,21 @@ export default function LandingPage({ auth, properties = [], search = "", initia
                         <a href="#faq" className="hover:text-gray-900">FAQ</a>
                     </nav>
 
+                    {/* Right CTAs (changed) */}
                     <div className="hidden md:flex items-center gap-3">
-                        <Link href="/login" className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100">Sign in</Link>
-                        <Link href="/register" className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700">Get Started</Link>
+                        {auth?.user ? (
+                            <Link
+                                href={getDashboardPath(auth.user)}
+                                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700"
+                            >
+                                Dashboard
+                            </Link>
+                        ) : (
+                            <>
+                                <Link href="/login" className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100">Sign in</Link>
+                                <Link href="/register" className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700">Get Started</Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile menu button */}
@@ -212,14 +234,31 @@ export default function LandingPage({ auth, properties = [], search = "", initia
                                 <a href="#testimonials" onClick={() => setMenuOpen(false)} className="py-2">Stories</a>
                                 <a href="#faq" onClick={() => setMenuOpen(false)} className="py-2">FAQ</a>
                                 <div className="pt-2 flex gap-2">
-                                    <Link href="/login" className="flex-1 px-4 py-2 rounded-xl ring-1 ring-gray-200 text-center">Sign in</Link>
-                                    <Link href="/register" className="flex-1 px-4 py-2 rounded-xl text-white bg-emerald-600 text-center">Get Started</Link>
+                                    {auth?.user ? (
+                                        <Link
+                                            href={getDashboardPath(auth.user)}
+                                            className="flex-1 px-4 py-2 rounded-xl text-white bg-emerald-600 text-center"
+                                            onClick={() => setMenuOpen(false)}
+                                        >
+                                            Dashboard
+                                        </Link>
+                                    ) : (
+                                        <>
+                                            <Link href="/login" className="flex-1 px-4 py-2 rounded-xl ring-1 ring-gray-200 text-center" onClick={() => setMenuOpen(false)}>
+                                                Sign in
+                                            </Link>
+                                            <Link href="/register" className="flex-1 px-4 py-2 rounded-xl text-white bg-emerald-600 text-center" onClick={() => setMenuOpen(false)}>
+                                                Get Started
+                                            </Link>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </motion.nav>
                     )}
                 </AnimatePresence>
             </header>
+
             <Chatbot />
 
             {/* Hero Section with Background */}
@@ -408,7 +447,7 @@ export default function LandingPage({ auth, properties = [], search = "", initia
                             <div className="flex items-start gap-4">
                                 <div className="flex-shrink-0 w-14 h-14 rounded-lg bg-emerald-500 flex items-center justify-center">
                                     <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0z" />
                                     </svg>
                                 </div>
                                 <div>

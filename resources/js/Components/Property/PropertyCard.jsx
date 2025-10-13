@@ -93,7 +93,7 @@ export default function PropertyCard({
                     src={imgSrc}
                     alt={property?.title || "Property image"}
                     onError={() => setImgErr(true)}
-                    className="w-full aspect-[16/10] object-cover bg-gray-100"
+                    className="w-full aspect-[16/10] object-cover bg-gray-100 rounded-t-xl"
                     loading="lazy"
                 />
                 <div className="absolute top-3 left-3 flex items-center gap-2">

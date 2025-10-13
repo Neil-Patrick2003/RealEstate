@@ -129,7 +129,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
 
-    Route::get('/seller/properties', [PropertyController::class, 'index'])->name('my-properties');
+    Route::get('/seller/properties', [PropertyController::class, 'index']);
     Route::get('/seller/properties/{property}', [ PropertyController::class, 'show']);
     Route::get('/seller/properties/{property}/edit', [ PropertyController::class, 'edit']);
     Route::patch('/seller/properties/{property}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
@@ -296,7 +296,7 @@ Route::middleware('auth')->group(function () {
     });
 
     //store
-//    Route::post('/post-property', [PropertyController::class, 'store'])->name('post-property');
+//    Route::post('/post-property', [PropertyController::class, 'store'])->name('post-');
 
     Route::get('/all-agents', [\App\Http\Controllers\Agent\AgentController::class, 'loadAgents'])->name('get-all-agents');
 });
