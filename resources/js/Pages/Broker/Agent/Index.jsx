@@ -66,7 +66,6 @@ export default function Index({
     const currentData = agents?.data || [];
 
     // --- Debounced search ---
-    // include sort & perPage in deps so URL stays in sync with UI
     const debouncedSearch = useCallback(
         debounce((value, sort, perPage) => {
             router.get(
@@ -175,6 +174,7 @@ export default function Index({
             Assigned: a.assigned_listings_count ?? 0,
             Published: a.published_listings_count ?? 0,
             Sold: a.sold_listings_count ?? 0,
+            Rating: a.rating ?? "",
         }));
 
         if (!rows.length) return;
@@ -227,12 +227,16 @@ export default function Index({
                 cancelText="Cancel"
             />
             <AddAgentModal openAddAgent={openAddAgent} setOpenAddAgent={setOpenAddAgent} />
-            <EditAgentModal openEditAgent={openEditAgent} agent={selectedAgent} setOpenEditAgent={setOpenEditAgent} />
+            <EditAgentModal
+                openEditAgent={openEditAgent}
+                agent={selectedAgent}
+                setOpenEditAgent={setOpenEditAgent}
+            />
 
             {/* Header */}
             <div className="px-2 py-2">
                 <div className="flex items-center justify-between mb-2">
-                    <h1 className="text-2xl text-primary font-bold">My Handle Agents</h1>
+                    <h1 className="text-2xl text-primary font-bold">My Agents</h1>
                     <button
                         onClick={() => setOpenAddAgent(true)}
                         className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 text-sm rounded-md hover:bg-primary/90"
@@ -251,30 +255,33 @@ export default function Index({
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-gray-600 text-sm">Assigned Listings</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-1">{totals.assigned.toLocaleString()}</p>
+                                <p className="text-3xl font-bold text-gray-900 mt-1">
+                                    {totals.assigned.toLocaleString()}
+                                </p>
                             </div>
-                            <div className={`w-12 h-12  rounded-full flex items-center justify-center`}>
-                            </div>
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center" />
                         </div>
                     </div>
                     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-gray-600 text-sm">Published</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-1">{totals.published.toLocaleString()}</p>
+                                <p className="text-3xl font-bold text-gray-900 mt-1">
+                                    {totals.published.toLocaleString()}
+                                </p>
                             </div>
-                            <div className={`w-12 h-12  rounded-full flex items-center justify-center`}>
-                            </div>
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center" />
                         </div>
                     </div>
                     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-gray-600 text-sm">Sold</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-1">{totals.sold.toLocaleString()}</p>
+                                <p className="text-3xl font-bold text-gray-900 mt-1">
+                                    {totals.sold.toLocaleString()}
+                                </p>
                             </div>
-                            <div className={`w-12 h-12  rounded-full flex items-center justify-center`}>
-                            </div>
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center" />
                         </div>
                     </div>
                 </div>
@@ -332,12 +339,10 @@ export default function Index({
                         </div>
                     </div>
 
-                    {/* Multi-select action bar (appears when you select rows) */}
+                    {/* Multi-select action bar */}
                     {selectedIds.size > 0 && (
                         <div className="px-4 md:px-6 py-3 bg-emerald-50 border-t border-emerald-200 flex items-center justify-between">
-                            <p className="text-sm text-emerald-800">
-                                {selectedIds.size} selected
-                            </p>
+                            <p className="text-sm text-emerald-800">{selectedIds.size} selected</p>
                             <div className="flex gap-2">
                                 <button
                                     onClick={mailtoSelected}
@@ -374,6 +379,7 @@ export default function Index({
                                 <th className="p-3">Address</th>
                                 <th className="p-3">Phone</th>
                                 <th className="p-3">Email</th>
+                                <th className="p-3">Rating</th>
                                 <th className="p-3">Assigned</th>
                                 <th className="p-3">Published</th>
                                 <th className="p-3">Sold</th>
@@ -401,6 +407,7 @@ export default function Index({
                                         <td className="p-3">{agent.address || "—"}</td>
                                         <td className="p-3">{agent.contact_number || "—"}</td>
                                         <td className="p-3">{agent.email || "—"}</td>
+                                        <td className="p-3">{agent.rating || "—"}</td>
                                         <td className="p-3">{agent.assigned_listings_count ?? 0}</td>
                                         <td className="p-3">{agent.published_listings_count ?? 0}</td>
                                         <td className="p-3">{agent.sold_listings_count ?? 0}</td>
@@ -426,7 +433,7 @@ export default function Index({
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="9" className="text-center py-10 text-gray-400">
+                                    <td colSpan={10} className="text-center py-10 text-gray-400">
                                         No agents found.
                                     </td>
                                 </tr>
@@ -504,7 +511,6 @@ export default function Index({
 
                     {/* Pagination */}
                     <div className="flex flex-wrap gap-2 justify-center items-center p-4 border-t">
-                        {/* Previous/Next shortcuts if your backend returns prev/next URLs in links */}
                         <div className="flex items-center gap-2">
                             {agents?.prev_page_url ? (
                                 <Link

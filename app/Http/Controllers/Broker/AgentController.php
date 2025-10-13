@@ -15,19 +15,21 @@ class AgentController extends Controller
         $sort = $request->input('sort', 'asc');
         $perPage = $request->input('perPage', 10);
 
-        $agents = User::withCount([
-            'listing as assigned_listings_count' => fn ($q) => $q->where('status', 'Assigned'),
-            'listing as published_listings_count' => fn ($q) => $q->where('status', 'Published'),
-            'listing as sold_listings_count' => fn ($q) => $q->where('status', 'Sold'),
-        ])
-            ->where('broker_id', auth()->id())
-            ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
+        $agents = User::where('broker_id', auth()->id())
+            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
+            ->withCount([
+                // These assume a many-to-many relation named 'listings'
+                'property_listings as assigned_listings_count' => fn($q) => $q->where('status', 'Assigned'),
+                'property_listings as published_listings_count' => fn($q) => $q->where('status', 'Published'),
+                'property_listings as sold_listings_count' => fn($q) => $q->where('status', 'Sold'),
+            ])
             ->orderBy('name', $sort)
             ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('Broker/Agent/Index', compact('agents', 'search', 'sort', 'perPage'));
     }
+
 
 
 
@@ -46,6 +48,7 @@ class AgentController extends Controller
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8',
+            'rating' => 'nullable',
             'contact_number' => 'required',
             'confirm_password' => 'required|same:password',
             'image_url' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -61,6 +64,7 @@ class AgentController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
+            'rating' => $request->rating,
             'role' => 'Agent    ',
             'contact_number' => $request->contact_number,
             'address' => $request->address,
@@ -77,6 +81,7 @@ class AgentController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $agent->id,
+            'rating' => 'nullable',
             'contact_number' => 'required|string|max:20',
             'address' => 'required|string|max:255',
             'password' => 'nullable|confirmed|min:6',

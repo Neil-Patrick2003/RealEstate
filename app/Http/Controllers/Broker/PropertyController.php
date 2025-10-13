@@ -102,6 +102,7 @@ class PropertyController extends Controller
     public function create()
     {
         $developers = Developer::all('id', 'name', 'company_logo');
+
         return Inertia::render('Broker/Property/Create', [
             'developers' => $developers,
         ]);

@@ -12,6 +12,7 @@ use App\Models\PropertyTripping;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -167,6 +168,17 @@ class AgentController extends Controller
         return Inertia::render('Agent/AgentProfile', [
             'agent' => $agent,
         ]);
+    }
+
+    public function calendar()
+    {
+        $events = PropertyTripping::with('property')
+            ->where('agent_id', Auth::user()->id)
+            ->get();
+
+        return Inertia::render('Agent/Tripping/Calendar');
+
+//        dd($events);
     }
 
 

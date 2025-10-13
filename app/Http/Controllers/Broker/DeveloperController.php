@@ -52,12 +52,6 @@ class DeveloperController extends Controller
             'facebook_url' => $validated['facebook_url'],
         ]);
 
-//        User::create([
-//            'name' => $validated['name'],
-//            'email' => $validated['email'],
-//            'password' => bcrypt(Str::random(10)),
-//            'role' => 'Seller',
-//        ]);
 
 
         return redirect()->back();
@@ -66,7 +60,7 @@ class DeveloperController extends Controller
 
     public function  show($id)
     {
-        $developer = Developer::with('property')->find($id);
+        $developer = Developer::with('properties', 'amenities')->find($id);
 
         return Inertia::render('Broker/Partner/ShowPartner', [
             'developer' => $developer,

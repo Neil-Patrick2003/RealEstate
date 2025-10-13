@@ -11,9 +11,11 @@ import {
     MessageSquare,
     MessageCircle,
     MapPinHouse,
+    Calendar as CalendarLogo
 } from "lucide-react";
 import logo from "../../../assets/framer_logo.png";
 import { Link, usePage } from "@inertiajs/react";
+import {Calendar} from "react-big-calendar";
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(" ");
@@ -36,6 +38,8 @@ const menus = [
     { name: "Deal", Icon: Handshake, path: "/agents/deal" },
     { name: "Transactions", Icon: BarChart3, path: "/agents/transaction" },
     { name: "Feedback", Icon: MessageSquare, path: "/agents/feedback" },
+    { name: "Calendar", Icon: CalendarLogo, path: "/agents/calendar" },
+
 ];
 
 const Sidebar_animation = {
