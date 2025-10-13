@@ -525,15 +525,8 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
                 </div>
             )}
 
-            {/* HERO */}
-            <section className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-emerald-500 text-white">
-                <div className="max-w-7xl mx-auto px-4 py-8">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">All Properties</h1>
-                    <p className="mt-2 text-white/90">Smart, context-aware filters, interactive map, and refined cards.</p>
-                </div>
-            </section>
 
-            <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
+            <div className=" px-4 py-6 flex flex-col lg:flex-row gap-6">
                 {/* DESKTOP SIDEBAR */}
                 {showFilters && (
                     <aside className="w-full lg:w-80 shrink-0 bg-white p-6 rounded-2xl shadow-sm ring-1 ring-gray-200 space-y-6 sticky top-6 h-fit">
@@ -756,7 +749,7 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
                     {/* Results */}
                     <div className="flex-1 overflow-y-auto">
                         {isFiltering ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                 {Array.from({ length: 6 }).map((_, i) => (
                                     <div key={`sk-${i}`} className="rounded-2xl ring-1 ring-gray-200 bg-white p-3 animate-pulse space-y-3">
                                         <div className="h-40 w-full bg-gray-200 rounded-xl" />
@@ -776,7 +769,7 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
                                 <p className="text-gray-600">No matching properties. Adjust your filters.</p>
                             </div>
                         ) : viewMode === "grid" ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                 {sortedProperties.map((p) => {
                                     const isFav = favoriteIds.includes(p?.id);
                                     return (

@@ -221,6 +221,36 @@ export default function Create({ agents = [] }) {
 
     const isLand = selectedType?.name === "Land";
 
+    // --- review/acceptance modal ---
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [acceptChecked, setAcceptChecked] = useState(false);
+
+// optional: centralize requirements here
+    const REQUIREMENTS = [
+        "Valid government-issued ID (seller)",
+        "Proof of ownership / Title (TCT/CCT) or SPA if applicable",
+        "Latest Real Property Tax (RPT) receipt",
+        "Association dues / utility clearance (if applicable)",
+        "Signed listing authority or authorization letter",
+    ];
+
+// compute 5% commission preview
+    const commissionAmount = Number(data.price || 0) * 0.05;
+
+// open modal instead of direct submit
+    const openReviewModal = (e) => {
+        e.preventDefault();
+        setShowReviewModal(true);
+    };
+
+// confirm from modal → actually post the form
+    const confirmAndSubmit = () => {
+        setShowReviewModal(false);
+        setAcceptChecked(false);
+        handleSubmit(new Event("submit")); // reuse your submit logic
+    };
+
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <NavBar />
@@ -574,6 +604,7 @@ export default function Create({ agents = [] }) {
                     <Header title="Location" subtitle="Pin & draw boundary on map" />
 
                     <div className="flex flex-col items-center">
+
                         <MapWithDraw
                             userId={authId}
                             boundary={data.boundary}
@@ -658,6 +689,99 @@ export default function Create({ agents = [] }) {
                     </Link>
                 </div>
             </form>
+            {showReviewModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center">
+                    {/* backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/50"
+                        onClick={() => setShowReviewModal(false)}
+                        aria-hidden
+                    />
+
+                    {/* modal */}
+                    <div className="relative z-[101] w-full max-w-xl mx-4 bg-white rounded-2xl shadow-xl border">
+                        <div className="p-6 border-b">
+                            <h3 className="text-lg font-bold text-gray-900">Before you submit</h3>
+                            <p className="text-sm text-gray-600">
+                                Please review the listing requirements and acceptance below.
+                            </p>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {/* Requirements */}
+                            <div>
+                                <p className="text-sm font-semibold text-gray-800 mb-2">Required Documents</p>
+                                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                                    {REQUIREMENTS.map((item, i) => (
+                                        <li key={i}>{item}</li>
+                                    ))}
+                                </ul>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    Tip: You can upload these later during verification if not ready now.
+                                </p>
+                            </div>
+
+                            {/* Commission statement */}
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <p className="text-sm text-gray-800">
+                                    <span className="font-semibold">Commission Notice:</span> The handling agent will receive{" "}
+                                    <span className="font-semibold">5% commission</span> from the seller upon successful closing.
+                                </p>
+                                <div className="mt-2 text-sm text-gray-700">
+                                    <div className="flex justify-between">
+                                        <span>Listing Price</span>
+                                        <span className="font-medium">
+                {Number(data.price || 0).toLocaleString("en-PH", { style: "currency", currency: "PHP" })}
+              </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Commission (5%)</span>
+                                        <span className="font-medium">
+                {commissionAmount.toLocaleString("en-PH", { style: "currency", currency: "PHP" })}
+              </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Acceptance */}
+                            <label className="flex items-start gap-3">
+                                <input
+                                    type="checkbox"
+                                    className="mt-1 w-4 h-4 border-gray-300 rounded"
+                                    checked={acceptChecked}
+                                    onChange={(e) => setAcceptChecked(e.target.checked)}
+                                />
+                                <span className="text-sm text-gray-700">
+                                    I confirm that the above information is accurate to the best of my knowledge and I accept the
+                                    requirement checklist and agent 5% commission policy.
+                                  </span>
+                            </label>
+                        </div>
+
+                        {/* actions */}
+                        <div className="p-6 border-t flex items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowReviewModal(false)}
+                                className="px-4 py-2 rounded border hover:bg-gray-50 text-gray-700"
+                            >
+                                Back
+                            </button>
+                            <button
+                                type="button"
+                                disabled={!acceptChecked || processing}
+                                onClick={confirmAndSubmit}
+                                className={`px-5 py-2 rounded text-white ${
+                                    !acceptChecked || processing ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-accent"
+                                }`}
+                            >
+                                {processing ? "Submitting..." : "Accept & Submit"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

@@ -7,12 +7,9 @@ import {
     AreaChart, Area, BarChart, Bar,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
-import { Wallet, Home, MessageSquare, Handshake, MapPin, Clock } from "lucide-react";
+import { Home, MessageSquare, MapPin, Clock } from "lucide-react";
 
 // --- helpers ---
-const money = (n = 0) =>
-    new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }).format(n || 0);
-
 const fmtInt = (n) =>
     new Intl.NumberFormat("en-PH", { maximumFractionDigits: 0 }).format(n ?? 0);
 
@@ -31,11 +28,15 @@ const Kpi = ({ icon: Icon, label, value, sub }) => (
 );
 
 export default function AgentDashboard({ filters = {}, kpi = {}, charts = {}, queues = {} }) {
-    const dealsSeries = (charts?.dealsByMonth || []).map(d => ({ name: d.ym, value: Number(d.total || 0) }));
-    const inquiriesSeries = (charts?.inquiriesThisMonth || []).map(d => ({ name: d.status || "—", value: Number(d.cnt || 0) }));
+    // New chart series (no deals)
+    const inquiriesTrend = (charts?.inquiriesByDay || []).map(d => ({
+        name: d.d, value: Number(d.cnt || 0),
+    }));
+    const inquiriesByStatus = (charts?.inquiriesByStatus || []).map(d => ({
+        name: d.status || "—", value: Number(d.cnt || 0),
+    }));
 
     const recentInquiries = Array.isArray(queues?.recentInquiries) ? queues.recentInquiries : [];
-    const pendingDeals     = Array.isArray(queues?.pendingDeals) ? queues.pendingDeals : [];
     const trippings        = Array.isArray(queues?.upcomingTrippings) ? queues.upcomingTrippings : [];
     const recentListings   = Array.isArray(queues?.recentListings) ? queues.recentListings : [];
 
@@ -43,35 +44,47 @@ export default function AgentDashboard({ filters = {}, kpi = {}, charts = {}, qu
         <AgentLayout>
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Agent Dashboard</h1>
-                <p className="text-sm text-gray-600">Your pipeline, inquiries, and schedule at a glance.</p>
+                <p className="text-sm text-gray-600">Your inquiries, listings, and schedule at a glance.</p>
             </div>
 
-            {/* KPIs */}
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-                <Kpi icon={Home}        label="Assigned Listings" value={fmtInt(kpi?.listings?.total)}   sub={`${fmtInt(kpi?.listings?.published)} published`} />
-                <Kpi icon={MessageSquare} label="Inquiries"         value={fmtInt(kpi?.inquiries?.total)}  sub={`${fmtInt(kpi?.inquiries?.pending)} pending`} />
-                <Kpi icon={Handshake}   label="Deals"              value={fmtInt(kpi?.deals?.total)}     sub={`${fmtInt(kpi?.deals?.pending)} pending`} />
-                <Kpi icon={Wallet}      label="Pipeline"           value={money(kpi?.deals?.pipeline_value)} />
-                <Kpi icon={Handshake}   label="Closed Deals"       value={fmtInt(kpi?.deals?.closed)}    sub={money(kpi?.deals?.closed_value)} />
-                <Kpi icon={MapPin}      label="Upcoming Trips"     value={fmtInt(trippings.length)} />
+            {/* KPIs (no deals) */}
+            <div className="grid grid-cols-2 md:grid-cols-3  gap-4 mb-6">
+                <Kpi
+                    icon={Home}
+                    label="Assigned Listings"
+                    value={fmtInt(kpi?.listings?.total)}
+                    sub={`${fmtInt(kpi?.listings?.published)} published`}
+                />
+                <Kpi
+                    icon={MessageSquare}
+                    label="Inquiries"
+                    value={fmtInt(kpi?.inquiries?.total)}
+                    sub={`${fmtInt(kpi?.inquiries?.pending)} pending`}
+                />
+                <Kpi
+                    icon={MapPin}
+                    label="Upcoming Trips"
+                    value={fmtInt(trippings.length)}
+                />
             </div>
 
-            {/* Charts */}
+            {/* Charts (no deals) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                {/* Deals value (Area) */}
+                {/* Inquiries Trend (Area) */}
                 <div className="lg:col-span-2 rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">Deals value (last 12 months)</h3>
+                        <h3 className="font-semibold text-gray-900">
+                            Inquiries trend ({filters?.date_from} → {filters?.date_to})
+                        </h3>
                     </div>
-                    {/* Give the chart a theme color via currentColor */}
                     <div className="h-64 text-primary">
-                        {dealsSeries.length ? (
+                        {inquiriesTrend.length ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={dealsSeries}>
+                                <AreaChart data={inquiriesTrend}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="name" fontSize={12} />
-                                    <YAxis fontSize={12} tickFormatter={(v)=>`₱${(v/1000).toFixed(0)}k`} />
-                                    <Tooltip formatter={(v)=>money(v)} />
+                                    <YAxis fontSize={12} allowDecimals={false} />
+                                    <Tooltip />
                                     <Area
                                         type="monotone"
                                         dataKey="value"
@@ -88,13 +101,13 @@ export default function AgentDashboard({ filters = {}, kpi = {}, charts = {}, qu
                     </div>
                 </div>
 
-                {/* Inquiries (Bar) */}
+                {/* Inquiries by Status (Bar) */}
                 <div className="rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
                     <h3 className="font-semibold text-gray-900 mb-2">Inquiries (this month)</h3>
                     <div className="h-64 text-secondary">
-                        {inquiriesSeries.length ? (
+                        {inquiriesByStatus.length ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={inquiriesSeries}>
+                                <BarChart data={inquiriesByStatus}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="name" fontSize={12} />
                                     <YAxis fontSize={12} allowDecimals={false} />
@@ -110,8 +123,8 @@ export default function AgentDashboard({ filters = {}, kpi = {}, charts = {}, qu
                 </div>
             </div>
 
-            {/* Queues */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Queues (no pending deals) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Inquiries */}
                 <Card className="border border-gray-200 shadow-sm">
                     <CardHeader>
@@ -140,40 +153,10 @@ export default function AgentDashboard({ filters = {}, kpi = {}, charts = {}, qu
                     </CardContent>
                 </Card>
 
-                {/* Pending Deals */}
-                <Card className="border border-gray-200 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-gray-900">Pending Deals</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="divide-y divide-gray-100">
-                            {pendingDeals.map((d) => (
-                                <li key={d.id} className="py-3 flex items-start gap-3">
-                                    <img
-                                        src={d?.property_listing?.property?.image_url ? `/storage/${d.property_listing.property.image_url}` : "/images/placeholder.jpg"}
-                                        onError={(e)=> (e.currentTarget.src="/images/placeholder.jpg")}
-                                        className="w-12 h-12 rounded object-cover ring-1 ring-gray-200"
-                                        alt=""
-                                    />
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">
-                                            {d?.property_listing?.property?.title || "—"}
-                                        </p>
-                                        <p className="text-xs text-gray-700">{money(d?.amount)}</p>
-                                        <p className="text-[11px] text-gray-500">{d?.status}</p>
-                                    </div>
-                                    <Link href="/agents/deals" className="ml-auto text-sm text-primary hover:text-accent">Review</Link>
-                                </li>
-                            ))}
-                            {pendingDeals.length === 0 && <EmptyList text="No pending deals." />}
-                        </ul>
-                    </CardContent>
-                </Card>
-
                 {/* Upcoming Trippings */}
                 <Card className="border border-gray-200 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-gray-900">Upcoming Trippings</CardTitle>
+                        <CardTitle className="text-gray-900">Recent Trippings</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ul className="divide-y divide-gray-100">
@@ -181,7 +164,7 @@ export default function AgentDashboard({ filters = {}, kpi = {}, charts = {}, qu
                                 <li key={t.id} className="py-3 flex items-start gap-3">
                                     <div className="p-2 rounded bg-primary/10 text-primary"><Clock size={16} /></div>
                                     <div className="min-w-0">
-                                        <p className="text-sm font-medium text-gray-900">{t?.property?.title || "Property visit"}</p>
+                                        <p className="text-sm font-medium text-gray-900">{t?.property?.title || "Property visit"}<span className='text-xs bg-green-100 ml-2 px-4 py-1 rounded-xl'>{t.status}</span></p>
                                         <p className="text-xs text-gray-700">{t?.property?.address || "—"}</p>
                                         <p className="text-xs text-gray-500 mt-0.5">
                                             {t?.schedule_at
