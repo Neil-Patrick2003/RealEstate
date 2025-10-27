@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Block extends Model
 {
@@ -17,5 +18,10 @@ class Block extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function inventoryPools(): HasMany
+    {
+        return $this->hasMany(InventoryPool::class);
     }
 }

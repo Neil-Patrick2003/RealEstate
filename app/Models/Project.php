@@ -26,4 +26,14 @@ class Project extends Model
     {
         return $this->hasMany(Block::class);
     }
+
+    public function house_types()
+    {
+        return $this->hasMany(HouseType::class);
+    }
+
+    public function inventoryPools()
+    {
+        return $this->hasMany(InventoryPool::class);
+    }
 }
