@@ -21,4 +21,9 @@ class Project extends Model
     {
         return $this->belongsTo(Developer::class);
     }
+
+    public function blocks()
+    {
+        return $this->hasMany(Block::class);
+    }
 }
