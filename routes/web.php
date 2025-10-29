@@ -39,6 +39,10 @@ Route::get('/', function (Request $request) {
         ->latest()
         ->get();
 
+    $developers = \App\Models\Developer::with('projects')
+        ->latest()
+        ->get();
+
     // Get the user's favourited property IDs
     $favouriteIds = auth()->check()
         ? auth()->user()->favourites()->pluck('property_id')->toArray()
@@ -47,6 +51,11 @@ Route::get('/', function (Request $request) {
     $properties = \App\Models\Property::where('status', 'Published')
         ->latest()
         ->get();
+
+    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type')
+        ->latest()
+        ->get();
+
 
 
     return Inertia::render('Welcome', [
@@ -57,6 +66,20 @@ Route::get('/', function (Request $request) {
         'favouriteIds' => $favouriteIds,
         'featured' => $featured,
         'properties' => $properties,
+        'developers' => $developers,
+        'projects' => $projects,
+    ]);
+});
+
+
+Route::get('/explore/projects', function (Request $request) {
+
+    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type')
+        ->latest()
+        ->paginate(12);
+
+    return Inertia::render('Projects/Index', [
+        'projects' => $projects,
     ]);
 });
 
@@ -184,6 +207,7 @@ Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\Inquiry
 
 Route::get('/agents/deal', [\App\Http\Controllers\Agent\DealController::class, 'index']);
 Route::put('/agents/deal/{deal}', [\App\Http\Controllers\Agent\DealController::class, 'update'])->name('agents.deals.update');
+Route::get('/agents/deal/{deal}/finalize-deal', [\App\Http\Controllers\Agent\DealController::class, 'update'])->name('agents.deals.update');
 //Route::put('/agents/deal/{id}/$', [DealController::class, 'accept']);
 Route::put('/agents/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
 
