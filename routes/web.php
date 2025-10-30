@@ -205,13 +205,14 @@ Route::patch('/agents/inquiries/{inquiry}/accept', [\App\Http\Controllers\Agent\
 Route::patch('/agents/inquiries/{inquiry}/reject', [\App\Http\Controllers\Agent\InquiryController::class, 'reject']);
 Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\InquiryController::class, 'cancel']);
 
-Route::get('/agents/deal', [\App\Http\Controllers\Agent\DealController::class, 'index']);
+Route::get('/agents/deal', [\App\Http\Controllers\Agent\DealController::class, 'index'])->name('agents.deal.index');
 Route::put('/agents/deal/{deal}', [\App\Http\Controllers\Agent\DealController::class, 'update'])->name('agents.deals.update');
-Route::get('/agents/deal/{deal}/finalize-deal', [\App\Http\Controllers\Agent\DealController::class, 'update'])->name('agents.deals.update');
+Route::get('/agents/deal/{deal}/finalize-deal', [\App\Http\Controllers\Agent\DealController::class, 'show'])->name('agents.deals.finalize');
+Route::post('/agents/deal/{deal}/finalize-deal', [\App\Http\Controllers\TransactionController::class, 'store'])->name('agents.transaction.store');
 //Route::put('/agents/deal/{id}/$', [DealController::class, 'accept']);
 Route::put('/agents/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
 
-Route::get('/agents/transaction', [\App\Http\Controllers\Agent\TransactionController::class, 'index']);
+Route::get('/agents/transaction', [\App\Http\Controllers\Agent\TransactionController::class, 'index'])->name('agents.transaction.index');
 
 Route::get('/agents/trippings', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'index']);
 Route::patch('/agents/trippings/{id}/accept', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'accept']);

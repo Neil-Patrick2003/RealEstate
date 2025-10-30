@@ -1,12 +1,11 @@
 // resources/js/Pages/Agents/MyListings.jsx
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
 import { Link, router } from "@inertiajs/react";
 import dayjs from "dayjs";
 import {
     MapPin,
     Share2,
-    Eye,
     Users,
     BadgeCheck,
     CheckCircle2,
@@ -17,10 +16,14 @@ import {
     Tag,
     Filter,
     Search,
+    ChevronDown,
+    Calendar,
+    Eye, // Added for View Button
 } from "lucide-react";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
-const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 });
+// PHP Currency Formatter
+const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }); // Reduced fraction digits for brevity
 
 /** Normalize listing row to avoid 0/1 vs boolean, mixed types, etc. */
 function normalizeListing(row = {}) {
@@ -45,44 +48,47 @@ function normalizeListing(row = {}) {
     };
 }
 
+// Badge Refinement: Subtle, rounded edges
 function TypeBadge({ type }) {
     const t = (type || "").toLowerCase();
     const map = {
-        house: { icon: Home, cls: "bg-blue-50 text-blue-700 border-blue-200" },
-        condo: { icon: Building2, cls: "bg-violet-50 text-violet-700 border-violet-200" },
-        land:  { icon: Ruler, cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-        default:{ icon: Tag, cls: "bg-gray-50 text-gray-700 border-gray-200" },
+        house: { icon: Home, cls: "bg-blue-50 text-blue-700" },
+        condo: { icon: Building2, cls: "bg-violet-50 text-violet-700" },
+        land:  { icon: Ruler, cls: "bg-emerald-50 text-emerald-700" },
+        default:{ icon: Tag, cls: "bg-gray-100 text-gray-700" },
     };
     const Item = map[t] || map.default;
     const Icon = Item.icon;
     return (
-        <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-md border", Item.cls)}>
-      <Icon className="w-3.5 h-3.5" />
+        <span className={cn("inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ring-1 ring-inset", Item.cls, Item.cls.replace('-50', '-200'))}>
+            <Icon className="w-3 h-3" />
             {type || "Property"}
-    </span>
+        </span>
     );
 }
 
+// Status Badge Refinement: Bolder, cleaner indicators
 function StatusBadge({ status }) {
     const s = (status || "").toLowerCase();
     if (s === "assigned") {
         return (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-sky-600 text-white px-2 py-1 rounded-md">
-        <BadgeCheck className="w-3.5 h-3.5" /> Assigned
-      </span>
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-sky-600 text-white px-2 py-0.5 rounded-full shadow-md">
+                <BadgeCheck className="w-3 h-3" /> Assigned
+            </span>
         );
     }
     if (s === "sold") {
         return (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-600 text-white px-2 py-1 rounded-md">
-        <CheckCircle2 className="w-3.5 h-3.5" /> Sold
-      </span>
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-green-600 text-white px-2 py-0.5 rounded-full shadow-md">
+                <CheckCircle2 className="w-3 h-3" /> Sold
+            </span>
         );
     }
+    // Default/Published
     return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-gray-700 text-white px-2 py-1 rounded-md">
-      <Clock3 className="w-3.5 h-3.5" /> Published
-    </span>
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-gray-600 text-white px-2 py-0.5 rounded-full shadow-md">
+            <Clock3 className="w-3 h-3" /> Published
+        </span>
     );
 }
 
@@ -90,35 +96,34 @@ function SellerChip({ seller }) {
     if (!seller) return null;
     const initials = (seller.name || "?").slice(0, 1).toUpperCase();
     return (
-        <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full border bg-white">
+        <div className="inline-flex items-center gap-1.5 p-0.5 rounded-full bg-gray-100/70 transition hover:bg-gray-100">
             {seller.photo_url ? (
                 <img
                     src={`/storage/${seller.photo_url}`}
                     alt={seller.name}
-                    className="w-6 h-6 rounded-full object-cover border"
+                    className="w-4 h-4 rounded-full object-cover ring-1 ring-white"
                     onError={(e)=>{e.currentTarget.src="/placeholder.png";}}
                 />
             ) : (
-                <div className="w-6 h-6 rounded-full bg-gray-900 text-white text-xs flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-gray-500 text-white text-[8px] flex items-center justify-center">
                     {initials}
                 </div>
             )}
-            <span className="text-xs text-gray-700">{seller.name}</span>
+            <span className="text-xs text-gray-700 font-medium truncate max-w-[80px]">{seller.name}</span>
         </div>
     );
 }
 
 // Small avatar stack for assigned agents
 function AgentsStack({ agents = [] }) {
-    if (!Array.isArray(agents) || agents.length === 0) return null;
+    const ArrayOf = (arr) => (Array.isArray(arr) ? arr : []);
+    if (!ArrayOf(agents).length) return null;
 
     return (
-        <div className="flex -space-x-2">
+        <div className="flex -space-x-1.5">
             {agents.slice(0, 3).map((a, i) => {
                 const key = a?.id ?? i;
                 const initials = (a?.name || "?").slice(0, 1).toUpperCase();
-
-                // Prefer photo_url, then avatar_url; fall back to initials
                 const src = a?.photo_url
                     ? `/storage/${a.photo_url}`
                     : a?.avatar_url
@@ -131,13 +136,13 @@ function AgentsStack({ agents = [] }) {
                         src={src}
                         alt={a?.name ? `${a.name} (Agent)` : "Agent"}
                         title={a?.name || "Agent"}
-                        className="w-7 h-7 rounded-full border object-cover bg-white"
+                        className="w-5 h-5 rounded-full object-cover ring-2 ring-white border border-gray-200 bg-white"
                         onError={(e) => { e.currentTarget.src = "/placeholder.png"; }}
                     />
                 ) : (
                     <div
                         key={key}
-                        className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs flex items-center justify-center border"
+                        className="w-5 h-5 rounded-full bg-gray-500 text-white text-[9px] flex items-center justify-center ring-2 ring-white border border-gray-200"
                         title={a?.name || "Agent"}
                         aria-label={a?.name || "Agent"}
                     >
@@ -147,7 +152,7 @@ function AgentsStack({ agents = [] }) {
             })}
 
             {agents.length > 3 && (
-                <div className="w-7 h-7 rounded-full bg-gray-100 border flex items-center justify-center text-[11px] text-gray-600">
+                <div className="w-5 h-5 rounded-full bg-gray-100 ring-2 ring-white border border-gray-200 flex items-center justify-center text-[9px] text-gray-600">
                     +{agents.length - 3}
                 </div>
             )}
@@ -162,88 +167,94 @@ function Card({ listing, onView, onShare }) {
     const area = p.property_type === "land" ? p.lot_area : p.floor_area;
 
     return (
-        <article className="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
-            {/* image */}
+        <article className="group bg-white rounded-xl shadow-lg hover:shadow-xl transition overflow-hidden flex flex-col transform hover:scale-[1.01] duration-300 border border-gray-100">
+            {/* Image & Overlay Actions */}
             <div className="relative">
                 <img
                     src={img}
                     alt={p.title}
-                    className="w-full aspect-[16/10] object-cover bg-gray-100"
+                    className="w-full aspect-[16/11] object-cover bg-gray-100 transition duration-300 group-hover:scale-[1.05]"
                     onError={(e)=>{e.currentTarget.src="/placeholder.png";}}
                     loading="lazy"
                 />
 
-                <div className="absolute top-3 left-3 flex items-center gap-2">
+                {/* Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition duration-300 flex items-center justify-center">
+                    <button
+                        onClick={onView}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold shadow-xl hover:bg-green-700 transform translate-y-2 group-hover:translate-y-0"
+                    >
+                        <Eye className="w-4 h-4" /> View Details
+                    </button>
+                </div>
+
+                {/* Badges */}
+                <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
                     <TypeBadge type={p.property_type} />
+                </div>
+                <div className="absolute top-2 right-2">
                     <StatusBadge status={listing.status} />
                 </div>
-                <div className="absolute top-3 right-3">
-                    {p.isPresell ? (
-                        <span className="text-[11px] font-semibold bg-orange-500 text-white px-2 py-1 rounded-md">Preselling</span>
-                    ) : (
-                        <span className="text-[11px] font-semibold bg-emerald-600 text-white px-2 py-1 rounded-md">Available</span>
-                    )}
+
+                {p.isPresell && (
+                    <div className="absolute bottom-0 left-0 bg-orange-600 text-white text-[10px] font-semibold px-2.5 py-1 rounded-tr-lg shadow-lg">
+                        Preselling
+                    </div>
+                )}
+            </div>
+
+            {/* Body: Main Details */}
+            <div className="p-4 pb-2 flex flex-col gap-2 flex-1">
+                <h3 className="text-lg font-extrabold text-gray-900 leading-snug line-clamp-2 min-h-[48px]">{p.title}</h3>
+
+                {/* Price (Primary Focus) */}
+                <p className="text-2xl font-black text-green-700 mt-1">
+                    {currency.format(p.price)}
+                </p>
+
+                {/* Location & Area (Combined into one section) */}
+                <div className="flex flex-col gap-1 text-xs text-gray-600 border-t border-gray-100 pt-3 mt-1">
+                    <div className="flex items-center gap-2">
+                        <MapPin className="w-3 h-3 shrink-0 text-green-500" />
+                        <span className="line-clamp-1" title={p.address}>{p.address || "Location Unknown"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Ruler className="w-3 h-3 shrink-0 text-gray-400" />
+                        <span className="font-semibold">{area ? `${area} sqm` : "Area Unknown"}</span>
+                        <span className="text-gray-400">•</span>
+                        <Calendar className="w-3 h-3 text-gray-400" />
+                        <span>{dayjs(listing.created_at).format("MMM D, YYYY")}</span>
+                    </div>
                 </div>
             </div>
 
-            {/* body */}
-            <div className="p-4 flex flex-col gap-3 flex-1">
-                <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-[15px] font-semibold text-gray-900 leading-tight line-clamp-2">{p.title}</h3>
-                    <div className="text-right shrink-0">
-                        <div className="text-xs text-gray-500">Created</div>
-                        <div className="text-xs font-medium text-gray-700">{dayjs(listing.created_at).format("MMM D, YYYY")}</div>
-                    </div>
-                </div>
-
-                <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
-                    <span className="line-clamp-2" title={p.address}>{p.address || "—"}</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                    <p className="text-xl font-bold text-emerald-600">{currency.format(p.price)}</p>
-                    <div className="text-xs text-gray-700">
-                        {area ? `${area} sqm` : "—"}
-                    </div>
-                </div>
-
-                {/* footer: seller + agents */}
-                <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-2">
-                        <SellerChip seller={listing.seller} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-gray-500" />
-                        <AgentsStack agents={listing.agents} />
-                    </div>
-                </div>
-
-                {/* bottom actions for keyboard / mobile */}
-                <div className="mt-auto pt-1 flex items-center gap-2">
-                    <button
-                        onClick={onView}
-                        className="flex-1 text-center py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-black"
-                    >
-                        View Details
-                    </button>
+            {/* Footer: Metadata (Seller & Agents) & Share Button - Recessed look */}
+            <div className="px-4 py-3 bg-gray-50 flex items-center justify-between border-t border-gray-100">
+                <SellerChip seller={listing.seller} />
+                <div className="flex items-center gap-3 shrink-0">
+                    <AgentsStack agents={listing.agents} />
                     <button
                         onClick={onShare}
-                        className="px-3 py-2 rounded-md text-sm border hover:bg-gray-50"
-                        title="Share"
+                        className="p-1.5 rounded-full text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 transition shadow-sm"
+                        title="Share Listing"
                     >
                         <Share2 className="h-4 w-4" />
                     </button>
                 </div>
             </div>
+
         </article>
     );
 }
 
+// Utility to ensure array is used
+const ArrayOf = (arr) => (Array.isArray(arr) ? arr : []);
+
 export default function MyListings({ listings }) {
 
     // listings is your paginator payload from controller
-    const normalized = useMemo(() => (listings?.data || []).map(normalizeListing), [listings?.data]);
+    const normalized = useMemo(() => ArrayOf(listings?.data).map(normalizeListing), [listings?.data]);
 
     // filters/sort/search (client-side for now)
     const [status, setStatus] = useState("all"); // all | assigned | published | sold
@@ -277,17 +288,25 @@ export default function MyListings({ listings }) {
 
     // share helper
     async function shareListing(listing) {
-        const url = `${window.location.origin}/agents/properties/${listing.property.id}`;
-        const title = listing.property.title || "Property";
+        // NOTE: Adjusted URL to use a standard format for sharing
+        const url = `${window.location.origin}/properties/${listing.id}`;
+        const title = listing.property.title || "Property Listing";
         try {
             if (navigator?.share) {
-                await navigator.share({ title, text: listing.property.address || "", url });
+                await navigator.share({
+                    title,
+                    text: `Check out this listing: ${listing.property.title}\n${listing.property.address || ""}`,
+                    url
+                });
                 return;
             }
-        } catch {}
+        } catch (e) {
+            // Sharing failed or was cancelled
+        }
+
         try {
             await navigator?.clipboard?.writeText(url);
-            alert("Link copied to clipboard");
+            alert("Listing link copied to clipboard!");
         } catch {
             prompt("Copy this link:", url);
         }
@@ -300,23 +319,28 @@ export default function MyListings({ listings }) {
             const s = (r.status || "").toLowerCase();
             if (s === "assigned") c.assigned++;
             else if (s === "sold") c.sold++;
-            else c.published++;
+            else c.published++; // Treat non-assigned/non-sold as 'published' for the tab
         });
         return c;
     }, [normalized]);
 
     return (
         <AgentLayout>
-            <div className="px-4 py-6 space-y-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">My Listings</h1>
-                    <p className="text-gray-500 text-sm">All properties you’re assigned to or handling.</p>
+            <div className="px-4 md:px-6 lg:px-8 py-8 space-y-8">
+                {/* --- Header --- */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-gray-900">My Listings</h1>
+                        <p className="text-gray-600 text-sm mt-1">Manage and track properties you are responsible for.</p>
+                    </div>
                 </div>
 
-                {/* controls */}
-                <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm">
-                    <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-                        <div className="inline-flex rounded-md overflow-hidden border border-gray-200">
+                {/* --- Controls / Filter Panel --- */}
+                <div className="bg-white rounded-xl p-4 sm:p-5 shadow-lg border border-gray-100">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+
+                        {/* Status Tabs */}
+                        <div className="inline-flex rounded-xl bg-gray-100 p-1 shrink-0 overflow-x-auto">
                             {[
                                 ["all", "All"],
                                 ["assigned", "Assigned"],
@@ -327,8 +351,10 @@ export default function MyListings({ listings }) {
                                     key={val}
                                     onClick={() => setStatus(val)}
                                     className={cn(
-                                        "px-4 py-1.5 text-sm",
-                                        status === val ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+                                        "px-3 py-1.5 text-sm font-semibold rounded-lg transition duration-200 whitespace-nowrap",
+                                        status === val
+                                            ? "bg-white text-gray-900 shadow-md ring-1 ring-gray-200"
+                                            : "text-gray-600 hover:text-gray-900"
                                     )}
                                 >
                                     {label} <span className="opacity-70">({counts[val] || 0})</span>
@@ -338,65 +364,73 @@ export default function MyListings({ listings }) {
 
                         <div className="flex-1" />
 
-                        <div className="relative">
+                        {/* Search Input */}
+                        <div className="relative w-full sm:w-[260px] shrink-0">
                             <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
                                 value={q}
                                 onChange={(e) => setQ(e.target.value)}
                                 placeholder="Search title or address…"
-                                className="pl-9 pr-3 py-2 text-sm rounded-md bg-gray-100 focus:bg-white border border-gray-200 focus:ring-2 focus:ring-gray-200 focus:outline-none w-[260px]"
+                                className="pl-9 pr-3 py-2.5 text-sm rounded-xl bg-gray-100 text-gray-700 border-none focus:ring-2 focus:ring-green-400 focus:bg-white focus:outline-none w-full transition"
                             />
                         </div>
 
-                        <div className="inline-flex items-center gap-2">
-                            <Filter className="w-4 h-4 text-gray-600" />
+                        {/* Sort Dropdown */}
+                        <div className="relative inline-flex items-center shrink-0">
+                            <Filter className="w-4 h-4 text-gray-600 absolute left-3" />
                             <select
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value)}
-                                className="px-3 py-2 text-sm rounded-md border bg-white"
+                                className="pl-8 pr-8 py-2.5 text-sm rounded-xl border border-gray-300 bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-green-400 transition"
                             >
                                 <option value="newest">Newest</option>
                                 <option value="price_asc">Price: Low → High</option>
                                 <option value="price_desc">Price: High → Low</option>
                             </select>
+                            <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 pointer-events-none" />
                         </div>
                     </div>
                 </div>
 
-                {/* grid */}
+                {/* --- Listings Grid --- */}
                 {filtered.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500 bg-white border rounded-lg">No listings match your filters.</div>
+                    <div className="p-12 text-center text-gray-500 bg-white rounded-xl shadow-lg border border-gray-200">
+                        <Home className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                        <h3 className="font-semibold text-gray-800">No Listings Found</h3>
+                        <p className="text-sm mt-1">Adjust your filters or create a new listing.</p>
+                    </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5   gap-6">
                         {filtered.map((listing) => (
                             <Card
                                 key={listing.id}
                                 listing={listing}
-                                onView={() => router.visit(`/agents/my-listings/${listing.id}`)}
+                                // NOTE: Assuming route name is correct, otherwise replace with hardcoded path
+                                onView={() => router.visit(route('agents.listings.show', listing.id))}
                                 onShare={() => shareListing(listing)}
                             />
                         ))}
                     </div>
                 )}
 
-                {/* pagination (server-driven) */}
-                {Array.isArray(listings?.links) && listings.links.length > 1 && (
-                    <div className="flex flex-wrap gap-2 justify-center items-center p-6">
+                {/* --- Pagination --- */}
+                {ArrayOf(listings?.links).length > 3 && (
+                    <div className="flex flex-wrap gap-2 justify-center items-center pt-4">
                         {listings.links.map((link, idx) =>
                             link.url ? (
                                 <Link
                                     key={idx}
                                     href={link.url}
                                     className={cn(
-                                        "px-3 py-2 rounded-md text-sm border transition",
-                                        link.active ? "bg-gray-900 text-white font-semibold" : "bg-white text-gray-700 hover:bg-gray-100"
+                                        "px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm",
+                                        link.active ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-100"
                                     )}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             ) : (
                                 <span
                                     key={idx}
-                                    className="px-3 py-2 text-sm text-gray-400 bg-white border rounded-md cursor-not-allowed"
+                                    className="px-4 py-2 text-sm text-gray-400 bg-white rounded-lg shadow-sm cursor-not-allowed"
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             )
