@@ -1,357 +1,262 @@
-// resources/js/Pages/Agents/Transaction.jsx
-import React, { useCallback, useEffect, useState } from "react";
-import dayjs from "dayjs";
+import React from "react";
+import { Head, Link, router } from "@inertiajs/react";
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
-import { Link, router } from "@inertiajs/react";
-import debounce from "lodash/debounce";
-import { Search } from "lucide-react";
+import TransactionReviewModal from "./TransactionReviewModal.jsx";
 
-/* =========================
-   Tiny theme-aligned UI bits
-   ========================= */
+// PHP Currency Formatter
+const php = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 });
 
-const PageHeader = ({ title, subtitle, right }) => (
-    <div className="mb-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
-            </div>
-            {right}
-        </div>
-    </div>
-);
+export default function Index({ transactions, filters, totals }) {
+    const [local, setLocal] = React.useState({
+        status: filters.status || "",
+        search: filters.search || "",
+        date_from: filters.date_from || "",
+        date_to: filters.date_to || "",
+    });
 
-const Toolbar = ({ children }) => (
-    <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm mb-4">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-3">{children}</div>
-    </div>
-);
-
-const SearchInput = ({ value, onChange, placeholder = "Search…" }) => (
-    <div className="relative">
-        <input
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            className="pl-9 pr-3 py-2 h-10 text-sm rounded-md bg-gray-50 focus:bg-white border border-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-none w-[260px]"
-        />
-        <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-    </div>
-);
-
-const StatusPill = ({ value = "" }) => {
-    const key = String(value).toLowerCase();
-    const map = {
-        sold: "bg-emerald-100 text-emerald-700",
-        pending: "bg-yellow-100 text-yellow-800",
-        cancelled: "bg-gray-100 text-gray-700",
-        default: "bg-gray-100 text-gray-700",
+    const applyFilters = () => {
+        // NOTE: The route name here was 'agents.transaction.index'. Ensure this is correct.
+        router.get(route('agents.transaction.index'), local, { preserveState: true, replace: true });
     };
-    const cls = map[key] || map.default;
-    return <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${cls}`}>{value || "—"}</span>;
-};
+    const resetFilters = () => {
+        setLocal({ status: "", search: "", date_from: "", date_to: "" });
+        // NOTE: The route name here was 'agents.transaction.index'. Ensure this is correct.
+        router.get(route('agents.transaction.index'), {}, { preserveState: true, replace: true });
+    };
 
-const DataCard = ({ title, actions, children }) => (
-    <div className="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-200">
-        {(title || actions) && (
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-3">
-                {title ? <h2 className="text-lg font-semibold text-gray-900">{title}</h2> : <div />}
-                {actions}
-            </div>
-        )}
-        {children}
-    </div>
-);
+    const [modalOpen, setModalOpen] = React.useState(false);
+    const [selectedTx, setSelectedTx] = React.useState(null);
 
-const PaginationFooter = ({ links }) => {
-    if (!Array.isArray(links) || links.length <= 1) return null;
-    return (
-        <div className="p-4 flex flex-wrap gap-2 justify-end border-t border-gray-200">
-            {links.map((link, i) =>
-                link.url ? (
-                    <Link
-                        key={i}
-                        href={link.url}
-                        className={`px-3 py-1.5 text-sm rounded-md border transition ${
-                            link.active
-                                ? "bg-primary text-white font-semibold border-primary"
-                                : "bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                ) : (
-                    <span
-                        key={i}
-                        className="px-3 py-1.5 text-sm text-gray-400 bg-white border rounded-md cursor-not-allowed"
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                )
-            )}
-        </div>
-    );
-};
-
-/* =========================
-   Money + Table
-   ========================= */
-
-const formatMoney = (n) =>
-    new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }).format(
-        Number(n || 0)
-    );
-
-const TransactionsTable = ({ rows = [] }) => {
-    if (!rows.length) {
-        return <div className="p-10 text-center text-gray-500">No transactions found.</div>;
+    function openReview(tx) {
+        setSelectedTx(tx);
+        setModalOpen(true);
     }
 
     return (
-        <>
-            {/* Desktop table */}
-            <table className="min-w-full text-sm text-gray-800 hidden md:table">
-                <thead className="bg-gray-50 text-xs text-gray-600 uppercase tracking-wide">
-                <tr>
-                    <th className="p-3 text-left">Property</th>
-                    <th className="p-3 text-left">Seller</th>
-                    <th className="p-3 text-left">Buyer</th>
-                    <th className="p-3 text-left">Amount</th>
-                    <th className="p-3 text-left">Sold At</th>
-                    <th className="p-3 text-left">Status</th>
-                </tr>
-                </thead>
-                <tbody className="divide-y divide-dashed divide-gray-200">
-                {rows.map((txn) => {
-                    const property = txn?.property_listing?.property;
-                    const seller = txn?.property_listing?.seller;
-                    const buyer = txn?.buyer;
-
-                    return (
-                        <tr key={txn.id} className="hover:bg-gray-50">
-                            <td className="p-3">
-                                <div className="flex items-center gap-3">
-                                    <img
-                                        src={property?.image_url ? `/storage/${property.image_url}` : "/placeholder.png"}
-                                        onError={(e) => (e.currentTarget.src = "/placeholder.png")}
-                                        alt={property?.title || "Property"}
-                                        className="w-14 h-14 object-cover rounded-md border border-gray-200"
-                                    />
-                                    <div>
-                                        <p className="font-medium text-gray-900">{property?.title || "—"}</p>
-                                        <p className="text-xs text-gray-500">{property?.address || "—"}</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td className="p-3">
-                                <p className="text-sm font-medium text-gray-900">{seller?.name || "—"}</p>
-                                <p className="text-xs text-gray-500">{seller?.email || "—"}</p>
-                            </td>
-                            <td className="p-3">
-                                <p className="text-sm font-medium text-gray-900">{buyer?.name || "—"}</p>
-                                <p className="text-xs text-gray-500">{buyer?.email || "—"}</p>
-                            </td>
-                            <td className="p-3">
-                                <p className="text-sm font-semibold text-emerald-600">{formatMoney(txn.amount)}</p>
-                            </td>
-                            <td className="p-3 text-sm text-gray-700">{dayjs(txn.created_at).format("MMM D, YYYY")}</td>
-                            <td className="p-3">
-                                <StatusPill value={txn.status} />
-                            </td>
-                        </tr>
-                    );
-                })}
-                </tbody>
-            </table>
-
-            {/* Mobile cards */}
-            <div className="md:hidden divide-y divide-gray-200">
-                {rows.map((txn) => {
-                    const property = txn?.property_listing?.property;
-                    const seller = txn?.property_listing?.seller;
-                    const buyer = txn?.buyer;
-
-                    return (
-                        <div key={txn.id} className="p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                                <img
-                                    src={property?.image_url ? `/storage/${property.image_url}` : "/placeholder.png"}
-                                    onError={(e) => (e.currentTarget.src = "/placeholder.png")}
-                                    alt={property?.title || "Property"}
-                                    className="w-16 h-16 object-cover rounded-md border border-gray-200"
-                                />
-                                <div className="min-w-0">
-                                    <p className="font-medium text-gray-900 truncate">{property?.title || "—"}</p>
-                                    <p className="text-xs text-gray-500 truncate">{property?.address || "—"}</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div>
-                                    <p className="text-xs text-gray-500">Seller</p>
-                                    <p className="text-gray-800">{seller?.name || "—"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500">Buyer</p>
-                                    <p className="text-gray-800">{buyer?.name || "—"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500">Amount</p>
-                                    <p className="font-semibold text-emerald-600">{formatMoney(txn.amount)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500">Sold At</p>
-                                    <p className="text-gray-800">{dayjs(txn.created_at).format("MMM D, YYYY")}</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-3">
-                                <StatusPill value={txn.status} />
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </>
-    );
-};
-
-/* =========================
-   Page Component
-   ========================= */
-
-export default function Transaction({
-                                        transactions,
-                                        search = "",
-                                        status = "all",
-                                        date_from = "",
-                                        date_to = "",
-                                    }) {
-    const [q, setQ] = useState(search || "");
-    const [st, setSt] = useState(status || "all");
-    const [from, setFrom] = useState(date_from || "");
-    const [to, setTo] = useState(date_to || "");
-    const [loading, setLoading] = useState(false);
-
-    const run = useCallback(
-        debounce((q1, s1, f1, t1) => {
-            setLoading(true);
-            router.get(
-                "/agents/transaction",
-                {
-                    search: q1 || undefined,
-                    status: s1 || undefined,
-                    date_from: f1 || undefined,
-                    date_to: t1 || undefined,
-                },
-                { preserveState: true, replace: true, onFinish: () => setLoading(false) }
-            );
-        }, 450),
-        []
-    );
-
-    useEffect(() => () => run.cancel(), [run]);
-
-    const exportCsv = () => {
-        const rows = transactions?.data ?? [];
-        const header = ["Property", "Seller", "Buyer", "Amount", "Sold At", "Status"];
-        const body = rows.map((t) => [
-            (t?.property_listing?.property?.title || "").replaceAll(",", " "),
-            t?.property_listing?.seller?.name || "",
-            t?.buyer?.name || "",
-            String(t?.amount || 0),
-            dayjs(t?.created_at).format("YYYY-MM-DD"),
-            t?.status || "",
-        ]);
-        const csv = [header, ...body].map((r) => r.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `transactions_${dayjs().format("YYYYMMDD_HHmm")}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
-
-    return (
         <AgentLayout>
-            <PageHeader
-                title="My Transactions"
-                subtitle="Track settled deals and payments."
-                right={
-                    <button
-                        onClick={exportCsv}
-                        className="h-10 px-3 rounded-md border border-gray-300 bg-white text-sm hover:bg-gray-50"
-                    >
-                        Export CSV
-                    </button>
-                }
-            />
 
-            <Toolbar>
-                {/* Status filter */}
-                <select
-                    value={st}
-                    onChange={(e) => {
-                        setSt(e.target.value);
-                        run(q, e.target.value, from, to);
-                    }}
-                    className="h-10 px-3 text-sm rounded-md border border-gray-300 bg-white"
-                    title="Status"
-                >
-                    <option value="all">All status</option>
-                    <option value="Sold">Sold</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select>
+            <Head title="My Transactions" />
 
-                {/* Date range */}
-                <div className="flex items-center gap-2">
-                    <input
-                        type="date"
-                        value={from}
-                        onChange={(e) => {
-                            setFrom(e.target.value);
-                            run(q, st, e.target.value, to);
-                        }}
-                        className="h-10 px-3 text-sm rounded-md border border-gray-300 bg-white"
-                    />
-                    <span className="text-xs text-gray-500">to</span>
-                    <input
-                        type="date"
-                        value={to}
-                        onChange={(e) => {
-                            setTo(e.target.value);
-                            run(q, st, from, e.target.value);
-                        }}
-                        className="h-10 px-3 text-sm rounded-md border border-gray-300 bg-white"
+            {/* --- Header: Adjust padding for mobile (px-4) --- */}
+            <header className="bg-white shadow-sm">
+                <div className="px-2 md:px-4 lg:p-6 py-4 flex items-center justify-between">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Transactions</h1> {/* Shorten title on mobile */}
+                    {/* Primary Button: Reduced padding on mobile */}
+
+                </div>
+            </header>
+
+            {/* --- Main Content: Adjust padding for mobile (px-4) --- */}
+            <main className="px-2 md:p-4 lg:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8  min-h-screen">
+                <TransactionReviewModal
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    tx={selectedTx}
+                />
+
+                {/* --- Stats: Responsive Grid (Default 2 cols, MD 5 cols) --- */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+                    <Stat title="All" value={totals.all} />
+                    <Stat title="Draft" value={totals.draft} />
+                    <Stat title="Reserved" value={totals.reserved} />
+                    <Stat title="Booked" value={totals.booked} />
+
+                    {/* Primary Stat Highlighted */}
+                    <Stat
+                        title="Total Contract Price"
+                        value={php.format(totals.tcp_sum || 0)}
+                        isPrimary={true}
                     />
                 </div>
 
-                <div className="flex-1" />
+                {/* --- Filters: Responsive Layout (Stacked on mobile) --- */}
+                <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">Filter Transactions</h3>
 
-                {/* Search */}
-                <SearchInput
-                    value={q}
-                    onChange={(e) => {
-                        setQ(e.target.value);
-                        run(e.target.value, st, from, to);
-                    }}
-                    placeholder="Search property, buyer, seller…"
-                />
-            </Toolbar>
+                    {/* Filter Grid: Default 1 column, MD 5 columns */}
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+                            <select
+                                className="w-full rounded-lg bg-gray-100 text-gray-700 border-transparent focus:border-transparent focus:ring-2 focus:ring-amber-400 focus:bg-white transition text-sm"
+                                value={local.status}
+                                onChange={(e) => setLocal((s) => ({ ...s, status: e.target.value }))}
+                            >
+                                <option value="">All Statuses</option>
+                                {["DRAFT","RESERVED","BOOKED","SOLD","CANCELLED","EXPIRED","REFUNDED"].map(s=>(
+                                    <option key={s} value={s}>{s}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Search</label>
+                            <input
+                                type="text"
+                                placeholder="Buyer, property, reference..."
+                                className="w-full rounded-lg bg-gray-100 text-gray-700 border-transparent focus:border-transparent focus:ring-2 focus:ring-amber-400 focus:bg-white transition text-sm px-3 py-2"
+                                value={local.search}
+                                onChange={(e)=>setLocal(s=>({...s, search: e.target.value}))}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">From Date</label>
+                            <input
+                                type="date"
+                                className="w-full rounded-lg bg-gray-100 text-gray-700 border-transparent focus:border-transparent focus:ring-2 focus:ring-amber-400 focus:bg-white transition text-sm px-3 py-2"
+                                value={local.date_from}
+                                onChange={(e)=>setLocal(s=>({...s, date_from: e.target.value}))}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">To Date</label>
+                            <input
+                                type="date"
+                                className="w-full rounded-lg bg-gray-100 text-gray-700 border-transparent focus:border-transparent focus:ring-2 focus:ring-amber-400 focus:bg-white transition text-sm px-3 py-2"
+                                value={local.date_to}
+                                onChange={(e)=>setLocal(s=>({...s, date_to: e.target.value}))}
+                            />
+                        </div>
+                    </div>
 
-            <DataCard>
-                {loading ? (
-                    <div className="p-6 text-sm text-gray-500">Loading…</div>
-                ) : (
-                    <>
-                        <TransactionsTable rows={transactions?.data || []} />
-                        <PaginationFooter links={transactions?.links} />
-                    </>
-                )}
-            </DataCard>
+                    {/* Flat Buttons: Adjust spacing and size for mobile */}
+                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2 justify-end">
+                        <button
+                            onClick={resetFilters}
+                            className="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-700 hover:text-amber-600 hover:bg-amber-50 transition"
+                        >
+                            Clear
+                        </button>
+                        <button
+                            onClick={applyFilters}
+                            className="px-3 py-1.5 text-sm font-medium rounded-lg bg-secondary text-white hover:bg-amber-700 transition shadow-md shadow-amber-200"
+                        >
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+
+                {/* --- Table: Mobile Scroll Container --- */}
+                <div className="bg-white rounded-xl shadow-md overflow-x-auto"> {/* Added overflow-x-auto */}
+                    <table className="w-full text-sm min-w-[700px]"> {/* Added min-w to force scroll on small screens */}
+                        {/* Header: Amber Background with White/Amber Text */}
+                        <thead className="bg-gray-100">
+                        <tr className="text-left text-amber-800">
+                            <Th>Created Date</Th>
+                            <Th>Buyer Details</Th>
+                            <Th>Property</Th>
+                            <Th>Status</Th>
+                            <Th className="text-right">TCP</Th>
+                            <Th className="text-right">Balance Due</Th>
+                            <Th className="text-right">Action</Th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {transactions.data.length === 0 && (
+                            <tr>
+                                <td colSpan="7" className="p-4 text-center text-gray-500 font-medium">No transactions matching the current filters were found.</td>
+                            </tr>
+                        )}
+
+                        {transactions.data.map((t) => (
+                            <tr key={t.id} className="hover:bg-gray-50 transition">
+                                <Td className="text-gray-600">{new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Td>
+                                <Td>
+                                    <div className="flex flex-col">
+                                        <span className="font-semibold text-gray-900">{t.buyer?.name || "-"}</span>
+                                        <span className="text-gray-500 text-xs">{t.buyer?.email || "No Email"}</span>
+                                    </div>
+                                </Td>
+                                <Td>
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-gray-800">{t.property?.title || `#${t.property_id || "N/A"}`}</span>
+                                        <span className="text-gray-500 text-xs">{t.property?.address}</span>
+                                    </div>
+                                </Td>
+                                <Td><StatusPill value={t.status} /></Td>
+                                <Td className="text-right font-semibold text-gray-800">{php.format(Number(t.tcp || 0))}</Td>
+                                <Td className="text-right font-extrabold text-red-600">{php.format(Number(t.balance_amount || 0))}</Td>
+                                <Td className="text-right">
+                                    {t ? (
+                                        <button
+                                            onClick={() => openReview(t)}
+                                            className="px-3 py-1.5 text-xs font-medium rounded-lg text-amber-700 bg-amber-50 hover:bg-amber-100 transition"
+                                            type="button"
+                                        >
+                                            Review
+                                        </button>
+                                    ) : (
+                                        <span className="text-gray-400">—</span>
+                                    )}
+                                </Td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* --- Pagination: Flat Style --- */}
+                <Pagination meta={transactions} />
+            </main>
         </AgentLayout>
+    );
+}
+
+// --- Helper Components ---
+
+function Th({ children, className="" }) {
+    return <th className={`p-4 text-xs font-bold uppercase tracking-wider ${className}`}>{children}</th>;
+}
+function Td({ children, className="" }) {
+    // Increased padding, used border-b for separation when not hovering
+    return <td className={`p-4 border-b border-gray-100 ${className}`}>{children}</td>;
+}
+
+// Stat component: Adjusted font sizes for better mobile hierarchy
+function Stat({ title, value, isPrimary = false }) {
+    const classes = isPrimary
+        ? "bg-amber-50 text-amber-800 shadow-sm"
+        : "bg-white text-gray-800 shadow-sm";
+
+    const valueClasses = isPrimary ? "text-xl sm:text-2xl font-extrabold text-amber-700" : "text-lg sm:text-xl font-bold text-gray-900"; // Use sm: for desktop size
+
+    return (
+        <div className={`rounded-xl p-4 sm:p-5 transition duration-150 ${classes}`}> {/* Adjusted padding */}
+            <div className="text-xs text-gray-600 font-semibold uppercase tracking-wider mb-1">{title}</div>
+            <div className={valueClasses}>{value}</div>
+        </div>
+    );
+}
+
+// StatusPill component (Unchanged)
+function StatusPill({ value }) {
+    const map = {
+        DRAFT:     "bg-neutral-100 text-neutral-800",
+        RESERVED:  "bg-amber-100 text-amber-800",
+        BOOKED:    "bg-blue-100 text-blue-800",
+        SOLD:      "bg-green-100 text-green-800",
+        CANCELLED: "bg-rose-100 text-rose-800",
+        EXPIRED:   "bg-neutral-200 text-neutral-700",
+        REFUNDED:  "bg-purple-100 text-purple-800",
+    };
+    return <span className={`inline-flex px-3 py-1 text-xs rounded-full font-semibold ${map[value] || map.DRAFT}`}>{value}</span>;
+}
+
+// Pagination component: Reduced active button shadow to 'md'
+function Pagination({ meta }) {
+    if (!meta?.links) return null;
+    return (
+        <div className="flex flex-wrap gap-2 items-center justify-center pt-4">
+            {meta.links.map((link, i) => (
+                <Link
+                    key={i}
+                    href={link.url || "#"}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${link.active
+                        ? "bg-secondary text-white shadow-md shadow-amber-200"
+                        : "text-gray-700 hover:bg-gray-100"
+                    } ${!link.url ? "opacity-40 pointer-events-none" : ""}`}
+                    dangerouslySetInnerHTML={{ __html: link.label }}
+                />
+            ))}
+        </div>
     );
 }

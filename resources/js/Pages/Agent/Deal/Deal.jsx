@@ -236,9 +236,9 @@ export default function Deal({ property_listings }) {
                                                         <tr key={deal.id} className="hover:bg-gray-50 align-top">
                                                             {/* ordinal */}
                                                             <td className="p-3">
-                                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-200">
-                                    {ordinal(idx + 1)}
-                                  </span>
+                                                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-200">
+                                                                {ordinal(idx + 1)}
+                                                              </span>
                                                             </td>
 
                                                             <td className="p-3">{deal.buyer?.name ?? "Unnamed Buyer"}</td>
@@ -250,24 +250,24 @@ export default function Deal({ property_listings }) {
                                                             <td className="p-3 font-semibold">{peso(deal.amount)}</td>
 
                                                             <td className="p-3">
-                                  <span
-                                      className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}
-                                  >
-                                    {deal.status}
-                                  </span>
+                                                              <span
+                                                                  className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}
+                                                              >
+                                                                {deal.status}
+                                                              </span>
                                                             </td>
 
                                                             <td className="p-3">
                                                                 {deal.amount_last_updated_at ? (
                                                                     <div className="flex flex-col">
-                                      <span>
-                                        {dayjs(deal.amount_last_updated_at).format(
-                                            "MMM D, YYYY h:mm A"
-                                        )}
-                                      </span>
-                                                                        <span className="text-xs text-gray-500">
-                                        {dayjs(deal.amount_last_updated_at).fromNow?.() || ""}
-                                      </span>
+                                                                      <span>
+                                                                        {dayjs(deal.amount_last_updated_at).format(
+                                                                            "MMM D, YYYY h:mm A"
+                                                                        )}
+                                                                      </span>
+                                                                                                        <span className="text-xs text-gray-500">
+                                                                        {dayjs(deal.amount_last_updated_at).fromNow?.() || ""}
+                                                                      </span>
                                                                     </div>
                                                                 ) : (
                                                                     "—"
@@ -282,8 +282,8 @@ export default function Deal({ property_listings }) {
                                                                             <p className="text-xs text-gray-500">
                                                                                 The other party updated the offer. You can{" "}
                                                                                 <span className="font-medium text-gray-700">
-                                            counter, accept, or decline
-                                          </span>
+                                                                                    counter, accept, or decline
+                                                                                </span>
                                                                                 .
                                                                             </p>
                                                                         )}
@@ -339,15 +339,37 @@ export default function Deal({ property_listings }) {
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <select
-                                                                        value={deal.status}
-                                                                        onChange={(e) => onStatusChange(deal, e.target.value)}
-                                                                        className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800"
-                                                                    >
-                                                                        <option value={STATUS.RESERVED}>Reserved</option>
-                                                                        <option value={STATUS.SOLD}>Sold</option>
-                                                                        <option value={STATUS.CANCELLED}>Cancelled</option>
-                                                                    </select>
+                                                                    // <select
+                                                                    //     value={deal.status}
+                                                                    //     onChange={(e) => onStatusChange(deal, e.target.value)}
+                                                                    //     className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800"
+                                                                    // >
+                                                                    //     <option value={STATUS.RESERVED}>Reserved</option>
+                                                                    //     <option value={STATUS.SOLD}>Sold</option>
+                                                                    //     <option value={STATUS.CANCELLED}>Cancelled</option>
+                                                                    // </select>
+                                                                    <div className="flex">
+                                                                        {deal.status.toLowerCase() === 'accepted' ? (
+                                                                            <div className="flex gap-2">
+                                                                                <Link
+                                                                                    href={`/agents/deal/${deal.id}/finalize-deal`}
+                                                                                    className="bg-primary text-white px-4 pt-2 text-sm rounded-full"
+                                                                                >
+                                                                                    Proceed Transaction
+                                                                                </Link>
+                                                                                <button
+                                                                                    className="border border-secondary rounded-full text-secondary px-4 py-2 text-sm"
+                                                                                    // onClick={handleCancel} // define this function if you want to cancel
+                                                                                >
+                                                                                    Cancel
+                                                                                </button>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <button className="bg-primary text-white px-4 py-1 text-sm rounded-full">
+                                                                                {deal.status}
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
                                                                 )}
                                                             </td>
                                                         </tr>
