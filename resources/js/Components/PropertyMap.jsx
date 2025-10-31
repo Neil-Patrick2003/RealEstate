@@ -11,10 +11,11 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import logo from "../../assets/framer_logo.png";
+import { Maximize2, Layers, Satellite, Home, Map } from "lucide-react"; // Imported Lucide icons
+import logo from "../../assets/framer_logo.png"; // Assuming this path is correct
 
 /* -----------------------------
-   small utils
+   small utils (Unchanged)
 ------------------------------*/
 const cn = (...c) => c.filter(Boolean).join(" ");
 const toNum = (v) => (v == null ? null : Number(v));
@@ -25,7 +26,7 @@ const isLatLng = (lat, lng) =>
     Number.isFinite(lng);
 
 /* -----------------------------
-   Tile sources
+   Tile sources (Unchanged)
 ------------------------------*/
 const TILE_LAYERS = {
     Satellite: {
@@ -45,7 +46,7 @@ const TILE_LAYERS = {
 };
 
 /* -----------------------------
-   DivIcon with logo
+   DivIcon with logo (Unchanged)
 ------------------------------*/
 const makeLogoDivIcon = () =>
     L.divIcon({
@@ -69,7 +70,7 @@ const makeLogoDivIcon = () =>
     });
 
 /* -----------------------------
-   Tile layer manager
+   Tile layer manager (Unchanged)
 ------------------------------*/
 function TileLayerManager({ base, showLabels }) {
     const map = useMap();
@@ -77,7 +78,8 @@ function TileLayerManager({ base, showLabels }) {
     useEffect(() => {
         const baseLayer = L.tileLayer(TILE_LAYERS[base].url, {
             attribution: TILE_LAYERS[base].attribution,
-            className: "mjvi-base-tiles",
+            // IMPROVEMENT: Added a generic class for potential custom styling if needed
+            className: "mjvi-base-tiles transition-all duration-500",
         });
         baseLayer.addTo(map);
         return () => map.removeLayer(baseLayer);
@@ -101,7 +103,7 @@ function TileLayerManager({ base, showLabels }) {
 }
 
 /* -----------------------------
-   Fit-to-bounds helper
+   Fit-to-bounds helper (Unchanged)
 ------------------------------*/
 function FitToBounds({ bounds }) {
     const map = useMap();
@@ -116,16 +118,12 @@ function FitToBounds({ bounds }) {
 
 /* -----------------------------
    Main component
-   coordinates: [
-     { type: "marker", coordinates: { lat, lng } },
-     { type: "polygon", coordinates: { geometry: { coordinates: [ [ [lng, lat], ... ] ] } } }
-   ]
 ------------------------------*/
 export default function PropertyMap({ coordinates = [] }) {
     const [mapType, setMapType] = useState("Street");
     const [labelsVisible, setLabelsVisible] = useState(true);
 
-    // Parse markers
+    // ... (markers, polygons, bounds, defaultCenter, logoIconRef remain unchanged)
     const markers = useMemo(() => {
         return coordinates
             .filter((i) => i?.type === "marker")
@@ -137,7 +135,6 @@ export default function PropertyMap({ coordinates = [] }) {
             .filter(Boolean);
     }, [coordinates]);
 
-    // Parse polygons (GeoJSON-like: [[lng,lat], ...])
     const polygons = useMemo(() => {
         return coordinates
             .filter((i) => i?.type === "polygon")
@@ -152,21 +149,20 @@ export default function PropertyMap({ coordinates = [] }) {
             .filter(Boolean);
     }, [coordinates]);
 
-    // Bounds (include all polygon points and markers)
     const bounds = useMemo(() => {
         const pts = [
             ...markers,
-            ...polygons.flatMap((poly) => poly), // flatten polygon points
+            ...polygons.flatMap((poly) => poly),
         ];
         if (!pts.length) return null;
         return L.latLngBounds(pts);
     }, [markers, polygons]);
 
-    // Initial center if no bounds
     const defaultCenter = [13.9407, 121.6151];
     const logoIconRef = useRef(makeLogoDivIcon());
 
-    // Polygon style + hover interactivity
+
+    // Polygon style + hover interactivity (Unchanged, looks great)
     const basePolyStyle = {
         color: "#2563eb",
         weight: 2.5,
@@ -182,7 +178,6 @@ export default function PropertyMap({ coordinates = [] }) {
             fillOpacity: 0.58,
             color: "#1d4ed8",
         });
-        // Bring to front so outline is crisp
         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
             layer.bringToFront();
         }
@@ -193,68 +188,79 @@ export default function PropertyMap({ coordinates = [] }) {
         layer.setStyle(basePolyStyle);
     };
 
-    const firstMarker = markers[0] || null;
-
-    // Early return if nothing to draw is okay, but a map with default center looks nicer
     const hasAnyGeometry = markers.length || polygons.length;
 
     return (
         <div className="relative">
-            {/* Controls */}
-            <div className="absolute top-3 left-3 z-[1000] flex flex-wrap gap-2 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-sm rounded-lg p-2">
-                <button
-                    aria-label="Satellite View"
-                    title="Satellite View"
-                    onClick={() => setMapType("Satellite")}
-                    className={cn(
-                        "px-3 py-1.5 rounded text-xs font-medium transition",
-                        mapType === "Satellite"
-                            ? "bg-gray-900 text-white"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    )}
-                >
-                    🛰 Satellite
-                </button>
-                <button
-                    aria-label="Street View"
-                    title="Street View"
-                    onClick={() => setMapType("Street")}
-                    className={cn(
-                        "px-3 py-1.5 rounded text-xs font-medium transition",
-                        mapType === "Street"
-                            ? "bg-gray-900 text-white"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    )}
-                >
-                    🛣 Street
-                </button>
+            {/* IMPROVEMENT: Controls: Dark background for a floating, professional look */}
+            <div className="absolute top-4 left-4 z-[1000] flex items-center gap-1.5 bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-xl p-1.5">
+
+                {/* Map Type Group */}
+                <div className="flex bg-gray-700 rounded-lg p-0.5">
+                    <button
+                        aria-label="Satellite View"
+                        title="Satellite View"
+                        onClick={() => setMapType("Satellite")}
+                        className={cn(
+                            "flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors",
+                            mapType === "Satellite"
+                                ? "bg-primary text-white shadow-md"
+                                : "text-gray-200 hover:bg-gray-600/70"
+                        )}
+                    >
+                        <Satellite className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Satellite</span>
+                    </button>
+                    <button
+                        aria-label="Street View"
+                        title="Street View"
+                        onClick={() => setMapType("Street")}
+                        className={cn(
+                            "flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors",
+                            mapType === "Street"
+                                ? "bg-primary text-white shadow-md"
+                                : "text-gray-200 hover:bg-gray-600/70"
+                        )}
+                    >
+                        <Map className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Street</span>
+                    </button>
+                </div>
+
+                {/* Labels Toggle */}
                 <button
                     aria-label="Toggle Labels"
                     title="Toggle Labels"
                     onClick={() => setLabelsVisible((s) => !s)}
                     className={cn(
-                        "px-3 py-1.5 rounded text-xs font-medium transition",
+                        "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
                         labelsVisible
-                            ? "bg-emerald-600 text-white"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                            ? "bg-amber-500 text-gray-900 hover:bg-amber-600 shadow-md"
+                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
                     )}
                 >
-                    🏷 {labelsVisible ? "Labels On" : "Labels Off"}
+                    <Layers className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">{labelsVisible ? "Labels On" : "Labels Off"}</span>
                 </button>
 
-                {/* Quick tools */}
-                <div className="w-px h-6 bg-gray-200 mx-1 hidden md:block" />
-                <button
-                    aria-label="Fit to bounds"
-                    title="Fit to bounds"
-                    onClick={() => {
-                        const evt = new Event("fit-bounds");
-                        window.dispatchEvent(evt);
-                    }}
-                    className="px-3 py-1.5 rounded text-xs font-medium bg-white border hover:bg-gray-50"
-                >
-                    Fit
-                </button>
+                {/* IMPROVEMENT: Fit Button integrated with an icon */}
+                {bounds && (
+                    <>
+                        <div className="w-px h-6 bg-gray-700 mx-1 hidden md:block" />
+                        <button
+                            aria-label="Fit to bounds"
+                            title="Fit to bounds"
+                            onClick={() => {
+                                // Dispatching a window event is fine for communication outside MapContainer
+                                const evt = new Event("fit-bounds");
+                                window.dispatchEvent(evt);
+                            }}
+                            className="p-2 rounded-lg text-gray-200 bg-gray-700 hover:bg-gray-600 transition-colors shadow-md"
+                        >
+                            <Maximize2 className="w-4 h-4" />
+                        </button>
+                    </>
+                )}
             </div>
 
             <MapContainer
@@ -268,7 +274,8 @@ export default function PropertyMap({ coordinates = [] }) {
                     borderRadius: 12,
                     position: "relative",
                     zIndex: 0,
-                    boxShadow: "0 10px 24px rgba(0,0,0,.06)",
+                    // IMPROVEMENT: Slightly deeper shadow for contrast with the floating controls
+                    boxShadow: "0 12px 30px rgba(0,0,0,.1)",
                 }}
             >
                 {/* Listen for "Fit" click dispatched above */}
@@ -297,14 +304,18 @@ export default function PropertyMap({ coordinates = [] }) {
                 {/* Markers */}
                 {markers.map((pos, idx) => (
                     <Marker key={`marker-${idx}`} position={pos} icon={logoIconRef.current}>
-                        <Popup minWidth={160}>📍 Property Location</Popup>
+                        <Popup minWidth={160}>
+                            <div className="font-semibold text-gray-800">📍 Property Location</div>
+                        </Popup>
                     </Marker>
                 ))}
 
                 {/* Empty fallback (still show map UI) */}
                 {!hasAnyGeometry && (
                     <Popup position={defaultCenter} openOnMount>
-                        No geometry provided.
+                        <div className="font-semibold text-gray-800">
+                            No geometry provided. Displaying default center.
+                        </div>
                     </Popup>
                 )}
             </MapContainer>
@@ -313,7 +324,7 @@ export default function PropertyMap({ coordinates = [] }) {
 }
 
 /* -----------------------------
-   Internal: Fit action listener
+   Internal: Fit action listener (Unchanged)
 ------------------------------*/
 function MapFitListener({ bounds }) {
     const map = useMap();

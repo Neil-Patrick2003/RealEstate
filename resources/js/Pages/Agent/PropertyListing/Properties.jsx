@@ -406,7 +406,7 @@ export default function MyListings({ listings }) {
                                 key={listing.id}
                                 listing={listing}
                                 // NOTE: Assuming route name is correct, otherwise replace with hardcoded path
-                                onView={() => router.visit(route('agents.listings.show', listing.id))}
+                                onView={() => router.visit(route('agents.my-listings.show', listing.id))}
                                 onShare={() => shareListing(listing)}
                             />
                         ))}
