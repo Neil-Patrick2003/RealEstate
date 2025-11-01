@@ -55,10 +55,9 @@ export default function Index({ transactions, filters, totals }) {
         <BuyerLayout>
             <Head title="My Transactions" />
 
-            <header className="bg-white shadow">
-                <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <header className="bg-white">
+                <div className="px-4 sm:px-6 lg:px-8 py-4 flex ">
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">My Transactions</h1>
-                    <div className="text-sm text-gray-600 hidden sm:block">Welcome back</div>
                 </div>
             </header>
 
