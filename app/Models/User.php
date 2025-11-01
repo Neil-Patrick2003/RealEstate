@@ -187,7 +187,6 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsToMany(\App\Models\Property::class, 'property_listings', 'user_id', 'property_id')
             ->withTimestamps();
-
     }
 
     public function listingAssignments()
@@ -196,6 +195,10 @@ class User extends Authenticatable implements FilamentUser
             ->withTimestamps();
     }
 
+    public function routeNotificationForSms(): ?string
+    {
+        return $this->contact_number;
+    }
     public function canAccessPanel(Panel $panel): bool
     {
         return true;

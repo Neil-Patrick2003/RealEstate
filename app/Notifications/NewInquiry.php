@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Inquiry;
+use App\Notifications\Channels\SmsChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -29,7 +30,7 @@ class NewInquiry extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', 'broadcast'];;
+        return ['mail', 'database', 'broadcast', SmsChannel::class];
     }
 
     /**
@@ -115,5 +116,12 @@ class NewInquiry extends Notification implements ShouldQueue
         return [
             //
         ];
+    }
+
+    public function toSms($notifiable): string
+    {
+        $actor = $this->inquiry->buyer ?: $this->inquiry->agent;
+
+        return "You have received a new inquiry from {$actor->name}.";
     }
 }
