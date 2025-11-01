@@ -8,7 +8,15 @@ class InventoryPool extends Model
 {
     protected $table = 'inventory_pools';
 
-    protected $fillable = ['id', 'project_id', 'block_id', 'house_type_id', 'reserved', 'sold', 'held'];
+    protected $guarded = [];
+
+    protected $casts = [
+        'total' => 'integer',
+        'held' => 'integer',
+        'reserved' => 'integer',
+        'sold' => 'integer',
+    ];
+
 
     public function project(){
         return $this->belongsTo('App\Models\Project');
@@ -20,6 +28,11 @@ class InventoryPool extends Model
 
     public function house_type(){
         return $this->belongsTo('App\Models\HouseType');
+    }
+
+    public function getAvailableAttribute(): int
+    {
+        return (int)$this->total - (int)$this->held - (int)$this->reserved - (int)$this->sold;
     }
 
 

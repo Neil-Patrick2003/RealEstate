@@ -13,13 +13,21 @@ return new class extends Migration
     {
         Schema::create('house_types', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('project_id');
-            $table->string('code');
-            $table->string('name');
-            $table->decimal('base_price', 8, 2)->default(0);
-            $table->boolean('is_active')->default(true);
+            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
 
-            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
+            $table->string('code')->unique();
+            $table->string('name');
+            $table->text('description')->nullable();
+
+            $table->unsignedTinyInteger('bed_room')->default(0);
+            $table->unsignedTinyInteger('bath_room')->default(0);
+            $table->unsignedTinyInteger('car_slot')->default(0);
+
+            $table->decimal('floor_area_sqm', 8, 2)->default(0);
+            $table->decimal('lot_area_sqm', 8, 2)->default(0);
+            $table->decimal('base_price', 15, 2)->default(0);
+
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

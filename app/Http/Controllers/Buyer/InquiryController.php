@@ -158,8 +158,21 @@ class InquiryController extends Controller
             'trippings' => fn ($q) => $q->where('buyer_id', $userId)->latest()->limit(1),
         ]);
 
+
+
+
+
         // Load property + latest buyer-scoped relations (NO buyer inquiries)
         $property = Property::findOrFail($inquiry->property_id);
+
+        $chatChannel = ChatChannel::where('subject_id', $property->id)
+            ->with('members', 'messages')
+            ->whereHas('members', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+            ->first();
+
+        dd($chatChannel->toArray());
 
         $property->load([
             'images',
