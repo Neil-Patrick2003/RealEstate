@@ -168,7 +168,7 @@ class InquiryController extends Controller
             })
             ->first();
 
-        dd($chatChannel->toArray());
+//        dd($chatChannel->toArray());
 
         $property->load([
             'images',
