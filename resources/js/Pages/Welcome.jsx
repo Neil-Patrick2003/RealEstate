@@ -296,7 +296,7 @@ export default function LandingPage({ auth, properties = [], search = "", initia
     /* ------------------------------ Render ------------------------------ */
     return (
         <main className="min-h-screen bg-gray-50">
-            <Head title="MJVI Realty — Find lots & homes fast" />
+            <Head title="RealSync — Find lots & homes fast" />
 
             {/* 0. NAV (Unchanged, sticky and blurred) */}
             <header className="sticky top-0 z-40 supports-[backdrop-filter]:bg-white/70 bg-white shadow-md backdrop-blur">

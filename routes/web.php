@@ -190,7 +190,7 @@ Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent
 Route::get('/agents/properties/{property}', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'show']);
 
 Route::get('/agents/my-listings', [\App\Http\Controllers\Agent\PropertyListingController::class, 'index'])->name('agents.my-listings');
-Route::get('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'show']);
+Route::get('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'show'])->name('agents.my-listings.show');
 Route::patch('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'update']);
 
 Route::get('/agents/chat', [\App\Http\Controllers\Agent\ChatController::class, 'index'])->name('agents.chat.index');
@@ -240,7 +240,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Buyer\BuyerController::class, 'index'])->name('dashboard');
-    Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
+    Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store'])->name('inquiry.store');
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
     Route::get('/inquiries/{inquiry}', [\App\Http\Controllers\Buyer\InquiryController::class, 'show']);
     Route::patch('/inquiries/{id}/cancel', [\App\Http\Controllers\Buyer\InquiryController::class, 'cancel']);
@@ -253,7 +253,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
     Route::get('/deals', [DealController::class, 'index']);
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
-    Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
+    Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index'])->name('buyer.transactions.index');
     Route::get('/deals/{deal}/feedback', [FeedbackController::class, 'create'])->name('deals.feedback.create');
     Route::post('/deals/{deal}/feedback', [FeedbackController::class, 'store'])->name('deals.feedback.store');
 });
