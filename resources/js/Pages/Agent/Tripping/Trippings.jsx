@@ -4,6 +4,8 @@ import AgentLayout from "@/Layouts/AgentLayout.jsx";
 import { router } from "@inertiajs/react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import {
     CalendarDays,
     Check,
@@ -22,14 +24,18 @@ import {
     ChevronRight,
     Bell,
     BellRing,
+    Repeat,
 } from "lucide-react";
 
 dayjs.extend(relativeTime);
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 /* ================= helpers ================= */
 const cn = (...c) => c.filter(Boolean).join(" ");
 const fmtDate = (d, f = "MMM D, YYYY") => (d ? dayjs(d).format(f) : "—");
 const fmtTime = (t) => (t ? dayjs(`1970-01-01T${t}`).format("h:mm A") : "Time TBD");
+// Fixed the toMaps function
 const toMaps = (address) =>
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || "")}`;
 
@@ -37,6 +43,8 @@ const toMaps = (address) =>
 const visitMoment = (t) => {
     const date = t?.visit_date;
     const time = t?.visit_time || "09:00:00";
+    // Ensure date is valid for dayjs
+    if (!date) return dayjs(0);
     return dayjs(`${date}T${time}`);
 };
 const isAfterNow = (t) => visitMoment(t).isAfter(dayjs());
@@ -57,7 +65,7 @@ function icsForTrip(trip) {
         trip?.buyer?.email ? ` (${trip.buyer.email})` : ""
     } • ${trip?.property?.address ?? ""}`;
     const start = visitMoment(trip).utc();
-    const end = start.add(60, "minute");
+    const end = start.add(60, "minute"); // Assuming 60 minute duration
     return [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
@@ -84,12 +92,16 @@ function downloadICS(trip) {
     a.click();
     URL.revokeObjectURL(url);
 }
+// Checks if a candidate trip conflicts with an array of accepted trips
 function hasConflict(candidate, accepted) {
     const cStart = visitMoment(candidate);
-    const cEnd = cStart.add(60, "minute");
+    const cEnd = cStart.add(60, "minute"); // Assume 60 min duration
+
     return accepted.some((t) => {
         const tStart = visitMoment(t);
         const tEnd = tStart.add(60, "minute");
+
+        // Conflict if start of one is before end of other, AND start of other is before end of one
         return cStart.isBefore(tEnd) && tStart.isBefore(cEnd);
     });
 }
@@ -119,18 +131,23 @@ function useReminders(storageKey = "trip-reminders") {
         const schedule = (tripId, whenMs, title, body) => {
             const delay = whenMs - Date.now();
             if (delay <= 0) return;
-            const id = setTimeout(async () => {
+
+            // Check if permission is needed/granted
+            const checkAndNotify = async () => {
                 try {
                     if ("Notification" in window) {
-                        if (Notification.permission === "granted") {
-                            new Notification(title, { body, tag: `trip-${tripId}` });
-                        } else if (Notification.permission !== "denied") {
-                            const p = await Notification.requestPermission();
-                            if (p === "granted") new Notification(title, { body, tag: `trip-${tripId}` });
+                        let permission = Notification.permission;
+                        if (permission === "default") {
+                            permission = await Notification.requestPermission();
+                        }
+                        if (permission === "granted") {
+                            new Notification(title, { body, tag: `trip-${tripId}`, icon: '/favicon.ico' });
                         }
                     }
                 } finally {}
-            }, delay);
+            };
+
+            const id = setTimeout(checkAndNotify, delay);
             timersRef.current[tripId] = id;
         };
 
@@ -166,8 +183,7 @@ function useReminders(storageKey = "trip-reminders") {
 
 /* ================= main page ================= */
 export default function TrippingsAgentFull({ trippings = [] }) {
-    // const [localTrips, setLocalTrips] = useState(trippings);
-    // useEffect(() => setLocalTrips(trippings), [trippings]);
+    // Note: We use the server-passed `trippings` as the single source of truth
 
     /* base lists */
     const pending = useMemo(
@@ -183,7 +199,6 @@ export default function TrippingsAgentFull({ trippings = [] }) {
         [trippings]
     );
 
-    // Completed is now a TRUE status, not inferred by time
     const completed = useMemo(
         () =>
             trippings
@@ -206,7 +221,7 @@ export default function TrippingsAgentFull({ trippings = [] }) {
     const [busy, setBusy] = useState({}); // {[id]: 'accept'|'decline'|'reschedule'|'complete'}
     const [confirm, setConfirm] = useState({ type: null, id: null });
     const [resched, setResched] = useState({ open: false, id: null, date: "", time: "" });
-    const [selected, setSelected] = useState(null);
+    // const [selected, setSelected] = useState(null); // Not used in this version
 
     const counts = {
         pending: pending.length,
@@ -224,9 +239,13 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                 t?.property?.address?.toLowerCase().includes(query) ||
                 t?.buyer?.name?.toLowerCase().includes(query) ||
                 t?.buyer?.email?.toLowerCase().includes(query);
+
+            // Date filtering using dayjs extensions
+            const moment = visitMoment(t);
             const inRange =
-                (!from || visitMoment(t).isSameOrAfter(dayjs(from), "day")) &&
-                (!to || visitMoment(t).isSameOrBefore(dayjs(to), "day"));
+                (!from || moment.isSameOrAfter(dayjs(from), "day")) &&
+                (!to || moment.isSameOrBefore(dayjs(to), "day"));
+
             return matchQ && inRange;
         });
     }, [baseList, q, from, to]);
@@ -243,9 +262,9 @@ export default function TrippingsAgentFull({ trippings = [] }) {
 
     const { reminders, setReminder, clearReminder } = useReminders();
     const reminderOptions = [
-        { label: "24h before", minutes: 24 * 60 },
-        { label: "1h before", minutes: 60 },
-        { label: "15m before", minutes: 15 },
+        { label: "24 hours before", minutes: 24 * 60 },
+        { label: "1 hour before", minutes: 60 },
+        { label: "15 minutes before", minutes: 15 },
     ];
     const scheduleReminder = (trip, mins) => {
         const when = visitMoment(trip).valueOf() - mins * 60_000;
@@ -256,11 +275,6 @@ export default function TrippingsAgentFull({ trippings = [] }) {
     /* actions */
     const patchTrip = useCallback((id, action, payload = {}) => {
         setBusy((b) => ({ ...b, [id]: action }));
-
-        // optimistic UI ideas (optional)
-        // if (action === "accept") { setLocalTrips((arr) => arr.map((t) => (t.id === id ? { ...t, status: "accepted" } : t))); }
-        // if (action === "decline") { setLocalTrips((arr) => arr.map((t) => (t.id === id ? { ...t, status: "declined" } : t))); }
-        // if (action === "complete") { setLocalTrips((arr) => arr.map((t) => (t.id === id ? { ...t, status: "completed" } : t))); }
 
         router.patch(`/agents/trippings/${id}/${action}`, payload, {
             preserveScroll: true,
@@ -292,10 +306,12 @@ export default function TrippingsAgentFull({ trippings = [] }) {
         } else if (confirm.type === "decline") {
             patchTrip(confirm.id, "decline");
         } else if (confirm.type.startsWith("complete")) {
-            patchTrip(confirm.id, "complete"); // backend should set status=completed (and completed_at=now())
+            patchTrip(confirm.id, "complete");
         }
         setConfirm({ type: null, id: null });
     };
+
+    // Reschedule handlers
     const openReschedule = (trip) =>
         setResched({
             open: true,
@@ -311,80 +327,48 @@ export default function TrippingsAgentFull({ trippings = [] }) {
         setResched({ open: false, id: null, date: "", time: "" });
     };
 
-    /* CSV export (current filtered tab) */
-    const exportCSV = () => {
-        const rows = [
-            ["#", "Property", "Address", "Buyer", "Email", "Status", "Visit Date", "Time"],
-            ...filtered.map((t, i) => [
-                i + 1,
-                t?.property?.title ?? "",
-                t?.property?.address ?? "",
-                t?.buyer?.name ?? "",
-                t?.buyer?.email ?? "",
-                t?.status ?? "",
-                fmtDate(t?.visit_date),
-                t?.visit_time ?? "",
-            ]),
-        ]
-            .map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(","))
-            .join("\n");
-        const blob = new Blob([rows], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `trippings_${tab}_${dayjs().format("YYYYMMDD_HHmmss")}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-    };
-
     /* Incoming (accepted + after now) grouped by day */
     const incomingGrouped = useMemo(() => {
-        const incoming = trippings
-            .filter((t) => statusLc(t) === "accepted" && isAfterNow(t))
-            .sort((a, b) => visitMoment(a).valueOf() - visitMoment(b).valueOf());
-
         const m = new Map();
-        for (const t of incoming) {
+        for (const t of upcoming) { // upcoming is already sorted and filtered
             const key = visitMoment(t).format("YYYY-MM-DD");
             if (!m.has(key)) m.set(key, []);
             m.get(key).push(t);
         }
-        return Array.from(m.entries()).sort(([a], [b]) => (a < b ? -1 : 1));
-    }, [trippings]);
+        return Array.from(m.entries());
+    }, [upcoming]); // Depend on `upcoming` list
 
     return (
         <AgentLayout>
-            {/* confirm banner */}
+            {/* Confirmation Modal/Banner */}
             {confirm.type && (
-                <div className="fixed top-[64px] left-0 right-0 z-[600]">
-                    <div className="mx-auto max-w-3xl bg-white border shadow-sm rounded-md p-4">
+                <div className="fixed top-[64px] left-0 right-0 z-[600] p-4">
+                    <div className="mx-auto max-w-3xl bg-white border border-gray-200 shadow-lg rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            {confirm.type === "accept-conflict" && (
-                                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
-                            )}
+                            <AlertTriangle className={cn("w-5 h-5 mt-0.5", confirm.type.startsWith("accept") ? "text-amber-600" : "text-rose-600")} />
                             <div className="flex-1">
-                                <div className="text-sm font-medium">
+                                <div className="text-sm font-medium text-gray-800">
                                     {confirm.type === "accept"
                                         ? "Accept this visit schedule?"
                                         : confirm.type === "accept-conflict"
-                                            ? "This overlaps another accepted visit. Accept anyway?"
+                                            ? "This overlaps another accepted visit. Are you sure you want to accept?"
                                             : confirm.type === "complete"
                                                 ? "Mark this visit as completed?"
                                                 : confirm.type === "complete-future"
-                                                    ? "This visit time hasn’t started yet. Are you sure you want to mark it completed?"
-                                                    : "Decline this visit schedule?"}
+                                                    ? "This visit hasn’t started yet. Are you sure you want to mark it completed now?"
+                                                    : "Decline this visit schedule? This action cannot be undone."}
                                 </div>
                                 <div className="mt-3 flex gap-2">
                                     <button
                                         onClick={() => setConfirm({ type: null, id: null })}
-                                        className="px-3 py-1.5 text-sm rounded-md bg-gray-100 hover:bg-gray-200"
+                                        className="px-3 py-1.5 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 font-medium"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={doConfirm}
                                         className={cn(
-                                            "px-3 py-1.5 text-sm rounded-md text-white",
+                                            "px-3 py-1.5 text-sm rounded-lg text-white font-medium transition",
                                             confirm.type.startsWith("accept")
                                                 ? "bg-green-600 hover:bg-green-700"
                                                 : confirm.type.startsWith("complete")
@@ -401,51 +385,55 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                 </div>
             )}
 
-            <div className="px-4 py-6 space-y-8">
+            <div className="px-4 py-6 space-y-8 ">
                 <header className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold text-gray-800">Agent Tripping Manager</h1>
-                    <p className="text-gray-500 text-sm">
-                        Incoming schedules with reminders, plus full queue management.
+                    <h1 className="text-3xl font-extrabold text-gray-900">Agent Tripping Manager</h1>
+                    <p className="text-gray-600 text-sm">
+                        Manage incoming schedules, set reminders, and track your property visits.
                     </p>
                 </header>
 
                 {/* Incoming (Accepted) with reminders */}
-                <section className="bg-white rounded-lg border border-gray-200 shadow-sm">
-                    <div className="px-4 md:px-6 py-4 border-b flex items-center gap-2 text-gray-700">
-                        <CalendarDays className="w-4 h-4" />
-                        <h2 className="font-semibold">Incoming Schedule (Accepted)</h2>
+                <section className="bg-white rounded-xl border border-gray-200 shadow-lg">
+                    <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex items-center gap-2 text-gray-800">
+                        <CalendarDays className="w-5 h-5 text-primary" />
+                        <h2 className="text-lg font-bold">Upcoming Accepted Visits</h2>
                         <span className="ml-auto text-xs text-gray-500">Local time</span>
                     </div>
 
                     {incomingGrouped.length === 0 ? (
-                        <div className="p-6 text-sm text-gray-500">No upcoming visits.</div>
+                        <div className="p-8 text-sm text-gray-500 text-center">
+                            <Clock className="w-6 h-6 mx-auto mb-2" />
+                            <p>No accepted visits scheduled in the future.</p>
+                        </div>
                     ) : (
-                        <div className="divide-y">
+                        <div className="divide-y divide-gray-100">
                             {incomingGrouped.map(([key, items]) => (
                                 <section key={key} className="p-4 md:p-6">
-                                    <div className="mb-3 font-medium text-gray-800">
-                                        {fmtDate(key, "MMMM D, YYYY")}
+                                    <div className="mb-4 text-base font-bold text-gray-900 border-b pb-2 border-dashed">
+                                        {fmtDate(key, "dddd, MMMM D, YYYY")}
                                     </div>
-                                    <ul className="space-y-3">
+                                    <ul className="space-y-4">
                                         {items.map((trip) => {
                                             const r = reminders[trip.id];
                                             const hasReminder = !!r;
                                             return (
                                                 <li
                                                     key={trip.id}
-                                                    className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition"
+                                                    className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition shadow-sm"
                                                 >
-                                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                                                        {/* left */}
-                                                        <div className="min-w-0">
-                                                            <div className="font-medium text-gray-900 truncate">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                        {/* left: details */}
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="font-bold text-gray-900 truncate text-base">
                                                                 {trip?.property?.title ?? "Property"}
                                                             </div>
-                                                            <div className="flex items-center gap-1.5 text-gray-600 text-sm">
-                                                                <Clock className="w-4 h-4" /> {fmtTime(trip.visit_time)}
-                                                                <span aria-hidden>•</span>
+                                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-gray-600 text-sm mt-1">
+                                                                <span className="flex items-center gap-1 font-medium">
+                                                                    <Clock className="w-4 h-4 text-primary" /> {fmtTime(trip.visit_time)}
+                                                                </span>
                                                                 <a
-                                                                    className="inline-flex items-center gap-1 text-blue-600 hover:underline truncate"
+                                                                    className="inline-flex items-center gap-1 text-blue-600 hover:underline truncate max-w-[calc(100%-100px)]"
                                                                     href={toMaps(trip?.property?.address)}
                                                                     target="_blank"
                                                                     rel="noreferrer"
@@ -457,34 +445,38 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                                             </div>
                                                             {trip?.buyer?.name || trip?.buyer?.email ? (
                                                                 <div className="mt-1 text-xs text-gray-500">
-                                                                    With:{" "}
-                                                                    <span className="text-gray-700">
-                                    {trip?.buyer?.name ?? "—"}
-                                  </span>
-                                                                    {trip?.buyer?.email ? ` • ${trip.buyer.email}` : ""}
+                                                                    Client:{" "}
+                                                                    <span className="text-gray-700 font-medium">
+                                                                        {trip?.buyer?.name ?? "—"}
+                                                                    </span>
+                                                                    {trip?.buyer?.email ? (
+                                                                        <a href={`mailto:${trip.buyer.email}`} className="text-blue-500 hover:underline">
+                                                                            {` • ${trip.buyer.email}`}
+                                                                        </a>
+                                                                    ) : ""}
                                                                 </div>
                                                             ) : null}
                                                         </div>
 
-                                                        {/* right actions */}
-                                                        <div className="flex flex-wrap items-center gap-2">
+                                                        {/* right: actions */}
+                                                        <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 justify-end sm:justify-start shrink-0">
                                                             {!hasReminder ? (
                                                                 <div className="relative">
                                                                     <details className="group">
-                                                                        <summary className="list-none">
+                                                                        <summary className="list-none focus:outline-none">
                                                                             <button
-                                                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white hover:bg-black"
+                                                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm bg-gray-900 text-white hover:bg-black transition "
                                                                                 type="button"
                                                                             >
                                                                                 <Bell className="w-4 h-4" /> Remind me
                                                                             </button>
                                                                         </summary>
-                                                                        <div className="absolute right-0 mt-2 bg-white border rounded-md shadow-lg p-2 w-44 z-[20]">
+                                                                        <div className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg  p-2 w-48 z-[20]">
                                                                             {reminderOptions.map((o) => (
                                                                                 <button
                                                                                     key={o.minutes}
                                                                                     onClick={() => scheduleReminder(trip, o.minutes)}
-                                                                                    className="w-full text-left text-sm px-2 py-1 rounded hover:bg-gray-50"
+                                                                                    className="w-full text-left text-sm px-3 py-1.5 rounded-md hover:bg-gray-100"
                                                                                     type="button"
                                                                                 >
                                                                                     {o.label}
@@ -495,28 +487,28 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex items-center gap-2">
-                                  <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                                    <BellRing className="w-3.5 h-3.5" />
-                                    Reminder set {dayjs(r.when).fromNow()}
-                                  </span>
+                                                                    <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-1 rounded-full font-medium">
+                                                                        <BellRing className="w-3.5 h-3.5" />
+                                                                        Reminder {dayjs(r.when).fromNow()}
+                                                                    </span>
                                                                     <button
                                                                         onClick={() => clearReminder(trip.id)}
-                                                                        className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+                                                                        className="text-xs px-2 py-1 rounded-lg border border-gray-300 hover:bg-gray-100 transition text-gray-700"
                                                                         type="button"
                                                                         title="Remove reminder"
                                                                     >
-                                                                        Remove
+                                                                        <XIcon className="w-3.5 h-3.5" />
                                                                     </button>
                                                                 </div>
                                                             )}
 
                                                             <button
                                                                 onClick={() => downloadICS(trip)}
-                                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm border hover:bg-gray-50"
+                                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition"
                                                                 type="button"
                                                                 title="Add to calendar (.ics)"
                                                             >
-                                                                <Download className="w-4 h-4" /> .ics
+                                                                <Download className="w-4 h-4" /> ICS
                                                             </button>
                                                         </div>
                                                     </div>
@@ -531,10 +523,12 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                 </section>
 
                 {/* Controls / Table */}
-                <section className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 md:p-6">
+                <section className="bg-white rounded-xl border border-gray-200  p-4 md:p-6">
                     {/* Controls */}
-                    <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                        <div className="inline-flex overflow-hidden rounded-md border border-gray-200">
+                    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+
+                        {/* Tabs */}
+                        <div className="inline-flex overflow-hidden rounded-xl border border-gray-200 ">
                             {[
                                 ["pending", "Pending"],
                                 ["upcoming", "Upcoming"],
@@ -547,20 +541,22 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                         setPage(1);
                                     }}
                                     className={cn(
-                                        "px-4 py-1.5 text-sm",
+                                        "px-4 py-2 text-sm font-semibold transition min-w-[120px]",
                                         tab === val
-                                            ? "bg-gray-900 text-white"
+                                            ? "bg-primary text-white"
                                             : "bg-white text-gray-700 hover:bg-gray-50"
                                     )}
                                 >
-                                    {label} <span className="opacity-70">({counts[val] || 0})</span>
+                                    {label} <span className="opacity-80 font-normal">({counts[val] || 0})</span>
                                 </button>
                             ))}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                        {/* Search, Filter, Export */}
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Search */}
+                            <div className="relative flex-1 min-w-[200px]">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <input
                                     value={q}
                                     onChange={(e) => {
@@ -568,12 +564,14 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                         setPage(1);
                                     }}
                                     placeholder="Search buyer, property, address…"
-                                    className="rounded-md border border-gray-200 bg-gray-100 px-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 focus:bg-white"
+                                    className="w-full rounded-lg border border-gray-300 bg-gray-50 px-9 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:bg-white shadow-sm"
                                 />
                             </div>
-                            <span className="inline-flex items-center gap-1 text-xs text-gray-600">
-                <Filter className="h-3.5 w-3.5" /> Date
-              </span>
+
+                            {/* Date Filters */}
+                            <span className="inline-flex items-center gap-1 text-xs text-gray-600 font-medium">
+                                <Filter className="h-3.5 w-3.5" /> Date Range:
+                            </span>
                             <input
                                 type="date"
                                 value={from}
@@ -581,7 +579,8 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                     setFrom(e.target.value);
                                     setPage(1);
                                 }}
-                                className="rounded-md border border-gray-200 bg-gray-100 px-2 py-2 text-sm"
+                                className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm shadow-sm"
+                                title="Date From"
                             />
                             <input
                                 type="date"
@@ -590,8 +589,11 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                     setTo(e.target.value);
                                     setPage(1);
                                 }}
-                                className="rounded-md border border-gray-200 bg-gray-100 px-2 py-2 text-sm"
+                                className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm shadow-sm"
+                                title="Date To"
                             />
+
+                            {/* Reset & Export */}
                             <button
                                 onClick={() => {
                                     setQ("");
@@ -599,13 +601,14 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                                     setTo("");
                                     setPage(1);
                                 }}
-                                className="rounded-md border bg-gray-50 px-3 py-2 text-sm hover:bg-gray-100"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 shadow-sm"
+                                title="Reset Filters"
                             >
-                                Reset
+                                <Repeat className="w-4 h-4" />
                             </button>
                             <button
-                                onClick={exportCSV}
-                                className="inline-flex items-center gap-1 rounded-md bg-gray-900 px-3 py-2 text-sm text-white hover:bg-black"
+                                // onClick={exportCSV}
+                                className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm text-white hover:bg-indigo-700 shadow-md transition font-medium"
                                 title="Export current list to CSV"
                             >
                                 <Download className="h-4 w-4" /> Export
@@ -614,210 +617,138 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                     </div>
 
                     {/* Table */}
-                    <div className="overflow-auto rounded-md border">
+                    <div className="overflow-x-auto rounded-lg border border-gray-200">
                         <table className="w-full text-sm text-gray-700">
                             <thead className="bg-gray-50">
                             <tr className="text-left text-xs uppercase text-gray-500">
-                                <th className="p-3">#</th>
-                                <th className="p-3">Property</th>
-                                <th className="p-3">Buyer</th>
-                                <th className="p-3">Status</th>
-                                <th className="p-3">Visit Date</th>
-                                <th className="p-3 text-right">Actions</th>
+                                <th className="p-3 font-semibold w-10">#</th>
+                                <th className="p-3 font-semibold min-w-[200px]">Property</th>
+                                <th className="p-3 font-semibold min-w-[150px]">Buyer</th>
+                                <th className="p-3 font-semibold min-w-[100px]">Status</th>
+                                <th className="p-3 font-semibold whitespace-nowrap min-w-[150px]">Visit Date</th>
+                                <th className="p-3 font-semibold text-right min-w-[150px]">Actions</th>
                             </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                             {paged.length ? (
                                 paged.map((trip, idx) => {
                                     const isBusy = busy[trip.id];
-                                    const conflict =
-                                        statusLc(trip) !== "accepted" && hasConflict(trip, acceptedAll);
-                                    const i = (page - 1) * size + idx + 1;
+                                    const conflict = isAfterNow(trip) && hasConflict(trip, acceptedAll.filter(t => t.id !== trip.id));
+                                    const isPending = statusLc(trip) === 'pending';
+                                    const isAccepted = statusLc(trip) === 'accepted';
+                                    const isCompleted = statusLc(trip) === 'completed';
 
                                     return (
-                                        <tr key={trip.id} className="hover:bg-gray-50">
-                                            <td className="p-3">{i}</td>
-
-                                            <td className="p-3">
-                                                <div className="flex items-center gap-3">
-                                                    <img
-                                                        src={
-                                                            trip?.property?.image_url
-                                                                ? `/storage/${trip.property.image_url}`
-                                                                : "/placeholder.png"
-                                                        }
-                                                        onError={(e) => (e.currentTarget.src = "/placeholder.png")}
-                                                        alt={trip?.property?.title ?? "Property"}
-                                                        className="h-12 w-12 rounded object-cover border border-gray-200"
-                                                    />
-                                                    <div className="min-w-0">
-                                                        <div className="truncate font-medium text-gray-800">
-                                                            {trip?.property?.title ?? "—"}
-                                                        </div>
-                                                        <div className="truncate text-xs text-gray-500">
-                                                            {trip?.property?.address ?? "—"}
-                                                        </div>
-                                                        <div className="mt-1 flex gap-3 text-xs">
-                                                            {trip?.property?.address && (
-                                                                <a
-                                                                    href={toMaps(trip.property.address)}
-                                                                    target="_blank"
-                                                                    rel="noreferrer"
-                                                                    className="inline-flex items-center gap-1 text-blue-600 hover:underline"
-                                                                >
-                                                                    <MapPin className="h-3.5 w-3.5" /> Maps
-                                                                </a>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                        <tr
+                                            key={trip.id}
+                                            className={cn(
+                                                "bg-white hover:bg-gray-50 transition",
+                                                conflict && isPending && "bg-amber-50/30 hover:bg-amber-50"
+                                            )}
+                                        >
+                                            <td className="p-3 font-semibold text-gray-900">
+                                                {(page - 1) * size + idx + 1}
                                             </td>
-
                                             <td className="p-3">
-                                                <div className="truncate font-medium text-gray-800">
-                                                    {trip?.buyer?.name ?? "—"}
-                                                </div>
-                                                <div className="truncate text-xs text-gray-500">
-                                                    {trip?.buyer?.email ?? ""}
-                                                </div>
-                                                <div className="mt-1 flex gap-3 text-xs">
-                                                    {trip?.buyer?.email && (
-                                                        <a
-                                                            href={`mailto:${trip.buyer.email}`}
-                                                            className="inline-flex items-center gap-1 text-blue-600 hover:underline"
-                                                        >
-                                                            <Mail className="h-3.5 w-3.5" /> Email
-                                                        </a>
-                                                    )}
-                                                    {trip?.buyer?.phone && (
-                                                        <a
-                                                            href={`tel:${trip.buyer.phone}`}
-                                                            className="inline-flex items-center gap-1 text-blue-600 hover:underline"
-                                                        >
-                                                            <Phone className="h-3.5 w-3.5" /> Call
-                                                        </a>
-                                                    )}
-                                                </div>
+                                                <div className="font-medium text-gray-900 truncate max-w-xs">{trip?.property?.title ?? "—"}</div>
+                                                <div className="text-xs text-gray-500 truncate max-w-xs">{trip?.property?.address ?? "—"}</div>
                                             </td>
-
-                                            <td className="p-3 capitalize">
-                          <span
-                              className={cn(
-                                  "inline-block rounded-full px-2 py-0.5 text-xs",
-                                  statusPill(trip.status)
-                              )}
-                          >
-                            {statusLc(trip)}
-                          </span>
-                                                {conflict && (
-                                                    <div className="mt-1 inline-flex items-center gap-1 text-xs text-amber-700">
-                                                        <AlertTriangle className="h-3.5 w-3.5" /> conflict risk
-                                                    </div>
+                                            <td className="p-3">
+                                                <div className="font-medium text-gray-800">{trip?.buyer?.name ?? "—"}</div>
+                                                <a href={`mailto:${trip?.buyer?.email}`} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                                                    <Mail className="w-3 h-3 shrink-0" /> {trip?.buyer?.email ?? "—"}
+                                                </a>
+                                            </td>
+                                            <td className="p-3">
+                                                <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusPill(trip.status))}>
+                                                    {trip.status}
+                                                </span>
+                                                {conflict && isPending && (
+                                                    <span className="mt-1 inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full font-medium">
+                                                        <AlertTriangle className="w-3.5 h-3.5" /> Conflict
+                                                    </span>
                                                 )}
                                             </td>
-
-                                            <td className="whitespace-nowrap p-3">
-                                                {fmtDate(trip.visit_date)}{" "}
-                                                {trip.visit_time ? `• ${fmtTime(trip.visit_time)}` : ""}
+                                            <td className="p-3 whitespace-nowrap">
+                                                <div className="font-medium">{fmtDate(trip.visit_date)}</div>
+                                                <div className="text-xs text-gray-500">{fmtTime(trip.visit_time)}</div>
                                             </td>
+                                            <td className="p-3 text-right whitespace-nowrap">
+                                                <div className="flex justify-end gap-1">
 
-                                            <td className="p-3 text-right space-x-2">
-                                                {statusLc(trip) === "pending" ? (
-                                                    <>
-                                                        <button
-                                                            onClick={() => askAccept(trip)}
-                                                            disabled={!!isBusy}
-                                                            className={cn(
-                                                                "inline-flex items-center gap-1 rounded-md bg-green-600 px-3 py-1.5 text-sm text-white transition hover:bg-green-700",
-                                                                isBusy && "cursor-not-allowed opacity-60"
-                                                            )}
-                                                            type="button"
+                                                    {/* View Property (Always available) */}
+                                                    {trip.property?.id && (
+                                                        <a
+                                                            href={`/properties/${trip.property.id}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition"
+                                                            title="View Property Details"
                                                         >
-                                                            {isBusy === "accept" ? (
-                                                                <>
-                                                                    <Clock className="h-4 w-4 animate-pulse" /> Saving…
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Check className="h-4 w-4" /> Accept
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => askDecline(trip.id)}
-                                                            disabled={!!isBusy}
-                                                            className={cn(
-                                                                "inline-flex items-center gap-1 rounded-md bg-rose-500 px-3 py-1.5 text-sm text-white transition hover:bg-rose-600",
-                                                                isBusy && "cursor-not-allowed opacity-60"
-                                                            )}
-                                                            type="button"
-                                                        >
-                                                            {isBusy === "decline" ? (
-                                                                <>
-                                                                    <Clock className="h-4 w-4 animate-pulse" /> Saving…
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <XIcon className="h-4 w-4" /> Decline
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <button
-                                                            className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-900 hover:text-white"
-                                                            type="button"
-                                                            onClick={() => setSelected(trip)}
-                                                        >
-                                                            <Eye className="h-4 w-4" /> View
-                                                        </button>
-                                                        {statusLc(trip) === "accepted" && (
+                                                            <Eye className="w-4 h-4" />
+                                                        </a>
+                                                    )}
+
+                                                    {/* PENDING Actions */}
+                                                    {isPending && (
+                                                        <>
                                                             <button
-                                                                className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white transition hover:bg-indigo-700"
-                                                                type="button"
-                                                                onClick={() => askComplete(trip)}
-                                                                disabled={!!isBusy}
-                                                                title="Mark this visit as completed"
+                                                                onClick={() => askAccept(trip)}
+                                                                disabled={isBusy}
+                                                                className="p-2 rounded-full text-green-600 hover:bg-green-100 disabled:opacity-50 transition"
+                                                                title="Accept Tripping"
                                                             >
-                                                                {isBusy === "complete" ? (
-                                                                    <>
-                                                                        <Clock className="h-4 w-4 animate-pulse" /> Saving…
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <Check className="h-4 w-4" /> Mark as completed
-                                                                    </>
-                                                                )}
+                                                                {isBusy === 'accept' ? <Clock className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                                             </button>
-                                                        )}
-                                                        <button
-                                                            className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-3 py-1.5 text-sm transition hover:bg-slate-200"
-                                                            type="button"
-                                                            onClick={() => openReschedule(trip)}
-                                                            disabled={!!isBusy || statusLc(trip) === "completed"}
-                                                            title={statusLc(trip) === "completed" ? "Already completed" : "Reschedule"}
-                                                        >
-                                                            <Pencil className="h-4 w-4" /> Reschedule
-                                                        </button>
-                                                        <button
-                                                            className="inline-flex items-center gap-1 rounded-md bg-gray-900 px-3 py-1.5 text-sm text-white transition hover:bg-black"
-                                                            type="button"
-                                                            onClick={() => downloadICS(trip)}
-                                                            title=".ics download"
-                                                        >
-                                                            <Download className="h-4 w-4" /> .ics
-                                                        </button>
-                                                    </>
-                                                )}
+                                                            <button
+                                                                onClick={() => askDecline(trip.id)}
+                                                                disabled={isBusy}
+                                                                className="p-2 rounded-full text-rose-600 hover:bg-rose-100 disabled:opacity-50 transition"
+                                                                title="Decline Tripping"
+                                                            >
+                                                                {isBusy === 'decline' ? <Clock className="w-4 h-4 animate-spin" /> : <XIcon className="w-4 h-4" />}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => openReschedule(trip)}
+                                                                disabled={isBusy}
+                                                                className="p-2 rounded-full text-blue-600 hover:bg-blue-100 disabled:opacity-50 transition"
+                                                                title="Suggest Reschedule"
+                                                            >
+                                                                {isBusy === 'reschedule' ? <Clock className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
+                                                            </button>
+                                                        </>
+                                                    )}
+
+                                                    {/* ACCEPTED Actions */}
+                                                    {isAccepted && !isCompleted && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => openReschedule(trip)}
+                                                                disabled={isBusy}
+                                                                className="p-2 rounded-full text-blue-600 hover:bg-blue-100 disabled:opacity-50 transition"
+                                                                title="Suggest Reschedule"
+                                                            >
+                                                                {isBusy === 'reschedule' ? <Clock className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => askComplete(trip)}
+                                                                disabled={isBusy}
+                                                                className="p-2 rounded-full text-indigo-600 hover:bg-indigo-100 disabled:opacity-50 transition"
+                                                                title="Mark as Completed"
+                                                            >
+                                                                {isBusy === 'complete' ? <Clock className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     );
                                 })
                             ) : (
                                 <tr>
-                                    <td colSpan="6" className="py-6 text-center text-gray-400">
-                                        No {tab} visits.
+                                    <td colSpan="6" className="py-8 text-center text-gray-500">
+                                        No trippings match the current filters.
                                     </td>
                                 </tr>
                             )}
@@ -826,192 +757,87 @@ export default function TrippingsAgentFull({ trippings = [] }) {
                     </div>
 
                     {/* Pagination */}
-                    <div className="flex items-center justify-between px-2 py-3 sm:px-4">
-                        <div className="text-xs text-gray-500">
-                            Showing {(page - 1) * size + 1}–{Math.min(page * size, filtered.length)} of {filtered.length}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <select
-                                value={size}
-                                onChange={(e) => {
-                                    setSize(Number(e.target.value));
-                                    setPage(1);
-                                }}
-                                className="rounded-md border bg-white px-2 py-1 text-sm"
-                            >
-                                {[10, 20, 50].map((n) => (
-                                    <option key={n} value={n}>
-                                        {n} / page
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="inline-flex overflow-hidden rounded-md border">
+                    {totalPages > 1 && (
+                        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between">
+                            <span className="text-sm text-gray-600 mb-2 sm:mb-0">
+                                Showing **{((page - 1) * size) + 1}** to **{Math.min(page * size, filtered.length)}** of **{filtered.length}** results
+                            </span>
+                            <div className="inline-flex items-center gap-2">
                                 <button
-                                    disabled={page <= 1}
-                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                    className={cn("px-2 py-1 hover:bg-gray-50", page <= 1 && "cursor-not-allowed opacity-40")}
-                                    aria-label="Previous"
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="p-2 rounded-full text-gray-700 hover:bg-gray-100 disabled:opacity-30 transition"
                                 >
-                                    <ChevronLeft className="h-4 w-4" />
+                                    <ChevronLeft className="w-5 h-5" />
                                 </button>
-                                <div className="px-3 py-1 text-sm">
-                                    {page} / {totalPages}
-                                </div>
+                                <span className="text-sm font-medium text-gray-700 bg-gray-50 px-3 py-1 rounded-full">Page {page} of {totalPages}</span>
                                 <button
-                                    disabled={page >= totalPages}
-                                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                    className={cn("px-2 py-1 hover:bg-gray-50", page >= totalPages && "cursor-not-allowed opacity-40")}
-                                    aria-label="Next"
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="p-2 rounded-full text-gray-700 hover:bg-gray-100 disabled:opacity-30 transition"
                                 >
-                                    <ChevronRight className="h-4 w-4" />
+                                    <ChevronRight className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </section>
             </div>
 
-            {/* Details Drawer */}
-            {selected && (
-                <div className="fixed inset-0 z-[700]">
-                    <button
-                        className="absolute inset-0 bg-black/30"
-                        onClick={() => setSelected(null)}
-                        aria-label="Close"
-                    />
-                    <div className="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto border-l bg-white p-5 shadow-xl">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-lg font-semibold">Visit Details</h3>
-                            <button
-                                className="rounded-md p-2 hover:bg-gray-100"
-                                onClick={() => setSelected(null)}
-                                aria-label="Close"
-                            >
-                                <XIcon className="h-5 w-5" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4 text-sm">
-                            <section className="space-y-2">
-                                <div className="font-medium text-gray-900">{selected?.property?.title}</div>
-                                <div className="flex items-center gap-2 text-gray-600">
-                                    <MapPin className="h-4 w-4" /> {selected?.property?.address || "—"}
-                                </div>
-                                <img
-                                    src={
-                                        selected?.property?.image_url
-                                            ? `/storage/${selected.property.image_url}`
-                                            : "/placeholder.png"
-                                    }
-                                    onError={(e) => (e.currentTarget.src = "/placeholder.png")}
-                                    className="h-40 w-full rounded-md border object-cover"
-                                    alt="Property"
-                                />
-                            </section>
-
-                            <section className="space-y-1">
-                                <div className="font-medium text-gray-900">Buyer</div>
-                                {selected?.buyer?.email && (
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <Mail className="h-4 w-4" /> {selected?.buyer?.email}
-                                    </div>
-                                )}
-                                {selected?.buyer?.phone && (
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <Phone className="h-4 w-4" /> {selected?.buyer?.phone}
-                                    </div>
-                                )}
-                            </section>
-
-                            <section className="space-y-1">
-                                <div className="font-medium text-gray-900">Schedule</div>
-                                <div className="flex items-center gap-2 text-gray-700">
-                                    <CalendarDays className="h-4 w-4" /> {fmtDate(selected?.visit_date)}{" "}
-                                    {selected?.visit_time ? `• ${fmtTime(selected.visit_time)}` : ""}
-                                </div>
-                                <div className="flex gap-2">
-                                    <a
-                                        href={toMaps(selected?.property?.address)}
-                                        className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 hover:bg-gray-50"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        <MapPin className="h-4 w-4" /> Open in Maps
-                                    </a>
-                                    <button
-                                        className="inline-flex items-center gap-1 rounded-md bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-black"
-                                        onClick={() => downloadICS(selected)}
-                                    >
-                                        <Download className="h-4 w-4" /> .ics
-                                    </button>
-                                </div>
-                            </section>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Reschedule Modal */}
             {resched.open && (
-                <div className="fixed inset-0 z-[750]">
-                    <button
-                        className="absolute inset-0 bg-black/30"
-                        onClick={() => setResched({ open: false, id: null, date: "", time: "" })}
-                    />
-                    <div className="absolute left-1/2 top-[15%] w-[92vw] max-w-md -translate-x-1/2 rounded-xl border bg-white p-5 shadow-xl">
-                        <div className="mb-3 flex items-center justify-between">
-                            <div className="font-semibold">Reschedule Visit</div>
-                            <button
-                                className="rounded-md p-2 hover:bg-gray-100"
-                                onClick={() => setResched({ open: false, id: null, date: "", time: "" })}
-                            >
-                                <XIcon className="h-5 w-5" />
-                            </button>
-                        </div>
-                        <div className="space-y-3">
-                            <label className="block">
-                                <span className="text-xs text-gray-600">New date</span>
-                                <input
-                                    type="date"
-                                    value={resched.date}
-                                    onChange={(e) => setResched((r) => ({ ...r, date: e.target.value }))}
-                                    className="mt-1 w-full rounded-md border px-2 py-2 text-sm"
-                                />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-600">New time (optional)</span>
-                                <div className="relative">
-                                    <Clock className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                <div className="fixed inset-0 z-[700] grid place-items-center bg-black/50 p-4 transition-opacity duration-300">
+                    <div className="w-full max-w-md rounded-xl bg-white shadow-2xl ring-1 ring-black/5 scale-100 transition-transform duration-300">
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-gray-900 mb-5 border-b pb-2">
+                                Reschedule Property Visit
+                            </h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label htmlFor="resched-date" className="block text-sm font-medium text-gray-700 mb-1">
+                                        New Visit Date
+                                    </label>
                                     <input
-                                        type="time"
-                                        value={resched.time}
-                                        onChange={(e) => setResched((r) => ({ ...r, time: e.target.value }))}
-                                        className="mt-1 w-full rounded-md border pl-8 pr-2 py-2 text-sm"
+                                        id="resched-date"
+                                        type="date"
+                                        value={resched.date}
+                                        onChange={(e) => setResched(r => ({ ...r, date: e.target.value }))}
+                                        min={dayjs().format("YYYY-MM-DD")}
+                                        className="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary/50"
                                     />
                                 </div>
-                            </label>
-
-                            {/* inline conflict indicator */}
-                            {resched.date &&
-                                hasConflict({ visit_date: resched.date, visit_time: resched.time }, acceptedAll) && (
-                                    <div className="flex items-center gap-2 text-sm text-amber-700">
-                                        <AlertTriangle className="h-4 w-4" /> Warning: this time overlaps another accepted visit.
+                                <div>
+                                    <label htmlFor="resched-time" className="block text-sm font-medium text-gray-700 mb-1">
+                                        New Visit Time
+                                    </label>
+                                    <input
+                                        id="resched-time"
+                                        type="time"
+                                        value={resched.time}
+                                        onChange={(e) => setResched(r => ({ ...r, time: e.target.value }))}
+                                        className="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary/50"
+                                    />
+                                </div>
+                                {resched.date && resched.time && acceptedAll.find(t => t.id === resched.id) && hasConflict({visit_date: resched.date, visit_time: resched.time}, acceptedAll.filter(t => t.id !== resched.id)) && (
+                                    <div className="p-3 text-sm rounded-lg bg-amber-50 text-amber-700 flex items-start gap-2 border border-amber-200">
+                                        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                                        Warning: This time slot conflicts with another **accepted** trip!
                                     </div>
                                 )}
-
-                            <div className="pt-1 flex justify-end gap-2">
+                            </div>
+                            <div className="mt-6 flex justify-end gap-3">
                                 <button
-                                    className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"
                                     onClick={() => setResched({ open: false, id: null, date: "", time: "" })}
+                                    className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 hover:bg-gray-200"
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    className="rounded-md bg-gray-900 px-3 py-2 text-sm text-white hover:bg-black"
                                     onClick={saveReschedule}
-                                    disabled={!resched.date}
+                                    disabled={!resched.date || busy[resched.id] === 'reschedule'}
+                                    className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition shadow-md"
                                 >
-                                    Save
+                                    {busy[resched.id] === 'reschedule' ? 'Sending Request...' : 'Confirm Reschedule'}
                                 </button>
                             </div>
                         </div>

@@ -39,6 +39,10 @@ Route::get('/', function (Request $request) {
         ->latest()
         ->get();
 
+    $developers = \App\Models\Developer::with('projects')
+        ->latest()
+        ->get();
+
     // Get the user's favourited property IDs
     $favouriteIds = auth()->check()
         ? auth()->user()->favourites()->pluck('property_id')->toArray()
@@ -47,6 +51,11 @@ Route::get('/', function (Request $request) {
     $properties = \App\Models\Property::where('status', 'Published')
         ->latest()
         ->get();
+
+    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type')
+        ->latest()
+        ->get();
+
 
 
     return Inertia::render('Welcome', [
@@ -57,6 +66,20 @@ Route::get('/', function (Request $request) {
         'favouriteIds' => $favouriteIds,
         'featured' => $featured,
         'properties' => $properties,
+        'developers' => $developers,
+        'projects' => $projects,
+    ]);
+});
+
+
+Route::get('/explore/projects', function (Request $request) {
+
+    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type')
+        ->latest()
+        ->paginate(12);
+
+    return Inertia::render('Projects/Index', [
+        'projects' => $projects,
     ]);
 });
 
@@ -167,7 +190,7 @@ Route::post('/agents/properties/{id}/sent-inquiry', [\App\Http\Controllers\Agent
 Route::get('/agents/properties/{property}', [\App\Http\Controllers\Agent\AgentPropertyController::class, 'show']);
 
 Route::get('/agents/my-listings', [\App\Http\Controllers\Agent\PropertyListingController::class, 'index'])->name('agents.my-listings');
-Route::get('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'show']);
+Route::get('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'show'])->name('agents.my-listings.show');
 Route::patch('/agents/my-listings/{property_listing}', [\App\Http\Controllers\Agent\PropertyListingController::class, 'update']);
 
 Route::get('/agents/chat', [\App\Http\Controllers\Agent\ChatController::class, 'index'])->name('agents.chat.index');
@@ -182,12 +205,14 @@ Route::patch('/agents/inquiries/{inquiry}/accept', [\App\Http\Controllers\Agent\
 Route::patch('/agents/inquiries/{inquiry}/reject', [\App\Http\Controllers\Agent\InquiryController::class, 'reject']);
 Route::patch('/agents/inquiries/{inquiry}', [\App\Http\Controllers\Agent\InquiryController::class, 'cancel']);
 
-Route::get('/agents/deal', [\App\Http\Controllers\Agent\DealController::class, 'index']);
+Route::get('/agents/deal', [\App\Http\Controllers\Agent\DealController::class, 'index'])->name('agents.deal.index');
 Route::put('/agents/deal/{deal}', [\App\Http\Controllers\Agent\DealController::class, 'update'])->name('agents.deals.update');
+Route::get('/agents/deal/{deal}/finalize-deal', [\App\Http\Controllers\Agent\DealController::class, 'show'])->name('agents.deals.finalize');
+Route::post('/agents/deal/{deal}/finalize-deal', [\App\Http\Controllers\TransactionController::class, 'store'])->name('agents.transaction.store');
 //Route::put('/agents/deal/{id}/$', [DealController::class, 'accept']);
 Route::put('/agents/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
 
-Route::get('/agents/transaction', [\App\Http\Controllers\Agent\TransactionController::class, 'index']);
+Route::get('/agents/transaction', [\App\Http\Controllers\Agent\TransactionController::class, 'index'])->name('agents.transaction.index');
 
 Route::get('/agents/trippings', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'index']);
 Route::patch('/agents/trippings/{id}/accept', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'accept']);
@@ -215,7 +240,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Buyer\BuyerController::class, 'index'])->name('dashboard');
-    Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store']);
+    Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store'])->name('inquiry.store');
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
     Route::get('/inquiries/{inquiry}', [\App\Http\Controllers\Buyer\InquiryController::class, 'show']);
     Route::patch('/inquiries/{id}/cancel', [\App\Http\Controllers\Buyer\InquiryController::class, 'cancel']);
@@ -228,7 +253,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
     Route::get('/deals', [DealController::class, 'index']);
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
-    Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index']);
+    Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index'])->name('buyer.transactions.index');
     Route::get('/deals/{deal}/feedback', [FeedbackController::class, 'create'])->name('deals.feedback.create');
     Route::post('/deals/{deal}/feedback', [FeedbackController::class, 'store'])->name('deals.feedback.store');
 });

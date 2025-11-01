@@ -384,6 +384,25 @@ export default function ShowInquiry({
                 <Breadcrumb pages={pages} />
             </div>
 
+            <header>
+                Inquiries
+                <div className='border p-4 grid grid-cols-1 md:grid-cols-4 gap-2'>
+                    <div className=''>
+                        <img src={`/storage/${normalized.image_url}`} alt={normalized.title} className='w-full h-[250px]'/>
+
+                    </div>
+                    <div className='cols-span-3'>
+                        <h1>{normalized.title}</h1>
+                        <div
+                            dangerouslySetInnerHTML={{ __html: normalized.description }}
+                            className='line-clamp-4'
+                        />
+                    </div>
+                </div>
+            </header>
+
+
+
             {/* Progress Stepper */}
             <div className="mx-4 lg:mx-auto mb-4">
                 <Stepper steps={steps} onAction={actions} lockedReasons={{ offer: offerLockedMsg }} />
@@ -433,6 +452,7 @@ export default function ShowInquiry({
             </div>
 
             <PropertyHeader title={normalized.title} address={normalized.address} isPresell={normalized.isPresell} />
+
 
             <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <div className="relative lg:col-span-2">

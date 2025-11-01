@@ -1,0 +1,21 @@
+@import "./filament-login.css";
+
+.filament-login-page input,
+.filament-login-page .fi-input {
+    background: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.25) !important;
+    color: #fff !important;
+}
+
+.filament-login-page ::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+
+.filament-login-page .fi-btn {
+    backdrop-filter: saturate(140%);
+}
+
+.filament-login-page :is(input, .fi-btn, .fi-select):focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.6) !important;
+}

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\Deal;
+use App\Models\Inquiry;
 use App\Models\PropertyListing;
 use App\Notifications\DealCounter;
 use App\Notifications\NewDeal;
@@ -34,6 +35,18 @@ class DealController extends Controller
 
         return Inertia::render('Agent/Deal/Deal', [
             'property_listings' => $propertyListings,
+        ]);
+    }
+
+
+    public function show(Deal $deal)
+    {
+
+        $deal->load(['property_listing', 'property_listing.seller', 'buyer', 'property_listing.agents', 'property_listing.property']);
+
+
+        return Inertia::render('Agent/Deal/ProceedTransaction', [
+            'deal' => $deal,
         ]);
     }
 

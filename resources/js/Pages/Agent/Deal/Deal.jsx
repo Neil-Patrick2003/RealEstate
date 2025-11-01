@@ -1,12 +1,16 @@
+// resources/js/Pages/Agents/Deal.jsx
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
 import InquiriesCollapsable from "@/Components/collapsable/InquiriesClosable.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faPen, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faPen, faXmark, faReply, faMoneyBillWave, faHandshake } from "@fortawesome/free-solid-svg-icons";
 import React, { useMemo, useState } from "react";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { router, useForm, usePage, Link, Head } from "@inertiajs/react";
 import Modal from "@/Components/Modal.jsx";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
+
+dayjs.extend(relativeTime);
 
 /** ---------- helpers ---------- */
 const peso = (v) =>
@@ -30,13 +34,13 @@ const STATUS = {
 };
 
 const statusStyles = {
-    [STATUS.ACCEPTED]: "bg-emerald-100 text-emerald-700 ring-emerald-200",
-    [STATUS.REJECTED]: "bg-rose-100 text-rose-700 ring-rose-200",
-    [STATUS.PENDING]: "bg-amber-100 text-amber-800 ring-amber-200",
-    [STATUS.CANCELLED]: "bg-gray-100 text-gray-700 ring-gray-200",
-    [STATUS.RESERVED]: "bg-blue-100 text-blue-700 ring-blue-200",
-    [STATUS.SOLD]: "bg-green-100 text-green-700 ring-green-200",
-    default: "bg-orange-100 text-orange-700 ring-orange-200",
+    [STATUS.ACCEPTED]: "bg-emerald-50 text-emerald-800 ring-emerald-50 border-emerald-300",
+    [STATUS.REJECTED]: "bg-rose-50 text-rose-800 ring-rose-50 border-rose-300",
+    [STATUS.PENDING]: "bg-amber-50 text-amber-800 ring-amber-50 border-amber-300",
+    [STATUS.CANCELLED]: "bg-gray-50 text-gray-700 ring-gray-50 border-gray-300",
+    [STATUS.RESERVED]: "bg-blue-50 text-blue-800 ring-blue-50 border-blue-300",
+    [STATUS.SOLD]: "bg-green-50 text-green-800 ring-green-50 border-green-300",
+    default: "bg-orange-50 text-orange-800 ring-orange-50 border-orange-300",
 };
 
 export default function Deal({ property_listings }) {
@@ -48,9 +52,9 @@ export default function Deal({ property_listings }) {
     const [selectedDeal, setSelectedDeal] = useState(null);
     const [selectedListingId, setSelectedListingId] = useState(null);
     const [openUpdateForm, setOpenUpdateForm] = useState(false);
-    const [openAcceptModal, setOpenAcceptModal] = useState(false);
+    const [openAcceptModal, setOpenAcceptModal] = useState(false); // Used for Accept/Decline confirmations
     const [newStatus, setNewStatus] = useState("");
-    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false); // Used for Status Dropdown confirmations (not used in final, but kept for future proofing)
     const [editMode, setEditMode] = useState("edit"); // 'edit' | 'counter'
 
     const { data, setData, processing, errors, reset, put } = useForm({
@@ -64,7 +68,8 @@ export default function Deal({ property_listings }) {
         setSelectedDeal(deal);
         setSelectedListingId(listingId);
         setEditMode(mode);
-        setData("amount", deal.amount || "");
+        // Ensure amount is formatted correctly for the input
+        setData("amount", String(deal.amount || ""));
         setOpenUpdateForm(true);
     };
 
@@ -80,11 +85,13 @@ export default function Deal({ property_listings }) {
         e.preventDefault();
         if (!selectedDeal) return;
 
-        // same route; backend can track who changed it and treat as counter if not last editor
+        // Use a consistent value for the PUT request amount, ensuring it's a string/number
+        const payload = { amount: data.amount };
+
         put(
             route("agents.deals.update", {
                 deal: selectedDeal.id,
-            }),
+            }), payload,
             {
                 preserveScroll: true,
                 onSuccess: () => closeModal(),
@@ -93,6 +100,8 @@ export default function Deal({ property_listings }) {
         );
     };
 
+    // Original onStatusChange is slightly simplified as Accept/Decline now use openAcceptModal
+    // This is primarily for future use if RESERVED/SOLD dropdown is re-added
     const onStatusChange = (deal, status) => {
         setSelectedDeal(deal);
         setNewStatus(status);
@@ -108,10 +117,12 @@ export default function Deal({ property_listings }) {
 
     const handleUpdate = (status) => {
         if (!status || !selectedDeal) return;
-        router.put(`/agents/deal/${selectedDeal.id}/${status}`, {}, {
+        router.put(route('agents.deals.update_status', { deal: selectedDeal.id, status: status.toLowerCase() }), {}, {
             onSuccess: () => {
                 setSelectedDeal(null);
                 setNewStatus("");
+                // Reload the page to get fresh data
+                router.reload({ only: ['property_listings'] });
             },
             onError: (error) => {
                 console.error("Failed to update status:", error);
@@ -123,57 +134,60 @@ export default function Deal({ property_listings }) {
 
     return (
         <AgentLayout>
-            <Head title="Deal" />
+            <Head title="Deal Manager" />
 
-            {/* Confirm: Accept / Reject (explicit buttons) */}
+            {/* Confirm: Accept / Reject Modal */}
             <ConfirmDialog
                 open={openAcceptModal}
                 onConfirm={handleConfirmUpdate}
-                confirmText={"Confirm"}
+                confirmText={newStatus}
                 cancelText={"Cancel"}
                 setOpen={setOpenAcceptModal}
-                title={"Confirm Action"}
-                description={`Are you sure you want to mark this offer as "${newStatus}"?`}
+                title={`Confirm ${newStatus}`}
+                description={`Are you sure you want to mark this offer as "${newStatus}"? This will notify the buyer.`}
             />
 
-            {/* Confirm: Status dropdown */}
+            {/* Confirm: Status dropdown (kept for completeness) */}
             <ConfirmDialog
                 open={confirmModalOpen}
                 setOpen={setConfirmModalOpen}
                 onConfirm={handleConfirmUpdate}
-                confirmText="Confirm"
+                confirmText="Confirm Update"
                 cancelText="Cancel"
                 title="Confirm Status Update"
                 description={`Are you sure you want to change status to "${newStatus}"?`}
             />
 
-            <div className="flex flex-col p-4 gap-4">
-                <div className="flex items-center justify-between">
+            <div className="flex flex-col p-4 md:p-8 gap-6 ">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                     <header className="flex flex-col gap-1">
-                        <h1 className="text-3xl font-bold text-gray-800">Agent Deals Manager</h1>
-                        <p className="text-gray-500 text-sm">
-                            Buyer offers management.
+                        <h1 className="text-3xl font-extrabold text-gray-900">Agent Deals Manager</h1>
+                        <p className="text-gray-600 text-base">
+                            Manage all incoming and negotiated buyer offers across your listings.
                         </p>
                     </header>
-                    <span className="text-sm text-gray-500">
-            {property_listings?.total ?? listings.length} total listings
-          </span>
+                    <span className="text-sm text-gray-500 font-medium whitespace-nowrap">
+                        <span className="font-bold text-lg text-gray-700">{property_listings?.total ?? listings.length}</span> total listings
+                    </span>
                 </div>
 
                 {listings.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
-                        No listings available.
+                    <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500 shadow-lg">
+                        <FontAwesomeIcon icon={faMoneyBillWave} className="w-8 h-8 mx-auto mb-4 text-gray-400" />
+                        <p className="text-lg font-medium">No Active Listings with Deals.</p>
+                        <p className="text-sm mt-1">Add a property listing to start receiving offers.</p>
                     </div>
                 ) : (
                     listings.map((listing) => {
                         const offerCount = listing.deal?.length ?? 0;
+                        const finalPrice = listing.property?.price ? peso(listing.property.price) : "—";
 
                         return (
                             <div className="mb-3" key={listing.id}>
                                 <InquiriesCollapsable
                                     header={
-                                        <div className="flex w-full items-center justify-between">
-                                            <div className="flex items-center gap-4">
+                                        <div className="flex w-full items-center justify-between gap-4 py-1">
+                                            <div className="flex items-center gap-4 min-w-0">
                                                 <img
                                                     src={
                                                         listing.property?.image_url
@@ -181,44 +195,47 @@ export default function Deal({ property_listings }) {
                                                             : "/placeholder.png"
                                                     }
                                                     alt={listing.property?.title || "Property Image"}
-                                                    className="w-16 h-16 object-cover rounded-lg ring-1 ring-gray-200"
+                                                    className="w-16 h-16 object-cover rounded-xl ring-1 ring-gray-200 shadow-sm"
                                                 />
-                                                <div className="leading-tight">
-                                                    <p className="font-semibold text-gray-900">
+                                                <div className="leading-snug min-w-0">
+                                                    <p className="font-extrabold text-gray-900 truncate">
                                                         {listing.property?.title || "Untitled Property"}
                                                     </p>
-                                                    <p className="text-sm text-gray-500">
+                                                    <p className="text-sm text-gray-500 truncate mt-0.5">
                                                         {listing.property?.address || "No address provided"}
+                                                    </p>
+                                                    <p className="text-sm font-bold text-primary mt-1">
+                                                        Listing Price: {finalPrice}
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-3 py-1 text-white text-xs">
-                          Offers
-                          <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-white px-2 text-gray-900">
-                            {offerCount}
-                          </span>
-                        </span>
+                                            <div className="flex items-center gap-3 shrink-0">
+                                                <span className="hidden sm:inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-gray-600 text-xs font-medium border border-gray-200">
+                                                    Offers Received
+                                                </span>
+                                                <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-primary px-3 text-white text-base font-bold shadow-md">
+                                                    {offerCount}
+                                                </span>
                                             </div>
                                         </div>
                                     }
                                 >
-                                    <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+                                    <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-lg">
                                         <table className="min-w-full text-sm text-left text-gray-800">
-                                            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                                            <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
                                             <tr>
-                                                <th className="p-3">Order</th>
-                                                <th className="p-3">Buyer</th>
-                                                <th className="p-3">Original Price</th>
-                                                <th className="p-3">Offer</th>
-                                                <th className="p-3">Status</th>
-                                                <th className="p-3">Last Update</th>
-                                                <th className="p-3">Action</th>
+                                                <th className="p-4 w-16">#</th>
+                                                <th className="p-4 min-w-[120px]">Buyer</th>
+                                                <th className="p-4 min-w-[150px]">Listing Price</th>
+                                                <th className="p-4 min-w-[150px]">Current Offer</th>
+                                                <th className="p-4 min-w-[120px]">Status</th>
+                                                <th className="p-4 min-w-[150px]">Last Negotiation</th>
+                                                <th className="p-4 min-w-[300px]">Action</th>
                                             </tr>
                                             </thead>
 
-                                            <tbody className="divide-y divide-dashed">
+                                            <tbody className="divide-y divide-gray-100">
                                             {offerCount > 0 ? (
                                                 listing.deal.map((deal, idx) => {
                                                     const property = listing.property;
@@ -229,109 +246,106 @@ export default function Deal({ property_listings }) {
                                                         !!deal.amount_last_updated_by &&
                                                         deal.amount_last_updated_by !== authUserId;
 
-                                                    const canAcceptReject =
-                                                        deal.status === STATUS.PENDING && someoneElseEdited;
+                                                    const isActionable = deal.status === STATUS.PENDING;
 
                                                     return (
-                                                        <tr key={deal.id} className="hover:bg-gray-50 align-top">
+                                                        <tr key={deal.id} className="hover:bg-gray-50 align-middle transition duration-150">
                                                             {/* ordinal */}
-                                                            <td className="p-3">
-                                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-200">
-                                    {ordinal(idx + 1)}
-                                  </span>
+                                                            <td className="p-4">
+                                                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700 ring-1 ring-inset ring-gray-200">
+                                                                {ordinal(idx + 1)}
+                                                              </span>
                                                             </td>
 
-                                                            <td className="p-3">{deal.buyer?.name ?? "Unnamed Buyer"}</td>
+                                                            <td className="p-4 font-medium">{deal.buyer?.name ?? "Unnamed Buyer"}</td>
 
-                                                            <td className="p-3">
-                                                                {property?.price ? peso(property.price) : "₱0.00"}
+                                                            <td className="p-4 text-gray-600">
+                                                                {finalPrice}
                                                             </td>
 
-                                                            <td className="p-3 font-semibold">{peso(deal.amount)}</td>
-
-                                                            <td className="p-3">
-                                  <span
-                                      className={`inline-block px-3 py-1 rounded-full text-xs ring-1 ${statusClass}`}
-                                  >
-                                    {deal.status}
-                                  </span>
+                                                            <td className="p-4 font-extrabold text-lg text-green-700">
+                                                                {peso(deal.amount)}
                                                             </td>
 
-                                                            <td className="p-3">
+                                                            <td className="p-4">
+                                                              <span
+                                                                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${statusClass}`}
+                                                              >
+                                                                {deal.status}
+                                                              </span>
+                                                            </td>
+
+                                                            <td className="p-4 text-gray-600">
                                                                 {deal.amount_last_updated_at ? (
                                                                     <div className="flex flex-col">
-                                      <span>
-                                        {dayjs(deal.amount_last_updated_at).format(
-                                            "MMM D, YYYY h:mm A"
-                                        )}
-                                      </span>
+                                                                      <span>
+                                                                        {dayjs(deal.amount_last_updated_at).format(
+                                                                            "MMM D, YYYY"
+                                                                        )}
+                                                                      </span>
                                                                         <span className="text-xs text-gray-500">
-                                        {dayjs(deal.amount_last_updated_at).fromNow?.() || ""}
-                                      </span>
+                                                                        {dayjs(deal.amount_last_updated_at).fromNow()}
+                                                                      </span>
                                                                     </div>
                                                                 ) : (
                                                                     "—"
                                                                 )}
                                                             </td>
 
-                                                            <td className="p-3">
-                                                                {deal.status === STATUS.PENDING ? (
-                                                                    <div className="flex flex-col gap-2">
-                                                                        {/* NOTE if last edited by someone else */}
+                                                            <td className="p-4">
+                                                                {isActionable ? (
+                                                                    <div className="flex flex-col gap-3">
+                                                                        {/* Contextual Note */}
                                                                         {someoneElseEdited && (
-                                                                            <p className="text-xs text-gray-500">
-                                                                                The other party updated the offer. You can{" "}
-                                                                                <span className="font-medium text-gray-700">
-                                            counter, accept, or decline
-                                          </span>
-                                                                                .
+                                                                            <p className="text-xs text-gray-500 p-2 border-l-4 border-amber-400 bg-amber-50 rounded-r-md">
+                                                                                <span className="font-semibold text-gray-700">New Offer Received:</span> The other party updated the amount. Please respond.
                                                                             </p>
                                                                         )}
 
                                                                         <div className="flex flex-wrap items-center gap-2">
-                                                                            {/* Edit or Counter button */}
+                                                                            {/* EDIT / COUNTER button */}
                                                                             {lastEditedByYou ? (
                                                                                 <button
                                                                                     onClick={() => openModal(deal, listing.id, "edit")}
-                                                                                    className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-gray-800 hover:bg-gray-100"
+                                                                                    className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-gray-700 font-medium hover:bg-gray-200 border border-gray-300 transition"
                                                                                 >
-                                                                                    <FontAwesomeIcon icon={faPen} />
-                                                                                    Edit Amount
+                                                                                    <FontAwesomeIcon icon={faPen} className="w-4 h-4" />
+                                                                                    Edit Last Offer
                                                                                 </button>
                                                                             ) : (
                                                                                 <button
                                                                                     onClick={() => openModal(deal, listing.id, "counter")}
-                                                                                    className="inline-flex items-center gap-2 rounded-md border border-blue-600 px-3 py-1.5 text-blue-700 hover:bg-blue-50"
+                                                                                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-white font-semibold hover:bg-blue-700 shadow-md transition"
                                                                                 >
-                                                                                    <FontAwesomeIcon icon={faPen} />
+                                                                                    <FontAwesomeIcon icon={faReply} className="w-4 h-4" />
                                                                                     Counter Price
                                                                                 </button>
                                                                             )}
 
                                                                             {/* Accept / Decline only if last edit was by someone else */}
-                                                                            {canAcceptReject && (
+                                                                            {someoneElseEdited && (
                                                                                 <>
                                                                                     <button
                                                                                         onClick={() => {
                                                                                             setSelectedDeal(deal);
-                                                                                            setOpenAcceptModal(true);
                                                                                             setNewStatus(STATUS.ACCEPTED);
+                                                                                            setOpenAcceptModal(true);
                                                                                         }}
-                                                                                        className="inline-flex items-center gap-2 rounded-md border border-emerald-600 px-3 py-1.5 text-emerald-700 hover:bg-emerald-50"
+                                                                                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-white font-semibold hover:bg-emerald-700 shadow-md transition"
                                                                                     >
-                                                                                        <FontAwesomeIcon icon={faCheck} />
+                                                                                        <FontAwesomeIcon icon={faCheck} className="w-4 h-4" />
                                                                                         Accept
                                                                                     </button>
 
                                                                                     <button
                                                                                         onClick={() => {
                                                                                             setSelectedDeal(deal);
-                                                                                            setOpenAcceptModal(true);
                                                                                             setNewStatus(STATUS.REJECTED);
+                                                                                            setOpenAcceptModal(true);
                                                                                         }}
-                                                                                        className="inline-flex items-center gap-2 rounded-md border border-rose-600 px-3 py-1.5 text-rose-700 hover:bg-rose-50"
+                                                                                        className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-2 text-white font-semibold hover:bg-rose-700 transition"
                                                                                     >
-                                                                                        <FontAwesomeIcon icon={faXmark} />
+                                                                                        <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
                                                                                         Decline
                                                                                     </button>
                                                                                 </>
@@ -339,15 +353,34 @@ export default function Deal({ property_listings }) {
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <select
-                                                                        value={deal.status}
-                                                                        onChange={(e) => onStatusChange(deal, e.target.value)}
-                                                                        className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800"
-                                                                    >
-                                                                        <option value={STATUS.RESERVED}>Reserved</option>
-                                                                        <option value={STATUS.SOLD}>Sold</option>
-                                                                        <option value={STATUS.CANCELLED}>Cancelled</option>
-                                                                    </select>
+                                                                    // Post-Negotiation Actions
+                                                                    <div className="flex gap-2">
+                                                                        {deal.status.toLowerCase() === 'accepted' ? (
+                                                                            <>
+                                                                                <Link
+                                                                                    href={route('agents.deals.finalize', { deal: deal.id })}
+                                                                                    className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 text-sm rounded-lg font-semibold hover:bg-indigo-700 transition shadow-md"
+                                                                                >
+                                                                                    <FontAwesomeIcon icon={faHandshake} />
+                                                                                    Finalize Deal
+                                                                                </Link>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedDeal(deal);
+                                                                                        setNewStatus(STATUS.CANCELLED);
+                                                                                        setOpenAcceptModal(true);
+                                                                                    }}
+                                                                                    className="inline-flex items-center border border-gray-300 rounded-lg text-gray-700 px-4 py-2 text-sm font-medium hover:bg-gray-100 transition"
+                                                                                >
+                                                                                    Cancel Deal
+                                                                                </button>
+                                                                            </>
+                                                                        ) : (
+                                                                            <span className="text-gray-500 italic text-sm">
+                                                                                No further action required. Status: {deal.status}.
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 )}
                                                             </td>
                                                         </tr>
@@ -355,8 +388,8 @@ export default function Deal({ property_listings }) {
                                                 })
                                             ) : (
                                                 <tr>
-                                                    <td colSpan="7" className="py-6 text-center text-gray-400">
-                                                        No deals for this listing.
+                                                    <td colSpan="7" className="py-8 text-center text-gray-400">
+                                                        No deals for this listing yet.
                                                     </td>
                                                 </tr>
                                             )}
@@ -371,15 +404,15 @@ export default function Deal({ property_listings }) {
 
                 {/* Pagination */}
                 {pageLinks.length > 0 && (
-                    <div className="mt-4 flex items-center justify-end gap-2">
+                    <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
                         {pageLinks.map((link, i) =>
                             link.url ? (
                                 <Link
                                     key={i}
                                     href={link.url}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md border transition ${
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg border transition shadow-sm ${
                                         link.active
-                                            ? "bg-gray-900 text-white border-gray-900"
+                                            ? "bg-primary text-white border-primary"
                                             : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                                     }`}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
@@ -387,7 +420,7 @@ export default function Deal({ property_listings }) {
                             ) : (
                                 <span
                                     key={i}
-                                    className="px-4 py-2 text-sm font-medium text-slate-400 bg-white border border-gray-200 rounded-md cursor-not-allowed"
+                                    className="px-4 py-2 text-sm font-medium text-slate-400 bg-white border border-gray-200 rounded-lg cursor-not-allowed"
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             )
@@ -398,35 +431,40 @@ export default function Deal({ property_listings }) {
                 {/* Edit/Counter Amount Modal */}
                 <Modal show={openUpdateForm} onClose={closeModal} maxWidth="sm" closeable>
                     <form onSubmit={submit} className="p-6">
-                        <h3 className="text-lg font-semibold mb-2">
-                            {editMode === "edit" ? "Edit Offer Amount" : "Counter Price"}
+                        <h3 className="text-xl font-bold mb-2 text-gray-900">
+                            {editMode === "edit" ? "Edit Your Offer Amount" : "Send Counter Price"}
                         </h3>
-                        <p className="text-sm text-gray-500 mb-4">
+                        <p className="text-sm text-gray-500 mb-4 border-b pb-3">
                             {editMode === "edit"
-                                ? "Update the amount you last set."
-                                : "Enter your counter amount to respond to the latest offer."}
+                                ? "Update the offer amount you previously submitted. This will refresh the negotiation."
+                                : "Enter your counter amount to respond to the buyer's latest offer. This is the new proposed price."}
                         </p>
 
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Amount (₱)
+                        <label className="mb-1 block text-sm font-semibold text-gray-700">
+                            Amount (PHP)
                         </label>
-                        <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={data.amount}
-                            onChange={(e) => setData("amount", e.target.value)}
-                            className="mb-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-200"
-                        />
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₱</span>
+                            <input
+                                type="number"
+                                min="0"
+                                step="any"
+                                value={data.amount}
+                                onChange={(e) => setData("amount", e.target.value)}
+                                className="mb-1 w-full rounded-lg border-gray-300 pl-8 pr-3 py-2 focus:border-primary focus:ring-primary/50 text-lg font-bold"
+                                autoFocus
+                            />
+                        </div>
+
                         {errors.amount && (
                             <p className="text-xs text-rose-600 mb-2">{errors.amount}</p>
                         )}
 
-                        <div className="mt-4 flex justify-end gap-2">
+                        <div className="mt-6 flex justify-end gap-3">
                             <button
                                 type="button"
                                 onClick={closeModal}
-                                className="rounded-md bg-gray-200 px-4 py-2 hover:bg-gray-300"
+                                className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-300 transition"
                                 disabled={processing}
                             >
                                 Cancel
@@ -434,17 +472,17 @@ export default function Deal({ property_listings }) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className={`rounded-md px-4 py-2 text-white disabled:opacity-50 ${
+                                className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50 shadow-md ${
                                     editMode === "edit"
-                                        ? "bg-gray-900 hover:bg-black/90"
-                                        : "bg-blue-700 hover:bg-blue-800"
+                                        ? "bg-gray-900 hover:bg-black"
+                                        : "bg-blue-600 hover:bg-blue-700"
                                 }`}
                             >
                                 {processing
-                                    ? "Saving..."
+                                    ? "Sending..."
                                     : editMode === "edit"
-                                        ? "Save Changes"
-                                        : "Send Counter"}
+                                        ? "Update Offer"
+                                        : "Send Counter Offer"}
                             </button>
                         </div>
                     </form>

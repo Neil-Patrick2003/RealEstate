@@ -26,9 +26,7 @@ const Hero = ({
 
     return (
         <>
-            <div className="absolute inset-0 bg-black/10" aria-hidden />
-
-            <main className="relative flex justify-center items-center h-[100vh]">
+            <main className="h-80 flex justify-center items-center]">
                 <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* Heading */}
                     <div className="text-center mb-8 lg:mb-12">
