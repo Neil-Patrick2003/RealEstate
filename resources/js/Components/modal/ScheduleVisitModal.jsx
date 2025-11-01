@@ -408,7 +408,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                                 required
                                                 disabled={buyerAlreadyScheduled}
                                                 className={cn(
-                                                    "mt-2 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary disabled:bg-gray-100",
+                                                    "hidden mt-2 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary disabled:bg-gray-100",
                                                     timeError && "border-rose-300"
                                                 )}
                                             />
