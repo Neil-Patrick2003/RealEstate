@@ -113,14 +113,10 @@ class InquiryController extends Controller
             $channel->members()->attach($recipient->id);
         }
 
-
-
-
         $channel->messages()->create([
             'content' => $validated['message'],
             'sender_id' => auth()->id(),
         ]);
-
 
         return redirect()->back()->with('success', 'Inquiry submitted successfully.');
     }

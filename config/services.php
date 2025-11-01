@@ -40,4 +40,6 @@ return [
         'redirect' => 'http://localhost/auth/google/callback',
     ],
 
+
+
 ];
