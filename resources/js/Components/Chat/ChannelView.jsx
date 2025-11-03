@@ -35,7 +35,7 @@ const ChannelView = ({ channel }) => {
 
 
     return <div className="flex flex-col h-full">
-        <div className="border-b  rounded-tr-xl  text-primary font-semibold  px-6 py-8">
+        <div className="border-b  rounded-tr-xl  text-primary font-semibold  px-6 pb-4  ">
             {title}
         </div>
 

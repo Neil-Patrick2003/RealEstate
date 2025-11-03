@@ -38,7 +38,7 @@ class IncomingTripping extends Notification
     {
         return (new MailMessage)
             ->line('Property Tripping Reminder')
-            ->line("You have scheduled a tripping later at ". $this->tripping->visit_time . " on " . $this->tripping->property->name);
+            ->line("You have scheduled a tripping later at ". $this->tripping->visit_time . " on " . $this->tripping->property->title);
     }
 
     /**
@@ -55,6 +55,6 @@ class IncomingTripping extends Notification
 
     public function toSms($notifiable): string
     {
-        return "TRIPPING REMINDER: You have scheduled a tripping later at ". $this->tripping->visit_time . " on " . $this->tripping->property->name;
+        return "TRIPPING REMINDER: You have scheduled a tripping later at ". $this->tripping->visit_time . " on " . $this->tripping->property->title;
     }
 }

@@ -1,8 +1,8 @@
+// resources/js/Layouts/BuyerLayout.jsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { AlignLeft, LogOut, X, Moon, Sun, Search, Bell, Info } from "lucide-react";
 import { Link, router, usePage } from "@inertiajs/react";
-import { useMediaQuery } from "react-responsive";
 import Dropdown from "@/Components/Dropdown";
 import BuyerSidebar from "@/Components/Sidebar/BuyerSidebar.jsx";
 import ToastHandler from "@/Components/ToastHandler.jsx";
@@ -19,7 +19,8 @@ const safeLS = {
     get(key, fallback = null) {
         if (!canUseDOM) return fallback;
         try {
-            return JSON.parse(window.localStorage.getItem(key)) ?? fallback;
+            const raw = window.localStorage.getItem(key);
+            return raw === null ? fallback : JSON.parse(raw);
         } catch {
             return fallback;
         }
@@ -34,6 +35,15 @@ const safeLS = {
 
 const isEditableTarget = (el) =>
     el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || el?.isContentEditable;
+
+/* Breakpoint helper (mobile/tablet/desktop) */
+const getLayoutMode = () => {
+    if (!canUseDOM) return "desktop";
+    const w = window.innerWidth;
+    if (w < 768) return "mobile";       // < md
+    if (w < 1024) return "tablet";      // md only
+    return "desktop";                   // lg+
+};
 
 /* =========================================================
    Command Palette (⌘/Ctrl+K) — with keyboard navigation
@@ -55,8 +65,9 @@ function CommandPalette({ open, setOpen, actions }) {
     useEffect(() => {
         if (!canUseDOM) return;
         if (open) {
+            const prev = document.body.style.overflow;
             document.body.style.overflow = "hidden";
-            return () => (document.body.style.overflow = "");
+            return () => (document.body.style.overflow = prev);
         }
     }, [open]);
 
@@ -157,9 +168,7 @@ function CommandPalette({ open, setOpen, actions }) {
 
                         <div className="max-h-[50vh] overflow-y-auto p-1" ref={listRef}>
                             {filtered.length === 0 ? (
-                                <div className="px-3 py-4 text-sm text-gray-500">
-                                    No commands found.
-                                </div>
+                                <div className="px-3 py-4 text-sm text-gray-500">No commands found.</div>
                             ) : (
                                 <ul className="py-1" role="listbox" aria-activedescendant={`cmd-${active}`}>
                                     {filtered.map((a, idx) => {
@@ -177,21 +186,13 @@ function CommandPalette({ open, setOpen, actions }) {
                                             "flex items-center justify-between px-3 py-2 rounded-md " +
                                             (idx === active ? "bg-gray-100" : "hover:bg-gray-50");
                                         return (
-                                            <li id={`cmd-${idx}`} key={idx} role="option" aria-selected={idx===active}>
+                                            <li id={`cmd-${idx}`} key={idx} role="option" aria-selected={idx === active}>
                                                 {a.href ? (
-                                                    <Link
-                                                        href={a.href}
-                                                        className={cls}
-                                                        onClick={() => setOpen(false)}
-                                                    >
+                                                    <Link href={a.href} className={cls} onClick={() => setOpen(false)}>
                                                         {common}
                                                     </Link>
                                                 ) : (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => perform(a)}
-                                                        className={`w-full ${cls}`}
-                                                    >
+                                                    <button type="button" onClick={() => perform(a)} className={`w-full ${cls}`}>
                                                         {common}
                                                     </button>
                                                 )}
@@ -230,29 +231,62 @@ export default function BuyerLayout({ children }) {
         else root.classList.remove("dark");
         safeLS.set("theme", theme);
     }, [theme]);
-    const toggleTheme = useCallback(
-        () => setTheme((t) => (t === "dark" ? "light" : "dark")),
-        []
-    );
+    const toggleTheme = useCallback(() => setTheme((t) => (t === "dark" ? "light" : "dark")), []);
 
-    /* -------- Sidebar state (DEFAULT OPEN) -------- */
-    const isMobile = useMediaQuery({ query: "(max-width: 768px)" });
-    const [isOpen, setIsOpen] = useState(true);
-    const [isMobileOpen, setIsMobileOpen] = useState(false);
-
+    /* -------- Responsive layout mode -------- */
+    const [mode, setMode] = useState(getLayoutMode()); // "mobile" | "tablet" | "desktop"
     useEffect(() => {
-        const saved = safeLS.get("sidebar-isOpen", true);
-        setIsOpen(!!saved);
+        if (!canUseDOM) return;
+        let raf = 0;
+        const onResize = () => {
+            cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(() => setMode(getLayoutMode()));
+        };
+        window.addEventListener("resize", onResize);
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener("resize", onResize);
+        };
     }, []);
-    useEffect(() => {
-        safeLS.set("sidebar-isOpen", isOpen);
-    }, [isOpen]);
-    useEffect(() => {
-        if (!isMobile) setIsMobileOpen(false);
-    }, [isMobile]);
 
-    const toggleSidebar = () =>
-        isMobile ? setIsMobileOpen((s) => !s) : setIsOpen((s) => !s);
+    /* -------- Sidebar state --------
+       Desktop: persistent (remember open/collapsed)
+       Tablet: collapsed by default (icon-only); toggles inline
+       Mobile: off-canvas drawer
+    --------------------------------- */
+    const SIDEBAR_OPEN = 288;     // 18rem
+    const SIDEBAR_COLLAPSED = 80; // 5rem
+    const CONTENT_PAD = 24;
+
+    const [isOpen, setIsOpen] = useState(() => {
+        const saved = safeLS.get("sidebar-isOpen", true);
+        // tablet default collapsed, mobile drawer (irrelevant), desktop saved
+        if (mode === "tablet") return false;
+        if (mode === "desktop") return !!saved;
+        return false;
+    });
+
+    // keep isOpen in sync when mode changes
+    useEffect(() => {
+        if (mode === "desktop") {
+            setIsOpen((prev) => safeLS.get("sidebar-isOpen", typeof prev === "boolean" ? prev : true));
+        } else if (mode === "tablet") {
+            setIsOpen(false);
+        } else {
+            // mobile
+            setIsOpen(false);
+        }
+    }, [mode]);
+
+    useEffect(() => {
+        if (mode === "desktop") safeLS.set("sidebar-isOpen", isOpen);
+    }, [isOpen, mode]);
+
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const toggleSidebar = () => {
+        if (mode === "mobile") setIsMobileOpen((s) => !s);        // drawer
+        else setIsOpen((s) => !s);                                 // inline collapse/expand
+    };
 
     /* -------- Global search (header) -------- */
     const [search, setSearch] = useState("");
@@ -264,10 +298,7 @@ export default function BuyerLayout({ children }) {
 
     /* -------- Notifications -------- */
     const [notifications, setNotifications] = useState(auth?.notifications?.all ?? []);
-    const [unreadNotifications, setUnreadNotifications] = useState(
-        auth?.notifications?.unread ?? []
-    );
-
+    const [unreadNotifications, setUnreadNotifications] = useState(auth?.notifications?.unread ?? []);
     const [openDrawer, setOpenDrawer] = useState(false);
     const [notifTab, setNotifTab] = useState("unread"); // 'unread' | 'all'
 
@@ -307,7 +338,7 @@ export default function BuyerLayout({ children }) {
         );
     }, [unreadNotifications, markAsRead]);
 
-    // Realtime (guard Echo presence)
+    // Realtime notifications (guard Echo presence)
     useEffect(() => {
         if (!auth?.user?.id || !canUseDOM) return;
         const channelName = `App.Models.User.${auth.user.id}`;
@@ -327,17 +358,12 @@ export default function BuyerLayout({ children }) {
         } catch {}
     }, [auth?.user?.id]);
 
-    /* -------- Layout constants -------- */
-    const SIDEBAR_OPEN = 288;     // 18rem
-    const SIDEBAR_COLLAPSED = 80; // 5rem
-    const CONTENT_PAD = 24;
+    /* -------- Layout paddings based on mode -------- */
+    const sidebarOffset =
+        mode === "mobile" ? 0 : isOpen ? SIDEBAR_OPEN : SIDEBAR_COLLAPSED;
+    const contentLeft = mode === "mobile" ? CONTENT_PAD : sidebarOffset + CONTENT_PAD;
 
-    const sidebarOffset = isMobile ? 0 : isOpen ? SIDEBAR_OPEN : SIDEBAR_COLLAPSED;
-    const contentLeft = isMobile ? CONTENT_PAD : sidebarOffset + CONTENT_PAD;
-
-    const headerTransition = prefersReducedMotion
-        ? { duration: 0 }
-        : { duration: 0.28, ease: "easeInOut" };
+    const headerTransition = prefersReducedMotion ? { duration: 0 } : { duration: 0.28, ease: "easeInOut" };
 
     /* -------- Command Palette -------- */
     const [paletteOpen, setPaletteOpen] = useState(false);
@@ -390,10 +416,10 @@ export default function BuyerLayout({ children }) {
     const listUnread = unreadNotifications;
     const listAll = notifications;
 
-    // Scroll lock when drawers are open (mobile sidebar or notifications)
+    // Scroll lock when overlays are open (mobile sidebar or notifications)
     useEffect(() => {
         if (!canUseDOM) return;
-        const anyOverlayOpen = isMobileOpen || openDrawer;
+        const anyOverlayOpen = (mode === "mobile" && isMobileOpen) || openDrawer;
         if (anyOverlayOpen) {
             const prev = document.body.style.overflow;
             document.body.style.overflow = "hidden";
@@ -401,29 +427,23 @@ export default function BuyerLayout({ children }) {
                 document.body.style.overflow = prev;
             };
         }
-    }, [isMobileOpen, openDrawer]);
+    }, [isMobileOpen, openDrawer, mode]);
 
     const counts = buildSidebarCounts(unreadNotifications);
-
     const { pendingFeedback = [] } = usePage().props;
-
 
     return (
         <div className="h-screen bg-white dark:bg-slate-900 flex overflow-hidden relative">
-            {/* Sidebar Desktop */}
-            {!isMobile && (
+            {/* Sidebar: Desktop & Tablet inline */}
+            {mode !== "mobile" && (
                 <div className="hidden md:block">
-                    <BuyerSidebar
-                        isOpen={isOpen}
-                        setIsOpen={setIsOpen}
-                        counts={counts}
-                    />
+                    <BuyerSidebar isOpen={isOpen} setIsOpen={setIsOpen} counts={counts} />
                 </div>
             )}
 
-            {/* Sidebar Mobile */}
+            {/* Sidebar: Mobile off-canvas */}
             <AnimatePresence initial={false}>
-                {isMobileOpen && isMobile && (
+                {mode === "mobile" && isMobileOpen && (
                     <motion.div
                         initial={{ x: "-100%" }}
                         animate={{ x: 0 }}
@@ -434,7 +454,7 @@ export default function BuyerLayout({ children }) {
                         aria-modal="true"
                         aria-label="Mobile navigation"
                     >
-                        <BuyerSidebar isOpen={true} setIsOpen={setIsMobileOpen} />
+                        <BuyerSidebar isOpen={true} setIsOpen={setIsMobileOpen} counts={counts} />
                         <button
                             onClick={() => setIsMobileOpen(false)}
                             className="absolute top-4 right-4 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800"
@@ -446,8 +466,8 @@ export default function BuyerLayout({ children }) {
                 )}
             </AnimatePresence>
 
-            {/* Backdrop */}
-            {isMobileOpen && (
+            {/* Backdrop for mobile drawer */}
+            {mode === "mobile" && isMobileOpen && (
                 <button
                     className="fixed inset-0 z-40 bg-black/30"
                     onClick={() => setIsMobileOpen(false)}
@@ -456,11 +476,11 @@ export default function BuyerLayout({ children }) {
             )}
 
             {/* Main */}
-            <main className="w-full h-full overflow-auto">
-                {/* Header — now above everything except palette/drawer */}
+            <main className="w-full h-full overflow-auto bg-gray-50">
+                {/* Header */}
                 <motion.header
                     initial={false}
-                    animate={{ paddingLeft: isMobile ? 0 : sidebarOffset }}
+                    animate={{ paddingLeft: mode === "mobile" ? 0 : sidebarOffset }}
                     transition={headerTransition}
                     className="fixed top-0 left-0 right-0 z-[70] bg-white/85 dark:bg-slate-900/85 backdrop-blur border-b border-gray-100 dark:border-slate-800 supports-[backdrop-filter]:backdrop-blur-md"
                 >
@@ -469,8 +489,16 @@ export default function BuyerLayout({ children }) {
                             <button
                                 onClick={toggleSidebar}
                                 className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 active:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition"
-                                aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
-                                title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+                                aria-label={
+                                    mode === "mobile"
+                                        ? isMobileOpen ? "Close menu" : "Open menu"
+                                        : isOpen ? "Collapse sidebar" : "Expand sidebar"
+                                }
+                                title={
+                                    mode === "mobile"
+                                        ? isMobileOpen ? "Close menu" : "Open menu"
+                                        : isOpen ? "Collapse sidebar" : "Expand sidebar"
+                                }
                             >
                                 <AlignLeft size={20} className="text-gray-700 dark:text-slate-200" />
                             </button>
@@ -504,11 +532,7 @@ export default function BuyerLayout({ children }) {
                                 aria-label="Toggle theme"
                                 title="Toggle theme"
                             >
-                                {theme === "dark" ? (
-                                    <Sun className="w-5 h-5 text-amber-400" />
-                                ) : (
-                                    <Moon className="w-5 h-5 text-gray-600" />
-                                )}
+                                {theme === "dark" ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-gray-600" />}
                             </button>
 
                             {/* Language */}
@@ -527,15 +551,10 @@ export default function BuyerLayout({ children }) {
                                         />
                                     </div>
                                 </Dropdown.Trigger>
-                                {/* add z-index so menu overlays content while scrolling */}
                                 <Dropdown.Content width="48" className="z-[75]">
                                     <ul className="py-1 px-2 text-sm text-gray-700 dark:text-slate-200">
-                                        <li className="hover:bg-gray-100 dark:hover:bg-slate-800 rounded px-2 py-1 cursor-pointer">
-                                            English
-                                        </li>
-                                        <li className="hover:bg-gray-100 dark:hover:bg-slate-800 rounded px-2 py-1 cursor-pointer">
-                                            Filipino
-                                        </li>
+                                        <li className="hover:bg-gray-100 dark:hover:bg-slate-800 rounded px-2 py-1 cursor-pointer">English</li>
+                                        <li className="hover:bg-gray-100 dark:hover:bg-slate-800 rounded px-2 py-1 cursor-pointer">Filipino</li>
                                     </ul>
                                 </Dropdown.Content>
                             </Dropdown>
@@ -557,8 +576,8 @@ export default function BuyerLayout({ children }) {
                                     } absolute top-1 right-1 bg-red-500 text-white text-[11px] font-bold min-w-[20px] h-5 px-1.5 items-center justify-center rounded-full`}
                                     aria-live="polite"
                                 >
-                  {unreadNotifications.length}
-                </span>
+                                  {unreadNotifications.length}
+                                </span>
                             </button>
 
                             {/* Profile */}
@@ -584,12 +603,7 @@ export default function BuyerLayout({ children }) {
                                         <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-slate-200 truncate max-w-[12ch]">
                       {auth?.user?.name ?? "Account"}
                     </span>
-                                        <svg
-                                            className="w-4 h-4 text-gray-500 dark:text-slate-400"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
-                                            aria-hidden="true"
-                                        >
+                                        <svg className="w-4 h-4 text-gray-500 dark:text-slate-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                             <path
                                                 fillRule="evenodd"
                                                 d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
@@ -598,12 +612,8 @@ export default function BuyerLayout({ children }) {
                                         </svg>
                                     </div>
                                 </Dropdown.Trigger>
-                                {/* ensure menu is above content */}
                                 <Dropdown.Content width="48" className="z-[75]">
-                                    <Dropdown.Link
-                                        href="/profile"
-                                        className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-800"
-                                    >
+                                    <Dropdown.Link href="/profile" className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-800">
                                         Profile
                                     </Dropdown.Link>
                                     <Dropdown.Link
@@ -643,7 +653,7 @@ export default function BuyerLayout({ children }) {
                 title="Notifications"
                 setOpen={setOpenDrawer}
                 open={openDrawer}
-                className="z-[80]" // if Drawer accepts className; otherwise add in its component root
+                className="z-[80]"
             >
                 <div className="py-4 space-y-6 max-h-[75vh] overflow-y-auto">
                     {/* Tabs */}
@@ -651,9 +661,7 @@ export default function BuyerLayout({ children }) {
                         <div className="inline-flex rounded-md overflow-hidden border border-gray-200">
                             <button
                                 className={`px-3 py-1.5 text-sm ${
-                                    notifTab === "unread"
-                                        ? "bg-gray-900 text-white"
-                                        : "bg-white text-gray-700 hover:bg-gray-50"
+                                    notifTab === "unread" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
                                 }`}
                                 onClick={() => setNotifTab("unread")}
                             >
@@ -661,9 +669,7 @@ export default function BuyerLayout({ children }) {
                             </button>
                             <button
                                 className={`px-3 py-1.5 text-sm ${
-                                    notifTab === "all"
-                                        ? "bg-gray-900 text-white"
-                                        : "bg-white text-gray-700 hover:bg-gray-50"
+                                    notifTab === "all" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
                                 }`}
                                 onClick={() => setNotifTab("all")}
                             >
@@ -702,12 +708,8 @@ export default function BuyerLayout({ children }) {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex justify-between gap-3">
-                                                        <p className="text-sm font-medium text-gray-900 truncate">
-                                                            {notifTitle(notif)}
-                                                        </p>
-                                                        <span className="text-xs text-gray-500 shrink-0">
-                              {notifTime(notif)}
-                            </span>
+                                                        <p className="text-sm font-medium text-gray-900 truncate">{notifTitle(notif)}</p>
+                                                        <span className="text-xs text-gray-500 shrink-0">{notifTime(notif)}</span>
                                                     </div>
                                                     <p className="text-sm text-gray-600 mt-1">{notifMsg(notif)}</p>
                                                     {notifLink(notif) && (
@@ -751,12 +753,8 @@ export default function BuyerLayout({ children }) {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between gap-3">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">
-                                                        {notifTitle(notif)}
-                                                    </p>
-                                                    <span className="text-xs text-gray-500 shrink-0">
-                            {notifTime(notif)}
-                          </span>
+                                                    <p className="text-sm font-medium text-gray-900 truncate">{notifTitle(notif)}</p>
+                                                    <span className="text-xs text-gray-500 shrink-0">{notifTime(notif)}</span>
                                                 </div>
                                                 <p className="text-sm text-gray-600 mt-1">{notifMsg(notif)}</p>
                                                 {notifLink(notif) && (

@@ -21,14 +21,20 @@ class InquiryController extends Controller
     public function index(Request $request)
     {
         $inquiries = Inquiry::where('buyer_id', auth()->id())
-            ->with('property', 'agent', 'messages', 'trippings', 'broker', 'agent.agent_trippings', 'agent.feedbackReceived' )
+            ->with([
+                'property',
+                'agent' => function($q) { $q->withCount('property_listings'); },
+                'broker' => function($q) { $q->withCount('property_listings'); },
+                'messages',
+                'trippings',
+                'agent.agent_trippings',
+                'agent.feedbackReceived',
+            ])
             ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 return $q->status($request->status);
             })
             ->latest()
             ->paginate(10);
-
-
 
 
 
@@ -157,18 +163,16 @@ class InquiryController extends Controller
 
 
 
-
         // Load property + latest buyer-scoped relations (NO buyer inquiries)
         $property = Property::findOrFail($inquiry->property_id);
 
-        $chatChannel = ChatChannel::where('subject_id', $property->id)
-            ->with('members', 'messages')
+        $channel = ChatChannel::where('subject_id', $property->id)
+            ->with('members', 'messages', 'subject')
             ->whereHas('members', function ($q) use ($userId) {
                 $q->where('user_id', $userId);
             })
             ->first();
 
-//        dd($chatChannel->toArray());
 
         $property->load([
             'images',
@@ -379,6 +383,7 @@ class InquiryController extends Controller
                 'isStarted'  => (bool) ($visitStart && $now->gte($visitStart)),
                 'isFinished' => (bool) ($visitEnd ? $now->gte($visitEnd) : ($visitStart && $now->gte($visitStart))),
             ],
+            'channel' => $channel,
         ]);
     }
 

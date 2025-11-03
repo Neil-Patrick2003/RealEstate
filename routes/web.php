@@ -248,6 +248,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/chat/channels/{channel}', [\App\Http\Controllers\Buyer\ChannelController::class, 'show'])->name('buyer.chat.channels.show');
     Route::get('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'index']);
     Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
+    Route::put('/trippings/{tripping}', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'update']);
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
     Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
     Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);

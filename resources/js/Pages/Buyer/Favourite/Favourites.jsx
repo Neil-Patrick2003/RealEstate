@@ -8,7 +8,6 @@ import PropertyCard from "@/Components/Property/PropertyCard.jsx";
 
 export default function Favourites({properties, favouriteIds = []}){
 
-    console.log(properties);
     const [favourites, setFavourites] = useState(new Set(favouriteIds));
     const [loading, setLoading] = useState(null);
     const [favoriteIds, setFavoriteIds] = useState([]);
@@ -31,6 +30,10 @@ export default function Favourites({properties, favouriteIds = []}){
             }
         );
     };
+
+
+
+    const isFavourite = (id) => favourites.has(id);
 
     const toggleFavourite = (propertyId) => {
         setLoading(propertyId);
@@ -57,12 +60,11 @@ export default function Favourites({properties, favouriteIds = []}){
         );
     };
 
-    const isFavourite = (id) => favourites.has(id);
     return (
 
         <BuyerLayout>
             <Head title="Favourites" />
-            <div className='mt-12'>
+            <div className=''>
                 <p className='text-primary font-bold text-lg md:text-xl lg:text-3xl'>
                     <span>
                         <FontAwesomeIcon icon={faHeart} className='mr-2' />
@@ -78,15 +80,15 @@ export default function Favourites({properties, favouriteIds = []}){
                             <p className='text-center'>No Favourite.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 ">
                             {properties.map((property) => (
-                                <div key={property.id} className="snap-center flex-shrink-0 w-80">
-                                    <PropertyCard property={property} favoriteIds={favoriteIds} toggleFavorite={toggleFavorite} />
-                                </div>
+                                <PropertyCard
+                                    key={property.id}
+                                    property={property}
+                                    favoriteIds={favoriteIds}
+                                    onToggleFavorite={toggleFavourite}
+                                />
                             ))}
-
-
-
                         </div>
                     )}
 

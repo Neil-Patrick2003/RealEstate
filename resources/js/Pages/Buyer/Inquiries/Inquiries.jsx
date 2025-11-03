@@ -6,13 +6,17 @@ import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
 import {
     faLocationDot, faClock, faPaperPlane, faTrashAlt, faCalendarCheck,
     faHouseChimney, faEnvelope, faPhone, faFolderOpen, faCircleCheck,
-    faCalendarPlus, faHandshakeSimple,
+    faCalendarPlus, faHandshakeSimple
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Head, Link, router } from "@inertiajs/react";
 import React, { useMemo, useState } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import ResponsiveHoverDialog from "@/Components/HoverDialog.jsx";
+import { Zap } from "lucide-react";
+import { StarIcon } from "@heroicons/react/24/solid";
+
 dayjs.extend(relativeTime);
 
 /* ---------- utils ---------- */
@@ -25,7 +29,7 @@ const peso = (n) => {
 };
 const statusBadge = (status) => {
     const s = (status ?? "").toLowerCase().trim();
-    if (s.includes("closed")) return "bg-emerald-50 text-emerald-700 border-emerald-200"; // both with/no deal
+    if (s.includes("closed")) return "bg-emerald-50 text-emerald-700 border-emerald-200";
     if (s === "sold")         return "bg-emerald-50 text-emerald-700 border-emerald-200";
     switch (s) {
         case "accepted": return "bg-emerald-50 text-emerald-700 border-emerald-200";
@@ -35,10 +39,45 @@ const statusBadge = (status) => {
         case "canceled":
             return "bg-gray-50 text-gray-700 border-gray-200";
         default:
-            return "bg-amber-50 text-amber-700 border-amber-200"; // pending/others
+            return "bg-amber-50 text-amber-700 border-amber-200";
     }
 };
 
+/* ---------- rating helpers (overall average from sub-categories) ---------- */
+const clamp01to5 = (n) => Math.max(0, Math.min(5, n));
+const formatRating = (n) => (n == null ? "—" : Number.isInteger(n) ? String(n) : n.toFixed(1));
+
+/** Average across the 4 sub-categories for each feedback; then average those per-feedback scores. */
+const computeOverallFromFeedback = (feedbacks = []) => {
+    const dims = ["communication", "negotiation", "professionalism", "knowledge"];
+    const perFeedbackAverages = [];
+
+    for (const f of feedbacks) {
+        const vals = dims
+            .map((k) => Number(f?.[k]))
+            .filter((v) => Number.isFinite(v))
+            .map(clamp01to5);
+        if (vals.length) {
+            perFeedbackAverages.push(vals.reduce((a, b) => a + b, 0) / vals.length);
+        }
+    }
+
+    if (!perFeedbackAverages.length) return { rating: null, reviews: 0 };
+
+    const rating = perFeedbackAverages.reduce((a, b) => a + b, 0) / perFeedbackAverages.length;
+    return { rating, reviews: perFeedbackAverages.length };
+};
+
+/** Works for agent or broker objects; checks both common feedback arrays. */
+const getContactAvgRating = (contact) => {
+    const feedbacks =
+        Array.isArray(contact?.feedback_received) && contact.feedback_received.length
+            ? contact.feedback_received
+            : Array.isArray(contact?.feedback_as_receiver)
+                ? contact.feedback_as_receiver
+                : [];
+    return computeOverallFromFeedback(feedbacks);
+};
 
 /* ---------- progress ---------- */
 const steps = [
@@ -50,7 +89,6 @@ const steps = [
 
 function normalizeInquiryStatus(raw) {
     const s = (raw || "").toLowerCase().replace(/\s+/g, " ").trim();
-    // Collapse common variants -> keys we care about
     if (s.includes("closed with deal")) return "closed_with_deal";
     if (s.includes("closed no deal") || s.includes("closed without deal")) return "closed_no_deal";
     if (s === "sold") return "sold";
@@ -58,10 +96,8 @@ function normalizeInquiryStatus(raw) {
     if (s === "rejected") return "rejected";
     if (s === "pending")  return "pending";
     if (s === "cancelled" || s === "canceled") return "cancelled";
-    return s; // passthrough (e.g., "won", "completed", etc.)
+    return s;
 }
-
-
 
 function hasAnyVisit(inquiry) {
     const trips = arr(inquiry?.trippings);
@@ -72,7 +108,6 @@ function computeStepIndex(inquiry) {
     const sKey = normalizeInquiryStatus(inquiry?.status);
     const hasVisit = hasAnyVisit(inquiry);
 
-    // If listing/deal already sold/closed, force final step
     const listingStatus = (inquiry?.property?.property_listing?.status || "").toLowerCase().trim();
     const dealArr = arr(inquiry?.property?.property_listing?.deal);
     const deal = dealArr[0] || null;
@@ -90,17 +125,12 @@ function computeStepIndex(inquiry) {
         isSold;
 
     if (isClosedFinal) return 3;
-
     if (sKey === "rejected") return 0;
     if (sKey === "pending")  return 0;
-
     if (sKey === "accepted" && !hasVisit) return 1;
     if (sKey === "accepted" &&  hasVisit) return 2;
-
-    // Default: keep conservative
     return 0;
 }
-
 
 function parseVisitDT(t) {
     const date = t?.visit_date || "";
@@ -219,13 +249,11 @@ export default function Inquiries({
 
     const list = arr(inquiries?.data);
 
-    // sidebar stats (kept for tabs)
     const counts = useMemo(
         () => ({ pending: pendingCount, accepted: acceptedCount, cancelled: cancelledCount, rejected: rejectedCount }),
         [pendingCount, acceptedCount, cancelledCount, rejectedCount]
     );
 
-    // compute upcoming trippings (sorted ascending)
     const upcomingTrippings = useMemo(() => {
         const items = [];
         for (const inq of list) {
@@ -254,36 +282,6 @@ export default function Inquiries({
             onError: (errors) => console.error("Failed to cancel inquiry", errors),
         });
     };
-
-
-    const getAgentAvgRating = (agent) => {
-        const list = arr(agent?.feedback_received);
-        // Prefer computed feedback; fallback to agent.rating if present
-        if (list.length) {
-            let sum = 0;
-            let n = 0;
-            for (const f of list) {
-                const vals = [
-                    Number(f?.communication ?? 0),
-                    Number(f?.negotiation ?? 0),
-                    Number(f?.professionalism ?? 0),
-                    Number(f?.knowledge ?? 0),
-                ].filter((x) => Number.isFinite(x) && x > 0);
-                if (vals.length) {
-                    sum += vals.reduce((a, b) => a + b, 0) / vals.length; // avg of the 4 metrics
-                    n += 1; // count one review
-                }
-            }
-            if (n > 0) return { rating: sum / n, reviews: n };
-        }
-
-        const fallback = Number(agent?.rating);
-        if (Number.isFinite(fallback) && fallback > 0) {
-            return { rating: fallback, reviews: 0 };
-        }
-        return { rating: null, reviews: 0 };
-    };
-
 
     return (
         <BuyerLayout>
@@ -315,7 +313,7 @@ export default function Inquiries({
                 />
 
                 {/* Tabs */}
-                <div className="sticky top-16 z-10 -mx-4 sm:mx-0 bg-gradient-to-b from-white/90 to-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/70 px-4 sm:px-0 py-2 border-y sm:border-none">
+                <div className="sticky overflow-auto top-16 z-10 -mx-4 sm:mx-0 bg-gradient-to-b from-white/90 to-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/70 px-4 sm:px-0 py-2 border-y sm:border-none">
                     <BuyerInquiriesFilterTab
                         setSelectedStatus={setSelectedStatus}
                         count={[allCount, pendingCount, acceptedCount, cancelledCount, rejectedCount]}
@@ -344,8 +342,9 @@ export default function Inquiries({
                             const hasTrips    = arr(inquiry?.trippings).length > 0;
                             const img         = property?.image_url ? `/storage/${property.image_url}` : "/placeholder.png";
                             const stepIndex   = computeStepIndex(inquiry);
-                            const { rating: avgRating, reviews: reviewCount } = getAgentAvgRating(agent);
 
+                            // Overall rating from sub-categories (agent or broker)
+                            const { rating: avgRating, reviews: reviewCount } = getContactAvgRating(contact);
 
                             return (
                                 <li key={`inq-${inquiry?.id}`} className="group bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow focus-within:ring-2 focus-within:ring-gray-300">
@@ -449,11 +448,106 @@ export default function Inquiries({
                                                     )}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">{contact?.name ?? "Contact"}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {avgRating
-                                                            ? `${avgRating.toFixed(2)} ⭐ (${reviewCount} ${reviewCount === 1 ? "review" : "reviews"})`
-                                                            : "No ratings yet"}
+                                                    <ResponsiveHoverDialog
+                                                        title={
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-lg font-bold text-gray-900">
+                                                                    {contact.name}
+                                                                </span>
+                                                                {/* Optional: Add a verification/role badge if applicable */}
+                                                                <span className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">
+                                                                    Agent
+                                                                </span>
+                                                            </div>
+                                                        }
+                                                        dialogContent={
+                                                            <div className="space-y-4 pt-2">
+
+                                                                {/* 1. Statistics Section - Clean, vertical stack */}
+                                                                <div className="space-y-2">
+
+                                                                    {/* 1A. Rating Display */}
+                                                                    <div className="flex items-center gap-2">
+                                                                        {/* Bolder, main rating */}
+                                                                        <span className="text-xl font-extrabold text-teal-700">
+                                                                            {formatRating(avgRating)}
+                                                                        </span>
+                                                                        {/* Star Icons */}
+                                                                        <div className="flex items-center">
+                                                                            {[...Array(5)].map((_, i) => (
+                                                                                <StarIcon
+                                                                                    key={i}
+                                                                                    className={`h-5 w-5 ${
+                                                                                        avgRating != null && i < Math.round(avgRating)
+                                                                                            ? "text-amber-400"
+                                                                                            : "text-gray-300"
+                                                                                    }`}
+                                                                                />
+                                                                            ))}
+                                                                        </div>
+                                                                        {/* Review Count */}
+                                                                        <span className="text-sm text-gray-500">
+                                                                            ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
+                                                                        </span>
+                                                                    </div>
+
+                                                                    {/* 1B. Listings Count */}
+                                                                    <p className="text-sm text-gray-600 flex items-center gap-1">
+                                                                        <span className="font-bold text-gray-900">
+                                                                            {contact.property_listings_count}
+                                                                        </span>
+                                                                        Listings Available
+                                                                    </p>
+
+                                                                </div>
+
+                                                                {/* --- Divider --- */}
+                                                                <div className="border-t border-gray-100" />
+
+
+                                                                {/* 3. Button - Primary, clear focus */}
+                                                                <button
+                                                                    onClick={() => router.visit(`/agents/${contact.id}`)}
+                                                                    className="w-full px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition shadow-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                                                                >
+                                                                    View Agent Profile
+                                                                </button>
+
+                                                            </div>
+                                                        }
+                                                    >
+                                                        {/* Trigger content (contact name) */}
+                                                        <button
+                                                            className="
+                                                                flex items-center font-extrabold
+                                                                text-teal-700 // Use a highlight color for the trigger
+                                                                hover:underline transition-colors
+        "
+                                                        >
+                                                            <span>{contact.name}</span>
+                                                        </button>
+                                                    </ResponsiveHoverDialog>
+
+                                                    {/* Overall rating under the name */}
+                                                    <p className="text-xs text-gray-600 flex items-center gap-1 mt-0.5">
+                                                        {avgRating != null ? (
+                                                            <>
+                                                                {[...Array(5)].map((_, i) => (
+                                                                    <StarIcon
+                                                                        key={i}
+                                                                        className={`h-4 w-4 ${
+                                                                            i < Math.round(avgRating) ? "text-amber-400" : "text-gray-300"
+                                                                        }`}
+                                                                    />
+                                                                ))}
+                                                                <span className="font-semibold text-gray-800">{formatRating(avgRating)}</span>
+                                                                <span className="text-gray-500">
+                                                                  ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            "No ratings yet"
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>
@@ -508,43 +602,26 @@ export default function Inquiries({
                                                         title="Wait for the agent/broker to accept your inquiry to schedule a visit"
                                                     >
                                                         <FontAwesomeIcon icon={faClock} className="mr-2" aria-hidden />
-                                                        {(() => {
-                                                            const raw = inquiry?.status ?? "Pending";
-                                                            const s = raw.toLowerCase().trim();
-                                                            if (s.includes("closed")) return "Closed";
-                                                            return raw;
-                                                        })()}
+                                                        Pending Acceptance
                                                     </div>
                                                 )}
 
-                                                {/* View */}
-                                                <Link
-                                                    href={isCancelled ? "#" : `/inquiries/${inquiry?.id}`}
-                                                    onClick={(e) => { if (isCancelled) e.preventDefault(); }}
-                                                    className={cn(
-                                                        "w-full text-center px-4 py-2 rounded-md text-sm font-medium transition border focus:outline-none focus:ring-2 focus:ring-offset-2",
-                                                        isCancelled
-                                                            ? "bg-gray-200 text-white cursor-not-allowed border-gray-200"
-                                                            : "bg-white border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white focus:ring-gray-300"
-                                                    )}
-                                                    aria-disabled={isCancelled}
-                                                    title={isCancelled ? "This inquiry is cancelled" : "Open conversation/details"}
-                                                >
-                                                    <FontAwesomeIcon icon={faPaperPlane} className="mr-2" aria-hidden />
-                                                    View
-                                                </Link>
-
-                                                {/* Cancel */}
+                                                {/* View / Cancel */}
                                                 {isCancelled ? (
-                                                    <div className="w-full py-2 rounded-md bg-gray-100 text-center text-gray-500 font-medium border border-gray-200">
+                                                    <div
+                                                        className="w-full flex items-center text-sm justify-center px-4 py-2 rounded-md bg-gray-50 text-gray-700 border border-gray-200 font-medium"
+                                                        aria-label="Inquiry Cancelled"
+                                                        title="This inquiry has been cancelled"
+                                                    >
+                                                        <FontAwesomeIcon icon={faTrashAlt} className="mr-2" aria-hidden />
                                                         Cancelled
                                                     </div>
                                                 ) : (
                                                     <button
                                                         type="button"
-                                                        className="w-full px-4 py-2 rounded-md text-sm font-medium transition bg-rose-600 hover:bg-rose-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500"
+                                                        className="w-full px-4 py-2 rounded-md border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-300"
                                                         onClick={() => {
-                                                            setCancelId(inquiry?.id ?? null);
+                                                            setCancelId(inquiry?.id);
                                                             setIsCancelModalOpen(true);
                                                         }}
                                                         title="Cancel this inquiry"
@@ -553,6 +630,15 @@ export default function Inquiries({
                                                         Cancel
                                                     </button>
                                                 )}
+
+                                                {/* View Conversation Link */}
+                                                <Link
+                                                    href={`/inquiries/${inquiry.id}`}
+                                                    className="w-full text-center px-4 py-2 rounded-md bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300"
+                                                >
+                                                    <FontAwesomeIcon icon={faEnvelope} className="mr-2" aria-hidden />
+                                                    View
+                                                </Link>
                                             </div>
                                         </div>
                                     </article>
@@ -561,33 +647,6 @@ export default function Inquiries({
                         })}
                     </ul>
                 )}
-
-                {/* Pagination */}
-                <nav className="flex flex-wrap gap-2 justify-end mt-6" aria-label="Pagination">
-                    {arr(inquiries?.links).map((link, i) =>
-                        link?.url ? (
-                            <Link
-                                key={i}
-                                href={link.url}
-                                className={cn(
-                                    "px-3 md:px-4 py-2 text-sm md:text-base rounded-md border transition focus:outline-none focus:ring-2 focus:ring-offset-2",
-                                    link.active
-                                        ? "bg-primary text-white font-semibold border-primary focus:ring-primary"
-                                        : "bg-white text-gray-700 hover:bg-gray-100 border-gray-200 focus:ring-gray-300"
-                                )}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                aria-current={link.active ? "page" : undefined}
-                            />
-                        ) : (
-                            <span
-                                key={i}
-                                className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 bg-white border border-gray-200 rounded-md cursor-not-allowed"
-                                dangerouslySetInnerHTML={{ __html: link?.label ?? "" }}
-                                aria-disabled="true"
-                            />
-                        )
-                    )}
-                </nav>
             </div>
         </BuyerLayout>
     );

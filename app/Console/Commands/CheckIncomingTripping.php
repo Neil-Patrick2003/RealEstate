@@ -31,11 +31,12 @@ class CheckIncomingTripping extends Command
         $date = Carbon::now()->addHours(1)->startOfHour();
 
         PropertyTripping::with(['agent', 'buyer', 'broker'])
-            ->whereStatus('pending')
+            ->whereStatus('accepted')
             ->where('visit_date', $date->format('Y-m-d'))
             ->where('visit_time', $date->format('H:i:s'))
             ->get()
             ->each(function ($tripping)  {
+                dd($tripping->toArray());
                 if ($tripping->agent) {
                     $tripping->agent->notify(new IncomingTripping($tripping));
                 }

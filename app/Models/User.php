@@ -111,15 +111,21 @@ class User extends Authenticatable
 
     public function property_listings()
     {
-        return $this->belongsToMany(
+        return $this->hasManyThrough(
             PropertyListing::class,
-            'property_listing_agents',
-            'agent_id',
-            'property_listing_id');
-
-
+            PropertyListingAgent::class, // your pivot model
+            'agent_id',                  // Foreign key on pivot table
+            'id',                        // Foreign key on PropertyListing
+            'id',                        // Local key on User
+            'property_listing_id'        // Local key on pivot
+        )->orWhere('broker_id', $this->id); // include broker_id
     }
 
+
+    public function getPropertyListingsCountAttribute()
+    {
+        return $this->property_listings()->count();
+    }
 
 
     public function broker_listing(){
@@ -186,6 +192,9 @@ class User extends Authenticatable
         return $this->belongsToMany(\App\Models\Property::class, 'property_listings', 'user_id', 'property_id')
             ->withTimestamps();
     }
+
+
+
 
     public function listingAssignments()
     {

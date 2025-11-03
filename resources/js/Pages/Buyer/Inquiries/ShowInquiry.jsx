@@ -1,59 +1,81 @@
 // resources/js/Pages/Buyer/Properties/ShowInquiry.jsx
 import React, { useMemo, useState, useCallback } from "react";
-import { usePage, router } from "@inertiajs/react";
+import {usePage, router, Head} from "@inertiajs/react";
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import Breadcrumb from "@/Components/Breadcrumbs.jsx";
-import PropertyHeader from "@/Components/Property/PropertyHeader.jsx";
-import MainImage from "@/Components/Property/MainImage.jsx";
-import Thumbnail from "@/Components/Property/Thumbnail.jsx";
-import PropertyMap from "@/Components/PropertyMap.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import {
-    Heart,
-    Share2,
     CalendarDays,
-    SendHorizontal,
-    Building2,
-    Ruler,
-    DoorClosed,
-    BedDouble,
-    Bath,
-    BadgeCheck,
     Pencil,
+    Bed,
+    Bath,
+    Maximize,
+    Ruler,
+    MessageSquare,
+    MapPin,
+    AlertTriangle,
 } from "lucide-react";
-import Collapsable from "@/Components/collapsable/collapsable.jsx";
 import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
 import Stepper from "@/Components/Stepper.jsx";
 import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
 import Modal from "@/Components/Modal.jsx";
+import ChannelView from "@/Components/Chat/ChannelView.jsx";
+import StepperNotes from "@/Components/StepperNotes.jsx";
 
 /* ---------- Small helpers ---------- */
-const cn = (...c) => c.filter(Boolean).join(" ");
-const fmtPHP = new Intl.NumberFormat("en-PH", {
+const cx = (...c) => c.filter(Boolean).join(" ");
+const peso = new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: "PHP",
     maximumFractionDigits: 0,
 });
 const safeStr = (v) => (v === 0 || v ? String(v) : "");
+const truthy = (v) => v === true || v === 1 || v === "1";
 
-/* ---------- Status Badge ---------- */
+function timeAgo(input) {
+    if (!input) return "";
+    const d = typeof input === "string" ? new Date(input) : input;
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return "just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 86400)}d ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+}
+
+/** super-light allowlist: if we detect tags outside this list, render as plain text */
+const ALLOW_TAGS = ["p", "br", "strong", "em", "ul", "ol", "li", "h4", "h5"];
+function looksSafeHtml(html = "") {
+    const tags = html.match(/<\/?([a-z0-9-]+)(\s[^>]*)?>/gi) || [];
+    return tags.every((t) => {
+        const name = (t.match(/<\/?([a-z0-9-]+)/i) || [, ""])[1]?.toLowerCase();
+        return ALLOW_TAGS.includes(name);
+    });
+}
+
+/* ---------- Status Badge (flat + legible) ---------- */
 function StatusBadge({ phase = "draft" }) {
     const map = {
-        pending: "bg-amber-100 text-amber-700",
-        draft: "bg-gray-100 text-gray-700",
-        sent: "bg-blue-100 text-blue-700",
-        countered: "bg-amber-100 text-amber-700",
-        accepted: "bg-green-100 text-green-700",
-        processing: "bg-purple-100 text-purple-700",
-        closed: "bg-emerald-100 text-emerald-700",
-        rejected: "bg-rose-100 text-rose-700",
-        expired: "bg-zinc-100 text-zinc-700",
-        sold: "bg-emerald-100 text-emerald-700",
-        terminated: "bg-rose-100 text-rose-700",
+        pending: "bg-amber-100 text-amber-800",
+        draft: "bg-gray-100 text-gray-800",
+        sent: "bg-amber-100 text-amber-800", // Using amber for general "sent" state
+        countered: "bg-amber-100 text-amber-800",
+        accepted: "bg-green-100 text-green-800",
+        processing: "bg-purple-100 text-purple-800",
+        closed: "bg-emerald-100 text-emerald-800",
+        rejected: "bg-rose-100 text-rose-800",
+        expired: "bg-zinc-100 text-zinc-800",
+        sold: "bg-emerald-100 text-emerald-800",
+        terminated: "bg-rose-100 text-rose-800",
     };
     const cls = map[phase] || map.draft;
     return (
-        <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", cls)}>
+        <span
+            className={cx(
+                "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide",
+                cls
+            )}
+            aria-label={`Status: ${phase}`}
+        >
       {phase.charAt(0).toUpperCase() + phase.slice(1)}
     </span>
     );
@@ -61,144 +83,180 @@ function StatusBadge({ phase = "draft" }) {
 
 /* ---------- Small info row ---------- */
 function Row({ label, children }) {
+    // Using a light bottom border as a minimal divider
     return (
-        <div className="flex items-start justify-between gap-3 py-1.5">
-            <div className="text-xs text-gray-500">{label}</div>
-            <div className="text-sm text-gray-900">{children ?? "—"}</div>
+        <div className="flex items-start justify-between gap-3 py-2 border-b border-gray-100 last:border-b-0">
+            <div className="text-xs font-medium text-gray-500">{label}</div>
+            <div className="text-sm font-semibold text-gray-900">
+                {children ?? "—"}
+            </div>
         </div>
     );
 }
 
-/* ---------- Deal Details Modal (buyer-side actions) ---------- */
+/* ---------- Deal Details Modal (flat) ---------- */
 function DealDetailsModal({
                               open,
                               onClose,
                               deal,
                               listingId,
-                              onEdit,       // opens DealFormModal
-                              onCheckout,   // go to checkout
-                              onCloseDeal,  // close the deal
+                              onEdit,
+                              onCheckout,
+                              onCloseDeal,
                               authId,
                           }) {
     if (!deal) return null;
 
-
     const phase = (deal.status || "draft").toLowerCase();
-    const createdAt = deal.created_at ? new Date(deal.created_at).toLocaleString() : null;
-    const updatedAt = deal.updated_at ? new Date(deal.updated_at).toLocaleString() : null;
+    const updatedAt = deal.updated_at ? new Date(deal.updated_at) : null;
 
     const lastEditedByYou =
-        !!deal.amount_last_updated_by && Number(deal.amount_last_updated_by) === Number(authId);
+        !!deal.amount_last_updated_by &&
+        Number(deal.amount_last_updated_by) === Number(authId);
     const someoneElseEdited =
-        !!deal.amount_last_updated_by && Number(deal.amount_last_updated_by) !== Number(authId);
-    const isPending = phase === "pending";
+        !!deal.amount_last_updated_by &&
+        Number(deal.amount_last_updated_by) !== Number(authId);
+    const isPending = phase === "pending" || phase === "countered";
 
     const handleStatus = async (next) => {
-        // Minimal confirm in-modal (no extra imports)
         const ok = window.confirm(
             next === "Accepted"
-                ? "Accept this offer? This will notify the other party."
-                : "Decline this offer?"
+                ? "Accept this offer? This will notify the other party and proceed to payment."
+                : "Decline this offer? This action cannot be easily undone."
         );
         if (!ok) return;
 
         try {
-            await router.put(`/deal/${deal.id}/${next}`, { status: next }, { preserveScroll: true });
+            await router.put(
+                `/deal/${deal.id}/${next}`,
+                { status: next },
+                { preserveScroll: true }
+            );
             onClose?.();
         } catch (e) {
             alert("Something went wrong updating status.");
         }
     };
 
-    const counterNow = () => onEdit?.();
-
-    // Compact notes preview (first 240 chars)
     const notesPreview = safeStr(deal.notes).trim();
-    const notesShort = notesPreview.length > 240 ? `${notesPreview.slice(0, 240)}…` : notesPreview || "—";
+    const notesShort =
+        notesPreview.length > 240
+            ? `${notesPreview.slice(0, 240)}…`
+            : notesPreview || "—";
 
     return (
         <Modal show={open} onClose={onClose} maxWidth="lg">
-            <div className="relative rounded-xl bg-white p-6 shadow-lg">
+            <div className="relative rounded-2xl bg-white p-6"> {/* Flat: no shadow, no border */}
                 <button
                     onClick={onClose}
-                    className="absolute right-4 top-4 text-gray-600 hover:text-gray-800"
+                    className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 focus:outline-none rounded-full p-2"
                     aria-label="Close modal"
                     type="button"
                 >
                     ✕
                 </button>
 
-                <div className="mb-1 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">Offer Details</h3>
+                <div className="mb-4 flex items-start justify-between">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">Your Offer</h3>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                            Review the latest terms of this deal.
+                        </div>
+                    </div>
                     <StatusBadge phase={phase} />
                 </div>
-                <div className="mb-4 text-sm text-gray-500">Review your offer and take action.</div>
 
-                <div className="rounded-lg border border-gray-100 p-4">
+                <div className="rounded-xl bg-amber-50 p-4 mb-5"> {/* Light background for emphasis */}
                     <div className="mb-3 flex items-center justify-between">
-                        <div className="text-2xl font-bold text-gray-900">
-                            {typeof deal.amount === "number" || /^\d/.test(String(deal.amount))
-                                ? fmtPHP.format(Number(deal.amount))
+                        <div className="text-2xl font-extrabold text-amber-800">
+                            {typeof deal.amount === "number" ||
+                            /^\d/.test(String(deal.amount))
+                                ? peso.format(Number(deal.amount))
                                 : "—"}
+                        </div>
+                        <div className="text-xs font-semibold text-gray-600">
+                            Deal #{deal.id}
                         </div>
                     </div>
 
                     {someoneElseEdited && isPending && (
-                        <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                            The other party updated the last amount. You can counter, accept, or decline.
+                        <div className="mb-3 rounded-lg bg-amber-100 px-3 py-2 text-xs font-medium text-amber-900 flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                            <span>Counter-offer received. Please respond.</span>
                         </div>
                     )}
 
-                    <Row label="Notes">{notesShort}</Row>
-                    <Row label="Deal ID">#{deal.id}</Row>
-                    <Row label="Listing ID">{listingId || "—"}</Row>
-                    <Row label="Created">{createdAt || "—"}</Row>
-                    <Row label="Updated">{updatedAt || "—"}</Row>
+                    <div className="space-y-1 rounded-lg bg-white p-3"> {/* Pure white background for list */}
+                        <Row label="Notes">{notesShort}</Row>
+                        <Row label="Listing ID">{listingId || "—"}</Row>
+                        <Row label="Last Update">
+                            {updatedAt
+                                ? `${updatedAt.toLocaleDateString()} (${timeAgo(updatedAt)})`
+                                : "—"}
+                        </Row>
+                    </div>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
-                    {/* If you last edited → Edit only (while pending) */}
+                <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-4"> {/* Minimal top divider */}
                     {lastEditedByYou && isPending && (
                         <button
                             type="button"
                             onClick={onEdit}
-                            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
+                            className="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-300"
                         >
                             <Pencil className="h-4 w-4" />
-                            Edit Offer
+                            Revise Offer
                         </button>
                     )}
 
-                    {/* If someone else last edited → Counter + Accept + Decline (while pending) */}
                     {someoneElseEdited && isPending && (
                         <>
                             <button
                                 type="button"
-                                onClick={counterNow}
-                                className="inline-flex items-center gap-2 rounded-md border border-blue-600 px-3 py-2 text-sm text-blue-700 hover:bg-blue-50"
-                            >
-                                <Pencil className="h-4 w-4" />
-                                Counter Offer
-                            </button>
-
-                            <PrimaryButton onClick={() => handleStatus("Accepted")} title="Accept this offer">
-                                Accept
-                            </PrimaryButton>
-
-                            <button
-                                type="button"
                                 onClick={() => handleStatus("Rejected")}
-                                className="inline-flex items-center gap-2 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
-                                title="Decline this offer"
+                                className="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                                title="Decline this counter-offer"
                             >
                                 Decline
                             </button>
+
+                            <button
+                                type="button"
+                                onClick={onEdit}
+                                className="inline-flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                            >
+                                <Pencil className="h-4 w-4" />
+                                Counter
+                            </button>
+
+                            <PrimaryButton
+                                onClick={() => handleStatus("Accepted")}
+                                title="Accept this offer"
+                                className="px-4 py-2 text-sm font-semibold"
+                            >
+                                Accept Offer
+                            </PrimaryButton>
                         </>
                     )}
-
                 </div>
             </div>
         </Modal>
+    );
+}
+
+/* ---------- Fact Card (flat + compact) ---------- */
+function FactCard({ icon: Icon, label, value }) {
+    // Using gray background for a subtle lift without shadow
+    return (
+        <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-gray-50">
+            <Icon className="h-5 w-5 text-amber-700 mb-1" />
+            <div className="text-lg font-extrabold text-gray-900">
+                {value ?? "—"}
+            </div>
+            <div className="text-xs text-gray-600 font-medium tracking-tight mt-0.5">
+                {label}
+            </div>
+        </div>
     );
 }
 
@@ -206,22 +264,20 @@ function DealDetailsModal({
 export default function ShowInquiry({
                                         property,
                                         deal,
-                                        inquiry,        // may be null
-                                        steps,          // inquiry, appointment, offer, payment, close
-                                        visitGate,      // optional hints
+                                        inquiry,
+                                        steps,
+                                        visitGate,
                                         initialFavorites = [],
+                                        channel = null,
                                     }) {
     const auth = usePage().props.auth?.user ?? null;
-    const isTruthy = (v) => v === true || v === 1 || v === "1";
 
-
-    // Normalize property
     const normalized = useMemo(() => {
         const p = property || {};
         return {
             ...p,
             id: p?.id ?? null,
-            isPresell: isTruthy(p?.isPresell),
+            isPresell: truthy(p?.isPresell),
             images: Array.isArray(p?.images) ? p.images : [],
             coordinate: p?.coordinate ?? null,
             price: Number(p?.price ?? 0),
@@ -251,83 +307,102 @@ export default function ShowInquiry({
     );
 
 
-    // Status helpers (frontend-only view)
+
+
+    // Status helpers
     const iStatus = (inquiry?.status || "pending").toLowerCase();
-    const apptStatus = (inquiry?.appointment_status || "none").toLowerCase();
+    const apptStatus = useMemo(() => deriveAppointmentStatus(inquiry), [inquiry]);
     const dealStatus = (deal?.status || "draft").toLowerCase();
     const listingId = normalized?.property_listing?.id ?? null;
 
-    // Favorites
-    const [favoriteIds, setFavoriteIds] = useState(Array.isArray(initialFavorites) ? initialFavorites : []);
+    // Favorites (kept local)
+    const [favoriteIds, setFavoriteIds] = useState(
+        Array.isArray(initialFavorites) ? [...new Set(initialFavorites)] : []
+    );
     const isFavorite = normalized.id ? favoriteIds.includes(normalized.id) : false;
 
     const toggleFavorite = useCallback((id) => {
         if (!id) return;
-        setFavoriteIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-        // router.post('/favorites/toggle', { property_id: id })
+        setFavoriteIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
     }, []);
 
-    // Share
-    const shareProperty = useCallback(async () => {
-        const id = normalized.id;
-        if (!id) return;
-        const url = `${window.location.origin}/properties/${id}`;
-        const title = normalized.title || "Property";
-        try {
-            if (navigator.share) {
-                await navigator.share({ title, text: normalized.address || "", url });
-                return;
-            }
-        } catch {}
-        try {
-            await navigator.clipboard.writeText(url);
-            alert("Link copied to clipboard");
-        } catch {
-            prompt("Copy this link:", url);
-        }
-    }, [normalized.id, normalized.title, normalized.address]);
-
-    // Modals
     const [isOpenDealForm, setIsOpenDealForm] = useState(false);
     const [isOpenDealDetails, setIsOpenDealDetails] = useState(false);
-    const [isContactSeller, setIsContactSeller] = useState(false);
     const [isAddVisitModal, setIsAddVisitModal] = useState(false);
     const [selectedVisitData, setSelectedVisitData] = useState(null);
 
-    // Appointment actions
+    function getLatestTripping(inquiry) {
+        const trips = Array.isArray(inquiry?.trippings) ? inquiry.trippings : [];
+        if (!trips.length) return null;
+        return [...trips].sort((a, b) => {
+            const ta = new Date(a.created_at || 0).getTime();
+            const tb = new Date(b.created_at || 0).getTime();
+            return tb - ta || (b.id ?? 0) - (a.id ?? 0);
+        })[0];
+    }
 
-    //
-    console.log('Inquires');
-    console.log(inquiry);
     const openScheduleModal = useCallback(() => {
         if (!inquiry?.id) return;
+
+        const latest = getLatestTripping(inquiry);
+        const isResched = !!latest && ["pending","accepted","scheduled"].includes(String(latest.status || "").toLowerCase());
+
         setSelectedVisitData({
+            /* required context */
             property,
             agent: inquiry?.agent ?? null,
             broker: inquiry?.broker ?? null,
             inquiryId: inquiry?.id,
+
+            /* mode + current tripping details (used by the modal to prefill) */
+            mode: isResched ? "reschedule" : "create",
+            tripping: latest
+                ? {
+                    id: latest.id,
+                    status: latest.status,
+                    visit_date: latest.visit_date,
+                    visit_time: latest.visit_time,
+                }
+                : null,
+
+            /* convenience initial fields (so modal can directly use them) */
+            initialDate: latest?.visit_date ?? null,
+            initialTime: latest?.visit_time ?? null,
         });
+
         setIsAddVisitModal(true);
-    }, [inquiry?.id, inquiry?.agent, inquiry?.broker, property]);
+    }, [inquiry?.id, inquiry?.agent, inquiry?.broker, inquiry, property]);
+
 
     const cancelVisit = useCallback(() => {
         if (!inquiry?.id) return;
-        router.post(`/inquiries/${inquiry.id}/appointment/cancel`);
+        if (!window.confirm("Cancel this visit?")) return;
+        router.post(
+            `/inquiries/${inquiry.id}/appointment/cancel`,
+            {},
+            { preserveScroll: true }
+        );
     }, [inquiry?.id]);
 
     const closeDeal = useCallback(() => {
         if (!deal?.id) return;
-        router.post(`/deals/${deal.id}/close`);
+        if (!window.confirm("Close this deal?")) return;
+        router.post(`/deals/${deal.id}/close`, {}, { preserveScroll: true });
     }, [deal?.id]);
 
-    // Stepper actions
     const actions = {
         inquiry: () => {
             if (!normalized.id) return;
-            router.post(`/properties/${normalized.id}/inquiries/resend`);
+            router.post(
+                `/properties/${normalized.id}/inquiries/resend`,
+                {},
+                { preserveScroll: true }
+            );
         },
         appointment: () => {
-            if (iStatus !== "accepted") return;
+            if (iStatus !== "accepted") return; // only open when accepted
             openScheduleModal();
         },
         offer: () => {
@@ -338,31 +413,122 @@ export default function ShowInquiry({
             if (deal?.id) router.visit(`/deals/${deal.id}/checkout`);
         },
         close: () => closeDeal(),
+
+
     };
 
-    // Hints / banners
-    const waitingNote = iStatus === "pending" ? "Waiting for agent approval before proceeding to the next step." : null;
+    /* ---------- Dynamic Step States & Lock Reasons ---------- */
+    const stepStates = useMemo(() => {
+        // INQUIRY
+        const inquiryState =
+            iStatus === "accepted"
+                ? "complete"
+                : iStatus === "pending"
+                    ? "current"
+                    : "complete"; // treat rejected as complete end-state
 
-    const isOfferLocked = steps?.offer === "locked";
-    const offerLockedMsg =
-        isOfferLocked && iStatus === "accepted" && apptStatus !== "done"
-            ? "Offer will unlock after your appointment is completed."
-            : undefined;
+        // APPOINTMENT
+        let appointmentState = "locked";
+        if (iStatus === "accepted") {
+            if (apptStatus === "done") appointmentState = "complete";
+            else if (["scheduled", "accepted", "pending"].includes(apptStatus))
+                appointmentState = "current";
+            else appointmentState = "upcoming"; // none/cancelled
+        }
 
-    const order = ["inquiry", "appointment", "offer", "payment", "close"].filter((k) => steps?.[k]);
-    const nextKey = order.find((k) => steps?.[k] === "current" || steps?.[k] === "upcoming");
+        // OFFER
+        let offerState = "locked";
+        if (apptStatus === "done") {
+            if (!deal) offerState = "upcoming";
+            else if (["pending", "countered"].includes(dealStatus)) offerState = "current";
+            else if (["accepted", "rejected"].includes(dealStatus)) offerState = "complete";
+            else offerState = "upcoming";
+        }
+
+        // PAYMENT
+        let paymentState = "locked";
+        if (dealStatus === "accepted") {
+            // could be "current" if you want to highlight payment now
+            paymentState = "upcoming";
+        } else if (dealStatus === "closed") {
+            paymentState = "complete";
+        }
+
+        return {
+            inquiry: inquiryState,
+            appointment: appointmentState,
+            offer: offerState,
+            payment: paymentState,
+        };
+    }, [iStatus, apptStatus, deal, dealStatus]);
+
+    const lockedReasons = useMemo(() => {
+        return {
+            inquiry:
+                iStatus === "pending"
+                    ? "Your inquiry is pending. Once accepted, you can schedule a visit."
+                    : undefined,
+
+            appointment:
+                iStatus !== "accepted"
+                    ? "Appointment unlocks after your inquiry is accepted."
+                    : undefined,
+
+            offer:
+                apptStatus !== "done"
+                    ? "Offer unlocks after your property visit is completed."
+                    : undefined,
+
+            payment:
+                dealStatus !== "accepted"
+                    ? "Payment unlocks after your offer is accepted."
+                    : undefined,
+        };
+    }, [iStatus, apptStatus, dealStatus]);
+
+    const appointmentStatusProp =
+        apptStatus === "none" ? "none" : apptStatus; // pass through to Stepper
+
+    const waitingNote =
+        iStatus === "pending"
+            ? "Waiting for agent approval before proceeding to the next step."
+            : null;
+
+    const descHtml =
+        normalized.description || "<p>No description provided for this listing.</p>";
+    const descIsSafe = looksSafeHtml(descHtml);
+
+    const hasImg = !!normalized.image_url;
+    const imgSrc = hasImg ? `/storage/${normalized.image_url}` : null;
+
+    function deriveAppointmentStatus(inquiry) {
+        const trips = Array.isArray(inquiry?.trippings) ? inquiry.trippings : [];
+        if (!trips.length) return "none";
+
+        // get latest tripping (by created_at; fallback to id)
+        const latest = [...trips].sort((a, b) => {
+            const ta = new Date(a.created_at || 0).getTime();
+            const tb = new Date(b.created_at || 0).getTime();
+            return tb - ta || (b.id ?? 0) - (a.id ?? 0);
+        })[0];
+
+        const s = String(latest?.status || "").toLowerCase();
+        if (["pending", "accepted", "scheduled", "cancelled", "done"].includes(s)) return s;
+        return "none";
+    }
 
     return (
         <BuyerLayout>
-            {/* Offer Create/Update */}
+
+            <Head title={`Inquiry ${inquiry.id}`} />
+
+            {/* Modals */}
             <DealFormModal
                 isOpen={isOpenDealForm}
                 setIsOpen={setIsOpenDealForm}
                 property={property}
                 initialValue={deal}
             />
-
-            {/* Deal Details (now with Edit vs Counter/Accept/Decline) */}
             <DealDetailsModal
                 open={isOpenDealDetails}
                 onClose={() => setIsOpenDealDetails(false)}
@@ -376,256 +542,193 @@ export default function ShowInquiry({
                 onCloseDeal={closeDeal}
                 authId={auth?.id}
             />
+            <ScheduleVisitModal
+                open={isAddVisitModal}
+                setOpen={setIsAddVisitModal}
+                visitData={selectedVisitData}
+            />
 
-            {/* Visit scheduler */}
-            <ScheduleVisitModal open={isAddVisitModal} setOpen={setIsAddVisitModal} visitData={selectedVisitData} />
-
-            <div className="mx-4 lg:mx-auto mb-6">
+            {/* Breadcrumb */}
+            <div className="mx-4 mb-6">
                 <Breadcrumb pages={pages} />
             </div>
 
-            <header>
-                Inquiries
-                <div className='border p-4 grid grid-cols-1 md:grid-cols-4 gap-2'>
-                    <div className=''>
-                        <img src={`/storage/${normalized.image_url}`} alt={normalized.title} className='w-full h-[250px]'/>
+            {/* Header / Inquiries summary */}
+            <header className="mx-4 mb-8">
+                <h1 className="sr-only">Inquiry for {normalized.title}</h1>
+                <div className="rounded-2xl bg-white p-6"> {/* Flat card: no shadow, no border */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                        {/* Image */}
+                        <div className="md:col-span-4">
+                            <div className="overflow-hidden rounded-xl bg-gray-50"> {/* Subtle background for image container */}
+                                {imgSrc ? (
+                                    <img
+                                        src={imgSrc}
+                                        alt={normalized.title}
+                                        className="w-full aspect-video object-cover"
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <div className="w-full aspect-video grid place-items-center text-sm text-gray-400">
+                                        No image available
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
-                    </div>
-                    <div className='cols-span-3'>
-                        <h1>{normalized.title}</h1>
-                        <div
-                            dangerouslySetInnerHTML={{ __html: normalized.description }}
-                            className='line-clamp-4'
-                        />
+                        {/* Details */}
+                        <div className="md:col-span-8">
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <div className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
+                                        {normalized.property_type || "Property"}
+                                        {normalized?.property_listing?.updated_at && (
+                                            <> · Updated {timeAgo(normalized.property_listing.updated_at)}</>
+                                        )}
+                                    </div>
+                                    <h2 className="mt-1 text-2xl md:text-3xl font-black text-gray-900 leading-tight">
+                                        {normalized.title}
+                                    </h2>
+                                    <p className="text-sm text-gray-600 mt-2 flex items-center gap-1">
+                                        <MapPin className="h-4 w-4 text-gray-400" />
+                                        {normalized.address || "—"}
+                                    </p>
+                                </div>
+                                <div className="text-right flex-shrink-0 pt-1">
+                                    <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-green-700">
+                                        {peso.format(Number(normalized.price || 0))}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-0.5">Listed Price</div>
+                                </div>
+                            </div>
+
+                            {/* Facts */}
+                            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-gray-100 pt-4">
+                                <FactCard icon={Bed} label="Bedrooms" value={normalized.bedrooms} />
+                                <FactCard icon={Bath} label="Bathrooms" value={normalized.bathrooms} />
+                                <FactCard
+                                    icon={Ruler}
+                                    label="Lot Area"
+                                    value={normalized.lot_area ? `${normalized.lot_area} sqm` : "—"}
+                                />
+                                <FactCard
+                                    icon={Maximize}
+                                    label="Floor Area"
+                                    value={normalized.floor_area ? `${normalized.floor_area} sqm` : "—"}
+                                />
+                            </div>
+
+                            {/* Statuses */}
+                            <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-gray-100 pt-4">
+                                <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                                    <MessageSquare className="h-4 w-4 text-gray-500" />
+                                    Inquiry: <StatusBadge phase={iStatus} />
+                                </div>
+                                {dealStatus && (
+                                    <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                                        Deal: <StatusBadge phase={dealStatus} />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
 
+            {/* Main Content Area: Stepper & Chat */}
+            <div className="mx-4 mb-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column: Progress (2/3 width on desktop) */}
+                    <div className="lg:col-span-2 space-y-8">
+                        <div className="rounded-2xl bg-white p-6"> {/* Flat card: no shadow, no border */}
+                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">
+                                Inquiry Progress
+                            </h3>
+
+                            <Stepper
+                                steps={stepStates}
+                                appointmentStatus={appointmentStatusProp}
+                                onAction={{
+                                    inquiry: actions.inquiry,
+                                    appointment: actions.appointment,
+                                    offer: actions.offer,
+                                    payment: actions.payment,
+                                }}
+                            />
+
+                            <StepperNotes
+                                iStatus={iStatus}
+                                apptStatus={apptStatus}
+                                deal={deal}
+                                dealStatus={dealStatus}
+                                onResched={openScheduleModal}
+                                onSchedule={openScheduleModal}
+                                onOffer={() => (deal?.id ? setIsOpenDealDetails(true) : setIsOpenDealForm(true))}
+                                onPay={() => deal?.id && router.visit(`/deals/${deal.id}/checkout`)}
+                            />
 
 
-            {/* Progress Stepper */}
-            <div className="mx-4 lg:mx-auto mb-4">
-                <Stepper steps={steps} onAction={actions} lockedReasons={{ offer: offerLockedMsg }} />
-
-                {waitingNote && (
-                    <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                        {waitingNote}
-                    </div>
-                )}
-
-                {apptStatus === "scheduled" && iStatus === "accepted" && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                            onClick={openScheduleModal}
-                            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        >
-                            <CalendarDays className="h-4 w-4" />
-                            Reschedule Visit
-                        </button>
-                        <button
-                            onClick={cancelVisit}
-                            className="inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
-                        >
-                            Cancel Visit
-                        </button>
-                    </div>
-                )}
-
-                {apptStatus === "cancelled" && iStatus === "accepted" && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                            onClick={openScheduleModal}
-                            className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
-                        >
-                            <CalendarDays className="h-4 w-4" />
-                            Schedule Again
-                        </button>
-                    </div>
-                )}
-
-                {offerLockedMsg && (
-                    <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                        {offerLockedMsg}
-                    </div>
-                )}
-
-            </div>
-
-            <PropertyHeader title={normalized.title} address={normalized.address} isPresell={normalized.isPresell} />
-
-
-            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <div className="relative lg:col-span-2">
-                    {/* overlay actions */}
-                    <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
-                        <button
-                            onClick={shareProperty}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/90 ring-1 ring-gray-200 backdrop-blur hover:bg-white"
-                            title="Share"
-                            aria-label="Share"
-                        >
-                            <Share2 className="h-5 w-5 text-gray-700" />
-                        </button>
-
-                        <button
-                            onClick={() => toggleFavorite(normalized.id)}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/90 ring-1 ring-gray-200 backdrop-blur hover:bg-white"
-                            title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                            aria-label="Toggle favorite"
-                            disabled={!normalized.id}
-                        >
-                            <Heart className={cn("h-5 w-5", isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-700")} />
-                        </button>
-                    </div>
-
-                    <MainImage image_url={normalized.image_url} title={normalized.title} />
-                </div>
-
-                <div className="lg:col-span-1">
-                    <Thumbnail images={normalized.images} />
-                </div>
-            </div>
-
-            <div className="mt-6 flex w-full flex-col gap-6">
-                {/* 1) Price / CTAs */}
-                <Collapsable title="Overview & Actions" description="Price, size and quick actions" defaultOpen>
-                    <div className="rounded-xl bg-gradient-to-r from-green-50 to-green-100 p-6 shadow-sm">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                            <div className="mb-4 sm:mb-0">
-                                <div className="text-3xl font-bold text-green-600">{fmtPHP.format(normalized.price)}</div>
-                                <div className="mt-1 text-sm text-gray-600">
-                                    {normalized.lot_area ? `${normalized.lot_area} m²` : ""}
-                                    {normalized.floor_area ? ` ${normalized.floor_area} m²` : ""}
-                                </div>
-                            </div>
-
-                            {auth?.role === "Buyer" && (
-                                <div className="flex flex-wrap gap-2">
-                                    {/* Schedule */}
+                            {apptStatus === "scheduled" && iStatus === "accepted" && (
+                                <div className="mt-6 flex flex-wrap gap-3">
                                     <button
-                                        onClick={() => (iStatus === "accepted" ? actions.appointment() : null)}
-                                        disabled={iStatus !== "accepted"}
-                                        className={cn(
-                                            "inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors",
-                                            iStatus === "accepted"
-                                                ? "bg-green-600 text-white hover:bg-green-700"
-                                                : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                        )}
-                                        title={iStatus === "accepted" ? "Schedule a property tour" : "Waiting for agent approval"}
+                                        onClick={openScheduleModal}
+                                        className="inline-flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
                                     >
                                         <CalendarDays className="h-4 w-4" />
-                                        {apptStatus === "scheduled"
-                                            ? "Reschedule Tour"
-                                            : apptStatus === "cancelled"
-                                                ? "Schedule Again"
-                                                : "Schedule Tour"}
+                                        Reschedule Visit
                                     </button>
-
-                                    {/* Offer (details or create) */}
-                                    {normalized.property_listing && (
-                                        <PrimaryButton
-                                            onClick={actions.offer}
-                                            disabled={steps?.offer === "locked"}
-                                            title={
-                                                steps?.offer === "locked"
-                                                    ? "Offer will unlock after your appointment is completed."
-                                                    : deal
-                                                        ? "View My Offer"
-                                                        : "Make Offer"
-                                            }
-                                        >
-                                            {deal ? "View My Offer" : "Make Offer"}
-                                        </PrimaryButton>
-                                    )}
-
-                                    {/* Close Deal quick action */}
-                                    {dealStatus === "accepted" && (
-                                        <PrimaryButton onClick={actions.close} title="Close the deal">
-                                            Close Deal
-                                        </PrimaryButton>
-                                    )}
-                                </div>
-                            )}
-
-                            {auth?.role === "Agent" && (
-                                <div className="flex space-x-3">
                                     <button
-                                        onClick={() => setIsContactSeller(true)}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-white transition-colors hover:bg-accent"
+                                        onClick={cancelVisit}
+                                        className="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     >
-                                        <SendHorizontal className="h-4 w-4" />
-                                        Send Request
+                                        Cancel Visit
+                                    </button>
+                                </div>
+                            )}
+
+                            {apptStatus === "cancelled" && iStatus === "accepted" && (
+                                <div className="mt-6">
+                                    <button
+                                        onClick={openScheduleModal}
+                                        className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                    >
+                                        <CalendarDays className="h-4 w-4" />
+                                        Schedule Visit Again
                                     </button>
                                 </div>
                             )}
                         </div>
-                    </div>
-                </Collapsable>
 
-                {/* 2) Description */}
-                <Collapsable title="Property Description" defaultOpen={false}>
-                    <div className="rounded-xl bg-white">
-                        <div className="prose max-w-none text-gray-800" dangerouslySetInnerHTML={{ __html: normalized.description }} />
-                    </div>
-                </Collapsable>
-
-                {/* 3) Features */}
-                <Collapsable title="Property Features" defaultOpen={false}>
-                    <div className="rounded-xl bg-white">
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                            {normalized.features.length > 0 ? (
-                                normalized.features.map((feature, idx) => (
-                                    <div
-                                        key={`${feature?.name ?? "feature"}-${idx}`}
-                                        className="flex items-center rounded-full bg-green-50 px-4 py-2 text-green-600 hover:shadow"
-                                    >
-                                        <span className="mr-2 inline-block h-2 w-2 rounded-full bg-green-500" />
-                                        <span>{feature?.name ?? "—"}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-gray-500">No features listed.</p>
-                            )}
+                        {/* Property Description */}
+                        <div className="rounded-2xl bg-white p-6"> {/* Flat card: no shadow, no border */}
+                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">
+                                Property Description
+                            </h3>
+                            <div className="text-sm text-gray-700 leading-relaxed">
+                                {descIsSafe ? (
+                                    <div dangerouslySetInnerHTML={{ __html: descHtml }} />
+                                ) : (
+                                    <p className="whitespace-pre-wrap">{descHtml}</p>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </Collapsable>
 
-                {/* 4) Details */}
-                <Collapsable title="Property Details" defaultOpen={false}>
-                    <div className="rounded-xl bg-white">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <DetailItem icon={<Building2 className="h-4 w-4" />} label="Property Type" value={normalized.property_type} />
-                            <DetailItem icon={<Ruler className="h-4 w-4" />} label="Sub Type" value={normalized.sub_type} />
-                            <DetailItem icon={<DoorClosed className="h-4 w-4" />} label="Total Rooms" value={normalized.total_rooms} />
-                            <DetailItem icon={<DoorClosed className="h-4 w-4" />} label="Parking Slot" value={normalized.car_slots} />
-                            <DetailItem icon={<BedDouble className="h-4 w-4" />} label="Total Bedrooms" value={normalized.bedrooms} />
-                            <DetailItem icon={<Bath className="h-4 w-4" />} label="Total Bathrooms" value={normalized.bathrooms} />
+                    {/* Right Column: Direct Messages (1/3 width on desktop) */}
+                    <div className="lg:col-span-1">
+                        <div className="rounded-2xl bg-white p-6 lg:sticky lg:top-8"> {/* Flat card: no shadow, no border, sticky */}
+                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3 border-b border-gray-100 pb-2 flex items-center gap-2">
+                                <MessageSquare className="h-5 w-5 text-amber-700" />
+                                Direct Messages
+                            </h3>
+                            <div className="pt-1">
+                                <ChannelView channel={channel} />
+                            </div>
                         </div>
                     </div>
-                </Collapsable>
 
-                {/* 5) Map */}
-                <Collapsable title="Map & Location" defaultOpen={false}>
-                    <div className="rounded-xl bg-white">
-                        <PropertyMap coordinates={normalized.coordinate} />
-                    </div>
-                </Collapsable>
+                </div>
             </div>
         </BuyerLayout>
-    );
-}
-
-/** Small detail row */
-function DetailItem({ icon, label, value }) {
-    return (
-        <div className="flex items-start">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-50 text-green-600">
-                {icon}
-            </div>
-            <div className="ml-3">
-                <h3 className="text-sm font-medium text-gray-500">{label}</h3>
-                <p className="text-sm text-gray-900">{value}</p>
-            </div>
-        </div>
     );
 }

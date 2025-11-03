@@ -41,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->font('Inter')                              // optional if you added this in Tailwind
             ->maxContentWidth('full')                       // full-width content area
             ->sidebarCollapsibleOnDesktop()              // enable if you like a collapsible sidebar
-            ->darkMode(true)                             // force dark; omit to allow user/system
+            ->darkMode(true)
 
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -72,7 +72,7 @@ class AdminPanelProvider extends PanelProvider
             ])
 
             ->databaseNotifications()
-            ->unsavedChangesAlerts()                       // optional safeguard for forms
-            ->spa()               ;                        // optional SPA mode if you prefer
+            ->unsavedChangesAlerts()
+            ->spa()               ;
     }
 }

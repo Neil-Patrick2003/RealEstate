@@ -21,11 +21,13 @@ const isWithinWindow = (t) => {
     const v = tToMin(t);
     return v !== null && v >= tToMin(WORK_START) && v <= tToMin(WORK_END);
 };
+const toHHMMSS = (t) => {
+    if (!t) return "";
+    // Accept "HH:mm" or "HH:mm:ss"
+    return t.length === 5 ? `${t}:00` : t.slice(0, 8);
+};
 
 export default function ScheduleVisitModal({ open, setOpen, visitData }) {
-
-
-    // console.log(visitData);
     // --------- Form State ---------
     const [form, setForm] = useState({
         date: "",
@@ -50,18 +52,14 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
     const brokerIdVD = visitData?.brokerId ?? broker?.id ?? null;
     const inquiryId = visitData?.inquiryId ?? null;
 
-    // Agent’s upcoming bookings (safe)
-    const trips = useMemo(() => (Array.isArray(agent?.agent_trippings) ? agent.agent_trippings : []), [agent]);
+    const mode = visitData?.mode === "reschedule" ? "reschedule" : "create";
+    const currentTrip = visitData?.tripping ?? null; // {id, visit_date, visit_time, status, notes?}
 
-    // Buyer already scheduled for THIS inquiry?
-    const buyerAlreadyScheduled = useMemo(() => {
-        if (!inquiryId) return false;
-        return trips.some((t) => {
-            const sameInquiry = String(t.inquiry_id ?? "") === String(inquiryId ?? "");
-            const status = String(t.status || "").toLowerCase();
-            return sameInquiry && !["cancelled", "declined"].includes(status);
-        });
-    }, [trips, inquiryId]);
+    // Agent’s upcoming bookings (safe)
+    const trips = useMemo(
+        () => (Array.isArray(agent?.agent_trippings) ? agent.agent_trippings : []),
+        [agent]
+    );
 
     // Booked map: date -> Set(times)
     const bookedByDate = useMemo(() => {
@@ -83,8 +81,15 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
     };
 
     const isSlotBlocked = (dateStr, timeStr) => {
+        // When rescheduling: allow keeping the same slot of the current tripping
         const set = bookedByDate.get(dateStr);
         if (!set) return false;
+        const sameAsCurrent =
+            mode === "reschedule" &&
+            currentTrip &&
+            dateStr === currentTrip.visit_date &&
+            timeStr === toHHMMSS(currentTrip.visit_time || "");
+        if (sameAsCurrent) return false;
         return set.has("00:00:00") || set.has(timeStr);
     };
 
@@ -105,17 +110,32 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
         return SLOTS.map((s) => ({ time: s, disabled: isSlotBlocked(form.date, s) }));
     }, [form.date, bookedByDate]);
 
-    // Pre-fill IDs
+    // Prefill IDs & initial values
     useEffect(() => {
         if (!visitData) return;
+
+        // Choose initial date/time/notes: prefer explicit initialDate/initialTime, else from currentTrip
+        const initialDate =
+            visitData.initialDate || currentTrip?.visit_date || "";
+        const initialTime =
+            toHHMMSS(visitData.initialTime || currentTrip?.visit_time || "");
+        const initialNotes = visitData.initialNotes ?? currentTrip?.notes ?? "";
+
         setForm((prev) => ({
             ...prev,
             agentId: agentIdVD,
             brokerId: brokerIdVD,
             inquiryId,
             propertyId,
+            date: initialDate,
+            time: initialTime, // keep as HH:mm:ss internally
+            notes: initialNotes,
         }));
-    }, [visitData, agentIdVD, brokerIdVD, inquiryId, propertyId]);
+
+        // Clear any prior errors when (re)opening
+        setError("");
+        setTimeError("");
+    }, [visitData, agentIdVD, brokerIdVD, inquiryId, propertyId, currentTrip]);
 
     // If chosen date becomes fully blocked, clear chosen time
     useEffect(() => {
@@ -127,13 +147,24 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [form.date]);
 
+    // Buyer already scheduled for THIS inquiry? (exclude current tripping when rescheduling)
+    const buyerAlreadyScheduled = useMemo(() => {
+        if (!inquiryId) return false;
+        return trips.some((t) => {
+            if (mode === "reschedule" && currentTrip && t.id === currentTrip.id) return false;
+            const sameInquiry = String(t.inquiry_id ?? "") === String(inquiryId ?? "");
+            const status = String(t.status || "").toLowerCase();
+            return sameInquiry && !["cancelled", "declined"].includes(status);
+        });
+    }, [trips, inquiryId, mode, currentTrip]);
+
     // --------- Handlers ---------
     const onChange = (e) => {
         const { name, value } = e.target;
-        setForm((f) => ({ ...f, [name]: value }));
+        setForm((f) => ({ ...f, [name]: name === "time" ? value : value }));
         if (name === "time") {
-            // live validate manual input
-            if (value && !isWithinWindow(value)) {
+            const hhmm = value.length >= 5 ? value.slice(0, 5) : value;
+            if (hhmm && !isWithinWindow(hhmm)) {
                 setTimeError("Please choose a time between 09:00 and 18:00.");
             } else {
                 setTimeError("");
@@ -153,13 +184,11 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
         if (!form.date) return;
         if (isSlotBlocked(form.date, t)) return;
 
-        // slots are HH:mm:ss; still validate window for safety
         const hhmm = t.slice(0, 5);
         if (!isWithinWindow(hhmm)) {
             setTimeError("Please choose a time between 09:00 and 18:00.");
             return;
         }
-
         setForm((f) => ({ ...f, time: t }));
         setTimeError("");
         setError("");
@@ -169,7 +198,8 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
         e?.preventDefault?.();
         setError("");
 
-        if (buyerAlreadyScheduled) {
+        // Only block “new” double-bookings; allow reschedule
+        if (mode !== "reschedule" && buyerAlreadyScheduled) {
             setError("You already have a pending/accepted schedule for this inquiry.");
             return;
         }
@@ -190,15 +220,13 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
             return;
         }
 
-        // Validate window for both slot time ("HH:mm:ss") and manual input ("HH:mm")
         const hhmm = form.time.length >= 5 ? form.time.slice(0, 5) : form.time;
         if (!isWithinWindow(hhmm)) {
             setTimeError("Please choose a time between 09:00 and 18:00.");
             return;
         }
 
-        // Slot conflict re-check
-        const canonical = form.time.length === 5 ? `${form.time}:00` : form.time; // normalize to HH:mm:ss
+        const canonical = toHHMMSS(form.time); // HH:mm:ss
         if (isSlotBlocked(form.date, canonical)) {
             setError("That time slot has just been booked. Pick another slot.");
             return;
@@ -206,28 +234,38 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
 
         setIsSubmitting(true);
 
-        router.post(
-            "/trippings",
-            {
-                property_id: form.propertyId,
-                inquiry_id: form.inquiryId,
-                agent_id: form.agentId,
-                broker_id: form.brokerId, // may be null (ok)
-                date: form.date,
-                time: canonical, // send HH:mm:ss
-                notes: form.notes,
-            },
-            {
-                onSuccess: () => {
-                    setIsSubmitting(false);
-                    setOpen(false);
-                },
-                onError: () => {
-                    setIsSubmitting(false);
-                    setError("Something went wrong. Please try again.");
-                },
-            }
-        );
+        const payload = {
+            property_id: form.propertyId,
+            inquiry_id: form.inquiryId,
+            agent_id: form.agentId,
+            broker_id: form.brokerId,
+            date: form.date,
+            time: canonical,
+            notes: form.notes,
+        };
+
+        const onDone = () => {
+            setIsSubmitting(false);
+            setOpen(false);
+        };
+        const onFail = () => {
+            setIsSubmitting(false);
+            setError("Something went wrong. Please try again.");
+        };
+
+        if (mode === "reschedule" && currentTrip?.id) {
+            router.put(`/trippings/${currentTrip.id}`, payload, {
+                onSuccess: onDone,
+                onError: onFail,
+                preserveScroll: true,
+            });
+        } else {
+            router.post("/trippings", payload, {
+                onSuccess: onDone,
+                onError: onFail,
+                preserveScroll: true,
+            });
+        }
     };
 
     if (!visitData) return null;
@@ -262,7 +300,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                             <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                                 <Dialog.Title className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                     <CalendarDays className="h-5 w-5 text-primary" />
-                                    Schedule a Property Visit
+                                    {mode === "reschedule" ? "Reschedule Property Visit" : "Schedule a Property Visit"}
                                 </Dialog.Title>
                                 <p className="text-sm text-gray-500 mt-1 mb-4">
                                     Choose your preferred date and time between <b>09:00</b> and <b>18:00</b>. The agent will confirm your request.
@@ -279,12 +317,14 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-semibold text-gray-800 truncate">{property?.title || "Property"}</h4>
                                         <p className="text-sm text-gray-500 truncate">{property?.address || "—"}</p>
-                                        <p className="text-sm font-bold text-primary mt-1">₱ {Number(property?.price || 0).toLocaleString()}</p>
+                                        <p className="text-sm font-bold text-primary mt-1">
+                                            ₱ {Number(property?.price || 0).toLocaleString()}
+                                        </p>
                                     </div>
                                 </div>
 
                                 {/* Info banners */}
-                                {buyerAlreadyScheduled && (
+                                {mode !== "reschedule" && buyerAlreadyScheduled && (
                                     <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 px-3 py-2 text-sm flex items-start gap-2">
                                         <AlertCircle className="h-4 w-4 mt-0.5" />
                                         You already have a pending/accepted schedule for this inquiry. You can’t book another one.
@@ -301,7 +341,11 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                             <ul className="max-h-28 overflow-auto divide-y">
                                                 {trips
                                                     .slice()
-                                                    .sort((a, b) => (a.visit_date + (a.visit_time || "")).localeCompare(b.visit_date + (b.visit_time || "")))
+                                                    .sort((a, b) =>
+                                                        (a.visit_date + (a.visit_time || "")).localeCompare(
+                                                            b.visit_date + (b.visit_time || "")
+                                                        )
+                                                    )
                                                     .map((t) => (
                                                         <li key={t.id} className="px-3 py-2 text-sm flex items-center justify-between">
                               <span className="text-gray-700">
@@ -334,7 +378,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                                                 ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                                                                 : "bg-white text-gray-800 hover:bg-gray-50 border-gray-200"
                                                     )}
-                                                    disabled={blocked || buyerAlreadyScheduled}
+                                                    disabled={blocked || (mode !== "reschedule" && buyerAlreadyScheduled)}
                                                     title={blocked ? "Fully booked" : "Select date"}
                                                 >
                                                     {fmtDate(d)}
@@ -356,7 +400,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                                 value={form.date}
                                                 onChange={onChange}
                                                 required
-                                                disabled={buyerAlreadyScheduled}
+                                                disabled={mode !== "reschedule" && buyerAlreadyScheduled}
                                                 className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary disabled:bg-gray-100"
                                             />
                                             {form.date && isDateFullyBlocked(form.date) && (
@@ -375,7 +419,11 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                                             key={time}
                                                             type="button"
                                                             onClick={() => onPickTime(time)}
-                                                            disabled={disabled || buyerAlreadyScheduled || !form.date}
+                                                            disabled={
+                                                                disabled ||
+                                                                (mode !== "reschedule" && buyerAlreadyScheduled) ||
+                                                                !form.date
+                                                            }
                                                             className={cn(
                                                                 "px-3 py-1.5 rounded-md text-sm border",
                                                                 form.time === time
@@ -394,19 +442,16 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                                 )}
                                             </div>
 
-                                            {/* Manual time input (kept for flexibility, with window guard) */}
+                                            {/* Manual time input (hidden but supported) */}
                                             <input
                                                 type="time"
                                                 name="time"
-                                                value={form.time.length === 8 ? form.time.slice(0, 5) : form.time} // show HH:mm
-                                                onChange={(e) => {
-                                                    // keep internal as HH:mm (we normalize on submit)
-                                                    onChange(e);
-                                                }}
+                                                value={form.time.length === 8 ? form.time.slice(0, 5) : form.time}
+                                                onChange={onChange}
                                                 min={WORK_START}
                                                 max={WORK_END}
                                                 required
-                                                disabled={buyerAlreadyScheduled}
+                                                disabled={mode !== "reschedule" && buyerAlreadyScheduled}
                                                 className={cn(
                                                     "hidden mt-2 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary disabled:bg-gray-100",
                                                     timeError && "border-rose-300"
@@ -424,7 +469,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                             placeholder="Any specific requests or questions?"
                                             value={form.notes}
                                             onChange={onChange}
-                                            disabled={buyerAlreadyScheduled}
+                                            disabled={mode !== "reschedule" && buyerAlreadyScheduled}
                                             className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary disabled:bg-gray-100"
                                         />
                                     </div>
@@ -451,11 +496,13 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                             type="submit"
                                             className={cn(
                                                 "px-5 py-2 rounded-md text-sm font-medium transition",
-                                                buyerAlreadyScheduled ? "bg-gray-300 text-white cursor-not-allowed" : "bg-primary hover:bg-primary-dark text-white"
+                                                mode !== "reschedule" && buyerAlreadyScheduled
+                                                    ? "bg-gray-300 text-white cursor-not-allowed"
+                                                    : "bg-primary hover:bg-primary-dark text-white"
                                             )}
-                                            disabled={isSubmitting || buyerAlreadyScheduled}
+                                            disabled={isSubmitting || (mode !== "reschedule" && buyerAlreadyScheduled)}
                                         >
-                                            {isSubmitting ? "Scheduling..." : "Confirm Schedule"}
+                                            {isSubmitting ? (mode === "reschedule" ? "Saving..." : "Scheduling...") : (mode === "reschedule" ? "Save Changes" : "Confirm Schedule")}
                                         </button>
                                     </div>
                                 </form>
