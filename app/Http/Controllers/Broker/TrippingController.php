@@ -6,39 +6,43 @@ use App\Http\Controllers\Controller;
 use App\Models\PropertyTripping;
 use App\Notifications\TrippingResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class TrippingController extends Controller
 {
-    public function index(Request $request)
+
+    public function index()
     {
-        // Only get the broker’s schedules once
-        $schedules = PropertyTripping::with('property', 'buyer')
-            ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
-                return $q->where('status', $request->status);
-            })
+        $trippings = PropertyTripping::with('property:id,title,image_url,address', 'buyer:id,name,email')
             ->where('broker_id', auth()->id())
             ->latest()
-        ->paginate($request->items_per_page, ['*'], 'page', $request->input('page', 1));
+            ->get();
 
 
-        // Use collection filtering without repeating broker_id
-        $upcomingTrips = $schedules->where('status', 'Upcoming')->count();
-        $pendingTrips = $schedules->where('status', 'Pending')->count();
-        $pastTrips = $schedules->where('status', 'Completed')->count();
-        $cancelledTrips = $schedules->where('status', 'Declined')->count();
 
-        return inertia('Broker/Tripping/Index', [
-            'schedules' => $schedules,
-            'upcomingTrips' => $upcomingTrips,
-            'pastTrips' => $pastTrips,
-            'cancelledTrips' => $cancelledTrips,
-            'pendingTrips' => $pendingTrips,
+        return Inertia::render('Broker/Tripping/Index', [
+            'trippings' => $trippings,
         ]);
     }
 
+
     public function update(Request $request, $id, $action)
     {
-        $status = ucfirst(strtolower($action)); // e.g. "accepted" → "Accepted"
+
+        $status = ucfirst(strtolower($action));
+
+        if($status == 'Accept'){
+            $status = 'accepted';
+        }
+        else if($status == 'Reject'){
+            $status = 'rejected';
+        }
+        else if($status == 'Complete'){
+            $status = 'completed';
+        }
+        else{
+            $status = 'Cancelled';
+        }
 
         $tripping = PropertyTripping::findOrFail($id);
 

@@ -6,9 +6,11 @@ use App\Models\Deal;
 use App\Models\Inquiry;
 use App\Models\Property;
 use App\Models\Transaction;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class TransactionController extends Controller
 {
@@ -73,8 +75,10 @@ class TransactionController extends Controller
             'totals'       => $totals,
         ]);
     }
-    public function store(Request $request){
 
+
+    public function store(Request $request)
+    {
         $data = $request->validate([
             'inquiry_id'         => ['nullable', 'exists:inquiries,id'],
             'property_id'        => ['nullable', 'exists:properties,id'],
@@ -97,77 +101,88 @@ class TransactionController extends Controller
             'discount_amount'    => ['nullable', 'numeric', 'min:0'],
             'fees_amount'        => ['nullable', 'numeric', 'min:0'],
             'tcp'                => ['nullable', 'numeric', 'min:0'],
+            'reservation_amount' => ['nullable', 'numeric', 'min:0'],
             'balance_amount'     => ['nullable', 'numeric', 'min:0'],
 
             // 🏦 Terms
-            'financing'          => ['nullable', Rule::in(['cash', 'bank', 'in_house', 'other'])],
+            'financing'          => ['required', Rule::in(['cash', 'bank', 'in_house', 'other'])],
             'payment_terms_json' => ['nullable', 'string'],
             'reference_no'       => ['nullable', 'string', 'max:100'],
+            'mode_of_payment'    => ['required', 'string'],
 
             // 🗒️ Notes
             'remarks'            => ['nullable', 'string'],
         ]);
 
+        $data['primary_agent_id'] = auth()->id();
 
-        $base   = (float) ($data['base_price'] ?? 0);
-        $disc   = (float) ($data['discount_amount'] ?? 0);
-        $fees   = (float) ($data['fees_amount'] ?? 0);
-        $tcp    = $data['tcp'] ?? ($base - $disc + $fees);
-        $res    = (float) ($data['reservation_amount'] ?? 0);
-        $balance = $data['balance_amount'] ?? max($tcp - $res - $dp, 0);
+
+        // Compute amounts
+        $base    = (float) ($data['base_price'] ?? 0);
+        $disc    = (float) ($data['discount_amount'] ?? 0);
+        $fees    = (float) ($data['fees_amount'] ?? 0);
+        $tcp     = (float) ($data['tcp'] ?? ($base - $disc + $fees));
+        $res     = (float) ($data['reservation_amount'] ?? 0);
+        $balance = (float) ($data['balance_amount'] ?? max($tcp - $res, 0)); // removed undefined $dp
 
         $data['tcp'] = $tcp;
         $data['balance_amount'] = $balance;
 
-        $transaction = Transaction::create($data);
+        // Auto-set date fields based on status (uses app timezone)
+        $now = Carbon::now(); // honors config('app.timezone'), e.g. Asia/Manila
+        $statusDates = [
+            'RESERVED'  => 'reserved_at',
+            'BOOKED'    => 'booked_at',
+            'SOLD'      => 'closed_at',
+            'CANCELLED' => 'cancelled_at',
+            'EXPIRED'   => 'expires_at',
+            // 'REFUNDED' => 'refunded_at', // add if you create this column later
+        ];
 
+        if (isset($statusDates[$data['status']])) {
+            $dateField = $statusDates[$data['status']];
+            if (empty($data[$dateField])) {
+                $data[$dateField] = $now;
+            }
+        }
 
+        DB::transaction(function () use (&$data) {
+            $transaction = Transaction::create($data);
 
+            // 🏁 Auto actions
+            if ($transaction->status === 'SOLD') {
+                // Deal → Sold + close related inquiry
+                if ($transaction->deal_id) {
+                    $deal = Deal::find($transaction->deal_id);
+                    if ($deal) {
+                        $deal->update(['status' => 'Sold']);
+                        $deal->load(['property_listing', 'property_listing.seller', 'buyer', 'property_listing.agents', 'property_listing.property']);
 
-        // 🏁 Auto actions
-        if ($transaction->status === 'SOLD') {
-            // Mark deal and property as sold
+                        $inquiry = Inquiry::where('property_id', optional($deal->property_listing->property)->id)
+                            ->where('buyer_id', optional($deal->buyer)->id)
+                            ->first();
 
-            if ($transaction->deal_id) {
-                $deal = Deal::find($transaction->deal_id);
-
-                if ($deal) {
-                    $deal->update(['status' => 'Sold']);
-
-                    $deal->load(['property_listing', 'property_listing.seller', 'buyer', 'property_listing.agents', 'property_listing.property']);
-
-
-                    $inquiry = Inquiry::where('property_id', $deal->property_listing->property->id)
-                        ->where('buyer_id', $deal->buyer->id)
-                        ->first();
-
-                    if ($inquiry) {
-                        $inquiry->update(['status' => 'Closed with Deal']);
+                        if ($inquiry) {
+                            $inquiry->update(['status' => 'Closed with Deal']);
+                        }
                     }
                 }
 
-            }
-
-
-
-            if ($transaction->property_id) {
-                $property = Property::find($transaction->property_id);
-                if ($property) {
-                    $property->update(['status' => 'Sold']);
+                // Property → Sold (+ listing)
+                if ($transaction->property_id) {
+                    $property = Property::find($transaction->property_id);
+                    if ($property) {
+                        $property->update(['status' => 'Sold']);
+                        $property->load('property_listing');
+                        if ($property->property_listing) {
+                            $property->property_listing->update(['status' => 'Sold']);
+                        }
+                    }
                 }
-
-                $property->load('property_listing');
-                if ($property->property_listing) {
-                    $property->property_listing->update(['status' => 'Sold']);
-                }
-
-
             }
+        });
 
-
-        }
-
-
-        return redirect()->back()->with('success', "Transaction save successfully.");
+        return redirect()->back()->with('success', 'Transaction saved successfully.');
     }
+
 }

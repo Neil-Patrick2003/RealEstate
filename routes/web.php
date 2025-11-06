@@ -300,6 +300,7 @@ Route::patch('/broker/trippings/{id}/{action}', [\App\Http\Controllers\Broker\Tr
 Route::get('/broker/transactions', [\App\Http\Controllers\Broker\TransactionController::class, 'index']);
 
 Route::get('/broker/deals', [\App\Http\Controllers\Broker\DealController::class, 'index']);
+Route::get('/broker/deal/{deal}/finalize-deal', [\App\Http\Controllers\Broker\DealController::class, 'show'])->name('broker.deals.finalize');
 Route::patch('/broker/deals/{deal}/{status}', [\App\Http\Controllers\Broker\DealController::class, 'update'])->name('broker.deals.update');
 Route::patch('/broker/deals/{deal}', [\App\Http\Controllers\Broker\DealController::class, 'counter'])->name('broker.deals.counter-offer');;
 

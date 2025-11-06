@@ -1,488 +1,492 @@
-import BrokerLayout from "@/Layouts/BrokerLayout.jsx";
-import StatCard from "@/Components/StatCard.jsx";
+// resources/js/Pages/Agents/Deal.jsx
+import InquiriesCollapsable from "@/Components/collapsable/InquiriesClosable.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faCalendarAlt,
-    faDownload,
-    faMagnifyingGlass,
-    faFilter,
-} from "@fortawesome/free-solid-svg-icons";
-import React, { useMemo, useState, useEffect } from "react";
-import { useForm, usePage, Link } from "@inertiajs/react";
+import { faCheck, faPen, faXmark, faReply, faMoneyBillWave, faHandshake } from "@fortawesome/free-solid-svg-icons";
+import React, { useMemo, useState } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { router, useForm, usePage, Link, Head } from "@inertiajs/react";
+import Modal from "@/Components/Modal.jsx";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
-import CounterOfferModal from "@/Components/Deal/CounterOfferModal.jsx";
+import BrokerLayout from "@/Layouts/BrokerLayout.jsx";
 
 dayjs.extend(relativeTime);
 
-export default function Index({
-                                  property_listings = [],
-                                  all_deals_count = 0,
-                                  pending_deals_count = 0,
-                                  cancelled_deals_count = 0,
-                                  closed_deals_count = 0,
-                                  status = "", // server-selected status (optional)
-                              }) {
-    const { data, setData, patch, processing, reset } = useForm({
-        id: "",
-        status: "",
+/** ---------- helpers ---------- */
+const peso = (v) =>
+    typeof v === "number"
+        ? v.toLocaleString("en-PH", { style: "currency", currency: "PHP" })
+        : Number(v || 0).toLocaleString("en-PH", { style: "currency", currency: "PHP" });
+
+const ordinal = (n) => {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
+
+const STATUS = {
+    PENDING: "Pending",
+    ACCEPTED: "Accepted",
+    REJECTED: "Rejected",
+    RESERVED: "Reserved",
+    SOLD: "Sold",
+    CANCELLED: "Cancelled",
+};
+
+const statusStyles = {
+    [STATUS.ACCEPTED]: "bg-emerald-50 text-emerald-800 ring-emerald-50 border-emerald-300",
+    [STATUS.REJECTED]: "bg-rose-50 text-rose-800 ring-rose-50 border-rose-300",
+    [STATUS.PENDING]: "bg-amber-50 text-amber-800 ring-amber-50 border-amber-300",
+    [STATUS.CANCELLED]: "bg-gray-50 text-gray-700 ring-gray-50 border-gray-300",
+    [STATUS.RESERVED]: "bg-blue-50 text-blue-800 ring-blue-50 border-blue-300",
+    [STATUS.SOLD]: "bg-green-50 text-green-800 ring-green-50 border-green-300",
+    default: "bg-orange-50 text-orange-800 ring-orange-50 border-orange-300",
+};
+
+export default function Deal({ property_listings }) {
+    const { auth } = usePage().props;
+    const authUserId = auth?.user?.id;
+
+    const listings = property_listings?.data ?? [];
+
+    const [selectedDeal, setSelectedDeal] = useState(null);
+    const [selectedListingId, setSelectedListingId] = useState(null);
+    const [openUpdateForm, setOpenUpdateForm] = useState(false);
+    const [openAcceptModal, setOpenAcceptModal] = useState(false); // Used for Accept/Decline confirmations
+    const [newStatus, setNewStatus] = useState("");
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false); // Used for Status Dropdown confirmations (not used in final, but kept for future proofing)
+    const [editMode, setEditMode] = useState("edit"); // 'edit' | 'counter'
+
+    const { data, setData, processing, errors, reset, put } = useForm({
+        amount: "",
     });
 
-    const [openStatusModal, setOpenStatusModal] = useState(false);
-    const [openCounterModal, setOpenCounterModal] = useState(false);
-    const [selectedDeal, setSelectedDeal] = useState(null);
+    const isLastEditedByAuth = (deal) =>
+        !!deal?.amount_last_updated_by && deal.amount_last_updated_by === authUserId;
 
-    const [search, setSearch] = useState("");
-    const [localStatus, setLocalStatus] = useState(status || "All");
-    const [showFilterBar, setShowFilterBar] = useState(false);
-
-    const userId = usePage().props?.auth?.user?.id;
-
-    const statusColors = {
-        pending: "bg-yellow-100 text-yellow-700",
-        accepted: "bg-green-100 text-green-700",
-        declined: "bg-red-100 text-red-700",
-        upcoming: "bg-blue-100 text-blue-700",
-        cancelled: "bg-gray-100 text-gray-600",
-        closed: "bg-indigo-100 text-indigo-700",
-        sold: "bg-purple-100 text-purple-700",
-    };
-
-    const money = (n) =>
-        `₱${Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
-
-    // Flatten deals for search/export (but keep your current table mapping intact)
-    const allDealsFlat = useMemo(() => {
-        const rows = [];
-        property_listings.forEach((listing) => {
-            const deals = Array.isArray(listing?.deal) ? listing.deal : [];
-            deals.forEach((deal) => {
-                rows.push({
-                    id: deal.id,
-                    status: deal.status,
-                    created_at: deal.created_at,
-                    amount: deal.amount,
-                    amount_last_updated_by: deal.amount_last_updated_by,
-                    buyer: deal.buyer || {},
-                    property: listing?.property || {},
-                    listingId: listing?.id,
-                });
-            });
-        });
-        return rows;
-    }, [property_listings]);
-
-    // Local status filter fallback (if server doesn't drive tabs)
-    const shouldKeepByStatus = (s) => {
-        const target = (localStatus || "All").toLowerCase();
-        if (target === "all") return true;
-        return s?.toLowerCase() === target;
-    };
-
-    const searchMatch = (row) => {
-        const q = search.trim().toLowerCase();
-        if (!q) return true;
-        const hay = `${row?.property?.title || ""} ${row?.property?.address || ""} ${
-            row?.buyer?.name || ""
-        } ${row?.buyer?.email || ""}`.toLowerCase();
-        return hay.includes(q);
-    };
-
-    const derivedCounts = useMemo(() => {
-        const counts = {
-            all: all_deals_count,
-            pending: pending_deals_count,
-            closed: closed_deals_count,
-            cancelled: cancelled_deals_count,
-        };
-        // If backend didn’t provide, compute locally
-        if (!all_deals_count && allDealsFlat.length) {
-            counts.all = allDealsFlat.length;
-            counts.pending = allDealsFlat.filter((d) => d.status === "Pending").length;
-            counts.closed = allDealsFlat.filter((d) => d.status === "Closed" || d.status === "Sold").length;
-            counts.cancelled = allDealsFlat.filter((d) => /cancel/i.test(d.status)).length;
-        }
-        return counts;
-    }, [all_deals_count, pending_deals_count, closed_deals_count, cancelled_deals_count, allDealsFlat]);
-
-    // For quick “showing X results”
-    const visibleDealCount = useMemo(() => {
-        return allDealsFlat.filter((d) => shouldKeepByStatus(d.status) && searchMatch(d)).length;
-    }, [allDealsFlat, localStatus, search]);
-
-    const handleStatusUpdate = (deal, next) => {
+    const openModal = (deal, listingId, mode = "edit") => {
         setSelectedDeal(deal);
-        setData({ id: deal.id, status: next });
-        setOpenStatusModal(true);
+        setSelectedListingId(listingId);
+        setEditMode(mode);
+        // Ensure amount is formatted correctly for the input
+        setData("amount", String(deal.amount || ""));
+        setOpenUpdateForm(true);
     };
 
-    const handleCounter = (deal, property) => {
-        setSelectedDeal({ deal, property });
-        setOpenCounterModal(true);
+    const closeModal = () => {
+        setOpenUpdateForm(false);
+        setSelectedDeal(null);
+        setSelectedListingId(null);
+        setEditMode("edit");
+        reset();
     };
 
-    const submitStatusUpdate = () => {
-        patch(route("broker.deals.update", { deal: data.id, status: data.status }), {
+    const submit = (e) => {
+        e.preventDefault();
+        if (!selectedDeal) return;
+
+        // Use a consistent value for the PUT request amount, ensuring it's a string/number
+        const payload = { amount: data.amount };
+
+        put(
+            route("agents.deals.update", {
+                deal: selectedDeal.id,
+            }), payload,
+            {
+                preserveScroll: true,
+                onSuccess: () => closeModal(),
+                onError: (err) => console.error(err),
+            }
+        );
+    };
+
+    // Original onStatusChange is slightly simplified as Accept/Decline now use openAcceptModal
+    // This is primarily for future use if RESERVED/SOLD dropdown is re-added
+    const onStatusChange = (deal, status) => {
+        setSelectedDeal(deal);
+        setNewStatus(status);
+        setConfirmModalOpen(true);
+    };
+
+    const handleConfirmUpdate = () => {
+        if (!selectedDeal || !newStatus) return;
+        handleUpdate(newStatus);
+        setConfirmModalOpen(false);
+        setOpenAcceptModal(false);
+    };
+
+    const handleUpdate = (status) => {
+        if (!status || !selectedDeal) return;
+        router.put(route('agents.deals.update_status', { deal: selectedDeal.id, status: status.toLowerCase() }), {}, {
             onSuccess: () => {
-                setOpenStatusModal(false);
-                reset();
+                setSelectedDeal(null);
+                setNewStatus("");
+                // Reload the page to get fresh data
+                router.reload({ only: ['property_listings'] });
+            },
+            onError: (error) => {
+                console.error("Failed to update status:", error);
             },
         });
     };
 
-    // CSV Export (current filtered rows)
-    const exportCSV = () => {
-        const rows = allDealsFlat.filter((r) => shouldKeepByStatus(r.status) && searchMatch(r));
-        const header = [
-            "Deal ID",
-            "Status",
-            "Amount",
-            "Buyer",
-            "Buyer Email",
-            "Property",
-            "Address",
-            "Created At",
-        ];
-        const body = rows.map((r) => [
-            r.id,
-            r.status,
-            r.amount,
-            r?.buyer?.name || "",
-            r?.buyer?.email || "",
-            r?.property?.title || "",
-            r?.property?.address || "",
-            dayjs(r.created_at).format("YYYY-MM-DD HH:mm"),
-        ]);
-        const csv = [header, ...body].map((arr) =>
-            arr
-                .map((v) => {
-                    const s = String(v ?? "");
-                    return /,|"|\n/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-                })
-                .join(",")
-        );
-        const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `deals_${dayjs().format("YYYYMMDD_HHmm")}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-    };
-
-    // Per-row action buttons
-    const ActionButtons = ({ deal, property }) => {
-        const isOwnCounter = deal?.amount_last_updated_by === userId;
-        const pending = deal?.status === "Pending";
-        const accepted = deal?.status === "Accepted";
-
-        return (
-            <div className="flex flex-wrap gap-2 justify-end">
-                {pending && (
-                    <>
-                        <button
-                            onClick={() => handleStatusUpdate(deal, "Accepted")}
-                            disabled={processing || isOwnCounter}
-                            className="text-sm px-3 py-1.5 rounded-md text-white bg-green-600 hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={isOwnCounter ? "You made the latest counter. Wait for buyer response." : "Accept this offer"}
-                        >
-                            Accept
-                        </button>
-                        <button
-                            onClick={() => handleCounter(deal, property)}
-                            className="text-sm px-3 py-1.5 rounded-md text-gray-700 border border-gray-300 hover:bg-gray-50 transition"
-                            title={isOwnCounter ? "Edit your counter" : "Send a counter offer"}
-                        >
-                            {isOwnCounter ? "Edit" : "Counter"}
-                        </button>
-                        <button
-                            onClick={() => handleStatusUpdate(deal, "Declined")}
-                            disabled={processing || isOwnCounter}
-                            className="text-sm px-3 py-1.5 rounded-md text-red-600 border border-red-300 hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={isOwnCounter ? "You made the latest counter. Wait for buyer response." : "Decline this offer"}
-                        >
-                            Decline
-                        </button>
-                    </>
-                )}
-                {accepted && (
-                    <>
-                        <button
-                            onClick={() => handleStatusUpdate(deal, "Sold")}
-                            className="text-sm px-3 py-1.5 rounded-md text-white bg-orange-500 hover:bg-orange-600 transition"
-                            title="Mark deal as sold"
-                        >
-                            Mark as Sold
-                        </button>
-                        <button
-                            onClick={() => handleStatusUpdate(deal, "Cancelled")}
-                            className="text-sm px-3 py-1.5 rounded-md text-white bg-gray-600 hover:bg-gray-700 transition"
-                            title="Cancel this deal"
-                        >
-                            Cancel
-                        </button>
-                    </>
-                )}
-            </div>
-        );
-    };
-
-    // Render helpers
-    const StatusBadge = ({ value }) => {
-        const cls = statusColors[value?.toLowerCase()] || "bg-gray-100 text-gray-700";
-        return (
-            <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full capitalize ${cls}`}>
-        {value || "Unknown"}
-      </span>
-        );
-    };
-
-    const CardProperty = ({ property }) => (
-        <div className="flex gap-3 items-start">
-            <img
-                src={property?.image_url ? `/storage/${property.image_url}` : "/placeholder-image.jpg"}
-                alt={property?.title || "Property"}
-                className="w-14 h-14 object-cover rounded-md"
-                onError={(e) => (e.currentTarget.src = "/placeholder-image.jpg")}
-            />
-            <div>
-                <p className="font-medium text-gray-800">{property?.title || "-"}</p>
-                <p className="text-sm text-gray-500 line-clamp-1">{property?.address || "-"}</p>
-            </div>
-        </div>
-    );
-
-    const filteredDealsForListing = (listing) => {
-        const deals = Array.isArray(listing?.deal) ? listing.deal : [];
-        return deals.filter((d) => shouldKeepByStatus(d.status) && searchMatch({ property: listing.property, buyer: d.buyer }));
-    };
-
-    const hasDeals = useMemo(
-        () => property_listings?.some((l) => filteredDealsForListing(l).length > 0),
-        [property_listings, localStatus, search]
-    );
+    const pageLinks = useMemo(() => property_listings?.links ?? [], [property_listings]);
 
     return (
         <BrokerLayout>
-            {/* Confirm Modal */}
+            <Head title="Deal Manager" />
+
+            {/* Confirm: Accept / Reject Modal */}
             <ConfirmDialog
-                open={openStatusModal}
-                onConfirm={submitStatusUpdate}
-                confirmText="Yes, Confirm"
+                open={openAcceptModal}
+                onConfirm={handleConfirmUpdate}
+                confirmText={newStatus}
+                cancelText={"Cancel"}
+                setOpen={setOpenAcceptModal}
+                title={`Confirm ${newStatus}`}
+                description={`Are you sure you want to mark this offer as "${newStatus}"? This will notify the buyer.`}
+            />
+
+            {/* Confirm: Status dropdown (kept for completeness) */}
+            <ConfirmDialog
+                open={confirmModalOpen}
+                setOpen={setConfirmModalOpen}
+                onConfirm={handleConfirmUpdate}
+                confirmText="Confirm Update"
                 cancelText="Cancel"
-                setOpen={setOpenStatusModal}
-                title="Update Deal Status"
-                description={`Are you sure you want to mark this deal as "${data.status}"?`}
-                processing={processing}
+                title="Confirm Status Update"
+                description={`Are you sure you want to change status to "${newStatus}"?`}
             />
 
-            {/* Counter Modal */}
-            <CounterOfferModal
-                show={openCounterModal}
-                onClose={() => setOpenCounterModal(false)}
-                deal={selectedDeal?.deal || selectedDeal} // supports old call signature
-                property={selectedDeal?.property}
-                buyer={(selectedDeal?.deal || selectedDeal)?.buyer}
-            />
+            <div className="flex flex-col p-4 md:p-8 gap-6 ">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <header className="flex flex-col gap-1">
+                        <h1 className="text-3xl font-extrabold text-gray-900">Agent Deals Manager</h1>
+                        <p className="text-gray-600 text-base">
+                            Manage all incoming and negotiated buyer offers across your listings.
+                        </p>
+                    </header>
+                    <span className="text-sm text-gray-500 font-medium whitespace-nowrap">
+                        <span className="font-bold text-lg text-gray-700">{property_listings?.total ?? listings.length}</span> total listings
+                    </span>
+                </div>
 
-            <div className="px-4 py-6 sm:px-6 lg:px-8">
-                {/* Header */}
-                <div className="flex items-center justify-between gap-3 mb-4">
-                    <h1 className="text-3xl font-semibold text-gray-800">Deals</h1>
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setShowFilterBar((v) => !v)}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-md border bg-white hover:bg-gray-50"
-                            title="Show filters"
-                        >
-                            <FontAwesomeIcon icon={faFilter} />
-                            Filters
-                        </button>
-                        <button
-                            onClick={exportCSV}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-md border bg-white hover:bg-gray-50"
-                            title="Export filtered results as CSV"
-                        >
-                            <FontAwesomeIcon icon={faDownload} />
-                            Export CSV
-                        </button>
+                {listings.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500 shadow-lg">
+                        <FontAwesomeIcon icon={faMoneyBillWave} className="w-8 h-8 mx-auto mb-4 text-gray-400" />
+                        <p className="text-lg font-medium">No Active Listings with Deals.</p>
+                        <p className="text-sm mt-1">Add a property listing to start receiving offers.</p>
                     </div>
-                </div>
+                ) : (
+                    listings.map((listing) => {
+                        const offerCount = listing.deal?.length ?? 0;
+                        const finalPrice = listing.property?.price ? peso(listing.property.price) : "—";
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <StatCard
-                        title="All Deals"
-                        count={derivedCounts.all}
-                        icon={<FontAwesomeIcon icon={faCalendarAlt} className="text-gray-600" />}
-                        bgColor="bg-gray-100"
-                    />
-                    <StatCard
-                        title="Pending Offers"
-                        count={derivedCounts.pending}
-                        icon={<FontAwesomeIcon icon={faCalendarAlt} className="text-yellow-600" />}
-                        bgColor="bg-yellow-100"
-                    />
-                    <StatCard
-                        title="Closed Deals"
-                        count={derivedCounts.closed}
-                        icon={<FontAwesomeIcon icon={faCalendarAlt} className="text-blue-600" />}
-                        bgColor="bg-blue-100"
-                    />
-                    <StatCard
-                        title="Cancelled Deals"
-                        count={derivedCounts.cancelled}
-                        icon={<FontAwesomeIcon icon={faCalendarAlt} className="text-red-600" />}
-                        bgColor="bg-red-100"
-                    />
-                </div>
+                        return (
+                            <div className="mb-3" key={listing.id}>
+                                <InquiriesCollapsable
+                                    header={
+                                        <div className="flex w-full items-center justify-between gap-4 py-1">
+                                            <div className="flex items-center gap-4 min-w-0">
+                                                <img
+                                                    src={
+                                                        listing.property?.image_url
+                                                            ? `/storage/${listing.property.image_url}`
+                                                            : "/placeholder.png"
+                                                    }
+                                                    alt={listing.property?.title || "Property Image"}
+                                                    className="w-16 h-16 object-cover rounded-xl ring-1 ring-gray-200 shadow-sm"
+                                                />
+                                                <div className="leading-snug min-w-0">
+                                                    <p className="font-extrabold text-gray-900 truncate">
+                                                        {listing.property?.title || "Untitled Property"}
+                                                    </p>
+                                                    <p className="text-sm text-gray-500 truncate mt-0.5">
+                                                        {listing.property?.address || "No address provided"}
+                                                    </p>
+                                                    <p className="text-sm font-bold text-primary mt-1">
+                                                        Listing Price: {finalPrice}
+                                                    </p>
+                                                </div>
+                                            </div>
 
-                {/* Filter bar */}
-                {showFilterBar && (
-                    <div className="mb-4 rounded-xl border border-gray-100 bg-white/70 backdrop-blur p-4 shadow-sm">
-                        <div className="flex flex-col md:flex-row md:items-center gap-3">
-                            <div className="relative w-full md:w-80">
-                                <input
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Search by property, address, or buyer…"
-                                    className="h-10 w-full rounded-md border border-gray-300 pl-10 pr-3 text-sm focus:ring-1 focus:ring-primary"
-                                />
-                                <FontAwesomeIcon
-                                    icon={faMagnifyingGlass}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                                />
+                                            <div className="flex items-center gap-3 shrink-0">
+                                                <span className="hidden sm:inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-gray-600 text-xs font-medium border border-gray-200">
+                                                    Offers Received
+                                                </span>
+                                                <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-primary px-3 text-white text-base font-bold shadow-md">
+                                                    {offerCount}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    }
+                                >
+                                    <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+                                        <table className="min-w-full text-sm text-left text-gray-800">
+                                            <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                                            <tr>
+                                                <th className="p-4 w-16">#</th>
+                                                <th className="p-4 min-w-[120px]">Buyer</th>
+                                                <th className="p-4 min-w-[150px]">Listing Price</th>
+                                                <th className="p-4 min-w-[150px]">Current Offer</th>
+                                                <th className="p-4 min-w-[120px]">Status</th>
+                                                <th className="p-4 min-w-[150px]">Last Negotiation</th>
+                                                <th className="p-4 min-w-[300px]">Action</th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody className="divide-y divide-gray-100">
+                                            {offerCount > 0 ? (
+                                                listing.deal.map((deal, idx) => {
+                                                    const property = listing.property;
+                                                    const statusClass = statusStyles[deal.status] || statusStyles.default;
+
+                                                    const lastEditedByYou = isLastEditedByAuth(deal);
+                                                    const someoneElseEdited =
+                                                        !!deal.amount_last_updated_by &&
+                                                        deal.amount_last_updated_by !== authUserId;
+
+                                                    const isActionable = deal.status === STATUS.PENDING;
+
+                                                    return (
+                                                        <tr key={deal.id} className="hover:bg-gray-50 align-middle transition duration-150">
+                                                            {/* ordinal */}
+                                                            <td className="p-4">
+                                                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700 ring-1 ring-inset ring-gray-200">
+                                                                {ordinal(idx + 1)}
+                                                              </span>
+                                                            </td>
+
+                                                            <td className="p-4 font-medium">{deal.buyer?.name ?? "Unnamed Buyer"}</td>
+
+                                                            <td className="p-4 text-gray-600">
+                                                                {finalPrice}
+                                                            </td>
+
+                                                            <td className="p-4 font-extrabold text-lg text-green-700">
+                                                                {peso(deal.amount)}
+                                                            </td>
+
+                                                            <td className="p-4">
+                                                              <span
+                                                                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${statusClass}`}
+                                                              >
+                                                                {deal.status}
+                                                              </span>
+                                                            </td>
+
+                                                            <td className="p-4 text-gray-600">
+                                                                {deal.amount_last_updated_at ? (
+                                                                    <div className="flex flex-col">
+                                                                      <span>
+                                                                        {dayjs(deal.amount_last_updated_at).format(
+                                                                            "MMM D, YYYY"
+                                                                        )}
+                                                                      </span>
+                                                                        <span className="text-xs text-gray-500">
+                                                                        {dayjs(deal.amount_last_updated_at).fromNow()}
+                                                                      </span>
+                                                                    </div>
+                                                                ) : (
+                                                                    "—"
+                                                                )}
+                                                            </td>
+
+                                                            <td className="p-4">
+                                                                {isActionable ? (
+                                                                    <div className="flex flex-col gap-3">
+                                                                        {/* Contextual Note */}
+                                                                        {someoneElseEdited && (
+                                                                            <p className="text-xs text-gray-500 p-2 border-l-4 border-amber-400 bg-amber-50 rounded-r-md">
+                                                                                <span className="font-semibold text-gray-700">New Offer Received:</span> The other party updated the amount. Please respond.
+                                                                            </p>
+                                                                        )}
+
+                                                                        <div className="flex flex-wrap items-center gap-2">
+                                                                            {/* EDIT / COUNTER button */}
+                                                                            {lastEditedByYou ? (
+                                                                                <button
+                                                                                    onClick={() => openModal(deal, listing.id, "edit")}
+                                                                                    className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-gray-700 font-medium hover:bg-gray-200 border border-gray-300 transition"
+                                                                                >
+                                                                                    <FontAwesomeIcon icon={faPen} className="w-4 h-4" />
+                                                                                    Edit Last Offer
+                                                                                </button>
+                                                                            ) : (
+                                                                                <button
+                                                                                    onClick={() => openModal(deal, listing.id, "counter")}
+                                                                                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-white font-semibold hover:bg-blue-700 shadow-md transition"
+                                                                                >
+                                                                                    <FontAwesomeIcon icon={faReply} className="w-4 h-4" />
+                                                                                    Counter Price
+                                                                                </button>
+                                                                            )}
+
+                                                                            {/* Accept / Decline only if last edit was by someone else */}
+                                                                            {someoneElseEdited && (
+                                                                                <>
+                                                                                    <button
+                                                                                        onClick={() => {
+                                                                                            setSelectedDeal(deal);
+                                                                                            setNewStatus(STATUS.ACCEPTED);
+                                                                                            setOpenAcceptModal(true);
+                                                                                        }}
+                                                                                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-white font-semibold hover:bg-emerald-700 shadow-md transition"
+                                                                                    >
+                                                                                        <FontAwesomeIcon icon={faCheck} className="w-4 h-4" />
+                                                                                        Accept
+                                                                                    </button>
+
+                                                                                    <button
+                                                                                        onClick={() => {
+                                                                                            setSelectedDeal(deal);
+                                                                                            setNewStatus(STATUS.REJECTED);
+                                                                                            setOpenAcceptModal(true);
+                                                                                        }}
+                                                                                        className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-2 text-white font-semibold hover:bg-rose-700 transition"
+                                                                                    >
+                                                                                        <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
+                                                                                        Decline
+                                                                                    </button>
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    // Post-Negotiation Actions
+                                                                    <div className="flex gap-2">
+                                                                        {deal.status.toLowerCase() === 'accepted' ? (
+                                                                            <>
+                                                                                <Link
+                                                                                    href={route('broker.deals.finalize', { deal: deal.id })}
+                                                                                    className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 text-sm rounded-lg font-semibold hover:bg-indigo-700 transition shadow-md"
+                                                                                >
+                                                                                    <FontAwesomeIcon icon={faHandshake} />
+                                                                                    Finalize Deal
+                                                                                </Link>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedDeal(deal);
+                                                                                        setNewStatus(STATUS.CANCELLED);
+                                                                                        setOpenAcceptModal(true);
+                                                                                    }}
+                                                                                    className="inline-flex items-center border border-gray-300 rounded-lg text-gray-700 px-4 py-2 text-sm font-medium hover:bg-gray-100 transition"
+                                                                                >
+                                                                                    Cancel Deal
+                                                                                </button>
+                                                                            </>
+                                                                        ) : (
+                                                                            <span className="text-gray-500 italic text-sm">
+                                                                                No further action required. Status: {deal.status}.
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="7" className="py-8 text-center text-gray-400">
+                                                        No deals for this listing yet.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </InquiriesCollapsable>
                             </div>
+                        );
+                    })
+                )}
 
-                            <select
-                                value={localStatus}
-                                onChange={(e) => setLocalStatus(e.target.value)}
-                                className="h-10 rounded-md border border-gray-300 text-sm px-2 bg-white"
-                                title="Quick status filter"
-                            >
-                                <option>All</option>
-                                <option>Pending</option>
-                                <option>Accepted</option>
-                                <option>Declined</option>
-                                <option>Closed</option>
-                                <option>Sold</option>
-                                <option>Cancelled</option>
-                            </select>
-
-                            <div className="ml-auto text-sm text-gray-600">
-                                Showing <span className="font-semibold">{visibleDealCount}</span> result
-                                {visibleDealCount === 1 ? "" : "s"}
-                            </div>
-                        </div>
+                {/* Pagination */}
+                {pageLinks.length > 0 && (
+                    <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+                        {pageLinks.map((link, i) =>
+                            link.url ? (
+                                <Link
+                                    key={i}
+                                    href={link.url}
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg border transition shadow-sm ${
+                                        link.active
+                                            ? "bg-primary text-white border-primary"
+                                            : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ) : (
+                                <span
+                                    key={i}
+                                    className="px-4 py-2 text-sm font-medium text-slate-400 bg-white border border-gray-200 rounded-lg cursor-not-allowed"
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            )
+                        )}
                     </div>
                 )}
 
-                {/* Desktop Table */}
-                <div className="hidden sm:block overflow-x-auto bg-white border border-gray-200 shadow-sm rounded-xl">
-                    {hasDeals ? (
-                        <table className="min-w-full divide-y divide-gray-200 text-sm text-gray-700">
-                            <thead className="bg-gray-50 text-xs uppercase text-gray-500 tracking-wide sticky top-0 z-10">
-                            <tr>
-                                <th className="p-4 text-left">Property</th>
-                                <th className="p-4 text-left">Buyer</th>
-                                <th className="p-4 text-right">Offer</th>
-                                <th className="p-4 text-left">Status</th>
-                                <th className="p-4 text-right">Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                            {property_listings.map(
-                                (listing) =>
-                                    filteredDealsForListing(listing).length > 0 &&
-                                    filteredDealsForListing(listing).map((deal) => (
-                                        <tr key={deal.id} className="hover:bg-gray-50 transition">
-                                            <td className="p-4 align-top">
-                                                <CardProperty property={listing.property} />
-                                            </td>
-                                            <td className="p-4 align-top">
-                                                <p className="font-medium text-gray-800">{deal?.buyer?.name || "-"}</p>
-                                                <p className="text-sm text-gray-500">{deal?.buyer?.email || "-"}</p>
-                                                <p className="text-xs text-gray-400 mt-1">
-                                                    {dayjs(deal?.created_at).format("MMM D, YYYY, h:mm A")} •{" "}
-                                                    {dayjs(deal?.created_at).fromNow()}
-                                                </p>
-                                            </td>
-                                            <td className="p-4 align-top text-right">
-                                                <p className="font-semibold text-gray-900">{money(deal?.amount)}</p>
-                                                {deal?.amount_last_updated_by === userId && (
-                                                    <p className="text-xs text-amber-700 bg-amber-100 inline-block px-2 py-0.5 mt-1 rounded">
-                                                        You made the latest counter
-                                                    </p>
-                                                )}
-                                            </td>
-                                            <td className="p-4 align-top">
-                                                <StatusBadge value={deal?.status} />
-                                            </td>
-                                            <td className="p-4 align-top">
-                                                <ActionButtons deal={deal} property={listing.property} />
-                                            </td>
-                                        </tr>
-                                    ))
-                            )}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <div className="p-8 text-center text-gray-500">No deals match your filters.</div>
-                    )}
-                </div>
+                {/* Edit/Counter Amount Modal */}
+                <Modal show={openUpdateForm} onClose={closeModal} maxWidth="sm" closeable>
+                    <form onSubmit={submit} className="p-6">
+                        <h3 className="text-xl font-bold mb-2 text-gray-900">
+                            {editMode === "edit" ? "Edit Your Offer Amount" : "Send Counter Price"}
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-4 border-b pb-3">
+                            {editMode === "edit"
+                                ? "Update the offer amount you previously submitted. This will refresh the negotiation."
+                                : "Enter your counter amount to respond to the buyer's latest offer. This is the new proposed price."}
+                        </p>
 
-                {/* Mobile Cards (fixed: no nested map, stable keys, no double compute) */}
-                <div className="sm:hidden space-y-4">
-                    {(() => {
-                        const mobileRows = property_listings.flatMap((listing) => {
-                            const deals = filteredDealsForListing(listing);
-                            return deals.map((deal) => ({ listing, deal }));
-                        });
+                        <label className="mb-1 block text-sm font-semibold text-gray-700">
+                            Amount (PHP)
+                        </label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₱</span>
+                            <input
+                                type="number"
+                                min="0"
+                                step="any"
+                                value={data.amount}
+                                onChange={(e) => setData("amount", e.target.value)}
+                                className="mb-1 w-full rounded-lg border-gray-300 pl-8 pr-3 py-2 focus:border-primary focus:ring-primary/50 text-lg font-bold"
+                                autoFocus
+                            />
+                        </div>
 
-                        if (mobileRows.length === 0) {
-                            return <p className="text-center text-gray-500">No deals match your filters.</p>;
-                        }
+                        {errors.amount && (
+                            <p className="text-xs text-rose-600 mb-2">{errors.amount}</p>
+                        )}
 
-                        return mobileRows.map(({ listing, deal }) => (
-                            <div
-                                key={`${listing?.id ?? 'l'}-${deal?.id}`}
-                                className="bg-white rounded-xl shadow-sm border border-gray-200 p-4"
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={closeModal}
+                                className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-300 transition"
+                                disabled={processing}
                             >
-                                <div className="mb-3">
-                                    <CardProperty property={listing?.property} />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4 mb-3">
-                                    <div>
-                                        <p className="text-xs text-gray-500">Buyer</p>
-                                        <p className="font-medium text-gray-800">{deal?.buyer?.name || "-"}</p>
-                                        <p className="text-xs text-gray-500">{deal?.buyer?.email || "-"}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs text-gray-500">Offer</p>
-                                        <p className="font-semibold text-gray-900">{money(deal?.amount)}</p>
-                                        <p className="text-xs text-gray-500">{dayjs(deal?.created_at).format("MMM D, YYYY")}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between mb-3">
-                                    <StatusBadge value={deal?.status} />
-                                    {deal?.amount_last_updated_by === userId && (
-                                        <span className="text-[11px] text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-                                          You made the latest counter
-                                        </span>
-                                    )}
-                                </div>
-
-                                <ActionButtons deal={deal} property={listing?.property} />
-                            </div>
-                        ));
-                    })()}
-                </div>
-
-
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50 shadow-md ${
+                                    editMode === "edit"
+                                        ? "bg-gray-900 hover:bg-black"
+                                        : "bg-blue-600 hover:bg-blue-700"
+                                }`}
+                            >
+                                {processing
+                                    ? "Sending..."
+                                    : editMode === "edit"
+                                        ? "Update Offer"
+                                        : "Send Counter Offer"}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
             </div>
         </BrokerLayout>
     );

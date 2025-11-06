@@ -352,7 +352,7 @@ export default function LandingPage({ auth, properties = [], search = "", initia
 
             {/* 1. Hero Section (MODIFIED for h-screen) */}
             <section
-                className="relative w-full flex items-center justify-center bg-cover bg-center min-h-screen py-24 md:py-32" // Using min-h-screen
+                className="relative w-full flex items-center justify-center bg-cover bg-center min-h-screen" // Using min-h-screen
                 style={{ backgroundImage: `url(${backgroundImage})` }}
             >
                 <div className="absolute min-h-screen inset-0 bg-black/50 backdrop-brightness-75" aria-hidden="true"></div>

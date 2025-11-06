@@ -203,6 +203,8 @@ export default function Stepper({
                                 }) {
     const ordered = ["inquiry", "appointment", "offer", "payment"];
 
+    console.log(appointmentStatus);
+
     const getDescription = (key, state) => {
         // Special handling for appointment based on appointmentStatus
         if (key === "appointment") {

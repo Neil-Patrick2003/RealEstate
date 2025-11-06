@@ -17,7 +17,7 @@ class UpdatePropertyRequest extends FormRequest
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:3000',
             'property_type' => 'nullable|string',
-            'property_sub_type' => 'nullable|string',
+            'sub_type' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
             'address' => 'nullable|string|max:255',
             'lot_area' => 'nullable|numeric|min:0',

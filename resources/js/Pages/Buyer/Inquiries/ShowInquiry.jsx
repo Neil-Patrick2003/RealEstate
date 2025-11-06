@@ -1,6 +1,6 @@
 // resources/js/Pages/Buyer/Properties/ShowInquiry.jsx
 import React, { useMemo, useState, useCallback } from "react";
-import {usePage, router, Head} from "@inertiajs/react";
+import { usePage, router, Head } from "@inertiajs/react";
 import BuyerLayout from "@/Layouts/BuyerLayout.jsx";
 import Breadcrumb from "@/Components/Breadcrumbs.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
@@ -38,7 +38,7 @@ function timeAgo(input) {
     const diff = (Date.now() - d.getTime()) / 1000;
     if (diff < 60) return "just now";
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     return `${Math.floor(diff / 86400)}d ago`;
 }
 
@@ -57,7 +57,7 @@ function StatusBadge({ phase = "draft" }) {
     const map = {
         pending: "bg-amber-100 text-amber-800",
         draft: "bg-gray-100 text-gray-800",
-        sent: "bg-amber-100 text-amber-800", // Using amber for general "sent" state
+        sent: "bg-amber-100 text-amber-800",
         countered: "bg-amber-100 text-amber-800",
         accepted: "bg-green-100 text-green-800",
         processing: "bg-purple-100 text-purple-800",
@@ -66,6 +66,8 @@ function StatusBadge({ phase = "draft" }) {
         expired: "bg-zinc-100 text-zinc-800",
         sold: "bg-emerald-100 text-emerald-800",
         terminated: "bg-rose-100 text-rose-800",
+        completed: "bg-indigo-100 text-indigo-800",
+        declined: "bg-rose-100 text-rose-800",
     };
     const cls = map[phase] || map.draft;
     return (
@@ -83,13 +85,10 @@ function StatusBadge({ phase = "draft" }) {
 
 /* ---------- Small info row ---------- */
 function Row({ label, children }) {
-    // Using a light bottom border as a minimal divider
     return (
         <div className="flex items-start justify-between gap-3 py-2 border-b border-gray-100 last:border-b-0">
             <div className="text-xs font-medium text-gray-500">{label}</div>
-            <div className="text-sm font-semibold text-gray-900">
-                {children ?? "—"}
-            </div>
+            <div className="text-sm font-semibold text-gray-900">{children ?? "—"}</div>
         </div>
     );
 }
@@ -127,11 +126,7 @@ function DealDetailsModal({
         if (!ok) return;
 
         try {
-            await router.put(
-                `/deal/${deal.id}/${next}`,
-                { status: next },
-                { preserveScroll: true }
-            );
+            await router.put(`/deal/${deal.id}/${next}`, { status: next }, { preserveScroll: true });
             onClose?.();
         } catch (e) {
             alert("Something went wrong updating status.");
@@ -139,14 +134,11 @@ function DealDetailsModal({
     };
 
     const notesPreview = safeStr(deal.notes).trim();
-    const notesShort =
-        notesPreview.length > 240
-            ? `${notesPreview.slice(0, 240)}…`
-            : notesPreview || "—";
+    const notesShort = notesPreview.length > 240 ? `${notesPreview.slice(0, 240)}…` : notesPreview || "—";
 
     return (
         <Modal show={open} onClose={onClose} maxWidth="lg">
-            <div className="relative rounded-2xl bg-white p-6"> {/* Flat: no shadow, no border */}
+            <div className="relative rounded-2xl bg-white p-6">
                 <button
                     onClick={onClose}
                     className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 focus:outline-none rounded-full p-2"
@@ -159,24 +151,19 @@ function DealDetailsModal({
                 <div className="mb-4 flex items-start justify-between">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Your Offer</h3>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                            Review the latest terms of this deal.
-                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">Review the latest terms of this deal.</div>
                     </div>
                     <StatusBadge phase={phase} />
                 </div>
 
-                <div className="rounded-xl bg-amber-50 p-4 mb-5"> {/* Light background for emphasis */}
+                <div className="rounded-xl bg-amber-50 p-4 mb-5">
                     <div className="mb-3 flex items-center justify-between">
                         <div className="text-2xl font-extrabold text-amber-800">
-                            {typeof deal.amount === "number" ||
-                            /^\d/.test(String(deal.amount))
+                            {typeof deal.amount === "number" || /^\d/.test(String(deal.amount))
                                 ? peso.format(Number(deal.amount))
                                 : "—"}
                         </div>
-                        <div className="text-xs font-semibold text-gray-600">
-                            Deal #{deal.id}
-                        </div>
+                        <div className="text-xs font-semibold text-gray-600">Deal #{deal.id}</div>
                     </div>
 
                     {someoneElseEdited && isPending && (
@@ -186,18 +173,16 @@ function DealDetailsModal({
                         </div>
                     )}
 
-                    <div className="space-y-1 rounded-lg bg-white p-3"> {/* Pure white background for list */}
+                    <div className="space-y-1 rounded-lg bg-white p-3">
                         <Row label="Notes">{notesShort}</Row>
                         <Row label="Listing ID">{listingId || "—"}</Row>
                         <Row label="Last Update">
-                            {updatedAt
-                                ? `${updatedAt.toLocaleDateString()} (${timeAgo(updatedAt)})`
-                                : "—"}
+                            {updatedAt ? `${updatedAt.toLocaleDateString()} (${timeAgo(updatedAt)})` : "—"}
                         </Row>
                     </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-4"> {/* Minimal top divider */}
+                <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-4">
                     {lastEditedByYou && isPending && (
                         <button
                             type="button"
@@ -246,16 +231,11 @@ function DealDetailsModal({
 
 /* ---------- Fact Card (flat + compact) ---------- */
 function FactCard({ icon: Icon, label, value }) {
-    // Using gray background for a subtle lift without shadow
     return (
         <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-gray-50">
             <Icon className="h-5 w-5 text-amber-700 mb-1" />
-            <div className="text-lg font-extrabold text-gray-900">
-                {value ?? "—"}
-            </div>
-            <div className="text-xs text-gray-600 font-medium tracking-tight mt-0.5">
-                {label}
-            </div>
+            <div className="text-lg font-extrabold text-gray-900">{value ?? "—"}</div>
+            <div className="text-xs text-gray-600 font-medium tracking-tight mt-0.5">{label}</div>
         </div>
     );
 }
@@ -306,8 +286,22 @@ export default function ShowInquiry({
         [normalized.title]
     );
 
+    // --- Appointment/tripping status logic (ONLY allow: pending, accepted, completed, declined)
+    function deriveAppointmentStatus(inq) {
+        const trips = Array.isArray(inq?.trippings) ? inq.trippings : [];
+        if (!trips.length) return "none";
 
+        // latest by created_at then id
+        const latest = [...trips].sort((a, b) => {
+            const ta = new Date(a.created_at || 0).getTime();
+            const tb = new Date(b.created_at || 0).getTime();
+            return tb - ta || (b.id ?? 0) - (a.id ?? 0);
+        })[0];
 
+        const s = String(latest?.status || "").toLowerCase();
+        if (["pending", "accepted", "completed", "declined"].includes(s)) return s;
+        return "none";
+    }
 
     // Status helpers
     const iStatus = (inquiry?.status || "pending").toLowerCase();
@@ -323,9 +317,7 @@ export default function ShowInquiry({
 
     const toggleFavorite = useCallback((id) => {
         if (!id) return;
-        setFavoriteIds((prev) =>
-            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-        );
+        setFavoriteIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
     }, []);
 
     const [isOpenDealForm, setIsOpenDealForm] = useState(false);
@@ -333,8 +325,8 @@ export default function ShowInquiry({
     const [isAddVisitModal, setIsAddVisitModal] = useState(false);
     const [selectedVisitData, setSelectedVisitData] = useState(null);
 
-    function getLatestTripping(inquiry) {
-        const trips = Array.isArray(inquiry?.trippings) ? inquiry.trippings : [];
+    function getLatestTripping(inq) {
+        const trips = Array.isArray(inq?.trippings) ? inq.trippings : [];
         if (!trips.length) return null;
         return [...trips].sort((a, b) => {
             const ta = new Date(a.created_at || 0).getTime();
@@ -347,16 +339,13 @@ export default function ShowInquiry({
         if (!inquiry?.id) return;
 
         const latest = getLatestTripping(inquiry);
-        const isResched = !!latest && ["pending","accepted","scheduled"].includes(String(latest.status || "").toLowerCase());
+        const isResched = !!latest && ["pending", "accepted"].includes(String(latest.status || "").toLowerCase());
 
         setSelectedVisitData({
-            /* required context */
             property,
             agent: inquiry?.agent ?? null,
             broker: inquiry?.broker ?? null,
             inquiryId: inquiry?.id,
-
-            /* mode + current tripping details (used by the modal to prefill) */
             mode: isResched ? "reschedule" : "create",
             tripping: latest
                 ? {
@@ -366,8 +355,6 @@ export default function ShowInquiry({
                     visit_time: latest.visit_time,
                 }
                 : null,
-
-            /* convenience initial fields (so modal can directly use them) */
             initialDate: latest?.visit_date ?? null,
             initialTime: latest?.visit_time ?? null,
         });
@@ -375,15 +362,10 @@ export default function ShowInquiry({
         setIsAddVisitModal(true);
     }, [inquiry?.id, inquiry?.agent, inquiry?.broker, inquiry, property]);
 
-
     const cancelVisit = useCallback(() => {
         if (!inquiry?.id) return;
         if (!window.confirm("Cancel this visit?")) return;
-        router.post(
-            `/inquiries/${inquiry.id}/appointment/cancel`,
-            {},
-            { preserveScroll: true }
-        );
+        router.post(`/inquiries/${inquiry.id}/appointment/cancel`, {}, { preserveScroll: true });
     }, [inquiry?.id]);
 
     const closeDeal = useCallback(() => {
@@ -395,17 +377,14 @@ export default function ShowInquiry({
     const actions = {
         inquiry: () => {
             if (!normalized.id) return;
-            router.post(
-                `/properties/${normalized.id}/inquiries/resend`,
-                {},
-                { preserveScroll: true }
-            );
+            router.post(`/properties/${normalized.id}/inquiries/resend`, {}, { preserveScroll: true });
         },
         appointment: () => {
-            if (iStatus !== "accepted") return; // only open when accepted
+            if (iStatus !== "accepted") return;
             openScheduleModal();
         },
         offer: () => {
+            // OFFER only accessible by UI when apptStatus === 'completed' (see stepStates)
             if (deal?.id) setIsOpenDealDetails(true);
             else setIsOpenDealForm(true);
         },
@@ -413,46 +392,36 @@ export default function ShowInquiry({
             if (deal?.id) router.visit(`/deals/${deal.id}/checkout`);
         },
         close: () => closeDeal(),
-
-
     };
 
     /* ---------- Dynamic Step States & Lock Reasons ---------- */
     const stepStates = useMemo(() => {
         // INQUIRY
         const inquiryState =
-            iStatus === "accepted"
-                ? "complete"
-                : iStatus === "pending"
-                    ? "current"
-                    : "complete"; // treat rejected as complete end-state
+            iStatus === "accepted" ? "complete" : iStatus === "pending" ? "current" : "complete";
 
-        // APPOINTMENT
+        // APPOINTMENT (tripping)
+        // allowed statuses: pending, accepted, completed, declined (or none)
         let appointmentState = "locked";
         if (iStatus === "accepted") {
-            if (apptStatus === "done") appointmentState = "complete";
-            else if (["scheduled", "accepted", "pending"].includes(apptStatus))
-                appointmentState = "current";
-            else appointmentState = "upcoming"; // none/cancelled
+            if (apptStatus === "completed") appointmentState = "complete";
+            else if (["pending", "accepted"].includes(apptStatus)) appointmentState = "current";
+            else appointmentState = "upcoming"; // none or declined -> you may schedule again
         }
 
-        // OFFER
+        // OFFER — strictly unlock only when tripping is completed
         let offerState = "locked";
-        if (apptStatus === "done") {
+        if (apptStatus === "completed") {
             if (!deal) offerState = "upcoming";
             else if (["pending", "countered"].includes(dealStatus)) offerState = "current";
-            else if (["accepted", "rejected"].includes(dealStatus)) offerState = "complete";
+            else if (["accepted", "rejected", "closed"].includes(dealStatus)) offerState = "complete";
             else offerState = "upcoming";
         }
 
         // PAYMENT
         let paymentState = "locked";
-        if (dealStatus === "accepted") {
-            // could be "current" if you want to highlight payment now
-            paymentState = "upcoming";
-        } else if (dealStatus === "closed") {
-            paymentState = "complete";
-        }
+        if (dealStatus === "accepted") paymentState = "upcoming";
+        else if (dealStatus === "closed") paymentState = "complete";
 
         return {
             inquiry: inquiryState,
@@ -468,17 +437,14 @@ export default function ShowInquiry({
                 iStatus === "pending"
                     ? "Your inquiry is pending. Once accepted, you can schedule a visit."
                     : undefined,
-
             appointment:
                 iStatus !== "accepted"
                     ? "Appointment unlocks after your inquiry is accepted."
                     : undefined,
-
             offer:
-                apptStatus !== "done"
-                    ? "Offer unlocks after your property visit is completed."
+                apptStatus !== "completed"
+                    ? "Offer unlocks only after your tripping is marked completed."
                     : undefined,
-
             payment:
                 dealStatus !== "accepted"
                     ? "Payment unlocks after your offer is accepted."
@@ -486,40 +452,16 @@ export default function ShowInquiry({
         };
     }, [iStatus, apptStatus, dealStatus]);
 
-    const appointmentStatusProp =
-        apptStatus === "none" ? "none" : apptStatus; // pass through to Stepper
+    const appointmentStatusProp = apptStatus === "none" ? "none" : apptStatus;
 
-    const waitingNote =
-        iStatus === "pending"
-            ? "Waiting for agent approval before proceeding to the next step."
-            : null;
-
-    const descHtml =
-        normalized.description || "<p>No description provided for this listing.</p>";
+    const descHtml = normalized.description || "<p>No description provided for this listing.</p>";
     const descIsSafe = looksSafeHtml(descHtml);
 
     const hasImg = !!normalized.image_url;
     const imgSrc = hasImg ? `/storage/${normalized.image_url}` : null;
 
-    function deriveAppointmentStatus(inquiry) {
-        const trips = Array.isArray(inquiry?.trippings) ? inquiry.trippings : [];
-        if (!trips.length) return "none";
-
-        // get latest tripping (by created_at; fallback to id)
-        const latest = [...trips].sort((a, b) => {
-            const ta = new Date(a.created_at || 0).getTime();
-            const tb = new Date(b.created_at || 0).getTime();
-            return tb - ta || (b.id ?? 0) - (a.id ?? 0);
-        })[0];
-
-        const s = String(latest?.status || "").toLowerCase();
-        if (["pending", "accepted", "scheduled", "cancelled", "done"].includes(s)) return s;
-        return "none";
-    }
-
     return (
         <BuyerLayout>
-
             <Head title={`Inquiry ${inquiry.id}`} />
 
             {/* Modals */}
@@ -542,11 +484,7 @@ export default function ShowInquiry({
                 onCloseDeal={closeDeal}
                 authId={auth?.id}
             />
-            <ScheduleVisitModal
-                open={isAddVisitModal}
-                setOpen={setIsAddVisitModal}
-                visitData={selectedVisitData}
-            />
+            <ScheduleVisitModal open={isAddVisitModal} setOpen={setIsAddVisitModal} visitData={selectedVisitData} />
 
             {/* Breadcrumb */}
             <div className="mx-4 mb-6">
@@ -556,22 +494,15 @@ export default function ShowInquiry({
             {/* Header / Inquiries summary */}
             <header className="mx-4 mb-8">
                 <h1 className="sr-only">Inquiry for {normalized.title}</h1>
-                <div className="rounded-2xl bg-white p-6"> {/* Flat card: no shadow, no border */}
+                <div className="rounded-2xl bg-white p-6">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                         {/* Image */}
                         <div className="md:col-span-4">
-                            <div className="overflow-hidden rounded-xl bg-gray-50"> {/* Subtle background for image container */}
+                            <div className="overflow-hidden rounded-xl bg-gray-50">
                                 {imgSrc ? (
-                                    <img
-                                        src={imgSrc}
-                                        alt={normalized.title}
-                                        className="w-full aspect-video object-cover"
-                                        loading="lazy"
-                                    />
+                                    <img src={imgSrc} alt={normalized.title} className="w-full aspect-video object-cover" loading="lazy" />
                                 ) : (
-                                    <div className="w-full aspect-video grid place-items-center text-sm text-gray-400">
-                                        No image available
-                                    </div>
+                                    <div className="w-full aspect-video grid place-items-center text-sm text-gray-400">No image available</div>
                                 )}
                             </div>
                         </div>
@@ -582,9 +513,7 @@ export default function ShowInquiry({
                                 <div>
                                     <div className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
                                         {normalized.property_type || "Property"}
-                                        {normalized?.property_listing?.updated_at && (
-                                            <> · Updated {timeAgo(normalized.property_listing.updated_at)}</>
-                                        )}
+                                        {normalized?.property_listing?.updated_at && <> · Updated {timeAgo(normalized.property_listing.updated_at)}</>}
                                     </div>
                                     <h2 className="mt-1 text-2xl md:text-3xl font-black text-gray-900 leading-tight">
                                         {normalized.title}
@@ -606,16 +535,8 @@ export default function ShowInquiry({
                             <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-gray-100 pt-4">
                                 <FactCard icon={Bed} label="Bedrooms" value={normalized.bedrooms} />
                                 <FactCard icon={Bath} label="Bathrooms" value={normalized.bathrooms} />
-                                <FactCard
-                                    icon={Ruler}
-                                    label="Lot Area"
-                                    value={normalized.lot_area ? `${normalized.lot_area} sqm` : "—"}
-                                />
-                                <FactCard
-                                    icon={Maximize}
-                                    label="Floor Area"
-                                    value={normalized.floor_area ? `${normalized.floor_area} sqm` : "—"}
-                                />
+                                <FactCard icon={Ruler} label="Lot Area" value={normalized.lot_area ? `${normalized.lot_area} sqm` : "—"} />
+                                <FactCard icon={Maximize} label="Floor Area" value={normalized.floor_area ? `${normalized.floor_area} sqm` : "—"} />
                             </div>
 
                             {/* Statuses */}
@@ -624,6 +545,11 @@ export default function ShowInquiry({
                                     <MessageSquare className="h-4 w-4 text-gray-500" />
                                     Inquiry: <StatusBadge phase={iStatus} />
                                 </div>
+                                {apptStatus && apptStatus !== "none" && (
+                                    <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                                        Tripping: <StatusBadge phase={apptStatus} />
+                                    </div>
+                                )}
                                 {dealStatus && (
                                     <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                                         Deal: <StatusBadge phase={dealStatus} />
@@ -638,12 +564,10 @@ export default function ShowInquiry({
             {/* Main Content Area: Stepper & Chat */}
             <div className="mx-4 mb-12">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Progress (2/3 width on desktop) */}
+                    {/* Left Column */}
                     <div className="lg:col-span-2 space-y-8">
-                        <div className="rounded-2xl bg-white p-6"> {/* Flat card: no shadow, no border */}
-                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">
-                                Inquiry Progress
-                            </h3>
+                        <div className="rounded-2xl bg-white p-6">
+                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Inquiry Progress</h3>
 
                             <Stepper
                                 steps={stepStates}
@@ -654,6 +578,7 @@ export default function ShowInquiry({
                                     offer: actions.offer,
                                     payment: actions.payment,
                                 }}
+                                lockedReasons={lockedReasons}
                             />
 
                             <StepperNotes
@@ -667,8 +592,8 @@ export default function ShowInquiry({
                                 onPay={() => deal?.id && router.visit(`/deals/${deal.id}/checkout`)}
                             />
 
-
-                            {apptStatus === "scheduled" && iStatus === "accepted" && (
+                            {/* Tripping actions reflect the new statuses */}
+                            {iStatus === "accepted" && apptStatus === "accepted" && (
                                 <div className="mt-6 flex flex-wrap gap-3">
                                     <button
                                         onClick={openScheduleModal}
@@ -686,7 +611,7 @@ export default function ShowInquiry({
                                 </div>
                             )}
 
-                            {apptStatus === "cancelled" && iStatus === "accepted" && (
+                            {iStatus === "accepted" && apptStatus === "declined" && (
                                 <div className="mt-6">
                                     <button
                                         onClick={openScheduleModal}
@@ -700,23 +625,17 @@ export default function ShowInquiry({
                         </div>
 
                         {/* Property Description */}
-                        <div className="rounded-2xl bg-white p-6"> {/* Flat card: no shadow, no border */}
-                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">
-                                Property Description
-                            </h3>
+                        <div className="rounded-2xl bg-white p-6">
+                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Property Description</h3>
                             <div className="text-sm text-gray-700 leading-relaxed">
-                                {descIsSafe ? (
-                                    <div dangerouslySetInnerHTML={{ __html: descHtml }} />
-                                ) : (
-                                    <p className="whitespace-pre-wrap">{descHtml}</p>
-                                )}
+                                {descIsSafe ? <div dangerouslySetInnerHTML={{ __html: descHtml }} /> : <p className="whitespace-pre-wrap">{descHtml}</p>}
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column: Direct Messages (1/3 width on desktop) */}
+                    {/* Right Column: Direct Messages */}
                     <div className="lg:col-span-1">
-                        <div className="rounded-2xl bg-white p-6 lg:sticky lg:top-8"> {/* Flat card: no shadow, no border, sticky */}
+                        <div className="rounded-2xl bg-white p-6 lg:sticky lg:top-8">
                             <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3 border-b border-gray-100 pb-2 flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5 text-amber-700" />
                                 Direct Messages
@@ -726,7 +645,6 @@ export default function ShowInquiry({
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </BuyerLayout>

@@ -27,6 +27,7 @@ class InquiryController extends Controller
                 'broker' => function($q) { $q->withCount('property_listings'); },
                 'messages',
                 'trippings',
+
                 'agent.agent_trippings',
                 'agent.feedbackReceived',
             ])
@@ -35,6 +36,7 @@ class InquiryController extends Controller
             })
             ->latest()
             ->paginate(10);
+
 
 
 
@@ -158,6 +160,7 @@ class InquiryController extends Controller
         $inquiry->load([
             'agent',
             'trippings' => fn ($q) => $q->where('buyer_id', $userId)->latest()->limit(1),
+            'broker'
         ]);
 
 

@@ -114,6 +114,7 @@ const SellerModal = ({ show, onClose, seller, message, onChangeMessage, onSubmit
 );
 
 export default function SingleProperty({ property, auth, agents, broker, seller, deal, initialFavorites = [] }) {
+
     const { data, setData, post, processing, reset } = useForm({ message: "", person: "" });
 
     const [isOpenModal, setIsOpenModal] = useState(false);
@@ -336,7 +337,11 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
                                     setData={setData}
                                 />
                             ) : broker ? (
-                                <ContactBroker broker={broker} setIsOpenModal={setIsOpenModal} setSelectedPerson={setSelectedPerson} setData={setData} />
+                                <ContactBroker
+                                    broker={broker}
+                                    setIsOpenModal={setIsOpenModal}
+                                    setSelectedPerson={setSelectedPerson}
+                                    setData={setData} />
                             ) : (
                                 <p className="text-sm text-gray-500">No assigned agents for this listing.</p>
                             )}

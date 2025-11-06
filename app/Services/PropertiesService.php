@@ -116,7 +116,7 @@ class PropertiesService
             'title' => $validated['title'],
             'description' => $validated['description'],
             'property_type' => $validated['property_type'],
-            'sub_type' => $validated['property_sub_type'],
+            'sub_type' => $validated['sub_type'],
             'price' => $validated['price'],
             'address' => $validated['address'],
             'lot_area' => $validated['lot_area'],
