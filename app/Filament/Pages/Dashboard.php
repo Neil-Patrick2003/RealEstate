@@ -2,6 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\DealsPerMonth;
+use App\Filament\Widgets\InquiriesOverTime;
+use App\Filament\Widgets\StatusBreakdownDonut;
+use App\Filament\Widgets\TrippingCompletionRateAgent;
 use Filament\Pages\Dashboard as BaseDashboard;
 
 // Header (top band)
@@ -55,7 +59,10 @@ class Dashboard extends BaseDashboard
     public function getWidgets(): array
     {
         return [
-            
+            InquiriesOverTime::class,
+            DealsPerMonth::class,
+            StatusBreakdownDonut::class,
+            TrippingCompletionRateAgent::class,
         ];
     }
 
