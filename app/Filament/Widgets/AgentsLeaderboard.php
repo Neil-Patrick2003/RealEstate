@@ -11,6 +11,11 @@ class AgentsLeaderboard extends BaseWidget
 {
     protected static ?string $heading = 'Agents Leaderboard (Last 30d)';
 
+    public function getColumnSpan(): int|string|array
+    {
+        return ['default' => 1, 'md' => 1, 'xl' => 3];
+    }
+
     protected function getTableQuery(): Builder
     {
         return User::query()

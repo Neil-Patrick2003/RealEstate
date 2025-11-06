@@ -8,16 +8,16 @@ use Filament\Widgets\ChartWidget;
     use Illuminate\Support\Facades\DB;
 
     class PropertiesByStatusChart extends ChartWidget
-    {
-        protected static ?string $heading = 'Property by Status';
+    {protected static ?string $heading = 'Property by Status';
     protected static ?string $pollingInterval = '60s';
     protected static ?int $sort = 12;
 
-    // Match Filament’s type exactly (array|string|int), non-static
-    protected array|string|int $columnSpan = [
-        'default' => 'full',
-        'xl' => 1, // takes 1 column on wide screens so it pairs nicely with another chart
-    ];
+    public function getColumnSpan(): int|string|array
+    {
+        return ['default' => 1, 'md' => 2, 'xl' => 3];
+    }
+
+
 
     protected int|string|null $chartHeight = 320;
 

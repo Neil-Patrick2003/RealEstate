@@ -10,7 +10,10 @@ class InquiriesOverTime extends ChartWidget
 {
     protected static ?string $heading = 'Inquiries Over Time';
     protected static ?int $sort = -40;
-    public function getColumnSpan(): int|string|array { return 'full'; }
+    public function getColumnSpan(): int|string|array
+    {
+        return ['default' => 1, 'md' => 2, 'xl' => 3];
+    }
     protected function getType(): string { return 'line'; }
 
     protected function getFilters(): ?array

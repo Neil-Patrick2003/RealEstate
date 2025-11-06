@@ -10,8 +10,12 @@ use Filament\Widgets\ChartWidget;
 class TrippingCompletionRateAgent extends ChartWidget
 {
     protected static ?string $heading = 'Tripping Completion Rate';
+
     protected static ?int $sort = -37;
-    public function getColumnSpan(): int|string|array { return '2'; }
+    public function getColumnSpan(): int|string|array
+    {
+        return ['default' => 1, 'md' => 2, 'xl' => 3];
+    }
     protected function getType(): string { return 'bar'; }
 
     public string $agent = 'all'; // filter key

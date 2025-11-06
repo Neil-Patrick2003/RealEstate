@@ -30,7 +30,11 @@ class StatsOverview extends BaseWidget
     /** Make the band full width */
     public function getColumnSpan(): int|string|array
     {
-        return 'full';
+        return [
+            'default' => 1,  // full-width on mobile (cards wrap)
+            'md'      => 2,  // 2-per-row on tablets
+            'xl'      => 6,  // stretch across; the widget itself renders 1 row 5 cols
+        ];
     }
 
     protected function getCards(): array

@@ -10,7 +10,10 @@ class DealsPerMonth extends ChartWidget
 {
     protected static ?string $heading = 'Deals Per Month (12M)';
     protected static ?int $sort = -39;
-    public function getColumnSpan(): int|string|array { return 'full'; }
+    public function getColumnSpan(): int|string|array
+    {
+        return ['default' => 1, 'md' => 2, 'xl' => 3];
+    }
     protected function getType(): string { return 'bar'; }
 
     protected function getData(): array

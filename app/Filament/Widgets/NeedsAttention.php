@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Builder;
 class NeedsAttention extends BaseWidget
 {
     protected static ?string $heading = 'Needs Attention (Draft/Pending)';
-    protected array|string|int $columnSpan = [
-        'default' => 'full',
-        'xl' => 2,
-    ];
+    public function getColumnSpan(): int|string|array
+    {
+        return ['default' => 1, 'md' => 1, 'xl' => 3];
+    }
 
     protected function getTableQuery(): Builder
     {
