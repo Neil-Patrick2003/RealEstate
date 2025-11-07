@@ -12,10 +12,10 @@ use Filament\Widgets\ChartWidget;
     protected static ?string $pollingInterval = '60s';
     protected static ?int $sort = 12;
 
-    public function getColumnSpan(): int|string|array
-    {
-        return ['default' => 1, 'md' => 2, 'xl' => 3];
-    }
+        public function getColumnSpan(): int|string|array
+        {
+            return ['default'=>1,'md'=>2,'xl'=>2,'2xl'=>2];
+        }
 
 
 

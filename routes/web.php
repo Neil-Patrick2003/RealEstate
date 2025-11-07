@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Buyer\FeedbackController;
 use App\Http\Controllers\DealController;
+use App\Http\Controllers\ExportPdfController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Seller\ChannelController;
 use App\Http\Controllers\Seller\ChatController;
@@ -348,6 +349,18 @@ Route::post('/properties/{id}/favorites', [\App\Http\Controllers\Property\Proper
 //    Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
 //});
 
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/exports/pdf/monthly-sales-transactions', [ExportPdfController::class, 'monthlySalesTransactions'])
+        ->name('exports.monthly-sales-transactions');
+
+    // ?mode=split|full (default split)
+    Route::get('/exports/pdf/monthly-sales-by-agent', [ExportPdfController::class, 'monthlySalesByAgent'])
+        ->name('exports.monthly-sales-by-agent');
+
+    Route::get('/exports/pdf/monthly-sales-by-role', [ExportPdfController::class, 'monthlySalesByRole'])
+        ->name('exports.monthly-sales-by-role');
+});
 
 
 

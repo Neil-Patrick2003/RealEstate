@@ -16,10 +16,10 @@ class AnalyticOverview extends BaseWidget
     protected static ?int $sort = 1;
 
     // Match Filament’s type exactly (array|string|int), non-static
-    protected array|string|int $columnSpan = [
-        'default' => 'full',
-        'xl' => 2,
-    ];
+    public function getColumnSpan(): int|string|array
+    {
+        return ['default'=>1,'md'=>2,'xl'=>4,'2xl'=>4];
+    }
 
     protected function getStats(): array
     {
