@@ -109,6 +109,12 @@ class User extends Authenticatable
         return $this->hasOne(Developer::class, 'user_id');
     }
 
+    public function broker_listing(){
+        return $this->hasMany(PropertyListing::class, 'broker_id');
+
+    }
+
+
     public function property_listings()
     {
         return $this->hasManyThrough(
@@ -128,10 +134,6 @@ class User extends Authenticatable
     }
 
 
-    public function broker_listing(){
-        return $this->hasMany(PropertyListing::class, 'broker_id');
-
-    }
 
     public function feedbackReceived()
     {

@@ -350,16 +350,18 @@ Route::post('/properties/{id}/favorites', [\App\Http\Controllers\Property\Proper
 //});
 
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/exports/pdf/monthly-sales-transactions', [ExportPdfController::class, 'monthlySalesTransactions'])
-        ->name('exports.monthly-sales-transactions');
+Route::prefix('export')->group(function () {
+    Route::get('/monthly-transactions', [ExportPdfController::class, 'monthlySalesTransactions'])
+        ->name('export.pdf.transactions');
 
-    // ?mode=split|full (default split)
-    Route::get('/exports/pdf/monthly-sales-by-agent', [ExportPdfController::class, 'monthlySalesByAgent'])
-        ->name('exports.monthly-sales-by-agent');
+    Route::get('/monthly-by-agent', [ExportPdfController::class, 'monthlySalesByAgent'])
+        ->name('export.pdf.by-agent');
 
-    Route::get('/exports/pdf/monthly-sales-by-role', [ExportPdfController::class, 'monthlySalesByRole'])
-        ->name('exports.monthly-sales-by-role');
+    Route::get('/monthly-by-role', [ExportPdfController::class, 'monthlySalesByRole'])
+        ->name('export.pdf.by-role');
+
+    Route::get('/export/monthly-handled-vs-sold', [\App\Http\Controllers\ExportPdfController::class, 'monthlyHandledVsSoldByUser'])
+        ->name('export.pdf.handled-vs-sold');
 });
 
 

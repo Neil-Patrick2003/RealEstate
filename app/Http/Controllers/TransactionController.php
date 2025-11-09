@@ -175,7 +175,10 @@ class TransactionController extends Controller
                         $property->update(['status' => 'Sold']);
                         $property->load('property_listing');
                         if ($property->property_listing) {
-                            $property->property_listing->update(['status' => 'Sold']);
+                            $property->property_listing->update([
+                                'status' => 'Sold',
+                                'sold_at' => $transaction->closed_at,
+                            ]);
                         }
                     }
                 }

@@ -71,8 +71,6 @@ class Analytics extends Page
             // ── 6) OPERATIONS / SLA ─────────────────────────────────────────
             \App\Filament\Widgets\ResponseTimeDistributionChart::class, // response-time histogram
             \App\Filament\Widgets\AvgLeadToDealTimeChart::class,        // doughnut “gauge”
-
-            DataExportTools::class
         ];
     }
 
