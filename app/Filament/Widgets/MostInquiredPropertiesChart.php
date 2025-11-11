@@ -10,6 +10,11 @@ class MostInquiredPropertiesChart extends ChartWidget
     protected static ?string $heading = 'Most Inquired Properties (Top 10)';
     protected static ?int $sort = -39;
 
+    protected function getMaxHeight(): ?string
+    {
+        return '400px';
+    }
+
     protected function getType(): string { return 'bar'; }
 
     protected function getData(): array

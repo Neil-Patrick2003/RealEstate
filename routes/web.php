@@ -4,6 +4,7 @@ use App\Http\Controllers\Buyer\FeedbackController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExportPdfController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PropertyTrendsController;
 use App\Http\Controllers\Seller\ChannelController;
 use App\Http\Controllers\Seller\ChatController;
 use App\Http\Controllers\Seller\MessageController;
@@ -362,6 +363,12 @@ Route::prefix('export')->group(function () {
 
     Route::get('/export/monthly-handled-vs-sold', [\App\Http\Controllers\ExportPdfController::class, 'monthlyHandledVsSoldByUser'])
         ->name('export.pdf.handled-vs-sold');
+
+    Route::get('/analytics/property-trends.json', [PropertyTrendsController::class, 'json'])
+        ->name('analytics.property.trends.json');
+
+    Route::get('/analytics/property-trends', [PropertyTrendsController::class, 'dashboard'])
+        ->name('analytics.property.trends');
 });
 
 

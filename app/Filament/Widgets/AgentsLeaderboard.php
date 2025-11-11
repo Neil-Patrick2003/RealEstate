@@ -13,7 +13,7 @@ class AgentsLeaderboard extends BaseWidget
 
     public function getColumnSpan(): int|string|array
     {
-        return ['default' => 1, 'md' => 1, 'xl' => 2];
+        return ['default' => 1, 'md' => 1, 'xl' => 3];
     }
 
     protected function getTableQuery(): Builder

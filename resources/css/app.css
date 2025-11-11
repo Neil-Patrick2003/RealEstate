@@ -6,3 +6,7 @@
 @tailwind variants;
 
 
+
+.fi-section .fi-section-content > * + * {
+    margin-top: 1.5rem; /* 24px between direct children */
+}

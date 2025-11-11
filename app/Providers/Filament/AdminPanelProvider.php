@@ -29,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login() // keep Filament's login route enabled
-            ->brandName('Your Brand')                       // ⬅︎ set your brand
+            ->brandName('RealSync')                       // ⬅︎ set your brand
             ->brandLogo(asset('images/logo.svg'))           // ⬅︎ 160×160 SVG/PNG
             ->favicon(asset('favicon.ico'))                 // ⬅︎ optional
 
