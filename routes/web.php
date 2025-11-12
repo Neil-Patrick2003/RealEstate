@@ -4,6 +4,7 @@ use App\Http\Controllers\Buyer\FeedbackController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExportPdfController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PropertyTrendsController;
 use App\Http\Controllers\Seller\ChannelController;
 use App\Http\Controllers\Seller\ChatController;
@@ -54,7 +55,7 @@ Route::get('/', function (Request $request) {
         ->latest()
         ->get();
 
-    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type')
+    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type', 'developer')
         ->latest()
         ->get();
 
@@ -74,16 +75,9 @@ Route::get('/', function (Request $request) {
 });
 
 
-Route::get('/explore/projects', function (Request $request) {
+Route::get('/explore/projects', [ProjectController::class, 'index']);
 
-    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type')
-        ->latest()
-        ->paginate(12);
-
-    return Inertia::render('Projects/Index', [
-        'projects' => $projects,
-    ]);
-});
+Route::get('/explores/projects/{project}', [ProjectController::class, 'show']);
 
 
 //<-----------------------Header Pages---------------------->
