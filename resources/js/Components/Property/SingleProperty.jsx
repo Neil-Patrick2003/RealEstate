@@ -12,9 +12,11 @@ import Modal from "@/Components/Modal.jsx";
 import ToastHandler from "@/Components/ToastHandler.jsx";
 import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
 import InquiryForm from "@/Components/Inquiry/InquiryForm.jsx";
-import { Heart, Share2, X, MapPin, Home, BadgeInfo, Tag, ClipboardCheck } from "lucide-react";
+import { Heart, Share2, X, MapPin, Home, BadgeInfo, Tag, Users, Star, Search,  } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import AgentCompactCard from "@/Components/Property/AgentCards/AgentCompactCard.jsx";
+import {AgentDetailedCard} from "@/Components/Property/AgentCards/index.js";
 dayjs.extend(relativeTime);
 
 /* utils */
@@ -42,6 +44,69 @@ function InlineToast({ toast, onClose }) {
                 {toast.msg}
             </div>
         </div>
+    );
+}
+
+function AgentsModal({ show, onClose, agents, onAgentSelect }) {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredAgents = agents.filter(agent =>
+        agent.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <Modal show={show} onClose={onClose} maxWidth="2xl">
+            <div className="bg-white rounded-2xl max-h-[90vh] flex flex-col">
+                {/* Header */}
+                <div className="flex-shrink-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-900">All Available Agents</h3>
+                            <p className="text-gray-600 text-sm mt-1">Select an agent to contact about this property</p>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            <X className="w-5 h-5 text-gray-500" />
+                        </button>
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="mt-4 relative">
+                        <input
+                            type="text"
+                            placeholder="Search agents by name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        />
+                        <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
+                    </div>
+                </div>
+
+                {/* Agents List */}
+                <div className="flex-1 overflow-y-auto p-6">
+                    <div className="space-y-4">
+                        {filteredAgents.map((agent) => (
+                            <AgentDetailedCard
+                                key={agent.id}
+                                agent={agent}
+                                onClick={() => onAgentSelect(agent)}
+                            />
+                        ))}
+                    </div>
+
+                    {filteredAgents.length === 0 && (
+                        <div className="text-center py-8">
+                            <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                            <p className="text-gray-600">No agents found</p>
+                            <p className="text-sm text-gray-500 mt-1">Try adjusting your search</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </Modal>
     );
 }
 
@@ -121,6 +186,7 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
     const [selectedPerson, setSelectedPerson] = useState(null);
     const [isOpenDealForm, setIsOpenDealForm] = useState(false);
     const [isContactSeller, setIsContactSeller] = useState(false);
+    const [showAgentsModal, setShowAgentsModal] = useState(false);
 
     /* MEDIA */
     const [activeImageUrl, setActiveImageUrl] = useState(property?.image_url || null);
@@ -325,8 +391,7 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
 
 
                     </section>
-
-                    <aside className="lg:col-span-1 ">
+                    <aside className="lg:col-span-1">
                         <div className="sticky">
                             {Array.isArray(agents) && agents.length > 0 ? (
                                 <AssignedAgents
@@ -343,21 +408,54 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
                                     setSelectedPerson={setSelectedPerson}
                                     setData={setData} />
                             ) : (
-                                <div>
-                                    Contact Agent
+                                <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                                    <div className="mb-4">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-1">Contact Agent</h3>
+                                        <p className="text-gray-600 text-sm">Please select your preferred agent</p>
+                                    </div>
 
-                                    <p>Please select your preferred agent</p>
+                                    {/* Show only top 3 agents */}  
+                                    <div className="space-y-3">
+                                        {allAgents.slice(0, 3).map((agent) => (
+                                            <AgentCompactCard
+                                                key={agent.id}
+                                                agent={agent}
+                                                onClick={() => {
+                                                    setData('person', agent.id);
+                                                    setSelectedPerson(agent);
+                                                    setIsOpenModal(true);
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
 
-                                    {allAgents.map((agent) => (
-                                        <div key={agent.id}>
-                                            <p>{agent.name}</p>
-
-                                        </div>
-                                    ))}
+                                    {/* Show "View All" button if more agents */}
+                                    {allAgents.length > 3 && (
+                                        <button
+                                            onClick={() => setShowAgentsModal(true)}
+                                            className="w-full mt-4 py-2 text-center text-emerald-600 text-sm font-semibold border border-dashed border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors"
+                                        >
+                                            View All {allAgents.length} Agents
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
                     </aside>
+
+                    {/* Agents Modal */}
+                    <AgentsModal
+                        show={showAgentsModal}
+                        onClose={() => setShowAgentsModal(false)}
+                        agents={allAgents}
+                        onAgentSelect={(agent) => {
+                            console.log(agent);
+                            setData('person', agent.id);
+                            setSelectedPerson(agent);
+                            setIsOpenModal(true);
+                            setShowAgentsModal(false);
+                        }}
+                    />
                 </div>
 
                 <div className="h-4" />
@@ -383,6 +481,7 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
                 onSubmit={handleSubmitInquiry}
                 processing={processing}
             />
+
         </div>
     );
 }

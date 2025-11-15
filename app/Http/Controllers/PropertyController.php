@@ -16,7 +16,10 @@ class PropertyController extends Controller
     {
         $deal = null;
 
-        $allAgents = User::where('role', 'agent')->get();
+        $allAgents = User::where('role', 'agent')
+            ->withCount('property_listings')
+            ->with('feedbackReceived.characteristics')
+            ->get();
 
         $property->load(
             'images',

@@ -196,8 +196,6 @@ class User extends Authenticatable
     }
 
 
-
-
     public function listingAssignments()
     {
         return $this->belongsToMany(\App\Models\PropertyListing::class, 'property_listing_agents', 'agent_id', 'property_listing_id')
