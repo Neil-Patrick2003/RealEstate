@@ -57,7 +57,7 @@ export default function Index({ projects }) {
                                 )}
                             </div>
 
-                            {/* Example CTA (optional) */}
+                            {/* Example CTASection (optional) */}
                             <div className="mt-4">
                                 <Link
                                     // href={route('public.projects.index') + `?project=${p.id}`} // replace with your “show” route if you have one

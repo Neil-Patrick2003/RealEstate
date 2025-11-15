@@ -540,7 +540,7 @@ export default function ScheduleVisitModal({ open, setOpen, visitData }) {
                                                 "px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md",
                                                 mode !== "reschedule" && buyerAlreadyScheduled
                                                     ? "bg-gray-300 text-white cursor-not-allowed"
-                                                    : "bg-primary-600 hover:bg-primary-700 text-white" // Primary CTA
+                                                    : "bg-primary-600 hover:bg-primary-700 text-white" // Primary CTASection
                                             )}
                                             disabled={isSubmitting || (mode !== "reschedule" && buyerAlreadyScheduled)}
                                         >

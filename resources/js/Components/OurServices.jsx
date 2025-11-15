@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
-import { Home, Key, DollarSign, FileText, Search, Shield } from 'lucide-react';
+import { Home, Key, MessageCircle, FileText, Search, Shield, Link } from 'lucide-react';
 
 function OurServices() {
     const ref = useRef(null);
@@ -11,38 +11,38 @@ function OurServices() {
         {
             icon: Search,
             title: "Property Search",
-            description: "Advanced search tools to find your perfect property based on your specific needs and budget.",
+            description: "Easily find properties that match your lifestyle, budget, and preferred location with our advanced search tools.",
             color: "from-primary-500 to-primary-600",
         },
         {
             icon: Home,
-            title: "Property Listings",
-            description: "Comprehensive database of verified properties including houses, apartments, and commercial spaces.",
+            title: "Buy & Sell Properties",
+            description: "Seamlessly buy or sell your property with the guidance and expertise of trusted local agents from MJVI Realty.",
             color: "from-secondary-500 to-secondary-600",
         },
         {
             icon: Key,
-            title: "Rental Services",
-            description: "Full-service rental assistance from property viewing to lease signing and move-in coordination.",
+            title: "Property Management",
+            description: "Comprehensive property management solutions to help you maintain and grow your real estate investments hassle-free.",
             color: "from-primary-600 to-primary-700",
         },
         {
-            icon: DollarSign,
-            title: "Property Valuation",
-            description: "Professional property valuation services to help you make informed buying or selling decisions.",
+            icon: MessageCircle,
+            title: "Real-Time Chat Support",
+            description: "Instantly connect with agents and get real-time answers to your property inquiries through our chat system.",
             color: "from-secondary-600 to-secondary-700",
         },
         {
             icon: FileText,
-            title: "Legal Assistance",
-            description: "Expert legal guidance for contracts, documentation, and all property transaction requirements.",
+            title: "Legal & Documentation Assistance",
+            description: "Get expert help with contracts, titles, and other legal requirements to ensure smooth and secure transactions.",
             color: "from-primary-500 to-primary-700",
         },
         {
-            icon: Shield,
-            title: "Investment Consulting",
-            description: "Strategic investment advice to maximize returns on your property investments.",
-            color: "from-secondary-500 to-secondary-700",
+            icon: Link,
+            title: "Multi-Source Data Connection",
+            description: "Seamlessly connects data from developers, brokers, and agents into one centralized platform with unified listing control.",
+            color: "from-primary-600 to-primary-700",
         },
     ];
 

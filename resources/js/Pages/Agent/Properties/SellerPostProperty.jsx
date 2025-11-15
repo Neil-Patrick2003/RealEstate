@@ -370,7 +370,7 @@ export default function SellerPostProperty({ properties }) {
                         </div>
                     </div>
 
-                    {/* CTA */}
+                    {/* CTASection */}
                     <div className="flex items-center justify-end gap-2">
                         <button
                             onClick={() => setIsContactSeller(false)}

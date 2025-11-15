@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Deal;
 use App\Models\Inquiry;
 use App\Models\Property;
+use App\Models\User;
 use Dflydev\DotAccessData\Data;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,6 +15,8 @@ class PropertyController extends Controller
     public function show(Property $property)
     {
         $deal = null;
+
+        $allAgents = User::where('role', 'agent')->get();
 
         $property->load(
             'images',
@@ -37,6 +40,7 @@ class PropertyController extends Controller
         return Inertia::render('LandingPage/Property/ShowProperty', [
             'property' => $property,
             'deal' => $deal,
+            'allAgents' => $allAgents,
         ]);
     }
 

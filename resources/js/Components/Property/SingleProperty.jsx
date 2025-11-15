@@ -113,7 +113,7 @@ const SellerModal = ({ show, onClose, seller, message, onChangeMessage, onSubmit
     </Modal>
 );
 
-export default function SingleProperty({ property, auth, agents, broker, seller, deal, initialFavorites = [] }) {
+export default function SingleProperty({ property, auth, agents, broker, seller, deal, initialFavorites = [], allAgents =[] }) {
 
     const { data, setData, post, processing, reset } = useForm({ message: "", person: "" });
 
@@ -343,7 +343,18 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
                                     setSelectedPerson={setSelectedPerson}
                                     setData={setData} />
                             ) : (
-                                <p className="text-sm text-gray-500">No assigned agents for this listing.</p>
+                                <div>
+                                    Contact Agent
+
+                                    <p>Please select your preferred agent</p>
+
+                                    {allAgents.map((agent) => (
+                                        <div key={agent.id}>
+                                            <p>{agent.name}</p>
+
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </aside>

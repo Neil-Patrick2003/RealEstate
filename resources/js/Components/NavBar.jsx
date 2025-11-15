@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Menu, X, Search, User, ChevronDown } from 'lucide-react';
 
 import logo from '../../assets//framer_logo.png';
+import {router} from "@inertiajs/react";
 
 function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -19,7 +20,7 @@ function Navbar() {
 
     const navLinks = [
         { name: 'Home', href: '#home' },
-        { name: 'Properties', href: '#properties' },
+        { name: 'Properties', href: 'all-properties' },
         { name: 'About', href: '#about' },
         { name: 'Services', href: '#services' },
         { name: 'Contact', href: '#contact' },
@@ -90,6 +91,7 @@ function Navbar() {
                             <Search className="w-5 h-5" />
                         </motion.button>
                         <motion.button
+                            onClick={() => router.visit('/login')}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             className="px-6 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"

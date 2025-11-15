@@ -25,17 +25,13 @@ function AboutUs() {
                         transition={{ duration: 0.6 }}
                     >
                         <h2 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
-                            About PropertyFinder
+                            About RealSync
                         </h2>
                         <p className="text-lg text-neutral-600 mb-6 leading-relaxed">
-                            We are passionate about connecting people with their dream homes. Since 2008,
-                            PropertyFinder has been the trusted partner for thousands of families seeking
-                            the perfect property in their ideal neighborhood.
+                            Powered by MJVI Realty, RealSync is dedicated to connecting people with their perfect homes and properties in Nasugbu and surrounding areas. Since our beginning, we’ve helped families, investors, and first-time buyers find properties that truly match their dreams and lifestyles.
                         </p>
                         <p className="text-lg text-neutral-600 mb-8 leading-relaxed">
-                            Our mission is to make property searching simple, transparent, and enjoyable.
-                            With cutting-edge technology and personalized service, we ensure every client
-                            finds not just a house, but a place to call home.
+                            Our mission is to make property searching simple, transparent, and enjoyable. With the trusted experience of MJVI Realty and our commitment to personalized service, RealSyn ensures that every client finds not just a property, but a place to call home.
                         </p>
 
                         {/* Stats Grid */}

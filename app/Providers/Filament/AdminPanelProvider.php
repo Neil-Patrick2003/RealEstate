@@ -24,23 +24,24 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            // ── Identity ───────────────────────────────────────────────
+
             ->default()
             ->id('admin')
             ->path('admin')
             ->login() // keep Filament's login route enabled
-            ->brandName('RealSync')                       // ⬅︎ set your brand
-            ->brandLogo(asset('images/logo.svg'))           // ⬅︎ 160×160 SVG/PNG
-            ->favicon(asset('favicon.ico'))                 // ⬅︎ optional
+            ->brandName('RealSync')
+            ->brandLogo(asset('framer_logo.png'))
+            ->favicon(asset('framer_logo.png'))
+            ->favicon(asset('framer_logo.png'))
 
 
             ->colors([
-                'primary' => Color::Amber,                  // use Filament palette helper
+                'primary' => Color::Amber,
             ])
-//            ->viteTheme('resources/css/filament.css')       // main theme entry (import your extras here)
-            ->font('Inter')                              // optional if you added this in Tailwind
-            ->maxContentWidth('full')                       // full-width content area
-            ->sidebarCollapsibleOnDesktop()              // enable if you like a collapsible sidebar
+//            ->viteTheme('resources/css/filament.css')
+            ->font('Inter')
+            ->maxContentWidth('full')
+            ->sidebarCollapsibleOnDesktop()
             ->darkMode(true)
 
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

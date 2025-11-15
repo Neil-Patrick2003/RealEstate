@@ -9,6 +9,7 @@ import PropertyListings from "@/Components/PropertyListings.jsx";
 import Footer from "@/Components/Footer.jsx";
 import ParallaxHero from "@/Components/ParallaxHero.jsx";
 import Testimonials from "@/Components/Testimonials.jsx";
+import Chatbot from "@/Components/Chatbot/Chatbot.jsx";
 
 
 
@@ -24,8 +25,9 @@ export default function Welcome() {
             <OurTeam />
             <Testimonials />
             <CTASection />
-            <PropertyListings />
+            {/*<PropertyListings />*/}
             <Footer />
+            <Chatbot/>
         </div>
     );
 }

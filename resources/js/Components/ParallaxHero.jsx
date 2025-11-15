@@ -178,7 +178,7 @@ function ParallaxHero() {
                         </div>
 
                         {/* 3. Search Button (Icon + Text on Desktop) */}
-                        <button className={`bg-gradient-to-r from-primary to-primary-500 border-r-lg text-white px-4 sm:px-8 py-3 font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2`}>
+                        <button className={`bg-gradient-to-r from-primary to-primary-500 border-r-lg text-white px-4 rounded-r-lg sm:px-8 py-3 font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2`}>
                             <Search className="w-5 h-5" />
                             {/* Text is hidden on mobile */}
                                     <span className="hidden sm:block">Search</span>

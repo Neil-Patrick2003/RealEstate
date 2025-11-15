@@ -1,7 +1,26 @@
 // resources/js/Layouts/BuyerLayout.jsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
-import { AlignLeft, LogOut, X, Moon, Sun, Search, Bell, Info } from "lucide-react";
+import {
+    AlignLeft,
+    LogOut,
+    X,
+    Moon,
+    Sun,
+    Search,
+    Bell,
+    Info,
+    Settings,
+    User,
+    Home,
+    Heart,
+    MessageSquare,
+    FileText,
+    CreditCard,
+    HelpCircle,
+    Zap,
+    Sparkles
+} from "lucide-react";
 import { Link, router, usePage } from "@inertiajs/react";
 import Dropdown from "@/Components/Dropdown";
 import BuyerSidebar from "@/Components/Sidebar/BuyerSidebar.jsx";
@@ -11,8 +30,39 @@ import { buildSidebarCounts } from "@/utils/sidebarCounts.js";
 import FeedbackReminder from "@/Components/reminder/FeedbackReminder.jsx";
 
 /* ================================
-   Small Utils
+   Design Constants & Utils
 =================================== */
+const DESIGN = {
+    colors: {
+        primary: {
+            50: '#f0fdf4',
+            100: '#dcfce7',
+            500: '#22c55e',
+            600: '#16a34a',
+            700: '#15803d',
+            900: '#14532d',
+        },
+        neutral: {
+            50: '#fafafa',
+            100: '#f4f4f5',
+            200: '#e4e4e7',
+            300: '#d4d4d8',
+            400: '#a1a1aa',
+            500: '#71717a',
+            600: '#52525b',
+            700: '#3f3f46',
+            800: '#27272a',
+            900: '#18181b',
+        }
+    },
+    shadows: {
+        sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+        xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+    }
+};
+
 const canUseDOM = typeof window !== "undefined" && typeof document !== "undefined";
 
 const safeLS = {
@@ -36,164 +86,209 @@ const safeLS = {
 const isEditableTarget = (el) =>
     el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || el?.isContentEditable;
 
-/* Breakpoint helper (mobile/tablet/desktop) */
 const getLayoutMode = () => {
     if (!canUseDOM) return "desktop";
     const w = window.innerWidth;
-    if (w < 768) return "mobile";       // < md
-    if (w < 1024) return "tablet";      // md only
-    return "desktop";                   // lg+
+    if (w < 768) return "mobile";
+    if (w < 1024) return "tablet";
+    return "desktop";
 };
 
 /* =========================================================
-   Command Palette (⌘/Ctrl+K) — with keyboard navigation
+   Enhanced Command Palette
 ========================================================= */
 function CommandPalette({ open, setOpen, actions }) {
-    const [q, setQ] = useState("");
-    const [active, setActive] = useState(0);
-    const listRef = useRef(null);
+    const [query, setQuery] = useState("");
+    const [activeIndex, setActiveIndex] = useState(0);
     const inputRef = useRef(null);
+    const listRef = useRef(null);
 
     useEffect(() => {
         if (!open) {
-            setQ("");
-            setActive(0);
+            setQuery("");
+            setActiveIndex(0);
         }
     }, [open]);
 
-    // lock body scroll while open
     useEffect(() => {
-        if (!canUseDOM) return;
         if (open) {
-            const prev = document.body.style.overflow;
             document.body.style.overflow = "hidden";
-            return () => (document.body.style.overflow = prev);
+            return () => { document.body.style.overflow = ""; };
         }
     }, [open]);
 
-    const filtered = useMemo(() => {
-        const query = q.trim().toLowerCase();
-        if (!query) return actions;
+    const filteredActions = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return actions;
         return actions.filter(
             (a) =>
-                a.label.toLowerCase().includes(query) ||
-                (a.keywords || "").toLowerCase().includes(query)
+                a.label.toLowerCase().includes(q) ||
+                (a.keywords || "").toLowerCase().includes(q) ||
+                (a.category || "").toLowerCase().includes(q)
         );
-    }, [q, actions]);
+    }, [query, actions]);
 
     useEffect(() => {
-        setActive((i) => Math.min(i, Math.max(filtered.length - 1, 0)));
-    }, [filtered.length]);
+        setActiveIndex(0);
+    }, [filteredActions.length]);
 
-    const perform = useCallback(
-        (item) => {
-            if (!item) return;
-            if (item.href) {
-                setOpen(false);
-            } else {
-                item.onClick?.();
-                setOpen(false);
-            }
-        },
-        [setOpen]
-    );
+    const executeAction = useCallback((action) => {
+        if (action.href) {
+            router.visit(action.href);
+        } else {
+            action.onClick?.();
+        }
+        setOpen(false);
+    }, [setOpen]);
 
-    const onKeyDown = (e) => {
-        if (e.key === "Escape") {
-            e.preventDefault();
-            setOpen(false);
-            return;
-        }
-        if (!filtered.length) return;
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            setActive((i) => (i + 1) % filtered.length);
-        }
-        if (e.key === "ArrowUp") {
-            e.preventDefault();
-            setActive((i) => (i - 1 + filtered.length) % filtered.length);
-        }
-        if (e.key === "Enter") {
-            e.preventDefault();
-            perform(filtered[active]);
+    const handleKeyDown = (e) => {
+        switch (e.key) {
+            case "Escape":
+                e.preventDefault();
+                setOpen(false);
+                break;
+            case "ArrowDown":
+                e.preventDefault();
+                setActiveIndex(prev => (prev + 1) % filteredActions.length);
+                break;
+            case "ArrowUp":
+                e.preventDefault();
+                setActiveIndex(prev => (prev - 1 + filteredActions.length) % filteredActions.length);
+                break;
+            case "Enter":
+                e.preventDefault();
+                if (filteredActions[activeIndex]) {
+                    executeAction(filteredActions[activeIndex]);
+                }
+                break;
         }
     };
 
     useEffect(() => {
-        if (!open) return;
-        inputRef.current?.focus();
+        if (open) {
+            inputRef.current?.focus();
+        }
     }, [open]);
+
+    // Scroll active item into view
+    useEffect(() => {
+        const activeEl = listRef.current?.children[activeIndex];
+        if (activeEl) {
+            activeEl.scrollIntoView({ block: "nearest" });
+        }
+    }, [activeIndex]);
 
     return (
         <AnimatePresence>
             {open && (
                 <>
-                    {/* overlay stays above header */}
-                    <motion.button
-                        aria-label="Close command palette"
-                        className="fixed inset-0 z-[90] bg-black/30"
-                        onClick={() => setOpen(false)}
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[90] bg-black/40 backdrop-blur-sm"
+                        onClick={() => setOpen(false)}
                     />
+
                     <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                        className="fixed z-[91] left-1/2 top-[10vh] w-[95vw] max-w-2xl -translate-x-1/2 rounded-2xl bg-white/95 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden"
                         role="dialog"
-                        aria-modal="true"
                         aria-label="Command palette"
-                        className="fixed z-[91] left-1/2 top-[12vh] w-[92vw] max-w-xl -translate-x-1/2 rounded-2xl border border-gray-200 bg-white shadow-xl"
-                        initial={{ opacity: 0, scale: 0.96 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.96 }}
-                        onKeyDown={onKeyDown}
                     >
-                        <div className="flex items-center gap-2 border-b border-gray-200 px-3 py-2">
-                            <Search className="w-4 h-4 text-gray-500" />
+                        {/* Header */}
+                        <div className="flex items-center gap-3 p-4 border-b border-neutral-100">
+                            <div className="p-2 bg-primary-100 rounded-xl">
+                                <Search className="w-5 h-5 text-primary-600" />
+                            </div>
                             <input
                                 ref={inputRef}
-                                value={q}
-                                onChange={(e) => setQ(e.target.value)}
-                                placeholder="Type a command…"
-                                className="w-full bg-transparent outline-none text-sm py-2"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Type a command or search..."
+                                className="flex-1 bg-transparent outline-none text-lg placeholder-neutral-400"
                                 aria-label="Command search"
                             />
-                            <button
-                                className="p-2 rounded-md hover:bg-gray-100"
-                                onClick={() => setOpen(false)}
-                                aria-label="Close"
-                            >
-                                <X className="w-4 h-4 text-gray-600" />
-                            </button>
+                            <div className="flex items-center gap-2 text-sm text-neutral-500">
+                                <kbd className="px-2 py-1 bg-neutral-100 rounded-md text-xs">ESC</kbd>
+                                <span>to close</span>
+                            </div>
                         </div>
 
-                        <div className="max-h-[50vh] overflow-y-auto p-1" ref={listRef}>
-                            {filtered.length === 0 ? (
-                                <div className="px-3 py-4 text-sm text-gray-500">No commands found.</div>
+                        {/* Results */}
+                        <div className="max-h-[60vh] overflow-y-auto" ref={listRef}>
+                            {filteredActions.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <Search className="w-12 h-12 text-neutral-300 mb-4" />
+                                    <p className="text-neutral-500 text-lg">No results found</p>
+                                    <p className="text-neutral-400 text-sm mt-1">Try a different search term</p>
+                                </div>
                             ) : (
-                                <ul className="py-1" role="listbox" aria-activedescendant={`cmd-${active}`}>
-                                    {filtered.map((a, idx) => {
-                                        const common = (
-                                            <>
-                                                <span className="text-sm text-gray-800">{a.label}</span>
-                                                {a.kbd && (
-                                                    <span className="ml-3 text-[11px] text-gray-500 border rounded px-1.5 py-0.5">
-                            {a.kbd}
-                          </span>
-                                                )}
-                                            </>
-                                        );
-                                        const cls =
-                                            "flex items-center justify-between px-3 py-2 rounded-md " +
-                                            (idx === active ? "bg-gray-100" : "hover:bg-gray-50");
+                                <ul className="py-2" role="listbox">
+                                    {filteredActions.map((action, index) => {
+                                        const Icon = action.icon || Zap;
                                         return (
-                                            <li id={`cmd-${idx}`} key={idx} role="option" aria-selected={idx === active}>
-                                                {a.href ? (
-                                                    <Link href={a.href} className={cls} onClick={() => setOpen(false)}>
-                                                        {common}
+                                            <li
+                                                key={action.label}
+                                                id={`cmd-${index}`}
+                                                role="option"
+                                                aria-selected={index === activeIndex}
+                                            >
+                                                {action.href ? (
+                                                    <Link
+                                                        href={action.href}
+                                                        className={`flex items-center gap-4 p-4 transition-all ${
+                                                            index === activeIndex
+                                                                ? 'bg-primary-50 border-r-2 border-primary-500'
+                                                                : 'hover:bg-neutral-50'
+                                                        }`}
+                                                        onClick={() => setOpen(false)}
+                                                    >
+                                                        <div className={`p-2 rounded-lg ${
+                                                            index === activeIndex ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
+                                                        }`}>
+                                                            <Icon className="w-4 h-4" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium text-neutral-900">{action.label}</p>
+                                                            {action.description && (
+                                                                <p className="text-sm text-neutral-500 mt-1">{action.description}</p>
+                                                            )}
+                                                        </div>
+                                                        {action.kbd && (
+                                                            <kbd className="px-2 py-1 bg-neutral-100 rounded text-xs text-neutral-500 font-mono">
+                                                                {action.kbd}
+                                                            </kbd>
+                                                        )}
                                                     </Link>
                                                 ) : (
-                                                    <button type="button" onClick={() => perform(a)} className={`w-full ${cls}`}>
-                                                        {common}
+                                                    <button
+                                                        onClick={() => executeAction(action)}
+                                                        className={`w-full flex items-center gap-4 p-4 text-left transition-all ${
+                                                            index === activeIndex
+                                                                ? 'bg-primary-50 border-r-2 border-primary-500'
+                                                                : 'hover:bg-neutral-50'
+                                                        }`}
+                                                    >
+                                                        <div className={`p-2 rounded-lg ${
+                                                            index === activeIndex ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
+                                                        }`}>
+                                                            <Icon className="w-4 h-4" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium text-neutral-900">{action.label}</p>
+                                                            {action.description && (
+                                                                <p className="text-sm text-neutral-500 mt-1">{action.description}</p>
+                                                            )}
+                                                        </div>
+                                                        {action.kbd && (
+                                                            <kbd className="px-2 py-1 bg-neutral-100 rounded text-xs text-neutral-500 font-mono">
+                                                                {action.kbd}
+                                                            </kbd>
+                                                        )}
                                                     </button>
                                                 )}
                                             </li>
@@ -202,10 +297,109 @@ function CommandPalette({ open, setOpen, actions }) {
                                 </ul>
                             )}
                         </div>
+
+                        {/* Footer */}
+                        <div className="p-3 border-t border-neutral-100 bg-neutral-50/50">
+                            <div className="flex items-center justify-between text-xs text-neutral-500">
+                                <span>Quickly access anything in the platform</span>
+                                <div className="flex items-center gap-4">
+                                    <span>↑↓ to navigate</span>
+                                    <span>↵ to select</span>
+                                </div>
+                            </div>
+                        </div>
                     </motion.div>
                 </>
             )}
         </AnimatePresence>
+    );
+}
+
+/* ================================
+   Enhanced Notification Item
+=================================== */
+function NotificationItem({ notification, onMarkRead, isUnread }) {
+    const { title, message, link, time, type = 'info' } = notification;
+
+    const getIcon = () => {
+        switch (type) {
+            case 'success': return '✅';
+            case 'warning': return '⚠️';
+            case 'error': return '❌';
+            default: return '💡';
+        }
+    };
+
+    const handleClick = () => {
+        if (isUnread) {
+            onMarkRead(notification.id);
+        }
+        if (link) {
+            router.visit(link);
+        }
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer group ${
+                isUnread
+                    ? 'bg-primary-50 border-primary-200 hover:bg-primary-100'
+                    : 'bg-white border-neutral-200 hover:bg-neutral-50'
+            }`}
+            onClick={handleClick}
+            role="button"
+            tabIndex={0}
+        >
+            <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-lg ${
+                    isUnread ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
+                }`}>
+                    <span className="text-sm">{getIcon()}</span>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                        <h4 className={`font-medium ${
+                            isUnread ? 'text-primary-900' : 'text-neutral-900'
+                        }`}>
+                            {title}
+                        </h4>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs text-neutral-500">{time}</span>
+                            {isUnread && (
+                                <span className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
+                            )}
+                        </div>
+                    </div>
+
+                    <p className="text-sm text-neutral-600 mb-3 line-clamp-2">
+                        {message}
+                    </p>
+
+                    {link && (
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors">
+                                View details →
+                            </span>
+                            {isUnread && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onMarkRead(notification.id);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded transition-all"
+                                    aria-label="Mark as read"
+                                >
+                                    <X className="w-3 h-3 text-neutral-400 hover:text-neutral-600" />
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </motion.div>
     );
 }
 
@@ -216,414 +410,296 @@ export default function BuyerLayout({ children }) {
     const { auth } = usePage().props;
     const prefersReducedMotion = useReducedMotion();
 
-    /* -------- Theme (light/dark) -------- */
+    /* -------- State Management -------- */
     const [theme, setTheme] = useState(() => {
         if (!canUseDOM) return "light";
-        return safeLS.get(
-            "theme",
+        return safeLS.get("theme",
             window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light"
         );
     });
+
+    const [mode, setMode] = useState(getLayoutMode());
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+        mode === "desktop" ? safeLS.get("sidebar-isOpen", true) : false
+    );
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isCommandOpen, setIsCommandOpen] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [activeNotifTab, setActiveNotifTab] = useState("unread");
+
+    /* -------- Notifications State -------- */
+    const [notifications, setNotifications] = useState(auth?.notifications?.all ?? []);
+    const [unreadNotifications, setUnreadNotifications] = useState(auth?.notifications?.unread ?? []);
+
+    /* -------- Effects -------- */
     useEffect(() => {
         if (!canUseDOM) return;
-        const root = document.documentElement;
-        if (theme === "dark") root.classList.add("dark");
-        else root.classList.remove("dark");
+        document.documentElement.classList.toggle("dark", theme === "dark");
         safeLS.set("theme", theme);
     }, [theme]);
-    const toggleTheme = useCallback(() => setTheme((t) => (t === "dark" ? "light" : "dark")), []);
 
-    /* -------- Responsive layout mode -------- */
-    const [mode, setMode] = useState(getLayoutMode()); // "mobile" | "tablet" | "desktop"
     useEffect(() => {
         if (!canUseDOM) return;
-        let raf = 0;
-        const onResize = () => {
-            cancelAnimationFrame(raf);
-            raf = requestAnimationFrame(() => setMode(getLayoutMode()));
-        };
-        window.addEventListener("resize", onResize);
-        return () => {
-            cancelAnimationFrame(raf);
-            window.removeEventListener("resize", onResize);
-        };
+        const handleResize = () => setMode(getLayoutMode());
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    /* -------- Sidebar state --------
-       Desktop: persistent (remember open/collapsed)
-       Tablet: collapsed by default (icon-only); toggles inline
-       Mobile: off-canvas drawer
-    --------------------------------- */
-    const SIDEBAR_OPEN = 288;     // 18rem
-    const SIDEBAR_COLLAPSED = 80; // 5rem
-    const CONTENT_PAD = 24;
-
-    const [isOpen, setIsOpen] = useState(() => {
-        const saved = safeLS.get("sidebar-isOpen", true);
-        // tablet default collapsed, mobile drawer (irrelevant), desktop saved
-        if (mode === "tablet") return false;
-        if (mode === "desktop") return !!saved;
-        return false;
-    });
-
-    // keep isOpen in sync when mode changes
     useEffect(() => {
         if (mode === "desktop") {
-            setIsOpen((prev) => safeLS.get("sidebar-isOpen", typeof prev === "boolean" ? prev : true));
-        } else if (mode === "tablet") {
-            setIsOpen(false);
+            safeLS.set("sidebar-isOpen", isSidebarOpen);
+        }
+    }, [isSidebarOpen, mode]);
+
+    /* -------- Handlers -------- */
+    const toggleTheme = useCallback(() => setTheme(t => t === "dark" ? "light" : "dark"), []);
+    const toggleSidebar = useCallback(() => {
+        if (mode === "mobile") {
+            setIsMobileSidebarOpen(s => !s);
         } else {
-            // mobile
-            setIsOpen(false);
+            setIsSidebarOpen(s => !s);
         }
     }, [mode]);
 
-    useEffect(() => {
-        if (mode === "desktop") safeLS.set("sidebar-isOpen", isOpen);
-    }, [isOpen, mode]);
-
-    const [isMobileOpen, setIsMobileOpen] = useState(false);
-    const toggleSidebar = () => {
-        if (mode === "mobile") setIsMobileOpen((s) => !s);        // drawer
-        else setIsOpen((s) => !s);                                 // inline collapse/expand
-    };
-
-    /* -------- Global search (header) -------- */
-    const [search, setSearch] = useState("");
-    const submitSearch = useCallback(() => {
-        const q = search.trim();
+    const handleSearch = useCallback((e) => {
+        e.preventDefault();
+        const q = searchQuery.trim();
         if (!q) return;
         router.get("/search", { q }, { preserveScroll: true });
-    }, [search]);
+    }, [searchQuery]);
 
-    /* -------- Notifications -------- */
-    const [notifications, setNotifications] = useState(auth?.notifications?.all ?? []);
-    const [unreadNotifications, setUnreadNotifications] = useState(auth?.notifications?.unread ?? []);
-    const [openDrawer, setOpenDrawer] = useState(false);
-    const [notifTab, setNotifTab] = useState("unread"); // 'unread' | 'all'
-
-    const markAsRead = useCallback((id) => {
-        if (!id) return;
-        router.post(
-            `/notifications/${id}/read`,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setUnreadNotifications((prev) => prev.filter((n) => n.id !== id));
-                    setNotifications((prev) =>
-                        prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n))
-                    );
-                },
-                onError: (error) => console.error("Error marking notification as read:", error),
-            }
-        );
-    }, []);
-
-    const markAllAsRead = useCallback(() => {
-        if (!unreadNotifications.length) return;
-        router.post(
-            `/notifications/read-all`,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setNotifications((prev) => prev.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })));
-                    setUnreadNotifications([]);
-                },
-                onError: () => {
-                    unreadNotifications.forEach((n) => markAsRead(n.id));
-                },
-            }
-        );
-    }, [unreadNotifications, markAsRead]);
-
-    // Realtime notifications (guard Echo presence)
-    useEffect(() => {
-        if (!auth?.user?.id || !canUseDOM) return;
-        const channelName = `App.Models.User.${auth.user.id}`;
-        try {
-            if (typeof Echo !== "undefined" && Echo?.private) {
-                const ch = Echo.private(channelName).notification((notification) => {
-                    setNotifications((prev) => [notification, ...prev]);
-                    setUnreadNotifications((prev) => [notification, ...prev]);
-                });
-                return () => {
-                    try {
-                        ch?.stopListening?.();
-                        Echo.leave(channelName);
-                    } catch {}
-                };
-            }
-        } catch {}
-    }, [auth?.user?.id]);
-
-    /* -------- Layout paddings based on mode -------- */
-    const sidebarOffset =
-        mode === "mobile" ? 0 : isOpen ? SIDEBAR_OPEN : SIDEBAR_COLLAPSED;
-    const contentLeft = mode === "mobile" ? CONTENT_PAD : sidebarOffset + CONTENT_PAD;
-
-    const headerTransition = prefersReducedMotion ? { duration: 0 } : { duration: 0.28, ease: "easeInOut" };
-
-    /* -------- Command Palette -------- */
-    const [paletteOpen, setPaletteOpen] = useState(false);
-    const actions = useMemo(
-        () => [
-            { label: "Open Notifications", onClick: () => setOpenDrawer(true), kbd: "N", keywords: "alerts messages" },
-            { label: "Toggle Theme", onClick: toggleTheme, keywords: "dark light mode appearance" },
-            { label: "Go to Inquiries", href: "/inquiries", keywords: "contact agent leads" },
-            { label: "Go to Transactions", href: "/buyer/transactions", keywords: "closed deals payments" },
-            { label: "Profile Settings", href: "/profile", keywords: "account user profile" },
-            { label: "Search…", onClick: () => document.getElementById("search_all")?.focus(), kbd: "⌘/Ctrl + K", keywords: "find query" },
-        ],
-        [toggleTheme]
-    );
+    /* -------- Command Palette Actions -------- */
+    const commandActions = useMemo(() => [
+        {
+            label: "Search Properties",
+            href: "/properties",
+            icon: Search,
+            kbd: "⌘P",
+            keywords: "find browse listings",
+            category: "Navigation"
+        },
+        {
+            label: "View Notifications",
+            onClick: () => setIsNotificationsOpen(true),
+            icon: Bell,
+            kbd: "⌘N",
+            keywords: "alerts messages",
+            category: "Navigation"
+        },
+        {
+            label: "My Favorites",
+            href: "/favorites",
+            icon: Heart,
+            keywords: "saved liked properties",
+            category: "Properties"
+        },
+        {
+            label: "My Inquiries",
+            href: "/inquiries",
+            icon: MessageSquare,
+            keywords: "messages contacts agents",
+            category: "Communication"
+        },
+        {
+            label: "Transactions",
+            href: "/buyer/transactions",
+            icon: CreditCard,
+            keywords: "payments deals closed",
+            category: "Transactions"
+        },
+        {
+            label: "Profile Settings",
+            href: "/profile",
+            icon: User,
+            keywords: "account preferences",
+            category: "Account"
+        },
+        {
+            label: "Toggle Theme",
+            onClick: toggleTheme,
+            icon: theme === "dark" ? Sun : Moon,
+            kbd: "⌘T",
+            keywords: "dark light mode",
+            category: "Preferences"
+        }
+    ], [toggleTheme, theme]);
 
     /* -------- Keyboard Shortcuts -------- */
     useEffect(() => {
-        const onKey = (e) => {
-            const cmdOrCtrl = e.metaKey || e.ctrlKey;
-            if (cmdOrCtrl && e.key.toLowerCase() === "k") {
+        const handleKeyDown = (e) => {
+            const cmd = e.metaKey || e.ctrlKey;
+
+            if (cmd && e.key === 'k') {
                 e.preventDefault();
-                setPaletteOpen(true);
-                return;
+                setIsCommandOpen(true);
             }
-            if (e.key.toLowerCase() === "n" && !isEditableTarget(e.target)) {
-                setOpenDrawer(true);
-                return;
-            }
-            if (e.key === "Escape") {
-                setPaletteOpen(false);
-                setOpenDrawer(false);
-                setIsMobileOpen(false);
-                return;
-            }
-            if (e.key === "Enter" && document.activeElement?.id === "search_all") {
+            if (cmd && e.key === 'n') {
                 e.preventDefault();
-                submitSearch();
+                setIsNotificationsOpen(true);
+            }
+            if (e.key === 'Escape') {
+                setIsCommandOpen(false);
+                setIsNotificationsOpen(false);
+                setIsMobileSidebarOpen(false);
             }
         };
-        window.addEventListener("keydown", onKey);
-        return () => window.removeEventListener("keydown", onKey);
-    }, [submitSearch]);
 
-    /* -------- Notification helpers -------- */
-    const notifTitle = (n) => n?.data?.title ?? n?.title ?? "Notification";
-    const notifMsg = (n) => n?.data?.message ?? n?.message ?? "";
-    const notifLink = (n) => n?.data?.link ?? n?.link ?? "";
-    const notifTime = (n) => n?.data?.created_at ?? n?.created_at ?? "";
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
-    const listUnread = unreadNotifications;
-    const listAll = notifications;
-
-    // Scroll lock when overlays are open (mobile sidebar or notifications)
-    useEffect(() => {
-        if (!canUseDOM) return;
-        const anyOverlayOpen = (mode === "mobile" && isMobileOpen) || openDrawer;
-        if (anyOverlayOpen) {
-            const prev = document.body.style.overflow;
-            document.body.style.overflow = "hidden";
-            return () => {
-                document.body.style.overflow = prev;
-            };
-        }
-    }, [isMobileOpen, openDrawer, mode]);
-
-    const counts = buildSidebarCounts(unreadNotifications);
-    const { pendingFeedback = [] } = usePage().props;
+    /* -------- Layout Calculations -------- */
+    const sidebarWidth = isSidebarOpen ? 288 : 80;
+    const contentPadding = mode === "mobile" ? 24 : sidebarWidth + 24;
 
     return (
-        <div className="h-screen bg-white dark:bg-slate-900 flex overflow-hidden relative">
-            {/* Sidebar: Desktop & Tablet inline */}
+        <div className="h-screen bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-800 flex overflow-hidden">
+            {/* Sidebar */}
             {mode !== "mobile" && (
                 <div className="hidden md:block">
-                    <BuyerSidebar isOpen={isOpen} setIsOpen={setIsOpen} counts={counts} />
+                    <BuyerSidebar
+                        isOpen={isSidebarOpen}
+                        setIsOpen={setIsSidebarOpen}
+                        counts={buildSidebarCounts(unreadNotifications)}
+                    />
                 </div>
             )}
 
-            {/* Sidebar: Mobile off-canvas */}
-            <AnimatePresence initial={false}>
-                {mode === "mobile" && isMobileOpen && (
-                    <motion.div
-                        initial={{ x: "-100%" }}
-                        animate={{ x: 0 }}
-                        exit={{ x: "-100%" }}
-                        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25 }}
-                        className="fixed top-0 left-0 z-50 w-64 h-full bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="Mobile navigation"
-                    >
-                        <BuyerSidebar isOpen={true} setIsOpen={setIsMobileOpen} counts={counts} />
-                        <button
-                            onClick={() => setIsMobileOpen(false)}
-                            className="absolute top-4 right-4 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800"
-                            aria-label="Close sidebar"
+            {/* Mobile Sidebar Overlay */}
+            <AnimatePresence>
+                {mode === "mobile" && isMobileSidebarOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-40 bg-black/30"
+                            onClick={() => setIsMobileSidebarOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ x: "-100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "-100%" }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="fixed top-0 left-0 z-50 w-80 h-full bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-700 shadow-2xl"
                         >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </motion.div>
+                            <BuyerSidebar
+                                isOpen={true}
+                                setIsOpen={setIsMobileSidebarOpen}
+                                counts={buildSidebarCounts(unreadNotifications)}
+                            />
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
 
-            {/* Backdrop for mobile drawer */}
-            {mode === "mobile" && isMobileOpen && (
-                <button
-                    className="fixed inset-0 z-40 bg-black/30"
-                    onClick={() => setIsMobileOpen(false)}
-                    aria-label="Close sidebar overlay"
-                />
-            )}
-
-            {/* Main */}
-            <main className="w-full h-full overflow-auto bg-gray-50">
-                {/* Header */}
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col overflow-hidden">
+                {/* Enhanced Header */}
                 <motion.header
                     initial={false}
-                    animate={{ paddingLeft: mode === "mobile" ? 0 : sidebarOffset }}
-                    transition={headerTransition}
-                    className="fixed top-0 left-0 right-0 z-[70] bg-white/85 dark:bg-slate-900/85 backdrop-blur border-b border-gray-100 dark:border-slate-800 supports-[backdrop-filter]:backdrop-blur-md"
+                    animate={{ paddingLeft: mode === "mobile" ? 0 : sidebarWidth }}
+                    className="fixed top-0 left-0 right-0 z-30 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-200/50 dark:border-neutral-700/50 supports-[backdrop-filter]:bg-white/60"
                 >
-                    <div className="flex items-center justify-between px-4 md:px-6 lg:px-8 py-3">
-                        <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center justify-between px-6 py-4">
+                        {/* Left Section */}
+                        <div className="flex items-center gap-4 flex-1">
                             <button
                                 onClick={toggleSidebar}
-                                className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 active:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition"
-                                aria-label={
-                                    mode === "mobile"
-                                        ? isMobileOpen ? "Close menu" : "Open menu"
-                                        : isOpen ? "Collapse sidebar" : "Expand sidebar"
-                                }
-                                title={
-                                    mode === "mobile"
-                                        ? isMobileOpen ? "Close menu" : "Open menu"
-                                        : isOpen ? "Collapse sidebar" : "Expand sidebar"
-                                }
+                                className="p-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200 hover:shadow-md"
+                                aria-label={mode === "mobile" ? "Toggle menu" : "Toggle sidebar"}
                             >
-                                <AlignLeft size={20} className="text-gray-700 dark:text-slate-200" />
+                                <AlignLeft className="w-5 h-5 text-neutral-700 dark:text-neutral-200" />
                             </button>
 
-                            {/* Desktop search */}
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    submitSearch();
-                                }}
-                                className="relative hidden md:flex items-center"
-                            >
-                                <Search className="w-4 h-4 text-gray-500 absolute left-3" />
-                                <input
-                                    type="search"
-                                    id="search_all"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Search anything…"
-                                    className="ml-3 w-80 pl-8 border-0 bg-gray-100 dark:bg-slate-800 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-slate-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-slate-700"
-                                    aria-label="Search anything"
-                                />
+                            {/* Search Bar */}
+                            <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                                    <input
+                                        type="search"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search properties, agents, or anything..."
+                                        className="w-full pl-10 pr-4 py-3 bg-neutral-100 dark:bg-neutral-800 border-0 rounded-xl text-neutral-700 dark:text-neutral-200 placeholder-neutral-500 focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-neutral-700 transition-all duration-200"
+                                        aria-label="Search"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsCommandOpen(true)}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-neutral-500 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                                    >
+                                        ⌘K
+                                    </button>
+                                </div>
                             </form>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        {/* Right Section */}
+                        <div className="flex items-center gap-3">
                             {/* Theme Toggle */}
                             <button
                                 onClick={toggleTheme}
-                                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800"
+                                className="p-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200"
                                 aria-label="Toggle theme"
-                                title="Toggle theme"
                             >
-                                {theme === "dark" ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-gray-600" />}
+                                {theme === "dark" ? (
+                                    <Sun className="w-5 h-5 text-amber-400" />
+                                ) : (
+                                    <Moon className="w-5 h-5 text-neutral-600" />
+                                )}
                             </button>
-
-                            {/* Language */}
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <div
-                                        className="hover:bg-gray-100 dark:hover:bg-slate-800 p-2 rounded-full transition"
-                                        role="button"
-                                        aria-label="Change language"
-                                    >
-                                        <img
-                                            loading="lazy"
-                                            alt="English"
-                                            className="w-6 h-6"
-                                            src="https://purecatamphetamine.github.io/country-flag-icons/3x2/GB.svg"
-                                        />
-                                    </div>
-                                </Dropdown.Trigger>
-                                <Dropdown.Content width="48" className="z-[75]">
-                                    <ul className="py-1 px-2 text-sm text-gray-700 dark:text-slate-200">
-                                        <li className="hover:bg-gray-100 dark:hover:bg-slate-800 rounded px-2 py-1 cursor-pointer">English</li>
-                                        <li className="hover:bg-gray-100 dark:hover:bg-slate-800 rounded px-2 py-1 cursor-pointer">Filipino</li>
-                                    </ul>
-                                </Dropdown.Content>
-                            </Dropdown>
 
                             {/* Notifications */}
                             <button
-                                onClick={() => {
-                                    setOpenDrawer(true);
-                                    setNotifTab("unread");
-                                }}
-                                className="relative w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition flex items-center justify-center"
-                                aria-label="Open notifications"
-                                aria-haspopup="dialog"
+                                onClick={() => setIsNotificationsOpen(true)}
+                                className="relative p-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200"
+                                aria-label="Notifications"
                             >
-                                <Bell className="w-6 h-6 text-gray-700 dark:text-slate-200" />
-                                <span
-                                    className={`${
-                                        unreadNotifications.length ? "flex" : "hidden"
-                                    } absolute top-1 right-1 bg-red-500 text-white text-[11px] font-bold min-w-[20px] h-5 px-1.5 items-center justify-center rounded-full`}
-                                    aria-live="polite"
-                                >
-                                  {unreadNotifications.length}
-                                </span>
+                                <Bell className="w-5 h-5 text-neutral-700 dark:text-neutral-200" />
+                                {unreadNotifications.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full animate-pulse">
+                                        {unreadNotifications.length}
+                                    </span>
+                                )}
                             </button>
 
-                            {/* Profile */}
+                            {/* User Menu */}
                             <Dropdown>
                                 <Dropdown.Trigger>
-                                    <div
-                                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 px-2 py-1 rounded-lg transition"
-                                        role="button"
-                                        aria-label="Open profile menu"
-                                    >
+                                    <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200 cursor-pointer">
                                         <img
-                                            src={
-                                                auth?.user?.avatar_url ||
-                                                "https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
-                                            }
-                                            alt="Profile"
-                                            className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-200"
-                                            onError={(e) =>
-                                                (e.currentTarget.src =
-                                                    "https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png")
-                                            }
+                                            src={auth?.user?.avatar_url || "/images/avatar-placeholder.png"}
+                                            alt={auth?.user?.name}
+                                            className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-200 dark:ring-primary-800"
                                         />
-                                        <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-slate-200 truncate max-w-[12ch]">
-                      {auth?.user?.name ?? "Account"}
-                    </span>
-                                        <svg className="w-4 h-4 text-gray-500 dark:text-slate-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                                            <path
-                                                fillRule="evenodd"
-                                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
-                                                clipRule="evenodd"
-                                            />
-                                        </svg>
+                                        <div className="hidden sm:block text-left">
+                                            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                                {auth?.user?.name}
+                                            </p>
+                                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                                                Buyer Account
+                                            </p>
+                                        </div>
                                     </div>
                                 </Dropdown.Trigger>
-                                <Dropdown.Content width="48" className="z-[75]">
-                                    <Dropdown.Link href="/profile" className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-800">
-                                        Profile
+                                <Dropdown.Content width="48" className="z-40">
+                                    <Dropdown.Link
+                                        href="/profile"
+                                        className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                                    >
+                                        <User className="w-4 h-4" />
+                                        <span>Profile & Settings</span>
                                     </Dropdown.Link>
                                     <Dropdown.Link
                                         href={route("logout")}
                                         method="post"
                                         as="button"
-                                        className="flex items-center justify-between px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-800"
+                                        className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-red-600 dark:text-red-400"
                                     >
+                                        <LogOut className="w-4 h-4" />
                                         <span>Log Out</span>
-                                        <LogOut size={18} className="text-gray-500" />
                                     </Dropdown.Link>
                                 </Dropdown.Content>
                             </Dropdown>
@@ -631,159 +707,96 @@ export default function BuyerLayout({ children }) {
                     </div>
                 </motion.header>
 
-                {/* Content */}
+                {/* Content Area */}
                 <motion.div
                     initial={false}
-                    animate={{ paddingLeft: contentLeft, paddingRight: CONTENT_PAD }}
-                    transition={headerTransition}
-                    className="pt-20 pb-10 relative z-0"
+                    animate={{
+                        paddingLeft: contentPadding,
+                        paddingRight: 24
+                    }}
+                    className="flex-1 pt-24 pb-8 overflow-auto"
                 >
                     <ToastHandler />
-                    <FeedbackReminder items={pendingFeedback} />
+                    <FeedbackReminder items={usePage().props.pendingFeedback || []} />
                     {children}
                 </motion.div>
             </main>
 
             {/* Command Palette */}
-            <CommandPalette open={paletteOpen} setOpen={setPaletteOpen} actions={actions} />
+            <CommandPalette
+                open={isCommandOpen}
+                setOpen={setIsCommandOpen}
+                actions={commandActions}
+            />
 
-            {/* Notifications Drawer — keep above header */}
+            {/* Notifications Drawer */}
             <Drawer
                 id="notifications-drawer"
                 title="Notifications"
-                setOpen={setOpenDrawer}
-                open={openDrawer}
-                className="z-[80]"
+                open={isNotificationsOpen}
+                setOpen={setIsNotificationsOpen}
+                className="z-40"
             >
-                <div className="py-4 space-y-6 max-h-[75vh] overflow-y-auto">
-                    {/* Tabs */}
-                    <div className="flex items-center justify-between">
-                        <div className="inline-flex rounded-md overflow-hidden border border-gray-200">
-                            <button
-                                className={`px-3 py-1.5 text-sm ${
-                                    notifTab === "unread" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
-                                }`}
-                                onClick={() => setNotifTab("unread")}
-                            >
-                                Unread ({listUnread.length})
-                            </button>
-                            <button
-                                className={`px-3 py-1.5 text-sm ${
-                                    notifTab === "all" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
-                                }`}
-                                onClick={() => setNotifTab("all")}
-                            >
-                                All ({listAll.length})
-                            </button>
+                <div className="h-full flex flex-col">
+                    {/* Header */}
+                    <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+                                Notifications
+                            </h2>
+                            {unreadNotifications.length > 0 && (
+                                <button
+                                    onClick={() => {/* Mark all as read logic */}}
+                                    className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                                >
+                                    Mark all as read
+                                </button>
+                            )}
                         </div>
 
-                        {listUnread.length > 0 && (
-                            <button onClick={markAllAsRead} className="text-sm text-blue-600 hover:underline">
-                                Mark all as read
-                            </button>
-                        )}
+                        {/* Tabs */}
+                        <div className="flex gap-1 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+                            {[
+                                { id: "unread", label: `Unread (${unreadNotifications.length})` },
+                                { id: "all", label: `All (${notifications.length})` }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveNotifTab(tab.id)}
+                                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all ${
+                                        activeNotifTab === tab.id
+                                            ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm'
+                                            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Lists */}
-                    {notifTab === "unread" ? (
-                        listUnread.length === 0 ? (
-                            <p className="text-gray-500 text-sm">No unread notifications.</p>
-                        ) : (
-                            <ul className="space-y-2">
-                                {listUnread.map((notif) => (
-                                    <li
-                                        key={notif.id}
-                                        className="rounded-md cursor-pointer bg-gray-100 hover:bg-gray-200 transition"
-                                        onClick={() => {
-                                            markAsRead(notif.id);
-                                            const l = notifLink(notif);
-                                            if (l) router.visit(l);
-                                        }}
-                                        role="button"
-                                    >
-                                        <div className="p-4">
-                                            <div className="flex items-start gap-3">
-                                                <div className="shrink-0 p-2 bg-blue-100 rounded-full" aria-hidden="true">
-                                                    <Info className="w-4 h-4 text-blue-500" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex justify-between gap-3">
-                                                        <p className="text-sm font-medium text-gray-900 truncate">{notifTitle(notif)}</p>
-                                                        <span className="text-xs text-gray-500 shrink-0">{notifTime(notif)}</span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-600 mt-1">{notifMsg(notif)}</p>
-                                                    {notifLink(notif) && (
-                                                        <div className="mt-2">
-                                                            <Link href={notifLink(notif)} className="text-blue-600 hover:underline">
-                                                                View
-                                                            </Link>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <span className="ml-2 text-[10px] font-semibold text-white bg-rose-500 px-1.5 py-0.5 rounded">
-                          New
-                        </span>
-                                            </div>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )
-                    ) : listAll.length === 0 ? (
-                        <p className="text-gray-500 text-sm">You have no notifications.</p>
-                    ) : (
-                        <ul className="space-y-2">
-                            {listAll.map((notif) => (
-                                <li
-                                    key={notif.id}
-                                    className={`rounded-md cursor-pointer transition group ${
-                                        notif.read_at === null ? "bg-gray-100 hover:bg-gray-200" : "bg-white hover:bg-gray-50"
-                                    }`}
-                                    onClick={() => {
-                                        if (!notif.read_at) markAsRead(notif.id);
-                                        const l = notifLink(notif);
-                                        if (l) router.visit(l);
-                                    }}
-                                    role="button"
-                                >
-                                    <div className="p-4">
-                                        <div className="flex items-start gap-3">
-                                            <div className="shrink-0 p-2 bg-blue-100 rounded-full" aria-hidden="true">
-                                                <Info className="w-4 h-4 text-blue-500" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between gap-3">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">{notifTitle(notif)}</p>
-                                                    <span className="text-xs text-gray-500 shrink-0">{notifTime(notif)}</span>
-                                                </div>
-                                                <p className="text-sm text-gray-600 mt-1">{notifMsg(notif)}</p>
-                                                {notifLink(notif) && (
-                                                    <div className="mt-2">
-                                                        <Link href={notifLink(notif)} className="text-blue-600 hover:underline">
-                                                            View
-                                                        </Link>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {!notif.read_at && (
-                                                <button
-                                                    className="text-gray-400 hover:text-gray-600 ml-2"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        markAsRead(notif.id);
-                                                    }}
-                                                    aria-label="Mark as read"
-                                                    title="Mark as read"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </li>
+                    {/* Notifications List */}
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <div className="space-y-3">
+                            {(activeNotifTab === "unread" ? unreadNotifications : notifications).map(notification => (
+                                <NotificationItem
+                                    key={notification.id}
+                                    notification={notification}
+                                    onMarkRead={(id) => {/* Mark as read logic */}}
+                                    isUnread={!notification.read_at}
+                                />
                             ))}
-                        </ul>
-                    )}
+
+                            {(activeNotifTab === "unread" ? unreadNotifications : notifications).length === 0 && (
+                                <div className="text-center py-12">
+                                    <Bell className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
+                                    <p className="text-neutral-500 dark:text-neutral-400">
+                                        No {activeNotifTab === "unread" ? "unread" : ""} notifications
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </Drawer>
         </div>
