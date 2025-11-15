@@ -9,21 +9,18 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class AnalyticOverview extends BaseWidget
 {
-    // ✅ Must be NON-static for StatsOverviewWidget
-    protected ?string $heading = 'Analytics Overview';
+    protected ?string $heading = 'Core Business Metrics';
 
-    // Sort is static (comes from base Widget)
     protected static ?int $sort = 1;
 
-    // Match Filament’s type exactly (array|string|int), non-static
-    protected array|string|int $columnSpan = [
-        'default' => 'full',
-        'xl' => 2,
-    ];
+    // Adjusted column span for modern wide dashboards (e.g., 4 columns on large screens)
+    public function getColumnSpan(): int|string|array
+    {
+        return 4; // Use full width, Filament will split into 4 columns automatically
+    }
 
     protected function getStats(): array
     {
-        // Total Partners (guard in case you don't have a Partner model)
         $totalPartners = class_exists(\App\Models\Developer::class)
             ? \App\Models\Developer::count()
             : 0;
@@ -31,34 +28,32 @@ class AnalyticOverview extends BaseWidget
         // Sold properties
         $totalSold = Property::where('status', 'Sold')->count();
 
-        // Active users (last 30 days)
-        $activeUsers = User::whereNotNull('last_login')
-            ->where('last_login', '>=', now()->subDays(30))
-            ->count();
+        //Total Brokers
+        $totalBrokers = User::where('role', 'broker')->count();
 
         // Total agents
         $totalAgents = User::where('role', 'agent')->count();
 
         return [
-            Stat::make('Total Partners', number_format($totalPartners))
-                ->description('Registered partners')
-                ->icon('heroicon-o-briefcase')     // ✅ common heroicon
-                ->color('info'),
+            Stat::make('Total Developers', number_format($totalPartners))
+                ->description('Registered project partners')
+                ->icon('heroicon-o-building-office')     // Use a relevant icon
+                ->color('primary'), // Use primary for contrast
 
-            Stat::make('Sold Properties', number_format($totalSold))
-                ->description('Marked as Sold')
-                ->icon('heroicon-o-home-modern')   // ✅ common heroicon
-                ->color('success'),
+            Stat::make('Properties Sold', number_format($totalSold))
+                ->description('Total closed deals')
+                ->icon('heroicon-o-receipt-percent')   // Icon emphasizing a completed transaction
+                ->color('success'), // Primary theme color
 
-            Stat::make('Active Users', number_format($activeUsers))
-                ->description('Logged in ≤ 30 days')
-                ->icon('heroicon-o-users')         // ✅ common heroicon
-                ->color('primary'),
+            Stat::make('Total Brokers', number_format($totalBrokers))
+                ->description('Registered brokerage users')
+                ->icon('heroicon-o-users')         // General user group icon
+                ->color('info'), // Use info for a neutral color
 
             Stat::make('Total Agents', number_format($totalAgents))
-                ->description('Registered agents')
-                ->icon('heroicon-o-user-group')    // ✅ common heroicon
-                ->color('warning'),
+                ->description('Field sales representatives')
+                ->icon('heroicon-o-user-group')    // Consistent user group icon
+                ->color('warning'), // Use warning for distinct visibility
         ];
     }
 }

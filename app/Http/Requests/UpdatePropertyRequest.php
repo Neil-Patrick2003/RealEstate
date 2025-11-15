@@ -17,7 +17,7 @@ class UpdatePropertyRequest extends FormRequest
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:3000',
             'property_type' => 'nullable|string',
-            'property_sub_type' => 'nullable|string',
+            'sub_type' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
             'address' => 'nullable|string|max:255',
             'lot_area' => 'nullable|numeric|min:0',
@@ -25,7 +25,7 @@ class UpdatePropertyRequest extends FormRequest
             'total_rooms' => 'nullable|integer|min:0|max:10',
             'total_bedrooms' => 'nullable|integer|min:0|max:10',
             'total_bathrooms' => 'nullable|integer|min:0|max:10',
-            'car_slots' => 'nullable|integer|min:0|max:10',
+            'car_slots' => 'nullable|integer|min:0|max:2',
 
             // Main image (optional on update)
             'image_url' => 'nullable|file|image|max:5120', // 5MB limit

@@ -8,9 +8,7 @@ class HouseType extends Model
 {
     protected $table = 'house_types';
 
-    protected $fillable = [
-        'id', 'project_id', 'code', 'name', 'base_price', 'is_active'
-    ];
+    protected $guarded = [];
 
     public function project()
     {

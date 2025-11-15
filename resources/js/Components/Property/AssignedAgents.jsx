@@ -84,7 +84,3 @@ AssignedAgents.propTypes = {
     emptyFallback: PropTypes.node,
 };
 
-// Add defaultProps for robustness
-AssignedAgents.defaultProps = {
-    setData: () => {},
-};

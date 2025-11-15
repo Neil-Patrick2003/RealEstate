@@ -79,6 +79,7 @@ class PropertyTrippingController extends Controller
 
 
     public function decline(Request $request, $id){
+
         $tripping = PropertyTripping::find($id);
         $tripping->update([
             'status' => 'declined',

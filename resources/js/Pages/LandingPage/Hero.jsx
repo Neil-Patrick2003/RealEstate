@@ -17,6 +17,14 @@ const Hero = ({
         { key: "Land", label: "Land", color: "bg-primary/70" },
     ];
 
+    // {
+    //     "to": "639215046150",
+    //     "text": "Gumana kaya ?",
+    //     "api_key": "34uQYI68SnDC7J83VxLx81Gm0le",
+    //     "api_secret": "mTVuRDLCNGrRoSI2D5jtMdKSPQnSSRvA4ghIeaRp",
+    //     "from": "MOVIDER"
+    // }
+
     const selected = propertyTypes.find((pt) => pt.key === selectedType) || propertyTypes[0];
 
     const handleSubmit = (e) => {

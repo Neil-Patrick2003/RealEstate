@@ -111,23 +111,31 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(Developer::class, 'user_id');
     }
 
-    public function property_listings()
-    {
-        return $this->belongsToMany(
-            PropertyListing::class,
-            'property_listing_agents',
-            'agent_id',
-            'property_listing_id');
-
-
-    }
-
-
-
     public function broker_listing(){
         return $this->hasMany(PropertyListing::class, 'broker_id');
 
     }
+
+
+    public function property_listings()
+    {
+        return $this->hasManyThrough(
+            PropertyListing::class,
+            PropertyListingAgent::class, // your pivot model
+            'agent_id',                  // Foreign key on pivot table
+            'id',                        // Foreign key on PropertyListing
+            'id',                        // Local key on User
+            'property_listing_id'        // Local key on pivot
+        )->orWhere('broker_id', $this->id); // include broker_id
+    }
+
+
+    public function getPropertyListingsCountAttribute()
+    {
+        return $this->property_listings()->count();
+    }
+
+
 
     public function feedbackReceived()
     {
@@ -188,6 +196,7 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(\App\Models\Property::class, 'property_listings', 'user_id', 'property_id')
             ->withTimestamps();
     }
+
 
     public function listingAssignments()
     {

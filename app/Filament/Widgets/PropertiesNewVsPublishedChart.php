@@ -13,10 +13,10 @@ class PropertiesNewVsPublishedChart extends ChartWidget
     protected static ?string $heading = 'New vs Published (last 8 weeks)';
     protected static ?int $sort = 11;
 
-    protected array|string|int $columnSpan = [
-        'default' => 'full',
-        'xl' => 2,
-    ];
+    public function getColumnSpan(): int|string|array
+    {
+        return ['default' => 1, 'md' => 2, 'xl' => 3];
+    }
 
 
     protected function getContentHeight(): string

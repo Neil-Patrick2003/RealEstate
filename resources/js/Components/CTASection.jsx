@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 
-export default function CTA() {
+export default function CTASection() {
     return (
         <div className="bg-primary py-12">
             <div className="max-w-7xl mx-auto px-4">

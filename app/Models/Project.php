@@ -15,6 +15,7 @@ class Project extends Model
         'type',
         'address',
         'status',
+        'project_img'
     ];
 
     public function developer()

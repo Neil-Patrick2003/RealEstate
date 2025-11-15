@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Buyer\FeedbackController;
 use App\Http\Controllers\DealController;
+use App\Http\Controllers\ExportPdfController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\PropertyTrendsController;
 use App\Http\Controllers\Seller\ChannelController;
 use App\Http\Controllers\Seller\ChatController;
 use App\Http\Controllers\Seller\MessageController;
@@ -52,7 +55,7 @@ Route::get('/', function (Request $request) {
         ->latest()
         ->get();
 
-    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type')
+    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type', 'developer')
         ->latest()
         ->get();
 
@@ -72,16 +75,9 @@ Route::get('/', function (Request $request) {
 });
 
 
-Route::get('/explore/projects', function (Request $request) {
+Route::get('/explore/projects', [ProjectController::class, 'index']);
 
-    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type')
-        ->latest()
-        ->paginate(12);
-
-    return Inertia::render('Projects/Index', [
-        'projects' => $projects,
-    ]);
-});
+Route::get('/explores/projects/{project}', [ProjectController::class, 'show']);
 
 
 //<-----------------------Header Pages---------------------->
@@ -248,6 +244,7 @@ Route::middleware(['auth','role:Buyer' ])->group(function () {
     Route::get('/chat/channels/{channel}', [\App\Http\Controllers\Buyer\ChannelController::class, 'show'])->name('buyer.chat.channels.show');
     Route::get('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'index']);
     Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
+    Route::put('/trippings/{tripping}', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'update']);
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
     Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
     Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
@@ -299,6 +296,7 @@ Route::patch('/broker/trippings/{id}/{action}', [\App\Http\Controllers\Broker\Tr
 Route::get('/broker/transactions', [\App\Http\Controllers\Broker\TransactionController::class, 'index']);
 
 Route::get('/broker/deals', [\App\Http\Controllers\Broker\DealController::class, 'index']);
+Route::get('/broker/deal/{deal}/finalize-deal', [\App\Http\Controllers\Broker\DealController::class, 'show'])->name('broker.deals.finalize');
 Route::patch('/broker/deals/{deal}/{status}', [\App\Http\Controllers\Broker\DealController::class, 'update'])->name('broker.deals.update');
 Route::patch('/broker/deals/{deal}', [\App\Http\Controllers\Broker\DealController::class, 'counter'])->name('broker.deals.counter-offer');;
 
@@ -346,6 +344,26 @@ Route::post('/properties/{id}/favorites', [\App\Http\Controllers\Property\Proper
 //    Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
 //});
 
+
+Route::prefix('export')->group(function () {
+    Route::get('/monthly-transactions', [ExportPdfController::class, 'monthlySalesTransactions'])
+        ->name('export.pdf.transactions');
+
+    Route::get('/monthly-by-agent', [ExportPdfController::class, 'monthlySalesByAgent'])
+        ->name('export.pdf.by-agent');
+
+    Route::get('/monthly-by-role', [ExportPdfController::class, 'monthlySalesByRole'])
+        ->name('export.pdf.by-role');
+
+    Route::get('/export/monthly-handled-vs-sold', [\App\Http\Controllers\ExportPdfController::class, 'monthlyHandledVsSoldByUser'])
+        ->name('export.pdf.handled-vs-sold');
+
+    Route::get('/analytics/property-trends.json', [PropertyTrendsController::class, 'json'])
+        ->name('analytics.property.trends.json');
+
+    Route::get('/analytics/property-trends', [PropertyTrendsController::class, 'dashboard'])
+        ->name('analytics.property.trends');
+});
 
 
 

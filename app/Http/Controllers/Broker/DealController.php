@@ -21,28 +21,19 @@ class DealController extends Controller
                 $query->orderBy('created_at', 'asc');
             },
             'deal.buyer',
-            'property',
+            'property:id,image_url,title,address,price',
             'seller:id,photo_url,name',
-            'agents'
+            'broker'
         ])
             ->whereHas('broker', function ($query) {
                 $query->where('id', auth()->id());
             })
+
             ->latest()
-            ->get();
-
-        // Flatten all deals across listings
-        $allDeals = $propertyListings->flatMap(fn($listing) => $listing->deal)->filter()->values();
-
-        // Normalize status for counting
-        $statusCounts = $allDeals->groupBy(fn($deal) => strtolower($deal->status))->map(fn($deals) => $deals->count());
+            ->paginate(15);
 
         return Inertia::render('Broker/Deal/Index', [
             'property_listings'    => $propertyListings,
-            'all_deals_count'      => $allDeals->count(),
-            'pending_deals_count'  => $statusCounts->get('pending', 0),
-            'cancelled_deals_count'=> $statusCounts->get('cancelled', 0),
-            'closed_deals_count'   => $statusCounts->get('sold', 0),
         ]);
     }
 
@@ -78,6 +69,14 @@ class DealController extends Controller
         }
 
         return redirect()->back()->with('success', 'Deal status updated successfully.');
+    }
+
+    public function show(Deal $deal){
+        $deal->load(['property_listing', 'property_listing.seller', 'buyer', 'property_listing.agents', 'property_listing.property']);
+
+        return Inertia::render('Broker/Deal/ProceedTransaction', [
+            'deal' => $deal,
+        ]);
     }
 
 

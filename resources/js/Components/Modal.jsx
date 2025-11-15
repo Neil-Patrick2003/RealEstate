@@ -44,7 +44,7 @@ export default function Modal({
       <Dialog
         as="div"
         id="modal"
-        className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6"
+        className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-4 sm:p-6"
         onClose={handleClose} // ESC key or programmatic close
       >
         <Transition.Child

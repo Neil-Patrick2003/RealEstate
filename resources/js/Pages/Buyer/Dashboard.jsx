@@ -330,7 +330,7 @@ export default function Dashboard({ properties = [], inquiries = [], saveCount =
                     </div>
                 </section>
 
-                {/* Sticky CTA on mobile */}
+                {/* Sticky CTASection on mobile */}
                 <div className="lg:hidden fixed bottom-5 inset-x-0 flex justify-center pointer-events-none">
                     <Link
                         href="/buyer/properties"

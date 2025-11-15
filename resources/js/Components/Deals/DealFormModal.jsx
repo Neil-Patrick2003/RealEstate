@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import Modal from "@/Components/Modal.jsx";
 import { useForm } from "@inertiajs/react";
 import InputError from "@/Components/InputError.jsx";
-import { BadgeCheck, X } from "lucide-react";
+import { BadgeCheck, X, DollarSign, Handshake } from "lucide-react";
 
+// Assuming you have primary, accent, and other color utilities defined in Tailwind config
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 const money = new Intl.NumberFormat("en-PH", {
@@ -18,7 +19,7 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
     const { data, setData, post, put, processing, errors, reset } = useForm({
         offer_mode: initialValue?.offer_mode ?? "preferred", // 'list_price' | 'preferred'
         amount: initialValue?.amount ?? "",
-        notes: "",
+        notes: initialValue?.notes ?? "", // Added initial notes check
     });
 
     const amountNumber = useMemo(
@@ -29,22 +30,30 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
     const [touched, setTouched] = useState(false);
     const inputRef = useRef(null);
 
+    // --- Logic (Kept mostly as is) ---
+
     useEffect(() => {
         if (isOpen) {
             const t = setTimeout(() => inputRef.current?.focus(), 80);
             return () => clearTimeout(t);
         } else {
             setTouched(false);
+            // Re-set form data only on close, ensuring update mode retains notes initially
+            if (!initialValue) {
+                reset("notes", "amount", "offer_mode");
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, initialValue, reset]);
 
-    // Adjust amount when switching mode
     useEffect(() => {
         if (data.offer_mode === "list_price") {
             setData("amount", listPrice || "");
         }
         if (data.offer_mode === "preferred") {
-            setData("amount", "");
+            // Keep the current amount if it was manually entered, otherwise clear
+            if (data.amount === listPrice) {
+                setData("amount", "");
+            }
         }
     }, [data.offer_mode, listPrice, setData]);
 
@@ -55,7 +64,6 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
         (e) => {
             e?.preventDefault?.();
 
-            // Amount guards
             let payloadAmount = null;
             if (data.offer_mode === "list_price") {
                 payloadAmount = listPrice > 0 ? listPrice : null;
@@ -82,6 +90,7 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
                 onError: (err) => console.log(err),
                 onSuccess: () => {
                     close();
+                    // Do not reset all, only reset what should be cleared for next open
                     reset("notes");
                 },
             };
@@ -122,8 +131,29 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
 
     const handleAmountChange = (e) => {
         setTouched(true);
-        const raw = e.target.value.replace(/[^\d.]/g, "");
-        setData("amount", raw === "" ? "" : Number(raw));
+        // Ensure decimal handling is clean, accepting digits and at most one dot
+        const raw = e.target.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, '$1');
+        setData("amount", raw === "" ? "" : raw); // Keep as string for better input handling
+    };
+
+    // Convert string back to number for display logic
+    const displayAmount = (amt) => {
+        const num = Number(amt);
+        if (Number.isNaN(num) || num === 0) return "";
+        return money.format(num);
+    }
+
+    // Handle focus/blur for number formatting consistency
+    const handleAmountFocus = (e) => {
+        if (amountDisabled) return;
+        // Show raw number on focus for easier editing
+        e.target.value = data.amount === "" ? "" : String(data.amount);
+    };
+
+    const handleAmountBlur = (e) => {
+        if (amountDisabled) return;
+        // Format to currency on blur
+        e.target.value = displayAmount(data.amount);
     };
 
     const handleKeyDown = (e) => {
@@ -137,19 +167,22 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
         }
     };
 
+    const amountIsZeroOrInvalid =
+        data.amount === "" ||
+        Number.isNaN(Number(data.amount)) ||
+        Number(data.amount) <= 0;
+
     const showClientError =
         data.offer_mode === "preferred" &&
         touched &&
-        (amountNumber === "" ||
-            Number.isNaN(Number(amountNumber)) ||
-            Number(amountNumber) <= 0);
+        amountIsZeroOrInvalid;
 
     const quickChips = useMemo(() => {
         const chips = [];
         if (listPrice > 0) chips.push({ label: "List Price", value: listPrice });
         if (listPrice > 0) chips.push({ label: "+ ₱25k", value: listPrice + 25000 });
         if (listPrice > 0) chips.push({ label: "+ ₱50k", value: listPrice + 50000 });
-        if (!chips.length) chips.push({ label: "₱100,000", value: 100000 });
+        if (!chips.length) chips.push({ label: "₱100k", value: 100000 });
         return chips;
     }, [listPrice]);
 
@@ -160,192 +193,231 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
         listPrice > 0
             ? (
                 <>
-                    Current list price: <span className="font-medium">{money.format(listPrice)}</span>
+                    Current list price: <span className="font-bold text-primary-600">{money.format(listPrice)}</span>
                 </>
             )
             : "Propose an offer amount for this property.";
 
     const primaryCtaLabel = initialValue ? "Update Offer" : "Send Offer";
 
+    // --- Render ---
+
     return (
         <Modal show={isOpen} onClose={close} maxWidth="2xl">
             <div
-                className="relative rounded-xl bg-white p-6 shadow-lg transition-transform"
+                className="relative rounded-2xl bg-white p-6 shadow-2xl transition-transform flex flex-col"
                 onKeyDown={handleKeyDown}
                 role="dialog"
                 aria-modal="true"
                 aria-label={primaryCtaLabel}
             >
-                {/* Close */}
+                {/* Close Button */}
                 <button
                     onClick={close}
-                    className="absolute right-4 top-4 text-gray-600 hover:text-gray-800 focus:outline-none"
+                    className="absolute right-4 top-4 text-gray-400 hover:text-gray-700 p-1 rounded-full transition-colors focus:outline-none"
                     aria-label="Close modal"
                     type="button"
                 >
-                    <X className="h-5 w-5" />
+                    <X className="h-6 w-6" />
                 </button>
 
                 {/* Header */}
-                <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                <div className="mb-6 border-b pb-3">
+                    <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <Handshake className="h-6 w-6 text-primary-600" />
                         {primaryCtaLabel}
                     </h3>
-                    <p className="text-sm text-gray-500">{headerLine}</p>
+                    <p className="text-sm text-gray-600 mt-1">{headerLine}</p>
                 </div>
 
                 {/* Offer mode selector */}
-                <div className="mb-4 rounded-lg border border-gray-200 p-3">
-                    <div className="text-sm font-medium text-gray-700 mb-2">
-                        How do you want to proceed?
+                <div className="mb-6">
+                    <div className="text-md font-semibold text-gray-800 mb-3">
+                        Choose Your Offer Type
                     </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-gray-200 p-2 hover:bg-gray-50">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        {/* Option 1: List Price */}
+                        <label
+                            className={cn(
+                                "flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all",
+                                data.offer_mode === "list_price"
+                                    ? "border-primary-600 bg-primary-50 shadow-md"
+                                    : "border-gray-200 hover:border-primary-400 hover:bg-primary-50/50"
+                            )}
+                        >
                             <input
                                 type="radio"
                                 name="offer_mode"
-                                className="mt-1"
+                                className="mt-1.5 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                                 checked={data.offer_mode === "list_price"}
                                 onChange={() => setData("offer_mode", "list_price")}
                             />
                             <div className="text-sm">
-                                <div className="font-medium">Continue at List Price</div>
-                                <div className="text-gray-600">
-                                    {listPrice > 0 ? money.format(listPrice) : "—"}
+                                <div className="font-extrabold text-gray-900 flex items-center gap-1">
+                                    <BadgeCheck className="h-4 w-4 text-primary-600" />
+                                    List Price Offer
+                                </div>
+                                <div className="text-lg font-bold text-primary-600 mt-1">
+                                    {listPrice > 0 ? money.format(listPrice) : "N/A"}
+                                </div>
+                                <div className="text-gray-600 mt-1">
+                                    A quick, accepted-as-is offer at the current posted price.
                                 </div>
                             </div>
                         </label>
 
-                        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-gray-200 p-2 hover:bg-gray-50">
+                        {/* Option 2: Preferred Amount */}
+                        <label
+                            className={cn(
+                                "flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all",
+                                data.offer_mode === "preferred"
+                                    ? "border-primary-600 bg-primary-50 shadow-md"
+                                    : "border-gray-200 hover:border-primary-400 hover:bg-primary-50/50"
+                            )}
+                        >
                             <input
                                 type="radio"
                                 name="offer_mode"
-                                className="mt-1"
+                                className="mt-1.5 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                                 checked={data.offer_mode === "preferred"}
                                 onChange={() => setData("offer_mode", "preferred")}
                             />
                             <div className="text-sm">
-                                <div className="font-medium">Enter Preferred Amount</div>
-                                <div className="text-gray-600">Set a custom price</div>
+                                <div className="font-extrabold text-gray-900 flex items-center gap-1">
+                                    <DollarSign className="h-4 w-4 text-primary-600" />
+                                    Custom Amount Offer
+                                </div>
+                                <div className="text-lg font-bold text-gray-700 mt-1">
+                                    Enter a preferred price
+                                </div>
+                                <div className="text-gray-600 mt-1">
+                                    Propose a specific amount, higher or lower than the list price.
+                                </div>
                             </div>
                         </label>
                     </div>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={onSubmit} className="space-y-5">
-                    {/* Amount */}
+                {/* Form Content */}
+                <form onSubmit={onSubmit} className="space-y-6">
+                    {/* Amount Input */}
                     <div>
-                        <label htmlFor="deal_amount" className="text-sm font-medium text-gray-700">
-                            Amount <span className="text-red-500">*</span>
+                        <label htmlFor="deal_amount" className="text-sm font-bold text-gray-700 mb-2 block">
+                            Offer Amount <span className="text-red-500">*</span>
                         </label>
-                        <div className="mt-2 flex items-center gap-2">
-                            <div className="relative flex-1">
-                                <input
-                                    id="deal_amount"
-                                    ref={inputRef}
-                                    inputMode="decimal"
-                                    type="text"
-                                    disabled={amountDisabled}
-                                    value={
-                                        amountDisabled
-                                            ? (listPrice > 0 ? money.format(listPrice) : "")
-                                            : amountNumber === ""
-                                                ? ""
-                                                : money.format(Number(amountNumber))
-                                    }
-                                    onChange={handleAmountChange}
-                                    onFocus={(e) => {
-                                        if (amountDisabled) return;
-                                        const val = data.amount === "" ? "" : String(data.amount);
-                                        e.target.value = val;
-                                    }}
-                                    onBlur={(e) => {
-                                        if (amountDisabled) return;
-                                        e.target.value = data.amount === "" ? "" : money.format(Number(data.amount));
-                                    }}
-                                    placeholder="Enter amount (e.g., 2500000)"
-                                    className={cn(
-                                        "w-full rounded-md border border-gray-200 p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary",
-                                        !amountDisabled && showClientError && "border-red-300",
-                                        amountDisabled && "bg-gray-50 text-gray-500 cursor-not-allowed"
-                                    )}
-                                />
-                                {!amountDisabled && showClientError && (
-                                    <p className="mt-1 text-xs text-red-600">
-                                        Please enter a valid amount greater than zero.
-                                    </p>
+                        <div className="relative">
+                            <input
+                                id="deal_amount"
+                                ref={inputRef}
+                                inputMode="decimal"
+                                type="text"
+                                disabled={amountDisabled}
+                                // Display formatted or raw based on disabled/focus state
+                                value={
+                                    amountDisabled
+                                        ? (listPrice > 0 ? money.format(listPrice) : "")
+                                        : data.amount === "" ? "" : displayAmount(data.amount) // Show formatted on load/blur
+                                }
+                                onChange={handleAmountChange}
+                                onFocus={handleAmountFocus}
+                                onBlur={handleAmountBlur}
+                                placeholder="Enter amount (e.g., 2,500,000)"
+                                className={cn(
+                                    "w-full rounded-xl border p-4 text-lg font-bold transition-all",
+                                    "focus:outline-none focus:ring-4 focus:ring-primary-100",
+                                    amountDisabled
+                                        ? "bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200"
+                                        : "bg-white text-gray-900 border-gray-300",
+                                    !amountDisabled && showClientError && "border-red-500 ring-red-100" // Error styling
                                 )}
-                                <InputError message={errors?.amount} className="mt-1" />
-                            </div>
+                            />
                         </div>
+
+                        {/* Client/Validation Errors */}
+                        {(showClientError || errors?.amount) && (
+                            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                <AlertCircle className="h-4 w-4" />
+                                {errors?.amount || "Please enter a valid amount greater than zero."}
+                            </p>
+                        )}
+
 
                         {/* Quick chips (only for preferred mode) */}
                         {!!quickChips.length && (
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                {quickChips.map((c) => (
-                                    <button
-                                        key={c.label}
-                                        type="button"
-                                        onClick={() => !chipsDisabled && setAmountFromChip(c.value)}
-                                        className={cn(
-                                            "rounded-md border px-2.5 py-1.5 text-xs",
-                                            chipsDisabled ? "text-gray-400 cursor-not-allowed bg-gray-50" : "hover:bg-gray-50"
-                                        )}
-                                        title={`Set ${money.format(c.value)}`}
-                                        disabled={chipsDisabled}
-                                    >
-                                        {c.label} · {money.format(c.value)}
-                                    </button>
-                                ))}
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <span className="text-xs text-gray-500 self-center hidden sm:inline">Quick Adjust:</span>
+                                {quickChips.map((c) => {
+                                    const isSelected = data.offer_mode === "preferred" && Number(data.amount) === c.value;
+                                    return (
+                                        <button
+                                            key={c.label}
+                                            type="button"
+                                            onClick={() => !chipsDisabled && setAmountFromChip(c.value)}
+                                            className={cn(
+                                                "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                                                chipsDisabled
+                                                    ? "text-gray-400 cursor-not-allowed bg-gray-50 border-gray-200"
+                                                    : isSelected
+                                                        ? "bg-primary-600 text-white border-primary-600 shadow-md"
+                                                        : "text-gray-700 bg-white border-gray-300 hover:bg-primary-50 hover:border-primary-400"
+                                            )}
+                                            title={`Set ${money.format(c.value)}`}
+                                            disabled={chipsDisabled}
+                                        >
+                                            {c.label}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
 
                     {/* Notes */}
                     <div>
-                        <label htmlFor="deal_notes" className="text-sm font-medium text-gray-700">
-                            Notes (optional)
+                        <label htmlFor="deal_notes" className="text-sm font-bold text-gray-700 mb-2 block">
+                            Notes to Agent (Optional)
                         </label>
                         <textarea
                             id="deal_notes"
                             rows={3}
                             value={data.notes}
                             onChange={(e) => setData("notes", e.target.value)}
-                            placeholder="Optional message to the agent…"
-                            className="mt-1 w-full rounded-md border border-gray-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="e.g., Mention financing pre-approval, specific timeline needs, or any included appliances."
+                            className="w-full rounded-xl border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-sm"
                         />
                         <InputError message={errors?.notes} className="mt-1" />
                     </div>
                 </form>
 
-                {/* Footer */}
-                <div className="mt-4 flex items-center justify-end gap-2">
-                    <button
-                        type="button"
-                        onClick={close}
-                        className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50"
-                        disabled={processing}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onSubmit}
-                        disabled={processing}
-                        className={cn(
-                            "rounded-md bg-primary px-5 py-2 text-sm font-medium text-white",
-                            processing ? "cursor-not-allowed opacity-60" : "hover:bg-accent"
-                        )}
-                    >
-                        {primaryCtaLabel}
-                    </button>
+                {/* Footer and Actions */}
+                <div className="mt-6 pt-4 border-t flex items-center justify-between">
+                    <p className="text-xs text-gray-500">
+                        Tip: Press <kbd className="rounded-md border px-1 py-0.5 text-gray-700 shadow-sm">⌘/Ctrl</kbd> +{" "}
+                        <kbd className="rounded-md border px-1 py-0.5 text-gray-700 shadow-sm">Enter</kbd> to submit.
+                    </p>
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={close}
+                            className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            disabled={processing}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onSubmit}
+                            disabled={processing || (data.offer_mode === "preferred" && amountIsZeroOrInvalid)}
+                            className={cn(
+                                "rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all",
+                                processing ? "cursor-not-allowed opacity-60" : "hover:bg-primary-700 hover:shadow-xl",
+                                (data.offer_mode === "preferred" && amountIsZeroOrInvalid) && "cursor-not-allowed opacity-40"
+                            )}
+                        >
+                            {processing ? (initialValue ? "Updating..." : "Sending...") : primaryCtaLabel}
+                        </button>
+                    </div>
                 </div>
-
-                <p className="mt-3 text-[11px] text-gray-500">
-                    Tip: Press <kbd className="rounded border px-1 py-0.5">⌘/Ctrl</kbd> +{" "}
-                    <kbd className="rounded border px-1 py-0.5">Enter</kbd> to submit.
-                </p>
             </div>
         </Modal>
     );

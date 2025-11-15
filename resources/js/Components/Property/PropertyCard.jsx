@@ -88,6 +88,9 @@ export default function PropertyCard({
                                          onToggleFavorite = () => {},
                                          isFavorite = false,
                                      }) {
+
+
+    console.log(onToggleFavorite);
     const [imgErr, setImgErr] = useState(false);
     const [imgLoaded, setImgLoaded] = useState(false);
 
@@ -282,13 +285,13 @@ export default function PropertyCard({
                         <div className="flex flex-wrap gap-1.5">
                             {features.show.map((f, i) => (
                                 <span key={i} className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-                  {String(f)}
-                </span>
+                                    {String(f)}
+                                </span>
                             ))}
                             {features.extra > 0 && (
                                 <span className="px-2 py-1 text-xs rounded-full bg-gray-50 text-gray-600">
-                  +{features.extra} more
-                </span>
+                                  +{features.extra} more
+                                </span>
                             )}
                         </div>
                     </div>
