@@ -414,7 +414,7 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
                                         <p className="text-gray-600 text-sm">Please select your preferred agent</p>
                                     </div>
 
-                                    {/* Show only top 3 agents */}  
+                                    {/* Show only top 3 agents */}
                                     <div className="space-y-3">
                                         {allAgents.slice(0, 3).map((agent) => (
                                             <AgentCompactCard
