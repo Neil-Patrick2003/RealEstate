@@ -30,7 +30,6 @@ function classNames(...classes) {
 }
 
 function generateSteps(currentStatus) {
-    console.log(currentStatus);
     const currentIndex = STATUS_FLOW.indexOf(currentStatus);
 
     return STEP_LABELS.map((step, idx) => ({

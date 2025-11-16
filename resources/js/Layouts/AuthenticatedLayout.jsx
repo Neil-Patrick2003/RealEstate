@@ -1,343 +1,872 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlignLeft, LogOut, X, Bell } from 'lucide-react';
-import {Link, router, usePage} from '@inertiajs/react';
-import { useMediaQuery } from 'react-responsive';
-import Dropdown from '@/Components/Dropdown';
-import Breadcrumb from '@/Components/Breadcrumbs';
-import FlashMessage from '@/Components/FlashMessage.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+// resources/js/Layouts/BuyerLayout.jsx
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import {
-    faLanguage,
-    faMoon,
-} from '@fortawesome/free-solid-svg-icons';
-import SellerSidebar from "@/Components/Sidebar/SellerSidebar.jsx";
+    AlignLeft,
+    LogOut,
+    X,
+    Moon,
+    Sun,
+    Search,
+    Bell,
+    Info,
+    Settings,
+    User,
+    Home,
+    Heart,
+    MessageSquare,
+    FileText,
+    CreditCard,
+    HelpCircle,
+    Zap,
+    Sparkles,
+    CheckCircle
+} from "lucide-react";
+import { Link, router, usePage } from "@inertiajs/react";
+import Dropdown from "@/Components/Dropdown";
+import BuyerSidebar from "@/Components/Sidebar/BuyerSidebar.jsx";
+import ToastHandler from "@/Components/ToastHandler.jsx";
 import Drawer from "@/Components/Drawer.jsx";
+import { buildSidebarCounts } from "@/utils/sidebarCounts.js";
+import FeedbackReminder from "@/Components/reminder/FeedbackReminder.jsx";
+import Sidebar from "@/Components/Layout/Sidebar.jsx";
+import {buyerSidebarConfig, sellerSidebarConfig} from "@/Components/Layout/SidebarConfigs.js";
+import {useNotification} from "../../hooks/useNotifications.js";
+/* ================================
+   Design Constants & Utils
+=================================== */
+const DESIGN = {
+    colors: {
+        primary: {
+            50: '#f0fdf4',
+            100: '#dcfce7',
+            500: '#22c55e',
+            600: '#16a34a',
+            700: '#15803d',
+            900: '#14532d',
+        },
+        neutral: {
+            50: '#fafafa',
+            100: '#f4f4f5',
+            200: '#e4e4e7',
+            300: '#d4d4d8',
+            400: '#a1a1aa',
+            500: '#71717a',
+            600: '#52525b',
+            700: '#3f3f46',
+            800: '#27272a',
+            900: '#18181b',
+        }
+    },
+    shadows: {
+        sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+        xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+    }
+};
 
-export default function AuthenticatedLayout({ children }) {
-    const { auth } = usePage().props;
+const canUseDOM = typeof window !== "undefined" && typeof document !== "undefined";
 
-    const [notifications, setNotifications] = useState(auth?.notifications?.all ?? []);
-    const [unreadNotifications, setUnreadNotifications] = useState(auth?.notifications?.unread ?? []);
+const safeLS = {
+    get(key, fallback = null) {
+        if (!canUseDOM) return fallback;
+        try {
+            const raw = window.localStorage.getItem(key);
+            return raw === null ? fallback : JSON.parse(raw);
+        } catch {
+            return fallback;
+        }
+    },
+    set(key, val) {
+        if (!canUseDOM) return;
+        try {
+            window.localStorage.setItem(key, JSON.stringify(val));
+        } catch { }
+    },
+};
 
-    const [ openDrawer, setOpenDrawer ] = useState(false);
+const isEditableTarget = (el) =>
+    el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || el?.isContentEditable;
 
-    const [isOpen, setIsOpen] = useState(() => {
-        const saved = localStorage.getItem('sidebar-isOpen');
-        return saved ? JSON.parse(saved) : false;
-    });
+const getLayoutMode = () => {
+    if (!canUseDOM) return "desktop";
+    const w = window.innerWidth;
+    if (w < 768) return "mobile";
+    if (w < 1024) return "tablet";
+    return "desktop";
+};
+
+/* =========================================================
+   Enhanced Command Palette
+========================================================= */
+function CommandPalette({ open, setOpen, actions }) {
+    const [query, setQuery] = useState("");
+    const [activeIndex, setActiveIndex] = useState(0);
+    const inputRef = useRef(null);
+    const listRef = useRef(null);
 
     useEffect(() => {
-        localStorage.setItem('sidebar-isOpen', JSON.stringify(isOpen));
-    }, [isOpen]);
-
-    const [isMobileOpen, setIsMobileOpen] = useState(false);
-    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
-
-    const toggleSidebar = () =>
-        isMobile ? setIsMobileOpen(!isMobileOpen) : setIsOpen(!isOpen);
+        if (!open) {
+            setQuery("");
+            setActiveIndex(0);
+        }
+    }, [open]);
 
     useEffect(() => {
-        if (!isMobile) setIsMobileOpen(false);
-    }, [isMobile]);
+        if (open) {
+            document.body.style.overflow = "hidden";
+            return () => { document.body.style.overflow = ""; };
+        }
+    }, [open]);
+
+    const filteredActions = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return actions;
+        return actions.filter(
+            (a) =>
+                a.label.toLowerCase().includes(q) ||
+                (a.keywords || "").toLowerCase().includes(q) ||
+                (a.category || "").toLowerCase().includes(q)
+        );
+    }, [query, actions]);
 
     useEffect(() => {
-        document.body.style.overflow = isMobileOpen ? 'hidden' : '';
-    }, [isMobileOpen]);
+        setActiveIndex(0);
+    }, [filteredActions.length]);
 
-    const markAsRead = (id) => {
-        router.post(`/notifications/${id}/read`, {}, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setUnreadNotifications(prev =>
-                    prev.filter(notif => notif.id !== id)
-                );
-                setNotifications(prev =>
-                    prev.map(notif =>
-                        notif.id === id ? { ...notif, read_at: new Date().toISOString() } : notif
-                    )
-                );
-            },
-            onError: (error) => {
-                console.error('Error marking notification as read:', error);
-            }
-        });
+    const executeAction = useCallback((action) => {
+        if (action.href) {
+            router.visit(action.href);
+        } else {
+            action.onClick?.();
+        }
+        setOpen(false);
+    }, [setOpen]);
+
+    const handleKeyDown = (e) => {
+        switch (e.key) {
+            case "Escape":
+                e.preventDefault();
+                setOpen(false);
+                break;
+            case "ArrowDown":
+                e.preventDefault();
+                setActiveIndex(prev => (prev + 1) % filteredActions.length);
+                break;
+            case "ArrowUp":
+                e.preventDefault();
+                setActiveIndex(prev => (prev - 1 + filteredActions.length) % filteredActions.length);
+                break;
+            case "Enter":
+                e.preventDefault();
+                if (filteredActions[activeIndex]) {
+                    executeAction(filteredActions[activeIndex]);
+                }
+                break;
+        }
     };
 
-    const markAllAsRead = () => {
-        unreadNotifications.forEach(notif => markAsRead(notif.id));
-    };
-
     useEffect(() => {
-        Echo.private(`App.Models.User.${auth.user.id}`)
-            .notification((notification) => {
-                console.log('Real-time NOTIFICATION: ', notification);
-                setNotifications(prev => [notification, ...prev]);
-                setUnreadNotifications(prev => [notification, ...prev]);
-            });
+        if (open) {
+            inputRef.current?.focus();
+        }
+    }, [open]);
 
-        return () => {
-            Echo.leave(`App.Models.User.${auth.user.id}`);
-        };
-    }, [auth.user.id]);
-
-    console.log(notifications);
+    // Scroll active item into view
+    useEffect(() => {
+        const activeEl = listRef.current?.children[activeIndex];
+        if (activeEl) {
+            activeEl.scrollIntoView({ block: "nearest" });
+        }
+    }, [activeIndex]);
 
     return (
-        <div className="h-screen flex overflow-hidden relative">
-            {/* Sidebar */}
-            {!isMobile && (
+        <AnimatePresence>
+            {open && (
+                <>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[90] bg-black/40 backdrop-blur-sm"
+                        onClick={() => setOpen(false)}
+                    />
+
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                        className="fixed z-[91] left-1/2 top-[10vh] w-[95vw] max-w-2xl -translate-x-1/2 rounded-2xl bg-white/95 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden"
+                        role="dialog"
+                        aria-label="Command palette"
+                    >
+                        {/* Header */}
+                        <div className="flex items-center gap-3 p-4 border-b border-neutral-100">
+                            <div className="p-2 bg-primary-100 rounded-xl">
+                                <Search className="w-5 h-5 text-primary-600" />
+                            </div>
+                            <input
+                                ref={inputRef}
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Type a command or search..."
+                                className="flex-1 bg-transparent outline-none text-lg placeholder-neutral-400"
+                                aria-label="Command search"
+                            />
+                            <div className="flex items-center gap-2 text-sm text-neutral-500">
+                                <kbd className="px-2 py-1 bg-neutral-100 rounded-md text-xs">ESC</kbd>
+                                <span>to close</span>
+                            </div>
+                        </div>
+
+                        {/* Results */}
+                        <div className="max-h-[60vh] overflow-y-auto" ref={listRef}>
+                            {filteredActions.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <Search className="w-12 h-12 text-neutral-300 mb-4" />
+                                    <p className="text-neutral-500 text-lg">No results found</p>
+                                    <p className="text-neutral-400 text-sm mt-1">Try a different search term</p>
+                                </div>
+                            ) : (
+                                <ul className="py-2" role="listbox">
+                                    {filteredActions.map((action, index) => {
+                                        const Icon = action.icon || Zap;
+                                        return (
+                                            <li
+                                                key={action.label}
+                                                id={`cmd-${index}`}
+                                                role="option"
+                                                aria-selected={index === activeIndex}
+                                            >
+                                                {action.href ? (
+                                                    <Link
+                                                        href={action.href}
+                                                        className={`flex items-center gap-4 p-4 transition-all ${index === activeIndex
+                                                            ? 'bg-primary-50 border-r-2 border-primary-500'
+                                                            : 'hover:bg-neutral-50'
+                                                        }`}
+                                                        onClick={() => setOpen(false)}
+                                                    >
+                                                        <div className={`p-2 rounded-lg ${index === activeIndex ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
+                                                        }`}>
+                                                            <Icon className="w-4 h-4" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium text-neutral-900">{action.label}</p>
+                                                            {action.description && (
+                                                                <p className="text-sm text-neutral-500 mt-1">{action.description}</p>
+                                                            )}
+                                                        </div>
+                                                        {action.kbd && (
+                                                            <kbd className="px-2 py-1 bg-neutral-100 rounded text-xs text-neutral-500 font-mono">
+                                                                {action.kbd}
+                                                            </kbd>
+                                                        )}
+                                                    </Link>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => executeAction(action)}
+                                                        className={`w-full flex items-center gap-4 p-4 text-left transition-all ${index === activeIndex
+                                                            ? 'bg-primary-50 border-r-2 border-primary-500'
+                                                            : 'hover:bg-neutral-50'
+                                                        }`}
+                                                    >
+                                                        <div className={`p-2 rounded-lg ${index === activeIndex ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
+                                                        }`}>
+                                                            <Icon className="w-4 h-4" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium text-neutral-900">{action.label}</p>
+                                                            {action.description && (
+                                                                <p className="text-sm text-neutral-500 mt-1">{action.description}</p>
+                                                            )}
+                                                        </div>
+                                                        {action.kbd && (
+                                                            <kbd className="px-2 py-1 bg-neutral-100 rounded text-xs text-neutral-500 font-mono">
+                                                                {action.kbd}
+                                                            </kbd>
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-3 border-t border-neutral-100 bg-neutral-50/50">
+                            <div className="flex items-center justify-between text-xs text-neutral-500">
+                                <span>Quickly access anything in the platform</span>
+                                <div className="flex items-center gap-4">
+                                    <span>↑↓ to navigate</span>
+                                    <span>↵ to select</span>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
+    );
+}
+
+/* ================================
+   Enhanced Notification Item
+=================================== */
+function NotificationItem({ notification, onMarkRead, isUnread }) {
+    const { data = {}, created_at, type = 'info' } = notification;
+
+    // FIXED — always read from the Laravel "data" object
+    const title =
+        data.title ??
+        notification.title ??
+        "Notification";
+
+    const message =
+        data.message ??
+        data.body ??
+        notification.message ??
+        "";
+
+    const link =
+        data.link ??
+        data.url ??
+        data.route ??
+        notification.link ??
+        null;
+
+    const getIcon = () => {
+        const t = String(type).toLowerCase();
+        if (t.includes('tripping')) return '🏠';
+        if (t.includes('inquiry')) return '💬';
+        if (t.includes('deal')) return '🤝';
+        if (t.includes('transaction')) return '💰';
+        return '💡';
+    };
+
+    const formatTime = (timestamp) => {
+        if (!timestamp) return "Recently";
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = (now - date) / (1000 * 60 * 60);
+
+        if (diff < 1) return "Just now";
+        if (diff < 24) return `${Math.floor(diff)}h ago`;
+
+        return date.toLocaleDateString();
+    };
+
+    const handleClick = () => {
+        if (isUnread) onMarkRead(notification.id);
+        if (link) {
+            router.visit(link);
+        }
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-4 rounded-xl border cursor-pointer transition-all group ${
+                isUnread
+                    ? "bg-primary-50 border-primary-200 hover:bg-primary-100"
+                    : "bg-white border-neutral-200 hover:bg-neutral-50"
+            }`}
+            onClick={handleClick}
+        >
+            <div className="flex items-start gap-3">
+                <div
+                    className={`p-2 rounded-lg ${
+                        isUnread
+                            ? "bg-primary-500 text-white"
+                            : "bg-neutral-100 text-neutral-600"
+                    }`}
+                >
+                    <span>{getIcon()}</span>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                    <div className="flex justify-between">
+                        <h4
+                            className={`font-medium ${
+                                isUnread ? "text-primary-900" : "text-neutral-900"
+                            }`}
+                        >
+                            {title}
+                        </h4>
+                        <span className="text-xs text-neutral-500">
+                            {formatTime(created_at)}
+                        </span>
+                    </div>
+
+                    <p className="text-sm text-neutral-600 mt-1 line-clamp-2">
+                        {message}
+                    </p>
+
+                    {isUnread && (
+                        <button
+                            className="opacity-0 group-hover:opacity-100 mt-2 text-xs text-primary-600"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMarkRead(notification.id);
+                            }}
+                        >
+                            Mark as read
+                        </button>
+                    )}
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
+
+/* ================================
+   Main Layout
+=================================== */
+export default function BuyerLayout({ children }) {
+    const { auth } = usePage().props;
+    const prefersReducedMotion = useReducedMotion();
+
+    /* -------- State Management -------- */
+    const [theme, setTheme] = useState(() => {
+        if (!canUseDOM) return "light";
+        return safeLS.get("theme",
+            window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+        );
+    });
+
+    const [mode, setMode] = useState(getLayoutMode());
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+        mode === "desktop" ? safeLS.get("sidebar-isOpen", true) : false
+    );
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isCommandOpen, setIsCommandOpen] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [activeNotifTab, setActiveNotifTab] = useState("unread");
+
+
+
+    const {
+        notifications,
+        unreadNotifications,
+        loading,
+        markAsRead,
+        markAllAsRead,
+    } = useNotification();
+
+
+
+
+    /* -------- Effects -------- */
+    useEffect(() => {
+        if (!canUseDOM) return;
+        document.documentElement.classList.toggle("dark", theme === "dark");
+        safeLS.set("theme", theme);
+    }, [theme]);
+
+    useEffect(() => {
+        if (!canUseDOM) return;
+        const handleResize = () => setMode(getLayoutMode());
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    useEffect(() => {
+        if (mode === "desktop") {
+            safeLS.set("sidebar-isOpen", isSidebarOpen);
+        }
+    }, [isSidebarOpen, mode]);
+
+    // Mark page notifications as read when page loads
+    useEffect(() => {
+        if (unreadNotifications.length > 0) {
+            markPageNotificationsAsRead();
+        }
+    }, [usePage().url]);
+
+    /* -------- Handlers -------- */
+    const toggleTheme = useCallback(() => setTheme(t => t === "dark" ? "light" : "dark"), []);
+
+    const toggleSidebar = useCallback(() => {
+        if (mode === "mobile") {
+            setIsMobileSidebarOpen(s => !s);
+        } else {
+            setIsSidebarOpen(s => !s);
+        }
+    }, [mode]);
+
+    const closeMobileSidebar = useCallback(() => {
+        setIsMobileSidebarOpen(false);
+    }, []);
+
+    const handleSearch = useCallback((e) => {
+        e.preventDefault();
+        const q = searchQuery.trim();
+        if (!q) return;
+        router.get("/search", { q }, { preserveScroll: true });
+    }, [searchQuery]);
+
+
+
+    const handleMarkAsRead = (notificationId) => {
+        markAsRead(notificationId);
+    };
+
+    const handleMarkAllAsRead = () => {
+        markAllAsRead();
+    };
+
+    /* -------- Command Palette Actions -------- */
+    const commandActions = useMemo(() => [
+        {
+            label: "Search Properties",
+            href: "/properties",
+            icon: Search,
+            kbd: "⌘P",
+            keywords: "find browse listings",
+            category: "Navigation"
+        },
+        {
+            label: "View Notifications",
+            onClick: () => setIsNotificationsOpen(true),
+            icon: Bell,
+            kbd: "⌘N",
+            keywords: "alerts messages",
+            category: "Navigation"
+        },
+        {
+            label: "My Favorites",
+            href: "/favorites",
+            icon: Heart,
+            keywords: "saved liked properties",
+            category: "Properties"
+        },
+        {
+            label: "My Inquiries",
+            href: "/inquiries",
+            icon: MessageSquare,
+            keywords: "messages contacts agents",
+            category: "Communication"
+        },
+        {
+            label: "Transactions",
+            href: "/buyer/transactions",
+            icon: CreditCard,
+            keywords: "payments deals closed",
+            category: "Transactions"
+        },
+        {
+            label: "Profile Settings",
+            href: "/profile",
+            icon: User,
+            keywords: "account preferences",
+            category: "Account"
+        },
+        {
+            label: "Toggle Theme",
+            onClick: toggleTheme,
+            icon: theme === "dark" ? Sun : Moon,
+            kbd: "⌘T",
+            keywords: "dark light mode",
+            category: "Preferences"
+        }
+    ], [toggleTheme, theme]);
+
+    /* -------- Keyboard Shortcuts -------- */
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            const cmd = e.metaKey || e.ctrlKey;
+
+            if (cmd && e.key === 'k') {
+                e.preventDefault();
+                setIsCommandOpen(true);
+            }
+            if (cmd && e.key === 'n') {
+                e.preventDefault();
+                setIsNotificationsOpen(true);
+            }
+            if (e.key === 'Escape') {
+                setIsCommandOpen(false);
+                setIsNotificationsOpen(false);
+                setIsMobileSidebarOpen(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    /* -------- Layout Calculations -------- */
+    const sidebarWidth = isSidebarOpen ? 288 : 80;
+    const contentPadding = mode === "mobile" ? 24 : sidebarWidth + 24;
+
+
+    return (
+        <div className="h-screen bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-800 flex overflow-hidden">
+            {/* Desktop Sidebar */}
+            {mode !== "mobile" && (
                 <div className="hidden md:block">
-                    <SellerSidebar isOpen={isOpen} setIsOpen={setIsOpen} />
+                    <Sidebar
+                        isOpen={isSidebarOpen}
+                        setIsOpen={setIsSidebarOpen}
+                        config={sellerSidebarConfig}
+                        counts={{ unread: unreadNotifications.length }}
+                        unreads={unreadNotifications}
+                        user={auth.user}
+                        onNavigate={closeMobileSidebar}
+                    />
                 </div>
             )}
 
-            {/* Mobile sidebar */}
+            {/* Mobile Sidebar Overlay - FIXED */}
             <AnimatePresence>
-                {isMobileOpen && (
+                {mode === "mobile" && isMobileSidebarOpen && (
                     <>
                         <motion.div
-                            initial={{ x: '-100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '-100%' }}
-                            transition={{ duration: 0.4 }}
-                            className="fixed top-0 left-0 z-50 w-64 h-full bg-white shadow-2xl border-r rounded-tr-2xl rounded-br-2xl"
-                            role="dialog"
-                        >
-                            <SellerSidebar
-                                isOpen={true}
-                                setIsOpen={setIsMobileOpen}
-                            />
-                            <button
-                                onClick={() => setIsMobileOpen(false)}
-                                className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-800"
-                                aria-label="Close sidebar"
-                            >
-                                <X size={24} />
-                            </button>
-                        </motion.div>
-                        <motion.div
-                            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.4 }}
-                            onClick={() => setIsMobileOpen(false)}
+                            className="fixed inset-0 z-40 bg-black/30"
+                            onClick={closeMobileSidebar}
                         />
+                        <motion.div
+                            initial={{ x: "-100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "-100%" }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="fixed top-0 left-0 z-50 w-80 h-full bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-700 shadow-2xl"
+                        >
+                            <Sidebar
+                                isOpen={true}
+                                setIsOpen={setIsMobileSidebarOpen}
+                                config={buyerSidebarConfig}
+                                counts={{ unread: unreadNotifications.length }}
+                                unreads={unreadNotifications}
+                                user={auth.user}
+                                onNavigate={closeMobileSidebar}
+                                isMobile={true}
+                            />
+                        </motion.div>
                     </>
                 )}
             </AnimatePresence>
 
-            {/* Main content */}
-            <main className="flex-1 h-full overflow-auto pt-14">
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col overflow-hidden">
+                {/* Enhanced Header */}
                 <motion.header
                     initial={false}
-                    animate={{
-                        marginLeft: isMobile ? 0 : isOpen ? '18rem' : '5rem',
-                    }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="fixed top-0 left-0 right-0 flex justify-between items-center bg-white px-6 py-3 z-50"
+                    animate={{ paddingLeft: mode === "mobile" ? 0 : sidebarWidth }}
+                    className="fixed top-0 left-0 right-0 z-30 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-200/50 dark:border-neutral-700/50 supports-[backdrop-filter]:bg-white/60"
                 >
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={toggleSidebar}
-                            className="p-2 rounded-lg border-0 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition"
-                            aria-label="Toggle sidebar"
-                        >
-                            <AlignLeft size={20} className="text-gray-500" />
-                        </button>
-                        <input
-                            type="search"
-                            id="search_all"
-                            placeholder="Search anything..."
-                            className="hidden md:block ml-3 w-72 border-0 bg-gray-100 rounded-md px-3 py-2 text-sm "
-                            aria-label="Search"
-                        />
-                    </div>
+                    <div className="flex items-center justify-between px-6 py-4">
+                        {/* Left Section */}
+                        <div className="flex items-center gap-4 flex-1">
+                            <button
+                                onClick={toggleSidebar}
+                                className="p-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200 hover:shadow-md"
+                                aria-label={mode === "mobile" ? "Toggle menu" : "Toggle sidebar"}
+                            >
+                                <AlignLeft className="w-5 h-5 text-neutral-700 dark:text-neutral-200" />
+                            </button>
 
-                    <div className="flex items-center gap-2">
-                        <div className="hidden sm:flex items-center gap-3">
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <div className="hover:bg-gray-100 p-2 rounded-full transition" role="button">
-                                        <img loading="lazy" alt="GB" className="w-6 h-6"
-                                             src="https://purecatamphetamine.github.io/country-flag-icons/3x2/GB.svg" />
-                                    </div>
-                                </Dropdown.Trigger>
-                                <Dropdown.Content width="48">
-                                    <ul className="py-1 px-2 text-sm text-gray-700">
-                                        <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">English</li>
-                                        <li className="hover:bg-gray-100 rounded px-2 py-1 cursor-pointer">Filipino</li>
-                                    </ul>
-                                </Dropdown.Content>
-                            </Dropdown>
+                            {/* Search Bar */}
+                            <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                                    <input
+                                        type="search"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search properties, agents, or anything..."
+                                        className="w-full pl-10 pr-4 py-3 bg-neutral-100 dark:bg-neutral-800 border-0 rounded-xl text-neutral-700 dark:text-neutral-200 placeholder-neutral-500 focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-neutral-700 transition-all duration-200"
+                                        aria-label="Search"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsCommandOpen(true)}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-neutral-500 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                                    >
+                                        ⌘K
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
 
-                            <div
-                                className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition cursor-pointer"
-                                role="button"
+                        {/* Right Section */}
+                        <div className="flex items-center gap-3">
+                            {/* Theme Toggle */}
+                            <button
+                                onClick={toggleTheme}
+                                className="p-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200"
+                                aria-label="Toggle theme"
+                            >
+                                {theme === "dark" ? (
+                                    <Sun className="w-5 h-5 text-amber-400" />
+                                ) : (
+                                    <Moon className="w-5 h-5 text-neutral-600" />
+                                )}
+                            </button>
+
+                            {/* Notifications */}
+                            <button
+                                onClick={() => setIsNotificationsOpen(true)}
+                                className="relative p-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200"
                                 aria-label="Notifications"
                             >
-                                <button onClick={() => setOpenDrawer(true)} className="relative w-10 h-10 rounded-full">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="currentColor"
-                                        className="w-6 h-6 text-gray-600"
-                                        aria-hidden="true"
+                                <Bell className="w-5 h-5 text-neutral-700 dark:text-neutral-200" />
+                                {unreadNotifications.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full animate-pulse">
+                                        {unreadNotifications.length > 99 ? '99+' : unreadNotifications.length}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* User Menu */}
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200 cursor-pointer">
+                                        {auth?.user?.photo_url ? (
+                                            <img
+                                                src={auth.user.photo_url}
+                                                alt={auth.user.name}
+                                                className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-200 dark:ring-primary-800"
+                                            />
+                                        ) : (
+                                            <div
+                                                className="w-8 h-8 rounded-full bg-gradient-to-l  from-primary to-accent text-white flex items-center justify-center ring-2 ring-primary-200 dark:ring-primary-800"
+                                            >
+                                                {auth?.user?.name?.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+
+                                        <div className="hidden sm:block text-left">
+                                            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                                {auth?.user?.name}
+                                            </p>
+                                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                                                Buyer Account
+                                            </p>
+                                        </div>
+                                    </div>
+                                </Dropdown.Trigger>
+                                <Dropdown.Content width="48" className="z-40">
+                                    <Dropdown.Link
+                                        href="/profile"
+                                        className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700"
                                     >
-                                        <path
-                                            opacity="0.4"
-                                            d="M18.75 9v.704c0 .845.24 1.671.692 2.374l1.108 1.723c1.011 1.574.239 3.713-1.52 4.21a25.8 25.8 0 0 1-14.06 0c-1.759-.497-2.531-2.636-1.52-4.21l1.108-1.723a4.4 4.4 0 0 0 .693-2.374V9c0-3.866 3.022-7 6.749-7s6.75 3.134 6.75 7"
-                                        />
-                                        <path d="M12.75 6a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0zM7.243 18.545a5.002 5.002 0 0 0 9.513 0c-3.145.59-6.367.59-9.513 0" />
-                                    </svg>
-
-                                    {unreadNotifications.length > 0 && (
-                                        <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                                            {unreadNotifications.length}
-                                        </span>
-                                    )}
-                                </button>
-
-                            </div>
-
-
+                                        <User className="w-4 h-4" />
+                                        <span>Profile & Settings</span>
+                                    </Dropdown.Link>
+                                    <Dropdown.Link
+                                        href={route("logout")}
+                                        method="post"
+                                        as="button"
+                                        className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-red-600 dark:text-red-400"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        <span>Log Out</span>
+                                    </Dropdown.Link>
+                                </Dropdown.Content>
+                            </Dropdown>
                         </div>
-
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <div
-                                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition"
-                                    role="button">
-                                    <img
-                                        src="https://www.pngitem.com/pimgs/m/404-4042710_circle-profile-picture-png-transparent-png.png"
-                                        alt="Profile"
-                                        className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-200"
-                                    />
-                                    <span className="hidden sm:inline text-sm font-medium text-gray-700">{auth?.user?.name || 'Guest'}</span>
-                                    <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                </div>
-                            </Dropdown.Trigger>
-                            <Dropdown.Content width="48">
-                                <Dropdown.Link href={route('profile.edit')} className="px-4 py-2 hover:bg-gray-100">
-                                    Profile
-                                </Dropdown.Link>
-                                <Dropdown.Link
-                                    href={route('logout')}
-                                    method="post"
-                                    as="button"
-                                    className="flex items-center justify-between px-4 py-2 hover:bg-gray-100"
-                                >
-                                    <span>Log Out</span>
-                                    <LogOut size={18} className="text-gray-500" />
-                                </Dropdown.Link>
-                            </Dropdown.Content>
-                        </Dropdown>
                     </div>
-
                 </motion.header>
 
-                {/* Body */}
-                <div className="pt-4 md:pt-14 sm:p-6 lg:p-8">
-                    <FlashMessage />
-                    <Breadcrumb />
+                {/* Content Area */}
+                <motion.div
+                    initial={false}
+                    animate={{
+                        paddingLeft: contentPadding,
+                        paddingRight: 24
+                    }}
+                    className="flex-1 pt-24 pb-8 overflow-auto"
+                >
+                    <ToastHandler />
+                    <FeedbackReminder items={usePage().props.pendingFeedback || []} />
                     {children}
-                </div>
+                </motion.div>
             </main>
-            <Drawer title="Notifications" setOpen={setOpenDrawer} open={openDrawer}>
-                <div className="py-4  border space-y-6 max-h-[75vh] overflow-y-auto">
-                    <div className="flex items-center justify-between">
-                        <button onClick={markAllAsRead} className="text-sm text-blue-600 hover:underline">Mark all as read</button>
+
+            {/* Command Palette */}
+            <CommandPalette
+                open={isCommandOpen}
+                setOpen={setIsCommandOpen}
+                actions={commandActions}
+            />
+
+            {/* Notifications Drawer */}
+            <Drawer
+                id="notifications-drawer"
+                title="Notifications"
+                open={isNotificationsOpen}
+                setOpen={setIsNotificationsOpen}
+                className="z-40"
+            >
+                <div className="h-full flex flex-col">
+                    {/* Header */}
+                    <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+                                Notifications
+                            </h2>
+                            {unreadNotifications.length > 0 && (
+                                <button
+                                    onClick={handleMarkAllAsRead}
+                                    className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                                >
+                                    Mark all as read
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex gap-1 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+                            {[
+                                { id: "unread", label: `Unread (${unreadNotifications.length})` },
+                                { id: "all", label: `All (${notifications.length})` }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveNotifTab(tab.id)}
+                                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all ${activeNotifTab === tab.id
+                                        ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm'
+                                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    {unreadNotifications.length > 0 && (
-                        <div>
-                            <h3 className="text-md font-semibold mb-2 text-gray-800">Unread</h3>
-                            <ul className="space-y-2">
-                                {unreadNotifications.map((notif) => (
-                                    <li key={notif.id}
-                                        // onClick={() => markAsRead(notif.id)}
-                                        className="rounded-md cursor-pointer bg-gray-100 hover:bg-gray-200 transition">
+                    {/* Notifications List */}
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <div className="space-y-3">
+                            {(activeNotifTab === "unread" ? unreadNotifications : notifications).map(notification => (
+                                <NotificationItem
+                                    key={notification.id}
+                                    notification={notification}
+                                    onMarkRead={handleMarkAsRead}  // This should point to markAsRead from useNotification
+                                    isUnread={!notification.read_at}
+                                />
+                            ))}
 
-                                        <div
-                                            className="notification-item p-4 hover:bg-gray-50 transition-colors duration-200">
-                                            <div className="flex items-start">
-                                                <div className="shrink-0 p-2 bg-blue-100 rounded-full">
-                                                    <i className="fas fa-info-circle text-blue-500"></i>
-                                                </div>
-                                                <div className="ml-3 flex-1">
-                                                    <div className="flex justify-between">
-                                                        <p className="text-sm font-medium text-gray-900">{notif?.data?.title || notif?.title }</p>
-                                                        <span className="text-xs text-gray-500">{ notif?.data?.created_at || notif?.created_at }</span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-500 mt-1">{notif?.data?.message || notif?.message} </p>
-                                                    <div className="mt-2">
-                                                        {notif?.link && (
-                                                            <Link href={notif?.link} className="text-blue-500 hover:underline">View</Link>
-                                                        )}
-
-                                                        {notif?.data?.link && (
-                                                            <Link href={notif?.data?.link} className="text-blue-500 hover:underline">View</Link>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <button className="text-gray-400 hover:text-gray-600">
-                                                    <i className="fas fa-times"></i>
-                                                </button>
-                                                <span className="text-xs text-accent">New</span>
-                                            </div>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
+                            {(activeNotifTab === "unread" ? unreadNotifications : notifications).map(notification => (
+                                <NotificationItem
+                                    key={notification.id}
+                                    notification={notification}
+                                    onMarkRead={handleMarkAsRead}
+                                    isUnread={!notification.read_at}
+                                />
+                            ))}
                         </div>
-                    )}
-
-                    <div>
-                        <h3 className="text-md font-semibold mb-2 text-gray-800">All Notifications</h3>
-                        {notifications.length === 0 ? (
-                            <p className="text-gray-500 text-sm">You have no notifications.</p>
-                        ) : (
-                            <ul className="border space-y-2">
-
-                                {notifications.map((notif) => (
-
-                                    <li key={notif.id}
-                                        className={`rounded-md cursor-pointer transition group ${notif.read_at === null ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-50'}`}>
-
-                                        <div
-                                            className="notification-item p-4 hover:bg-gray-50 transition-colors duration-200">
-                                            <div className="flex items-start">
-                                                <div className="shrink-0 p-2 bg-blue-100 rounded-full">
-                                                    <i className="fas fa-info-circle text-blue-500"></i>
-                                                </div>
-                                                <div className="ml-3 flex-1">
-                                                    <div className="flex justify-between">
-                                                        <p className="text-sm font-medium text-gray-900">{notif?.data?.title}</p>
-                                                        <span className="text-xs text-gray-500">{notif.created_at}</span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-500 mt-1">{notif?.data?.message}</p>
-                                                    <div className="mt-2">
-                                                        {notif?.data?.link && (
-                                                            <Link href={notif?.data?.link} className="text-blue-500 hover:underline">View</Link>
-                                                        ) }
-                                                    </div>
-                                                </div>
-                                                <button className="text-gray-400 hover:text-gray-600">
-                                                    <i className="fas fa-times"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
                     </div>
                 </div>
             </Drawer>

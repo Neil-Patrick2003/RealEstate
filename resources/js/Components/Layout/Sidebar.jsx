@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import logo from '../../../assets/framer_logo.png';
 import {
     ChevronDown,
     Home,
@@ -17,13 +18,9 @@ import {
     X,
     Search,
     Plus,
-    Bell,
-    Shield,
     Users,
     FileText,
-    Zap
 } from "lucide-react";
-import logo from "../../../assets/framer_logo.png";
 import { Link, usePage, router } from "@inertiajs/react";
 import { createPortal } from "react-dom";
 
@@ -33,37 +30,6 @@ import { createPortal } from "react-dom";
 const canUseDOM = typeof window !== "undefined" && typeof document !== "undefined"
 const classNames = (...c) => c.filter(Boolean).join(" ");
 const fmtCount = (n) => n > 99 ? "99+" : n;
-
-/* Detect which sidebar path a notification belongs to */
-const PATHS = {
-    chat: "/chat",
-    inquiries: "/inquiries",
-    trippings: "/trippings",
-    deals: "/deals",
-    properties: "/properties",
-
-
-};
-
-function categorizeNotifToPath(n) {
-    const link = n?.data?.link || "";
-    if (link) {
-        for (const p of Object.values(PATHS)) {
-            if (link.startsWith(p)) return p;
-        }
-    }
-    const title = (n?.data?.title || n?.title || "").toLowerCase();
-    const msg = (n?.data?.message || n?.message || "").toLowerCase();
-    const text = `${title} ${msg}`;
-
-    if (/(inquiry|lead)\b/.test(text)) return PATHS.inquiries;
-    if (/(tripping|visit|site\s*visit|schedule(d)?\s*tripping)\b/.test(text)) return PATHS.trippings;
-    if (/(deal|offer|agreement|reservation|closed\s*deal)\b/.test(text)) return PATHS.deals;
-    if (/(message|chat|replied|responded)\b/.test(text)) return PATHS.chat;
-    if (/(property|listing|new\s*property)\b/.test(text)) return PATHS.properties;
-
-    return null;
-}
 
 /* Enhanced Hover Tooltip */
 const HoverTooltip = ({ show, label, children }) => {
@@ -121,89 +87,6 @@ const HoverTooltip = ({ show, label, children }) => {
 };
 
 /* --------------------------------
-   Professional menu config using primary/accent colors
-----------------------------------*/
-const mainMenus = [
-    {
-        name: "Dashboard",
-        Icon: Home,
-        path: "/dashboard",
-        description: "Overview and analytics"
-    },
-    {
-        name: "Messages",
-        Icon: MessageSquare,
-        path: "/chat",
-        description: "Communications and chats"
-    },
-    {
-        name: "Inquiries",
-        Icon: Mail,
-        path: "/inquiries",
-        description: "Property inquiries and leads"
-    },
-    {
-        name: "Favourites",
-        Icon: Star,
-        path: "/favourites",
-        description: "Saved properties"
-    },
-    {
-        name: "Trippings",
-        Icon: Star,
-        path: "/trippings",
-        description: "Saved properties"
-    },
-    {
-        name: "Deals",
-        Icon: Star,
-        path: "/deals",
-        description: "Saved properties"
-    },
-    {
-        name: "Transactions",
-        Icon: BarChart3,
-        path: "/transactions",
-        description: "Sales and transactions"
-    },
-];
-
-const adminMenus = [
-    { name: "User Management", Icon: Users, path: "/admin/users" },
-    { name: "System Settings", Icon: Settings, path: "/admin/settings" },
-    { name: "Reports", Icon: FileText, path: "/admin/reports" },
-];
-
-const userMenu = [
-    { name: "Profile", Icon: User, path: "/profile" },
-    { name: "Settings", Icon: Settings, path: "/settings" },
-];
-
-/* Animation config */
-const sidebarAnim = {
-    open: { width: "280px", transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] } },
-    closed: { width: "80px", transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] } },
-};
-
-const itemAnim = {
-    open: { opacity: 1, x: 0, transition: { duration: 0.2 } },
-    closed: { opacity: 0, x: -10, transition: { duration: 0.15 } },
-};
-
-const subMenuAnim = {
-    enter: {
-        height: "auto",
-        opacity: 1,
-        transition: { duration: 0.3, ease: "easeOut" },
-    },
-    exit: {
-        height: 0,
-        opacity: 0,
-        transition: { duration: 0.2, ease: "easeIn" },
-    },
-};
-
-/* --------------------------------
    Enhanced Badge component using primary colors
 ----------------------------------*/
 const Badge = ({ count, isCollapsed, variant = "primary" }) => {
@@ -244,7 +127,7 @@ const Badge = ({ count, isCollapsed, variant = "primary" }) => {
 /* --------------------------------
    User Profile Component
 ----------------------------------*/
-const UserProfile = ({ user, isCollapsed, onToggle }) => {
+const UserProfile = ({ user, isCollapsed, onToggle, logo }) => {
     if (!user) return null;
 
     return (
@@ -294,8 +177,8 @@ const UserProfile = ({ user, isCollapsed, onToggle }) => {
 /* --------------------------------
    Quick Actions Component
 ----------------------------------*/
-const QuickActions = ({ isOpen }) => {
-    if (!isOpen) return null;
+const QuickActions = ({ isOpen, quickActions = [] }) => {
+    if (!isOpen || !quickActions.length) return null;
 
     return (
         <motion.div
@@ -304,14 +187,18 @@ const QuickActions = ({ isOpen }) => {
             animate="open"
             className="px-4 pb-4 space-y-3"
         >
-            <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-gradient-to-r from-primary to-accent text-white rounded-xl text-sm font-semibold hover:shadow-xl transition-all shadow-lg"
-            >
-                <Plus size={16} />
-                New Property
-            </motion.button>
+            {quickActions.map((action, index) => (
+                <motion.button
+                    key={index}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={action.onClick}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-gradient-to-r from-primary to-accent text-white rounded-xl text-sm font-semibold hover:shadow-xl transition-all shadow-lg"
+                >
+                    <action.Icon size={16} />
+                    {action.label}
+                </motion.button>
+            ))}
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
@@ -345,6 +232,7 @@ const NavItem = ({
                 <motion.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
+                    className={`block ${isOpen ? "w-[244px]" : "w-[60px]"}`}
                 >
                     <Link
                         href={path}
@@ -433,7 +321,7 @@ const NavItem = ({
                                 initial="closed"
                                 animate="open"
                                 exit="closed"
-                                className="flex-1 min-w-0 text-left"
+                                className="flex-1 border min-w-0 text-left"
                             >
                                 <span className="font-semibold text-gray-900 block">{name}</span>
                                 {description && (
@@ -463,19 +351,76 @@ const NavItem = ({
     );
 };
 
+/* Animation config */
+const sidebarAnim = {
+    open: { width: "280px", transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] } },
+    closed: { width: "80px", transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] } },
+};
+
+const itemAnim = {
+    open: { opacity: 1, x: 0, transition: { duration: 0.2 } },
+    closed: { opacity: 0, x: -10, transition: { duration: 0.15 } },
+};
+
+const subMenuAnim = {
+    enter: {
+        height: "auto",
+        opacity: 1,
+        transition: { duration: 0.3, ease: "easeOut" },
+    },
+    exit: {
+        height: 0,
+        opacity: 0,
+        transition: { duration: 0.2, ease: "easeIn" },
+    },
+};
+
 /* --------------------------------
-   Enhanced BuyerSidebar with Primary/Accent Theme
+   Main Reusable Sidebar Component
 ----------------------------------*/
-const BuyerSidebar = ({ isOpen, setIsOpen, counts = {}, unreads = [], user }) => {
+const Sidebar = ({
+                     isOpen,
+                     setIsOpen,
+                     config,
+                     counts,
+                     unreads,
+                     user,
+                     onNavigate,
+                     isMobile = false
+                 }) => {
     const [openedIndex, setOpenedIndex] = useState(null);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const { url } = usePage();
 
+    const handleNavigation = (href) => {
+        if (isMobile && onNavigate) {
+            onNavigate();
+        }
+        // The page notifications will be marked as read via the layout effect
+    };
+
+    // Destructure config with defaults
+    const {
+        appName = "RealSync",
+        appDescription = "Dashboard",
+        mainMenus = [],
+        adminMenus = [],
+        userMenu = [
+            { name: "Profile", Icon: User, path: "/profile" },
+            { name: "Settings", Icon: Settings, path: "/settings" },
+        ],
+        quickActions = [],
+        showSearch = true,
+        categorizeNotification
+    } = config;
+
     /* Mark notifications as read */
     const markAllOfPathAsRead = useCallback(async (path) => {
+        if (!unreads.length) return;
+
         const ids = [];
         for (const n of unreads) {
-            const p = categorizeNotifToPath(n);
+            const p = categorizeNotification ? categorizeNotification(n) : null;
             if (p === path) ids.push(n.id);
         }
         if (!ids.length) return;
@@ -491,7 +436,7 @@ const BuyerSidebar = ({ isOpen, setIsOpen, counts = {}, unreads = [], user }) =>
                 router.post(`/notifications/${id}/read`, {}, { preserveScroll: true, preserveState: true });
             });
         }
-    }, [unreads]);
+    }, [unreads, categorizeNotification]);
 
     const getCount = useCallback(
         (path, subMenu) => {
@@ -551,14 +496,20 @@ const BuyerSidebar = ({ isOpen, setIsOpen, counts = {}, unreads = [], user }) =>
                         <Link
                             href="/"
                             className="flex items-center space-x-3 transition-all hover:scale-105 active:scale-95"
-                            title={!isOpen ? "RealSync" : undefined}
+                            title={!isOpen ? appName : undefined}
                         >
                             <motion.div
                                 whileHover={{ rotate: 5, scale: 1.1 }}
                                 className="relative"
                             >
                                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg flex items-center justify-center">
-                                    <img src={logo} alt="RealSync Logo" className="w-10 h-10" />
+                                    {logo ? (
+                                        <img src={logo} alt={`${appName} Logo`} className="w-10 h-10" />
+                                    ) : (
+                                        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                                            <Building className="w-5 h-5 text-primary" />
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                             {isOpen && (
@@ -569,32 +520,25 @@ const BuyerSidebar = ({ isOpen, setIsOpen, counts = {}, unreads = [], user }) =>
                                     className="flex flex-col"
                                 >
                                     <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                                      RealSync
+                                        {appName}
                                     </span>
-                                    <span className="text-xs text-gray-500 font-medium">Buyer Dashboard</span>
+                                    <span className="text-xs text-gray-500 font-medium">{appDescription}</span>
                                 </motion.div>
                             )}
                         </Link>
 
-                        {/* Toggle Button */}
-                        <motion.button
-                            whileHover={{ scale: 1.05, backgroundColor: "#FEF7ED" }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setIsOpen(!isOpen)}
-                            className="p-2 rounded-xl text-gray-600 transition-all"
-                        >
-                            {isOpen ? <X size={20} /> : <Menu size={20} />}
-                        </motion.button>
                     </div>
 
                     {/* Quick Actions */}
-                    <QuickActions isOpen={isOpen} />
+                    {(quickActions.length > 0 || showSearch) && (
+                        <QuickActions isOpen={isOpen} quickActions={quickActions} />
+                    )}
                 </div>
 
                 {/* Navigation Sections */}
                 <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 [scrollbar-gutter:stable]">
                     {/* Main Navigation */}
-                    {isOpen && (
+                    {isOpen && mainMenus.length > 0 && (
                         <motion.p
                             variants={itemAnim}
                             initial="closed"
@@ -635,7 +579,7 @@ const BuyerSidebar = ({ isOpen, setIsOpen, counts = {}, unreads = [], user }) =>
                     </ul>
 
                     {/* Admin Section */}
-                    {isAdmin && isOpen && (
+                    {isAdmin && adminMenus.length > 0 && isOpen && (
                         <>
                             <motion.p
                                 variants={itemAnim}
@@ -645,7 +589,7 @@ const BuyerSidebar = ({ isOpen, setIsOpen, counts = {}, unreads = [], user }) =>
                             >
                                 Administration
                             </motion.p>
-                            <ul className="px-3 py-2 space-y-2">
+                            <ul className="px-3 py-2 space-y-2 bg-red-900">
                                 {adminMenus.map((item) => {
                                     const isActive = url.startsWith(item.path);
                                     const count = counts[item.path] ?? 0;
@@ -672,46 +616,8 @@ const BuyerSidebar = ({ isOpen, setIsOpen, counts = {}, unreads = [], user }) =>
                     <UserProfile
                         user={user}
                         isCollapsed={!isOpen}
-                        onToggle={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                        logo={logo}
                     />
-
-                    {/* User Menu when expanded */}
-                    <AnimatePresence>
-                        {isOpen && isUserMenuOpen && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="px-3 pb-4 space-y-1 overflow-hidden"
-                            >
-                                {userMenu.map(({ name, Icon, path }) => (
-                                    <motion.div
-                                        key={name}
-                                        whileHover={{ x: 4 }}
-                                    >
-                                        <Link
-                                            href={path}
-                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200"
-                                        >
-                                            <Icon size={16} />
-                                            <span>{name}</span>
-                                        </Link>
-                                    </motion.div>
-                                ))}
-                                <motion.div
-                                    whileHover={{ x: 4 }}
-                                >
-                                    <button
-                                        onClick={() => router.post('/logout')}
-                                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200"
-                                    >
-                                        <LogOut size={16} />
-                                        <span>Sign Out</span>
-                                    </button>
-                                </motion.div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
                 </div>
             </motion.div>
 
@@ -732,4 +638,4 @@ const BuyerSidebar = ({ isOpen, setIsOpen, counts = {}, unreads = [], user }) =>
     );
 };
 
-export default BuyerSidebar;
+export default Sidebar;
