@@ -8,7 +8,7 @@ return [
     |--------------------------------------------------------------------------
     | Supported: 'infotxt', 'semaphore'
     */
-    'provider' => env('SMS_PROVIDER', 'infotxt'),
+    'provider' => env('SMS_PROVIDER', 'semaphore'),
 
     /*
     |--------------------------------------------------------------------------

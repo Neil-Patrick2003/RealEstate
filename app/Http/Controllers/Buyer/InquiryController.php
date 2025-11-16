@@ -12,6 +12,7 @@ use App\Models\Property;
 use App\Models\PropertyTripping;
 use App\Models\User;
 use App\Notifications\NewInquiry;
+use App\Services\Sms\SmsClient;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -111,6 +112,8 @@ class InquiryController extends Controller
             'title' => 'Inquiry',
         ]);
 
+
+
         $channel->load('members');
 
         if (!$channel->members->contains('id', auth()->id())) {
@@ -134,8 +137,6 @@ class InquiryController extends Controller
         $inquiry = Inquiry::findOrFail($id);
 
         $existingTripping = PropertyTripping::where('inquiry_id', $inquiry->id)->first();
-
-
 
         if ($existingTripping) {
             $existingTripping->update([
