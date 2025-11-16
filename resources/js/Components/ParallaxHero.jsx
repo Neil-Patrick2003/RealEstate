@@ -2,14 +2,7 @@ import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Search, MapPin, Home, Pencil, Copy, ArchiveX, Trash2, ChevronDown } from 'lucide-react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import {
-    ArchiveBoxXMarkIcon,
-    ChevronDownIcon,
-    PencilIcon,
-    Square2StackIcon,
-    TrashIcon,
-} from '@heroicons/react/16/solid'
-import {useParallax} from "../../hooks/useParallax.js";
+import { useParallax } from "../../hooks/useParallax.js";
 
 function ParallaxHero() {
     const { scrollY } = useScroll();
@@ -43,9 +36,9 @@ function ParallaxHero() {
                 }}
             />
 
-            {/* Floating 3D Elements with New Colors */}
+            {/* Floating 3D Elements */}
             <motion.div
-                className="absolute top-20 left-10 w-64 h-64 bg-primary-500 rounded-full opacity-20 blur-3xl"
+                className="absolute top-20 left-10 w-64 h-64 bg-primary rounded-full opacity-20 blur-3xl"
                 animate={{
                     y: [0, 50, 0],
                     scale: [1, 1.2, 1],
@@ -62,7 +55,7 @@ function ParallaxHero() {
             />
 
             <motion.div
-                className="absolute bottom-20 right-10 w-96 h-96 bg-secondary-500 rounded-full opacity-20 blur-3xl"
+                className="absolute bottom-20 right-10 w-96 h-96 bg-secondary rounded-full opacity-20 blur-3xl"
                 animate={{
                     y: [0, -50, 0],
                     scale: [1, 1.1, 1],
@@ -80,27 +73,27 @@ function ParallaxHero() {
 
             {/* Content */}
             <motion.div
-                className="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center"
+                className="relative z-10 flex flex-col items-center justify-center h-full px-4 sm:px-6 text-center"
                 style={{ opacity, scale }}
             >
                 <motion.h1
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    className="text-5xl md:text-7xl font-bold text-white mb-6"
+                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 sm:mb-6"
                 >
                     Find Your Perfect
                     <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-secondary-500">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
                         Property
-          </span>
+                    </span>
                 </motion.h1>
 
                 <motion.p
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.6 }}
-                    className="text-xl text-neutral-300 mb-12 max-w-2xl"
+                    className="text-lg sm:text-xl text-neutral-300 mb-8 sm:mb-12 max-w-2xl px-2"
                 >
                     Explore verified listings with clear map boundaries — making property search simple, visual, and transparent.
                 </motion.p>
@@ -111,54 +104,122 @@ function ParallaxHero() {
                     transition={{ duration: 0.8, delay: 0.8 }}
                     className="w-full max-w-3xl"
                 >
-                    {/* KEY FIX: Removed p-8 padding and ensured single-line flex layout */}
-                    <div className="flex w-full bg-white/10 backdrop-blur-lg rounded-2xl border p-12 border-white/20 overflow-hidden shadow-xl">
+                    {/* Mobile Layout - Vertical */}
+                    <div className="lg:hidden space-y-3">
+                        {/* Location Input - Mobile */}
+                        <div className="relative bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <MapPin className="w-5 h-5 text-neutral-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Enter location..."
+                                className="w-full pl-12 pr-4 py-4 bg-transparent text-white placeholder-neutral-400 outline-none text-base"
+                            />
+                        </div>
 
-                        {/* 1. Property Type Menu (Icon + Text on Desktop) */}
-                        <div className="flex items-center justify-center flex-initial bg-white/5 py-3 border-r rounded-l-xl border-white/10">
+                        {/* Property Type & Search Button Row - Mobile */}
+                        <div className="flex gap-2">
+                            {/* Property Type Menu - Mobile */}
+                            <div className="flex-1">
+                                <Menu>
+                                    <MenuButton className="w-full inline-flex items-center justify-between bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 px-4 py-4 text-white hover:bg-white/20 transition-colors duration-150">
+                                        <span className="flex items-center gap-2">
+                                            <Home className="w-5 h-5 text-neutral-400" />
+                                            <span className="text-sm font-medium">Type</span>
+                                        </span>
+                                        <ChevronDown className="w-4 h-4 text-neutral-400" />
+                                    </MenuButton>
+
+                                    <MenuItems
+                                        transition
+                                        anchor="bottom start"
+                                        className="w-full origin-top-right z-50 rounded-xl border border-white/5 bg-neutral-800/95 backdrop-blur-lg p-2 text-sm text-white transition duration-100 ease-out [--anchor-gap:8px] focus:outline-none data-closed:scale-95 data-closed:opacity-0"
+                                    >
+                                        <MenuItem>
+                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                                <Home className="w-4 h-4" />
+                                                Apartment
+                                            </button>
+                                        </MenuItem>
+                                        <MenuItem>
+                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                                <Home className="w-4 h-4" />
+                                                Commercial
+                                            </button>
+                                        </MenuItem>
+                                        <MenuItem>
+                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                                <Home className="w-4 h-4" />
+                                                Condominium
+                                            </button>
+                                        </MenuItem>
+                                        <MenuItem>
+                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                                <Home className="w-4 h-4" />
+                                                House
+                                            </button>
+                                        </MenuItem>
+                                        <MenuItem>
+                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                                <Home className="w-4 h-4" />
+                                                Land
+                                            </button>
+                                        </MenuItem>
+                                    </MenuItems>
+                                </Menu>
+                            </div>
+
+                            {/* Search Button - Mobile */}
+                            <button className="flex-shrink-0 inline-flex items-center justify-center bg-gradient-to-r from-primary to-accent rounded-xl text-white font-semibold px-6 py-4 hover:shadow-xl hover:scale-105 transition-all duration-300 min-w-[60px]">
+                                <Search className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Desktop Layout - Horizontal */}
+                    <div className="hidden lg:flex w-full bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden shadow-xl">
+                        {/* Property Type Menu - Desktop */}
+                        <div className="flex items-center justify-center flex-initial bg-white/5 border-r border-white/10 min-w-[140px]">
                             <Menu>
-                                {/* Button content optimized for mobile: just Home icon */}
-                                <MenuButton className="inline-flex items-center justify-center gap-1.5 w-full h-full text-sm/6 font-semibold text-white px-2 sm:px-4 hover:bg-white/10 transition-colors duration-150">
+                                <MenuButton className="inline-flex items-center justify-center gap-2 w-full h-full text-sm font-semibold text-white px-6 py-4 hover:bg-white/10 transition-colors duration-150">
                                     <Home className="w-5 h-5 text-neutral-400" />
-                                    {/* Text is hidden on mobile */}
-                                    <span className="hidden sm:inline">Type</span>
-                                    <ChevronDown className="hidden sm:inline size-4 fill-white/60" />
+                                    <span>Type</span>
+                                    <ChevronDown className="w-4 h-4 fill-white/60" />
                                 </MenuButton>
 
                                 <MenuItems
                                     transition
                                     anchor="bottom start"
-                                    className="w-52 origin-top-right z-50 rounded-xl border border-white/5 bg-white/5 p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:--spacing(1)] focus:outline-none data-closed:scale-95 data-closed:opacity-0"
+                                    className="w-52 origin-top-right z-50 rounded-xl border border-white/5 bg-neutral-800/95 backdrop-blur-lg p-2 text-sm text-white transition duration-100 ease-out [--anchor-gap:8px] focus:outline-none data-closed:scale-95 data-closed:opacity-0"
                                 >
-                                    {/* Menu Items Content - Using Lucide icons */}
                                     <MenuItem>
-                                        <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-white/10">
-                                            <Pencil className="size-4 fill-white/30" />
+                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                            <Home className="w-4 h-4" />
                                             Apartment
                                         </button>
                                     </MenuItem>
                                     <MenuItem>
-                                        <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-white/10">
-                                            <Copy className="size-4 fill-white/30" />
+                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                            <Home className="w-4 h-4" />
                                             Commercial
                                         </button>
                                     </MenuItem>
-                                    <div className="my-1 h-px bg-white/5" />
                                     <MenuItem>
-                                        <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-white/10">
-                                            <ArchiveX className="size-4 fill-white/30" />
+                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                            <Home className="w-4 h-4" />
                                             Condominium
                                         </button>
                                     </MenuItem>
                                     <MenuItem>
-                                        <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-white/10">
-                                            <Trash2 className="size-4 fill-white/30" />
+                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                            <Home className="w-4 h-4" />
                                             House
                                         </button>
                                     </MenuItem>
                                     <MenuItem>
-                                        <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-white/10">
-                                            <MapPin className="size-4 fill-white/30" />
+                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
+                                            <Home className="w-4 h-4" />
                                             Land
                                         </button>
                                     </MenuItem>
@@ -166,22 +227,22 @@ function ParallaxHero() {
                             </Menu>
                         </div>
 
-
-                        {/* 2. Location Input (Maximized Space) */}
-                        <div className="flex items-center flex-grow bg-white/5 px-4 py-3">
-                            {/* MapPin icon removed for space */}
-                            <input
-                                type="text"
-                                placeholder="Enter location..."
-                                className="bg-transparent flex-1 text-white placeholder-neutral-400 outline-none"
-                            />
+                        {/* Location Input - Desktop */}
+                        <div className="flex items-center flex-grow bg-white/5 px-6 py-4">
+                            <div className="flex items-center w-full">
+                                <MapPin className="w-5 h-5 text-neutral-400 mr-3" />
+                                <input
+                                    type="text"
+                                    placeholder="Enter location..."
+                                    className="bg-transparent flex-1 text-white placeholder-neutral-400 outline-none text-base"
+                                />
+                            </div>
                         </div>
 
-                        {/* 3. Search Button (Icon + Text on Desktop) */}
-                        <button className={`bg-gradient-to-r from-primary to-primary-500 border-r-lg text-white px-4 rounded-r-lg sm:px-8 py-3 font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2`}>
+                        {/* Search Button - Desktop */}
+                        <button className="flex-shrink-0 inline-flex items-center justify-center bg-gradient-to-r from-primary to-accent text-white font-semibold px-8 py-4 hover:shadow-xl hover:scale-105 transition-all duration-300 min-w-[180px] gap-2">
                             <Search className="w-5 h-5" />
-                            {/* Text is hidden on mobile */}
-                                    <span className="hidden sm:block">Search</span>
+                            <span>Search</span>
                         </button>
                     </div>
                 </motion.div>
@@ -192,7 +253,7 @@ function ParallaxHero() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 1, delay: 1.2 }}
-                    className="absolute bottom-10"
+                    className="absolute bottom-6 sm:bottom-10"
                 >
                     <motion.div
                         animate={{ y: [0, 10, 0] }}

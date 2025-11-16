@@ -378,6 +378,9 @@ const subMenuAnim = {
 /* --------------------------------
    Main Reusable Sidebar Component
 ----------------------------------*/
+/* --------------------------------
+   Main Reusable Sidebar Component
+----------------------------------*/
 const Sidebar = ({
                      isOpen,
                      setIsOpen,
@@ -392,11 +395,13 @@ const Sidebar = ({
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const { url } = usePage();
 
+    // FOR MOBILE: Always show expanded sidebar when open
+    const shouldShowExpanded = isMobile ? true : isOpen;
+
     const handleNavigation = (href) => {
         if (isMobile && onNavigate) {
             onNavigate();
         }
-        // The page notifications will be marked as read via the layout effect
     };
 
     // Destructure config with defaults
@@ -487,16 +492,16 @@ const Sidebar = ({
             <motion.div
                 className="sidebar-container bg-white border-r border-gray-200 h-screen z-[999] fixed shadow-xl overflow-hidden flex flex-col"
                 variants={sidebarAnim}
-                animate={isOpen ? "open" : "closed"}
+                animate={shouldShowExpanded ? "open" : "closed"} // Use shouldShowExpanded here
                 initial={false}
             >
                 {/* Header */}
                 <div className="flex-shrink-0 border-b border-gray-200 bg-gradient-to-br from-white to-primary/5">
-                    <div className={`flex items-center justify-between p-4 ${isOpen ? 'pr-3' : ''}`}>
+                    <div className={`flex items-center justify-between p-4 ${shouldShowExpanded ? 'pr-3' : ''}`}>
                         <Link
                             href="/"
                             className="flex items-center space-x-3 transition-all hover:scale-105 active:scale-95"
-                            title={!isOpen ? appName : undefined}
+                            title={!shouldShowExpanded ? appName : undefined}
                         >
                             <motion.div
                                 whileHover={{ rotate: 5, scale: 1.1 }}
@@ -512,7 +517,7 @@ const Sidebar = ({
                                     )}
                                 </div>
                             </motion.div>
-                            {isOpen && (
+                            {shouldShowExpanded && ( // Use shouldShowExpanded here
                                 <motion.div
                                     variants={itemAnim}
                                     initial="closed"
@@ -531,14 +536,14 @@ const Sidebar = ({
 
                     {/* Quick Actions */}
                     {(quickActions.length > 0 || showSearch) && (
-                        <QuickActions isOpen={isOpen} quickActions={quickActions} />
+                        <QuickActions isOpen={shouldShowExpanded} quickActions={quickActions} /> // Use shouldShowExpanded here
                     )}
                 </div>
 
                 {/* Navigation Sections */}
                 <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 [scrollbar-gutter:stable]">
                     {/* Main Navigation */}
-                    {isOpen && mainMenus.length > 0 && (
+                    {shouldShowExpanded && mainMenus.length > 0 && ( // Use shouldShowExpanded here
                         <motion.p
                             variants={itemAnim}
                             initial="closed"
@@ -565,7 +570,7 @@ const Sidebar = ({
                                 >
                                     <NavItem
                                         item={item}
-                                        isOpen={isOpen}
+                                        isOpen={shouldShowExpanded} // Use shouldShowExpanded here
                                         isActive={isActive}
                                         count={totalCount}
                                         onMarkRead={withMarkRead}
@@ -579,7 +584,7 @@ const Sidebar = ({
                     </ul>
 
                     {/* Admin Section */}
-                    {isAdmin && adminMenus.length > 0 && isOpen && (
+                    {isAdmin && adminMenus.length > 0 && shouldShowExpanded && ( // Use shouldShowExpanded here
                         <>
                             <motion.p
                                 variants={itemAnim}
@@ -589,7 +594,7 @@ const Sidebar = ({
                             >
                                 Administration
                             </motion.p>
-                            <ul className="px-3 py-2 space-y-2 bg-red-900">
+                            <ul className="px-3 py-2 space-y-2">
                                 {adminMenus.map((item) => {
                                     const isActive = url.startsWith(item.path);
                                     const count = counts[item.path] ?? 0;
@@ -598,7 +603,7 @@ const Sidebar = ({
                                         <motion.li key={item.name} whileHover={{ scale: 1.02 }}>
                                             <NavItem
                                                 item={item}
-                                                isOpen={isOpen}
+                                                isOpen={shouldShowExpanded} // Use shouldShowExpanded here
                                                 isActive={isActive}
                                                 count={count}
                                                 onMarkRead={withMarkRead}
@@ -615,7 +620,7 @@ const Sidebar = ({
                 <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50/50">
                     <UserProfile
                         user={user}
-                        isCollapsed={!isOpen}
+                        isCollapsed={!shouldShowExpanded} // Use shouldShowExpanded here
                         logo={logo}
                     />
                 </div>
