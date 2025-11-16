@@ -3,6 +3,7 @@
 use App\Http\Controllers\Buyer\FeedbackController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExportPdfController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PropertyTrendsController;
@@ -223,9 +224,8 @@ Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::cla
 Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
 Route::get('/all-properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
-Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])
-    ->middleware('auth')
-    ->name('notifications.read');
+
+
 //------------------------------------------buyer---------------------------------------------------
 
 Route::middleware(['auth'])->group(function () {
@@ -366,7 +366,12 @@ Route::prefix('export')->group(function () {
 });
 
 
-
-
+Route::middleware(['auth', 'web'])->group(function () {
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::post('/notifications/mark-page-read', [NotificationController::class, 'markPageNotificationsAsRead']);
+});
 
 require __DIR__.'/auth.php';

@@ -90,7 +90,6 @@ export default function PropertyCard({
                                      }) {
 
 
-    console.log(onToggleFavorite);
     const [imgErr, setImgErr] = useState(false);
     const [imgLoaded, setImgLoaded] = useState(false);
 

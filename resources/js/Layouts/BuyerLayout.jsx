@@ -19,7 +19,8 @@ import {
     CreditCard,
     HelpCircle,
     Zap,
-    Sparkles
+    Sparkles,
+    CheckCircle
 } from "lucide-react";
 import { Link, router, usePage } from "@inertiajs/react";
 import Dropdown from "@/Components/Dropdown";
@@ -28,7 +29,9 @@ import ToastHandler from "@/Components/ToastHandler.jsx";
 import Drawer from "@/Components/Drawer.jsx";
 import { buildSidebarCounts } from "@/utils/sidebarCounts.js";
 import FeedbackReminder from "@/Components/reminder/FeedbackReminder.jsx";
-
+import Sidebar from "@/Components/Layout/Sidebar.jsx";
+import { buyerSidebarConfig } from "@/Components/Layout/SidebarConfigs.js";
+import {useNotification} from "../../hooks/useNotifications.js";
 /* ================================
    Design Constants & Utils
 =================================== */
@@ -79,7 +82,7 @@ const safeLS = {
         if (!canUseDOM) return;
         try {
             window.localStorage.setItem(key, JSON.stringify(val));
-        } catch {}
+        } catch { }
     },
 };
 
@@ -240,15 +243,13 @@ function CommandPalette({ open, setOpen, actions }) {
                                                 {action.href ? (
                                                     <Link
                                                         href={action.href}
-                                                        className={`flex items-center gap-4 p-4 transition-all ${
-                                                            index === activeIndex
-                                                                ? 'bg-primary-50 border-r-2 border-primary-500'
-                                                                : 'hover:bg-neutral-50'
+                                                        className={`flex items-center gap-4 p-4 transition-all ${index === activeIndex
+                                                            ? 'bg-primary-50 border-r-2 border-primary-500'
+                                                            : 'hover:bg-neutral-50'
                                                         }`}
                                                         onClick={() => setOpen(false)}
                                                     >
-                                                        <div className={`p-2 rounded-lg ${
-                                                            index === activeIndex ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
+                                                        <div className={`p-2 rounded-lg ${index === activeIndex ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
                                                         }`}>
                                                             <Icon className="w-4 h-4" />
                                                         </div>
@@ -267,14 +268,12 @@ function CommandPalette({ open, setOpen, actions }) {
                                                 ) : (
                                                     <button
                                                         onClick={() => executeAction(action)}
-                                                        className={`w-full flex items-center gap-4 p-4 text-left transition-all ${
-                                                            index === activeIndex
-                                                                ? 'bg-primary-50 border-r-2 border-primary-500'
-                                                                : 'hover:bg-neutral-50'
+                                                        className={`w-full flex items-center gap-4 p-4 text-left transition-all ${index === activeIndex
+                                                            ? 'bg-primary-50 border-r-2 border-primary-500'
+                                                            : 'hover:bg-neutral-50'
                                                         }`}
                                                     >
-                                                        <div className={`p-2 rounded-lg ${
-                                                            index === activeIndex ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
+                                                        <div className={`p-2 rounded-lg ${index === activeIndex ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
                                                         }`}>
                                                             <Icon className="w-4 h-4" />
                                                         </div>
@@ -319,21 +318,50 @@ function CommandPalette({ open, setOpen, actions }) {
    Enhanced Notification Item
 =================================== */
 function NotificationItem({ notification, onMarkRead, isUnread }) {
-    const { title, message, link, time, type = 'info' } = notification;
+    const { data = {}, created_at, type = 'info' } = notification;
+
+    // FIXED — always read from the Laravel "data" object
+    const title =
+        data.title ??
+        notification.title ??
+        "Notification";
+
+    const message =
+        data.message ??
+        data.body ??
+        notification.message ??
+        "";
+
+    const link =
+        data.link ??
+        data.url ??
+        data.route ??
+        notification.link ??
+        null;
 
     const getIcon = () => {
-        switch (type) {
-            case 'success': return '✅';
-            case 'warning': return '⚠️';
-            case 'error': return '❌';
-            default: return '💡';
-        }
+        const t = String(type).toLowerCase();
+        if (t.includes('tripping')) return '🏠';
+        if (t.includes('inquiry')) return '💬';
+        if (t.includes('deal')) return '🤝';
+        if (t.includes('transaction')) return '💰';
+        return '💡';
+    };
+
+    const formatTime = (timestamp) => {
+        if (!timestamp) return "Recently";
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = (now - date) / (1000 * 60 * 60);
+
+        if (diff < 1) return "Just now";
+        if (diff < 24) return `${Math.floor(diff)}h ago`;
+
+        return date.toLocaleDateString();
     };
 
     const handleClick = () => {
-        if (isUnread) {
-            onMarkRead(notification.id);
-        }
+        if (isUnread) onMarkRead(notification.id);
         if (link) {
             router.visit(link);
         }
@@ -343,65 +371,59 @@ function NotificationItem({ notification, onMarkRead, isUnread }) {
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer group ${
+            className={`p-4 rounded-xl border cursor-pointer transition-all group ${
                 isUnread
-                    ? 'bg-primary-50 border-primary-200 hover:bg-primary-100'
-                    : 'bg-white border-neutral-200 hover:bg-neutral-50'
+                    ? "bg-primary-50 border-primary-200 hover:bg-primary-100"
+                    : "bg-white border-neutral-200 hover:bg-neutral-50"
             }`}
             onClick={handleClick}
-            role="button"
-            tabIndex={0}
         >
             <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${
-                    isUnread ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600'
-                }`}>
-                    <span className="text-sm">{getIcon()}</span>
+                <div
+                    className={`p-2 rounded-lg ${
+                        isUnread
+                            ? "bg-primary-500 text-white"
+                            : "bg-neutral-100 text-neutral-600"
+                    }`}
+                >
+                    <span>{getIcon()}</span>
                 </div>
 
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                        <h4 className={`font-medium ${
-                            isUnread ? 'text-primary-900' : 'text-neutral-900'
-                        }`}>
+                    <div className="flex justify-between">
+                        <h4
+                            className={`font-medium ${
+                                isUnread ? "text-primary-900" : "text-neutral-900"
+                            }`}
+                        >
                             {title}
                         </h4>
-                        <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs text-neutral-500">{time}</span>
-                            {isUnread && (
-                                <span className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
-                            )}
-                        </div>
+                        <span className="text-xs text-neutral-500">
+                            {formatTime(created_at)}
+                        </span>
                     </div>
 
-                    <p className="text-sm text-neutral-600 mb-3 line-clamp-2">
+                    <p className="text-sm text-neutral-600 mt-1 line-clamp-2">
                         {message}
                     </p>
 
-                    {link && (
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors">
-                                View details →
-                            </span>
-                            {isUnread && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onMarkRead(notification.id);
-                                    }}
-                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded transition-all"
-                                    aria-label="Mark as read"
-                                >
-                                    <X className="w-3 h-3 text-neutral-400 hover:text-neutral-600" />
-                                </button>
-                            )}
-                        </div>
+                    {isUnread && (
+                        <button
+                            className="opacity-0 group-hover:opacity-100 mt-2 text-xs text-primary-600"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMarkRead(notification.id);
+                            }}
+                        >
+                            Mark as read
+                        </button>
                     )}
                 </div>
             </div>
         </motion.div>
     );
 }
+
 
 /* ================================
    Main Layout
@@ -428,9 +450,18 @@ export default function BuyerLayout({ children }) {
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [activeNotifTab, setActiveNotifTab] = useState("unread");
 
-    /* -------- Notifications State -------- */
-    const [notifications, setNotifications] = useState(auth?.notifications?.all ?? []);
-    const [unreadNotifications, setUnreadNotifications] = useState(auth?.notifications?.unread ?? []);
+
+
+    const {
+        notifications,
+        unreadNotifications,
+        loading,
+        markAsRead,
+        markAllAsRead,
+    } = useNotification();
+
+
+
 
     /* -------- Effects -------- */
     useEffect(() => {
@@ -452,8 +483,16 @@ export default function BuyerLayout({ children }) {
         }
     }, [isSidebarOpen, mode]);
 
+    // Mark page notifications as read when page loads
+    useEffect(() => {
+        if (unreadNotifications.length > 0) {
+            markPageNotificationsAsRead();
+        }
+    }, [usePage().url]);
+
     /* -------- Handlers -------- */
     const toggleTheme = useCallback(() => setTheme(t => t === "dark" ? "light" : "dark"), []);
+
     const toggleSidebar = useCallback(() => {
         if (mode === "mobile") {
             setIsMobileSidebarOpen(s => !s);
@@ -462,12 +501,26 @@ export default function BuyerLayout({ children }) {
         }
     }, [mode]);
 
+    const closeMobileSidebar = useCallback(() => {
+        setIsMobileSidebarOpen(false);
+    }, []);
+
     const handleSearch = useCallback((e) => {
         e.preventDefault();
         const q = searchQuery.trim();
         if (!q) return;
         router.get("/search", { q }, { preserveScroll: true });
     }, [searchQuery]);
+
+
+
+    const handleMarkAsRead = (notificationId) => {
+        markAsRead(notificationId);
+    };
+
+    const handleMarkAllAsRead = () => {
+        markAllAsRead();
+    };
 
     /* -------- Command Palette Actions -------- */
     const commandActions = useMemo(() => [
@@ -553,20 +606,25 @@ export default function BuyerLayout({ children }) {
     const sidebarWidth = isSidebarOpen ? 288 : 80;
     const contentPadding = mode === "mobile" ? 24 : sidebarWidth + 24;
 
+
     return (
         <div className="h-screen bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-800 flex overflow-hidden">
-            {/* Sidebar */}
+            {/* Desktop Sidebar */}
             {mode !== "mobile" && (
                 <div className="hidden md:block">
-                    <BuyerSidebar
+                    <Sidebar
                         isOpen={isSidebarOpen}
                         setIsOpen={setIsSidebarOpen}
-                        counts={buildSidebarCounts(unreadNotifications)}
+                        config={buyerSidebarConfig}
+                        counts={{ unread: unreadNotifications.length }}
+                        unreads={unreadNotifications}
+                        user={auth.user}
+                        onNavigate={closeMobileSidebar}
                     />
                 </div>
             )}
 
-            {/* Mobile Sidebar Overlay */}
+            {/* Mobile Sidebar Overlay - FIXED */}
             <AnimatePresence>
                 {mode === "mobile" && isMobileSidebarOpen && (
                     <>
@@ -575,7 +633,7 @@ export default function BuyerLayout({ children }) {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="fixed inset-0 z-40 bg-black/30"
-                            onClick={() => setIsMobileSidebarOpen(false)}
+                            onClick={closeMobileSidebar}
                         />
                         <motion.div
                             initial={{ x: "-100%" }}
@@ -584,10 +642,15 @@ export default function BuyerLayout({ children }) {
                             transition={{ duration: 0.3, ease: "easeOut" }}
                             className="fixed top-0 left-0 z-50 w-80 h-full bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-700 shadow-2xl"
                         >
-                            <BuyerSidebar
+                            <Sidebar
                                 isOpen={true}
                                 setIsOpen={setIsMobileSidebarOpen}
-                                counts={buildSidebarCounts(unreadNotifications)}
+                                config={buyerSidebarConfig}
+                                counts={{ unread: unreadNotifications.length }}
+                                unreads={unreadNotifications}
+                                user={auth.user}
+                                onNavigate={closeMobileSidebar}
+                                isMobile={true}
                             />
                         </motion.div>
                     </>
@@ -660,7 +723,7 @@ export default function BuyerLayout({ children }) {
                                 <Bell className="w-5 h-5 text-neutral-700 dark:text-neutral-200" />
                                 {unreadNotifications.length > 0 && (
                                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full animate-pulse">
-                                        {unreadNotifications.length}
+                                        {unreadNotifications.length > 99 ? '99+' : unreadNotifications.length}
                                     </span>
                                 )}
                             </button>
@@ -669,11 +732,20 @@ export default function BuyerLayout({ children }) {
                             <Dropdown>
                                 <Dropdown.Trigger>
                                     <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200 cursor-pointer">
-                                        <img
-                                            src={auth?.user?.avatar_url || "/images/avatar-placeholder.png"}
-                                            alt={auth?.user?.name}
-                                            className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-200 dark:ring-primary-800"
-                                        />
+                                        {auth?.user?.photo_url ? (
+                                            <img
+                                                src={auth.user.photo_url}
+                                                alt={auth.user.name}
+                                                className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-200 dark:ring-primary-800"
+                                            />
+                                        ) : (
+                                            <div
+                                                className="w-8 h-8 rounded-full bg-gradient-to-l  from-primary to-accent text-white flex items-center justify-center ring-2 ring-primary-200 dark:ring-primary-800"
+                                            >
+                                                {auth?.user?.name?.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+
                                         <div className="hidden sm:block text-left">
                                             <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                                 {auth?.user?.name}
@@ -746,7 +818,7 @@ export default function BuyerLayout({ children }) {
                             </h2>
                             {unreadNotifications.length > 0 && (
                                 <button
-                                    onClick={() => {/* Mark all as read logic */}}
+                                    onClick={handleMarkAllAsRead}
                                     className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                                 >
                                     Mark all as read
@@ -763,10 +835,9 @@ export default function BuyerLayout({ children }) {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveNotifTab(tab.id)}
-                                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all ${
-                                        activeNotifTab === tab.id
-                                            ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm'
-                                            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all ${activeNotifTab === tab.id
+                                        ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm'
+                                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
                                     }`}
                                 >
                                     {tab.label}
@@ -782,19 +853,19 @@ export default function BuyerLayout({ children }) {
                                 <NotificationItem
                                     key={notification.id}
                                     notification={notification}
-                                    onMarkRead={(id) => {/* Mark as read logic */}}
+                                    onMarkRead={handleMarkAsRead}  // This should point to markAsRead from useNotification
                                     isUnread={!notification.read_at}
                                 />
                             ))}
 
-                            {(activeNotifTab === "unread" ? unreadNotifications : notifications).length === 0 && (
-                                <div className="text-center py-12">
-                                    <Bell className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
-                                    <p className="text-neutral-500 dark:text-neutral-400">
-                                        No {activeNotifTab === "unread" ? "unread" : ""} notifications
-                                    </p>
-                                </div>
-                            )}
+                            {(activeNotifTab === "unread" ? unreadNotifications : notifications).map(notification => (
+                                <NotificationItem
+                                    key={notification.id}
+                                    notification={notification}
+                                    onMarkRead={handleMarkAsRead}
+                                    isUnread={!notification.read_at}
+                                />
+                            ))}
                         </div>
                     </div>
                 </div>
