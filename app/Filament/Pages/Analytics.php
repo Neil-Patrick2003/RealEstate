@@ -31,24 +31,24 @@ class Analytics extends Page
             \App\Filament\Widgets\DailyInquiriesChart::class,
             \App\Filament\Widgets\LeadFunnelOverviewChart::class,
 //            \App\Filament\Widgets\HotLeadsTable::class,
-            \App\Filament\Widgets\UnattendedLeadsTable::class,
+//            \App\Filament\Widgets\UnattendedLeadsTable::class,
 
             // ── 3) TRIPPING ANALYTICS ────────────────────────────────────────
             \App\Filament\Widgets\TrippingsScheduledCompletedChart::class,
-            \App\Filament\Widgets\TrippingCancellationReasonsChart::class,
+//            \App\Filament\Widgets\TrippingCancellationReasonsChart::class,
             // \App\Filament\Widgets\TrippingHeatmap::class, // enable when ready
 
             // ── 4) PROPERTY ANALYTICS ────────────────────────────────────────
             \App\Filament\Widgets\MostInquiredPropertiesChart::class,
             \App\Filament\Widgets\PropertyConversionTable::class,
-            \App\Filament\Widgets\PropertyPerformanceTimeline::class,
+//            \App\Filament\Widgets\PropertyPerformanceTimeline::class,
             \App\Filament\Widgets\PropertyPerformanceChart::class,
 
             // ── 5) AGENT ANALYTICS ───────────────────────────────────────────
             \App\Filament\Widgets\TopAgentsDealsChart::class,
-            \App\Filament\Widgets\LeadToDealRatioPerAgentChart::class,
+//            \App\Filament\Widgets\LeadToDealRatioPerAgentChart::class,
 //            \App\Filament\Widgets\AvgFeedbackPerAgentChart::class,
-            \App\Filament\Widgets\AgentsLeaderboard::class,
+//            \App\Filament\Widgets\AgentsLeaderboard::class,
             \App\Filament\Widgets\AgentPerformance::class,
 
             // ── 6) OPERATIONS / SLA ─────────────────────────────────────────

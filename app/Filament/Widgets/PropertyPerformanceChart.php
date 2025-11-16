@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets;
 
-        use App\Models\Inquiry;
+use App\Models\Inquiry;
 use App\Models\Property;
-use App\Models\PropertyTripping; // <-- adjust if your class name differs
+use App\Models\PropertyTripping;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +16,8 @@ class PropertyPerformanceChart extends ChartWidget
 
     protected static ?string $heading = 'Property Performance (30 days)';
     protected static ?int $sort = 20;
+    protected static ?string $pollingInterval = '120s';
+    protected static ?string $maxHeight = '500px';
 
     protected array|string|int $columnSpan = [
         'default' => 'full',
@@ -31,10 +33,15 @@ class PropertyPerformanceChart extends ChartWidget
 
     public function getHeading(): string
     {
-        if ($this->propertyId && ($t = Property::whereKey($this->propertyId)->value('title'))) {
-            return "Performance – {$t} (30 days)";
+        if ($this->propertyId && ($title = Property::whereKey($this->propertyId)->value('title'))) {
+            return "📊 Performance – {$title} (30 days)";
         }
-        return static::$heading ?? 'Property Performance (30 days)';
+        return static::$heading ?? '📊 Property Performance (30 days)';
+    }
+
+    public function getHeight(): string
+    {
+        return '500px';
     }
 
     protected function getData(): array
@@ -53,14 +60,11 @@ class PropertyPerformanceChart extends ChartWidget
         }
 
         // ---- Views (cumulative snapshot from properties.views) ----
-        // If focused to a property → that property's views
-        // Else → sum of all property views
         if ($this->propertyId) {
             $totalViews = (int) (Property::whereKey($this->propertyId)->value('views') ?? 0);
         } else {
             $totalViews = (int) (Property::sum('views') ?? 0);
         }
-        // Represent it as a flat cumulative line across the range
         $seriesViews = array_fill(0, count($dateKeys), $totalViews);
 
         // ---- Inquiries (daily counts) ----
@@ -93,34 +97,40 @@ class PropertyPerformanceChart extends ChartWidget
                 [
                     'label' => 'Views (cumulative)',
                     'data' => $seriesViews,
-                    'tension' => 0.25,
-                    'borderColor' => 'rgba(59, 130, 246, 1)',       // blue-500
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.12)',
+                    'tension' => 0.3,
+                    'borderColor' => '#10B981', // emerald-500
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
                     'fill' => true,
-                    'borderWidth' => 2,
+                    'borderWidth' => 3,
                     'pointRadius' => 0,
                 ],
                 [
                     'label' => 'Inquiries',
                     'data' => $seriesInquiries,
-                    'tension' => 0.25,
-                    'borderColor' => 'rgba(234, 179, 8, 1)',        // amber-500
-                    'backgroundColor' => 'rgba(234, 179, 8, 0.12)',
+                    'tension' => 0.3,
+                    'borderColor' => '#059669', // emerald-600
+                    'backgroundColor' => 'rgba(5, 150, 105, 0.1)',
                     'fill' => true,
                     'borderWidth' => 2,
-                    'pointRadius' => 2,
-                    'pointHoverRadius' => 4,
+                    'pointBackgroundColor' => '#059669',
+                    'pointBorderColor' => '#ffffff',
+                    'pointBorderWidth' => 2,
+                    'pointRadius' => 4,
+                    'pointHoverRadius' => 6,
                 ],
                 [
                     'label' => 'Trippings',
                     'data' => $seriesTrippings,
-                    'tension' => 0.25,
-                    'borderColor' => 'rgba(16, 185, 129, 1)',       // emerald-500
-                    'backgroundColor' => 'rgba(16, 185, 129, 0.12)',
+                    'tension' => 0.3,
+                    'borderColor' => '#047857', // emerald-700
+                    'backgroundColor' => 'rgba(4, 120, 87, 0.1)',
                     'fill' => true,
                     'borderWidth' => 2,
-                    'pointRadius' => 2,
-                    'pointHoverRadius' => 4,
+                    'pointBackgroundColor' => '#047857',
+                    'pointBorderColor' => '#ffffff',
+                    'pointBorderWidth' => 2,
+                    'pointRadius' => 4,
+                    'pointHoverRadius' => 6,
                 ],
             ],
         ];
@@ -135,39 +145,95 @@ class PropertyPerformanceChart extends ChartWidget
     {
         return [
             'responsive' => true,
-            'maintainAspectRatio' => false,
+            'maintainAspectRatio' => true,
             'plugins' => [
                 'legend' => [
-                    'position' => 'bottom',
+                    'position' => 'top',
                     'labels' => [
+                        'color' => '#374151',
+                        'font' => [
+                            'size' => 12,
+                            'weight' => '600',
+                        ],
+                        'padding' => 15,
                         'usePointStyle' => true,
-                        'padding' => 14,
+                        'pointStyle' => 'circle',
                     ],
                 ],
-                'tooltip' => [
-                    'mode' => 'index',
-                    'intersect' => false,
-                ],
+                // Using default tooltip - no custom configuration
             ],
             'interaction' => [
                 'mode' => 'index',
                 'intersect' => false,
             ],
             'elements' => [
-                'line' => ['borderWidth' => 2],
+                'line' => [
+                    'tension' => 0.3,
+                ],
             ],
             'scales' => [
                 'x' => [
-                    'grid' => ['display' => false],
-                    'ticks' => ['font' => ['size' => 12]],
+                    'grid' => [
+                        'display' => false,
+                    ],
+                    'ticks' => [
+                        'color' => '#374151',
+                        'font' => [
+                            'size' => 11,
+                        ],
+                        'maxTicksLimit' => 10,
+                    ],
                 ],
                 'y' => [
                     'beginAtZero' => true,
-                    'ticks' => ['precision' => 0, 'font' => ['size' => 12]],
-                    'grid' => ['color' => 'rgba(200,200,200,0.15)'],
+                    'ticks' => [
+                        'precision' => 0,
+                        'color' => '#374151',
+                        'font' => [
+                            'size' => 12,
+                        ],
+                    ],
+                    'grid' => [
+                        'color' => 'rgba(5, 150, 105, 0.1)',
+                    ],
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Count',
+                        'color' => '#374151',
+                        'font' => [
+                            'size' => 12,
+                            'weight' => '600',
+                        ],
+                    ],
+                ],
+            ],
+            'layout' => [
+                'padding' => [
+                    'top' => 20,
+                    'right' => 20,
+                    'bottom' => 20,
+                    'left' => 20,
                 ],
             ],
         ];
+    }
+
+    /** ========== CHART DESCRIPTION ========== */
+    public function getDescription(): ?string
+    {
+        $data = $this->getData();
+        $inquiries = $data['datasets'][1]['data'] ?? [];
+        $trippings = $data['datasets'][2]['data'] ?? [];
+
+        $totalInquiries = array_sum($inquiries);
+        $totalTrippings = array_sum($trippings);
+        $conversionRate = $totalInquiries > 0 ? round(($totalTrippings / $totalInquiries) * 100, 1) : 0;
+
+        if ($this->propertyId) {
+            return "Inquiries: {$totalInquiries} • Trippings: {$totalTrippings} • Conversion: {$conversionRate}%";
+        }
+
+        return "Total Inquiries: {$totalInquiries} • Total Trippings: {$totalTrippings} • Overall Conversion: {$conversionRate}%";
     }
 
     /**
@@ -196,5 +262,52 @@ class PropertyPerformanceChart extends ChartWidget
             ->groupBy('d')
             ->pluck('c', 'd')
             ->toArray();
+    }
+
+    /** ========== EMPTY STATE ========== */
+    private function getEmptyData(): array
+    {
+        $labels = [];
+        $start = Carbon::today()->subDays(29);
+
+        for ($i = 0; $i < 30; $i++) {
+            $labels[] = $start->copy()->addDays($i)->format('M d');
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Views (cumulative)',
+                    'data' => array_fill(0, 30, 0),
+                    'tension' => 0.3,
+                    'borderColor' => 'rgba(16, 185, 129, 0.3)',
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.05)',
+                    'fill' => true,
+                    'borderWidth' => 2,
+                    'pointRadius' => 0,
+                ],
+                [
+                    'label' => 'Inquiries',
+                    'data' => array_fill(0, 30, 0),
+                    'tension' => 0.3,
+                    'borderColor' => 'rgba(5, 150, 105, 0.3)',
+                    'backgroundColor' => 'rgba(5, 150, 105, 0.05)',
+                    'fill' => true,
+                    'borderWidth' => 2,
+                    'pointRadius' => 0,
+                ],
+                [
+                    'label' => 'Trippings',
+                    'data' => array_fill(0, 30, 0),
+                    'tension' => 0.3,
+                    'borderColor' => 'rgba(4, 120, 87, 0.3)',
+                    'backgroundColor' => 'rgba(4, 120, 87, 0.05)',
+                    'fill' => true,
+                    'borderWidth' => 2,
+                    'pointRadius' => 0,
+                ],
+            ],
+        ];
     }
 }

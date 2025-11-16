@@ -9,17 +9,24 @@ use Carbon\CarbonImmutable;
 
 class AvgLeadToDealTimeChart extends ChartWidget
 {
-    protected static ?string $heading = 'Avg Lead → Deal Time (90d)';
+    protected static ?string $heading = '⏱️ Avg Lead → Deal Time (90 Days)';
     protected static ?int $sort = -28;
+    protected static ?string $pollingInterval = '120s';
+    protected static ?string $maxHeight = '350px';
 
     protected function getType(): string
     {
-        return 'doughnut'; // still a doughnut, styled as a gauge
+        return 'doughnut';
+    }
+
+    public function getHeight(): string
+    {
+        return '350px';
     }
 
     public function getColumnSpan(): int|string|array
     {
-        return ['default' => 1, 'md' => 1, 'xl' => 2];
+        return ['default' => 1, 'md' => 1, 'xl' => 2, '2xl' => 2];
     }
 
     protected float $avgDays = 0;
@@ -27,10 +34,7 @@ class AvgLeadToDealTimeChart extends ChartWidget
     protected function getData(): array
     {
         if (!Schema::hasTable('deals')) {
-            return [
-                'labels'   => ['Avg Days', 'Remaining to Target'],
-                'datasets' => [[ 'data' => [0, 1] ]],
-            ];
+            return $this->getEmptyData();
         }
 
         $tz   = 'Asia/Manila';
@@ -79,17 +83,22 @@ class AvgLeadToDealTimeChart extends ChartWidget
         $rem = max($targetDays - $val, 0);
 
         $ratio = $targetDays > 0 ? $this->avgDays / $targetDays : 0;
-        $valueColor =
-            $ratio <= 0.7 ? '#16a34a' :        // green
-                ($ratio <= 1.0 ? '#f59e0b' : '#dc2626'); // orange/red
+
+        // Green theme colors
+        $valueColor = match(true) {
+            $ratio <= 0.5 => '#10B981',  // emerald-500 - excellent
+            $ratio <= 0.7 => '#059669',  // emerald-600 - good
+            $ratio <= 0.9 => '#F59E0B',  // amber-500 - warning
+            default => '#DC2626'         // red-600 - critical
+        };
 
         return [
-            'labels'   => ['Avg Days', 'Remaining to Target'],
+            'labels'   => ['Current Avg', 'Remaining to Target'],
             'datasets' => [[
                 'data'            => [$val, $rem],
-                'backgroundColor' => [$valueColor, '#e5e7eb'],
+                'backgroundColor' => [$valueColor, '#E5E7EB'],
                 'borderWidth'     => 0,
-                'borderRadius'    => [8, 0],
+                'borderRadius'    => 8,
             ]],
         ];
     }
@@ -98,44 +107,72 @@ class AvgLeadToDealTimeChart extends ChartWidget
     {
         return [
             'responsive' => true,
-            'maintainAspectRatio' => false,
-            'cutout' => '70%',
-            'rotation' => -90 * (M_PI / 180),     // start left
-            'circumference' => 180 * (M_PI / 180), // 180° arc
+            'maintainAspectRatio' => true,
+            'cutout' => '75%',
+            'rotation' => -90 * (M_PI / 180),
+            'circumference' => 180 * (M_PI / 180),
             'plugins' => [
-                // --- Hide legend ---
-                'legend' => ['display' => false],
-
-                // --- Tooltip with labels ---
-                'tooltip' => [
-                    'enabled' => true,
-                    'callbacks' => [
-                        // Show "Avg Days: 12 days"
-                        'label' => fn($ctx) => match ($ctx->dataIndex) {
-                            0 => 'Avg Days: ' . $ctx->parsed . ' days',
-                            default => 'Remaining: ' . $ctx->parsed . ' days',
-                        },
-                    ],
+                'legend' => [
+                    'display' => false,
                 ],
-
-                // --- Title in the center of gauge ---
-                'title' => [
-                    'display' => true,
-                    'text' => sprintf('%.1f days', $this->avgDays),
-                    'align' => 'center',
-                    'position' => 'bottom',
-                    'font' => [
-                        'size' => 16,
-                        'weight' => 'bold',
-                    ],
-                    'color' => '#374151',
-                    'padding' => ['top' => 6],
-                ],
+                // Using default tooltip - no custom configuration
             ],
             'layout' => [
-                'padding' => ['top' => 8, 'bottom' => 0],
+                'padding' => [
+                    'top' => 40,
+                    'right' => 20,
+                    'bottom' => 60,
+                    'left' => 20,
+                ],
             ],
         ];
     }
-}
 
+    /** ========== CHART DESCRIPTION ========== */
+    public function getDescription(): ?string
+    {
+        if (!Schema::hasTable('deals')) {
+            return 'No lead-to-deal data available';
+        }
+
+        $targetDays = (int) config('metrics.avg_lead_to_deal_target_days', 30);
+        $performance = $this->getPerformanceLevel();
+
+        if ($this->avgDays === 0) {
+            return 'No completed deals in the last 90 days';
+        }
+
+        $daysFromTarget = $this->avgDays - $targetDays;
+        $comparison = $daysFromTarget > 0 ?
+            "{$daysFromTarget} days above target" :
+            abs($daysFromTarget) . " days below target";
+
+        return "{$performance} • Target: {$targetDays} days • {$comparison}";
+    }
+
+    private function getPerformanceLevel(): string
+    {
+        $targetDays = (int) config('metrics.avg_lead_to_deal_target_days', 30);
+        $ratio = $targetDays > 0 ? $this->avgDays / $targetDays : 0;
+
+        return match(true) {
+            $ratio <= 0.5 => '🚀 Excellent',
+            $ratio <= 0.7 => '✅ Good',
+            $ratio <= 0.9 => '⚠️  Needs Improvement',
+            default => '❌ Critical Attention Needed'
+        };
+    }
+
+    private function getEmptyData(): array
+    {
+        return [
+            'labels'   => ['Current Avg', 'Remaining to Target'],
+            'datasets' => [[
+                'data'            => [0, 30],
+                'backgroundColor' => ['#9CA3AF', '#E5E7EB'],
+                'borderWidth'     => 0,
+                'borderRadius'    => 8,
+            ]],
+        ];
+    }
+}
