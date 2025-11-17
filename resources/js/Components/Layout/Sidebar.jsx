@@ -423,24 +423,24 @@ const Sidebar = ({
     const markAllOfPathAsRead = useCallback(async (path) => {
         if (!unreads.length) return;
 
-        const ids = [];
-        for (const n of unreads) {
-            const p = categorizeNotification ? categorizeNotification(n) : null;
-            if (p === path) ids.push(n.id);
-        }
-        if (!ids.length) return;
-
-        try {
-            await router.post(
-                "/notifications/read-batch",
-                { ids },
-                { preserveScroll: true, preserveState: true }
-            );
-        } catch (e) {
-            ids.forEach((id) => {
-                router.post(`/notifications/${id}/read`, {}, { preserveScroll: true, preserveState: true });
-            });
-        }
+        // const ids = [];
+        // for (const n of unreads) {
+        //     const p = categorizeNotification ? categorizeNotification(n) : null;
+        //     if (p === path) ids.push(n.id);
+        // }
+        // if (!ids.length) return;
+        //
+        // try {
+        //     await router.post(
+        //         "/notifications/read-batch",
+        //         { ids },
+        //         { preserveScroll: true, preserveState: true }
+        //     );
+        // } catch (e) {
+        //     ids.forEach((id) => {
+        //         router.post(`/notifications/${id}/read`, {}, { preserveScroll: true, preserveState: true });
+        //     });
+        // }
     }, [unreads, categorizeNotification]);
 
     const getCount = useCallback(

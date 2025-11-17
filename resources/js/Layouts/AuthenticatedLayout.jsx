@@ -514,7 +514,13 @@
 
         const toggleSidebar = useCallback(() => {
             if (mode === "mobile") {
-                setIsMobileSidebarOpen(s => !s);
+                setIsMobileSidebarOpen(prev => {
+                    const next = !prev;
+                    if (next) {
+                        setIsSidebarOpen(true);
+                    }
+                    return next;
+                });
             } else {
                 setIsSidebarOpen(s => !s);
             }
@@ -627,7 +633,7 @@
 
 
         return (
-            <div className="h-screen bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-800 flex overflow-hidden">
+            <div className="h-screen bg-white dark:from-neutral-900 dark:to-neutral-800 flex overflow-hidden">
                 {/* Desktop Sidebar */}
                 {mode !== "mobile" && (
                     <div className="hidden md:block">
@@ -659,12 +665,12 @@
                                 animate={{ x: 0 }}
                                 exit={{ x: "-100%" }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="fixed top-0 left-0 z-50 w-80 h-full bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-700 shadow-2xl"
+                                className="fixed top-0 left-0 z-50 w-80 h-full  dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-2xl"
                             >
                                 <Sidebar
-                                    isOpen={isSidebarOpen}
-                                    setIsOpen={setIsSidebarOpen}
-                                    config={sidebarConfig}  // ← Use dynamic config
+                                    isOpen={true}                 // ✅ always expanded on mobile
+                                    setIsOpen={() => {}}          // no-op or keep if you want
+                                    config={sidebarConfig}
                                     counts={{ unread: unreadNotifications.length }}
                                     unreads={unreadNotifications}
                                     user={auth.user}
@@ -673,6 +679,7 @@
                             </motion.div>
                         </>
                     )}
+
                 </AnimatePresence>
 
                 {/* Main Content Area */}
@@ -719,19 +726,6 @@
 
                             {/* Right Section */}
                             <div className="flex items-center gap-3">
-                                {/* Theme Toggle */}
-                                <button
-                                    onClick={toggleTheme}
-                                    className="p-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200"
-                                    aria-label="Toggle theme"
-                                >
-                                    {theme === "dark" ? (
-                                        <Sun className="w-5 h-5 text-amber-400" />
-                                    ) : (
-                                        <Moon className="w-5 h-5 text-neutral-600" />
-                                    )}
-                                </button>
-
                                 {/* Notifications */}
                                 <button
                                     onClick={() => setIsNotificationsOpen(true)}
@@ -769,7 +763,7 @@
                                                     {auth?.user?.name}
                                                 </p>
                                                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                                                    Buyer Account
+                                                    {auth?.user?.role} Account
                                                 </p>
                                             </div>
                                         </div>

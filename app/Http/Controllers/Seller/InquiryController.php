@@ -24,7 +24,7 @@ class InquiryController extends Controller
         $rejectedCount = Inquiry::where('seller_id', $sellerId)->where('status', 'Rejected')->count();
         $cancelledCount = Inquiry::where('seller_id', $sellerId)->where('status', 'Cancelled')->count();
 
-        $inquiries = Inquiry::with('property', 'agent', 'messages')
+        $inquiries = Inquiry::with('property', 'agent', 'messages', 'agent.feedbackReceived',)
             ->where('seller_id', $sellerId)
             ->when($request->search, function ($q) use ($request) {
                 $q->whereHas('agent', function ($q2) use ($request) {

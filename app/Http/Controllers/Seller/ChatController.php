@@ -25,5 +25,6 @@ class ChatController extends Controller
             'channels' => [],
             'channel' => $channel
         ]);
+
     }
 }

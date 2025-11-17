@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Models\Deal;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,12 +13,14 @@ class TransactionController extends Controller
     public function index(){
 
 
-        $transactions = Deal::with(['property_listing.property', 'property_listing.agent', 'feedback'])
-            ->whereHas('property_listing.property', function ($query) {
-                $query->where('seller_id', auth()->id());
+        $transactions = Transaction::query()
+            ->with(['buyer:id,name,email,contact_number', 'property:id,title,address,price', 'deal:id,status,amount', 'agent'])
+            ->whereHas('property.seller', function ($query) {
+                $query->where('id', auth()->id());
             })
-            ->where('status', 'Sold')
-            ->get();
+            ->latest()
+            ->paginate(15)
+        ;
 
 
         return Inertia::render('Seller/Transaction/Index', [
