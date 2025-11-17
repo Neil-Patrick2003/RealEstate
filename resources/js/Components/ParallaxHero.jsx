@@ -18,19 +18,19 @@ function ParallaxHero() {
             {/* Animated Background Layers */}
             <motion.div
                 className="absolute inset-0 opacity-20"
-                style={{
-                    y: y1,
-                    backgroundImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1920')",
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                }}
+                // style={{
+                //     y: y1,
+                //     backgroundImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1920')",
+                //     backgroundSize: 'cover',
+                //     backgroundPosition: 'center',
+                // }}
             />
             <motion.div
                 className="absolute inset-0 opacity-30"
                 style={{
                     y: y2,
                     x: mousePosition.x * 20,
-                    backgroundImage: "url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1920')",
+                    backgroundImage: "url('https://as2.ftcdn.net/jpg/05/38/94/65/1000_F_538946570_HNfmPaLd8LZxN6kB6tx5M3dzyL3MIsgZ.jpg')",
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                 }}

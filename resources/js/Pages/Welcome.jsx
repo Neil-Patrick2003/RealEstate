@@ -13,12 +13,14 @@ import Chatbot from "@/Components/Chatbot/Chatbot.jsx";
 
 
 
-export default function Welcome() {
+export default function Welcome({featured}) {
+
     return (
+
         <div className="min-h-screen">
             <Navbar />
             <ParallaxHero />
-            <FeaturedProperties />
+            <FeaturedProperties  properties={featured}/>
             <ParallaxFeatures />
             <AboutUs />
             <OurServices />

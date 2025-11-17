@@ -2,43 +2,11 @@ import React from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { Bed, Bath, Maximize, MapPin, Heart } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 
-function FeaturedProperties() {
+function FeaturedProperties({properties = []}) {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, margin: "-100px" });
-
-    const properties = [
-        {
-            id: 1,
-            image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
-            price: "$450,000",
-            title: "Modern Family Home",
-            location: "Downtown District",
-            beds: 4,
-            baths: 3,
-            sqft: "2,400",
-        },
-        {
-            id: 2,
-            image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800",
-            price: "$320,000",
-            title: "Luxury Apartment",
-            location: "Riverside View",
-            beds: 2,
-            baths: 2,
-            sqft: "1,200",
-        },
-        {
-            id: 3,
-            image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
-            price: "$680,000",
-            title: "Contemporary Villa",
-            location: "Sunset Hills",
-            beds: 5,
-            baths: 4,
-            sqft: "3,500",
-        },
-    ];
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -61,6 +29,36 @@ function FeaturedProperties() {
                 ease: "easeOut",
             },
         },
+    };
+
+    const formatPrice = (value) => {
+        if (value == null || value === undefined) return "₱0.00";
+
+        // Convert to number
+        const price = Number(value);
+
+        // If NaN, return 0
+        if (isNaN(price)) return "₱0.00";
+
+        // 1M or more → short format
+        if (price >= 1_000_000) {
+            const millions = price / 1_000_000;
+            const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1);
+            return `₱${formatted}M`;
+        }
+
+        // 100K or more → format with K
+        if (price >= 100_000) {
+            const thousands = price / 1_000;
+            const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1);
+            return `₱${formatted}K`;
+        }
+
+        // Under 100K → normal comma formatting
+        return `₱${price.toLocaleString("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        })}`;
     };
 
     return (
@@ -87,77 +85,123 @@ function FeaturedProperties() {
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                 >
                     {properties.map((property, index) => (
-                        <motion.div
+                        <Link
                             key={property.id}
-                            variants={itemVariants}
-                            whileHover={{ y: -10, scale: 1.02 }}
-                            className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
-                            style={{
-                                transformStyle: "preserve-3d",
-                                perspective: "1000px",
-                            }}
+                            href={`/properties/${property.id}`}
+                            className="no-underline block h-full"
                         >
-                            {/* Image Container */}
-                            <div className="relative h-64 overflow-hidden">
-                                <motion.img
-                                    src={property.image}
-                                    alt={property.title}
-                                    className="w-full h-full object-cover"
-                                    whileHover={{ scale: 1.1 }}
-                                    transition={{ duration: 0.6 }}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                                {/* Favorite Button */}
-                                <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-secondary-500 hover:text-white transition-colors"
-                                >
-                                    <Heart className="w-5 h-5" />
-                                </motion.button>
+                            <motion.div
+                                variants={itemVariants}
+                                whileHover={{ y: -8, scale: 1.02 }}
+                                className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 h-full flex flex-col"
+                                style={{
+                                    transformStyle: "preserve-3d",
+                                    perspective: "1000px",
+                                }}
+                            >
+                                {/* Image Container - Fixed Height */}
+                                <div className="relative h-72 overflow-hidden flex-shrink-0">
+                                    <motion.img
+                                        src={property.image_url ? `/storage/${property.image_url}` : "/placeholder-property.jpg"}
+                                        alt={property.title}
+                                        className="w-full h-full object-cover"
+                                        whileHover={{ scale: 1.1 }}
+                                        transition={{ duration: 0.6 }}
+                                        onError={(e) => {
+                                            e.target.src = "/placeholder-property.jpg";
+                                        }}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-                                {/* Price Tag */}
-                                <div className="absolute bottom-4 left-4">
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        className="bg-primary-500 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg"
+                                    {/* Favorite Button */}
+                                    <motion.button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            // Add favorite functionality here
+                                        }}
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors z-10"
                                     >
-                                        {property.price}
-                                    </motion.div>
-                                </div>
-                            </div>
+                                        <Heart className="w-5 h-5" />
+                                    </motion.button>
 
-                            {/* Content */}
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
-                                    {property.title}
-                                </h3>
-                                <div className="flex items-center text-neutral-600 mb-4">
-                                    <MapPin className="w-4 h-4 mr-1" />
-                                    <span className="text-sm">{property.location}</span>
+                                    {/* Price Tag */}
+                                    <div className="absolute bottom-4 left-4">
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: index * 0.1 }}
+                                            className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg"
+                                        >
+                                            {formatPrice(property.price)}
+                                        </motion.div>
+                                    </div>
                                 </div>
 
-                                {/* Property Details */}
-                                <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
-                                    <div className="flex items-center gap-1 text-neutral-600">
-                                        <Bed className="w-4 h-4" />
-                                        <span className="text-sm font-medium">{property.beds}</span>
+                                {/* Content - Flexible Height */}
+                                <div className="p-6 flex-1 flex flex-col">
+                                    {/* Title with consistent 2-line height */}
+                                    <h3 className="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary transition-colors line-clamp-2 leading-tight min-h-[3.5rem]">
+                                        {property.title || "Untitled Property"}
+                                    </h3>
+
+                                    {/* Address */}
+                                    <div className="flex items-start text-neutral-600 mb-4 flex-shrink-0">
+                                        <MapPin className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+                                        <span className="text-sm line-clamp-2 leading-relaxed flex-1">
+                                            {property.address || "No address provided"}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center gap-1 text-neutral-600">
-                                        <Bath className="w-4 h-4" />
-                                        <span className="text-sm font-medium">{property.baths}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1 text-neutral-600">
-                                        <Maximize className="w-4 h-4" />
-                                        <span className="text-sm font-medium">{property.sqft} sqft</span>
+
+                                    {/* Property Details - Always at bottom */}
+                                    <div className="flex items-center justify-between pt-4 border-t border-neutral-100 mt-auto flex-shrink-0">
+                                        <div className="flex items-center gap-1 text-neutral-600" title="Bedrooms">
+                                            <Bed className="w-4 h-4" />
+                                            <span className="text-sm font-medium">
+                                                {property.bedrooms || 0}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-neutral-600" title="Bathrooms">
+                                            <Bath className="w-4 h-4" />
+                                            <span className="text-sm font-medium">
+                                                {property.bathrooms || 0}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-neutral-600" title="Area">
+                                            <Maximize className="w-4 h-4" />
+                                            <span className="text-sm font-medium">
+                                                {property?.lot_area || property?.floor_area || 0}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </motion.div>
+                            </motion.div>
+                        </Link>
                     ))}
                 </motion.div>
+
+                {/* Empty State */}
+                {properties.length === 0 && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-16"
+                    >
+                        <div className="max-w-md mx-auto">
+                            <div className="w-24 h-24 bg-neutral-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Home className="w-10 h-10 text-neutral-400" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-neutral-600 mb-2">
+                                No Featured Properties
+                            </h3>
+                            <p className="text-neutral-500">
+                                Check back later for new featured listings
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
             </div>
         </section>
     );

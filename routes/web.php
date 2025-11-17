@@ -23,12 +23,14 @@ use Inertia\Inertia;
 
 Route::get('/', function (Request $request) {
 
-    $featured = \App\Models\Property::with('features', 'images', 'property_listing.agents', 'property_listing.broker')
+    $featured = \App\Models\Property::with('project')
     ->  where('status', 'Published')
         ->orderBy('views', 'desc')
         ->latest()
-        ->take(4)
+        ->take(3)
         ->get();
+
+//    dd($featured->toArray());
 
     $properties = \App\Models\Property::where('status', 'Published')
         ->when($request->search, function ($q) use ($request) {
@@ -234,7 +236,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-Route::middleware(['auth', 'verified', 'role:Buyer' ])->group(function () {
+Route::middleware(['auth', 'role:Buyer' ])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Buyer\BuyerController::class, 'index'])->name('dashboard');
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store'])->name('inquiry.store');
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);

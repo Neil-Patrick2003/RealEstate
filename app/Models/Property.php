@@ -113,6 +113,11 @@ class Property extends Model
         return $this->listings->flatMap->agents->unique('id')->values();
     }
 
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
 
 
 
