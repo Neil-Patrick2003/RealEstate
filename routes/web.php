@@ -15,10 +15,10 @@ use App\Http\Controllers\Seller\PropertyImageController;
 use App\Http\Controllers\Seller\TransactionController;
 use App\Http\Controllers\Seller\TrippingController;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use function Pest\Laravel\get;
 
 
 Route::get('/', function (Request $request) {
@@ -234,7 +234,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-Route::middleware(['auth','role:Buyer' ])->group(function () {
+Route::middleware(['auth', 'verified', 'role:Buyer' ])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Buyer\BuyerController::class, 'index'])->name('dashboard');
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store'])->name('inquiry.store');
     Route::get('/inquiries', [\App\Http\Controllers\Buyer\InquiryController::class, 'index']);
@@ -373,5 +373,19 @@ Route::middleware(['auth', 'web'])->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::post('/notifications/mark-page-read', [NotificationController::class, 'markPageNotificationsAsRead']);
 });
+
+Route::get('/verify-email', function () {
+    return Inertia::render('Auth/VerifyEmail'); // Inertia page
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/verify-email/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('/dashboard');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('status', 'verification-link-sent');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 require __DIR__.'/auth.php';
