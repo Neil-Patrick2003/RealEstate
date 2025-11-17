@@ -18,6 +18,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Vite;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -30,9 +31,8 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login() // keep Filament's login route enabled
             ->brandName('RealSync')
-            ->brandLogo(asset('framer_logo.png'))
-            ->favicon(asset('framer_logo.png'))
-            ->favicon(asset('framer_logo.png'))
+            ->brandLogo(Vite::asset('resources/assets/framer_logo.png'))
+            ->favicon(Vite::asset('resources/assets/framer_logo.png'))
 
 
             ->colors([

@@ -119,13 +119,12 @@ export const agentSidebarConfig = {
     logo: "/assets/logo.png",
     mainMenus: [
         { name: "Dashboard", Icon: Home, path: "/agents/dashboard", description: "Agent performance overview" },
-        { name: "My Leads", Icon: ListChecks, path: "/agents/leads", description: "Assigned buyer leads" },
         { name: "Properties", Icon: Building, path: "/agents/properties", description: "Listed & assigned properties" },
         { name: "Inquiries", Icon: Mail, path: "/agents/inquiries", description: "Client inquiries" },
         { name: "Message", Icon: MessageSquare, path: "/agents/messages", description: "All messages for your Inquiries" },
         { name: "Trippings", Icon: Calendar, path: "/agents/trippings", description: "Property tours & schedules" },
-        { name: "Deals", Icon: Handshake, path: "/agents/deals", description: "Negotiations & deal tracking" },
-        { name: "Transactions", Icon: BarChart3, path: "/agents/transactions", description: "Sales & payment overview" },
+        { name: "Deals", Icon: Handshake, path: "/agents/deal", description: "Negotiations & deal tracking" },
+        { name: "Transactions", Icon: BarChart3, path: "/agents/transaction", description: "Sales & payment overview" },
     ],
     quickActions: [
         { label: "Add Lead", Icon: Plus, onClick: () => router.get('/agents/leads/create') }

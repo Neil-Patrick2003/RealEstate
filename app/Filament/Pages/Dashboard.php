@@ -36,7 +36,8 @@ class Dashboard extends BaseDashboard
             \App\Filament\Widgets\TrippingCompletionRateAgent::class,
             \App\Filament\Widgets\PropertiesNewVsPublishedChart::class,
             \App\Filament\Widgets\PropertiesByStatusChart::class,
-            \App\Filament\Widgets\NewListingsTable::class,
+            \App\Filament\Widgets\NeedsAttention::class,
+
 
 
             // --- Operational widgets ---
@@ -45,12 +46,11 @@ class Dashboard extends BaseDashboard
             \App\Filament\Widgets\RecentFeedbackTable::class,
 
 
-            // --- Feeds & alerts ---
-            \App\Filament\Widgets\SmartInsightsFeed::class,
-            \App\Filament\Widgets\SystemAlerts::class,
+//            // --- Feeds & alerts ---
+//            \App\Filament\Widgets\SmartInsightsFeed::class,
+//            \App\Filament\Widgets\SystemAlerts::class,
             \App\Filament\Widgets\RecentInquiriesTable::class,
             \App\Filament\Widgets\AgentsLeaderboard::class,
-            \App\Filament\Widgets\NeedsAttention::class,
 //            \App\Filament\Widgets\TopAgentThisWeek::class,
 //            \App\Filament\Widgets\HotLeadSurge::class,
 //            \App\Filament\Widgets\CancelledTrippingsAlert::class,

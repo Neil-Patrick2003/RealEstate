@@ -10,7 +10,7 @@ class SmsClient
     public function send(string $to, string $message): void
     {
         $to = $this->formatPHMobile($to);
-        $provider = config('sms.provider', 'infotxt');
+        $provider = config('sms.provider', 'semaphore');
 
         match ($provider) {
             'infotxt'   => $this->sendViaInfoTxt($to, $message),
@@ -58,6 +58,7 @@ class SmsClient
 
         $res = $this->http()->asForm()->post(config('sms.semaphore.url'), $payload);
 
+
         if (!$res->ok()) {
             throw new RuntimeException("Semaphore HTTP error: ".$res->body());
         }
@@ -69,6 +70,8 @@ class SmsClient
         if (!is_array($json)) {
             throw new RuntimeException("Semaphore unexpected response: ".json_encode($json));
         }
+
+
     }
 
     /* ========= Phone Sanitizer (09 format) ========= */

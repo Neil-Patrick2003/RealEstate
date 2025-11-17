@@ -23,6 +23,11 @@ export default {
             extend: {
                 animation: {
                     'spin-slow': 'spin 4s linear infinite',
+                    'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    'float': 'float 6s ease-in-out infinite',
+                    'float-delayed': 'float 7s ease-in-out 1s infinite',
+                    'float-slow': 'float 8s ease-in-out 2s infinite',
+                    'float-delayed-slow': 'float 9s ease-in-out 3s infinite',
                 },
             },
             animation: {
@@ -110,6 +115,12 @@ export default {
                 sidebar:     '#F5F7F4',
                 topbar:      '#5C7934',
             },
+            keyframes: {
+                float: {
+                    '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+                    '50%': { transform: 'translateY(-20px) rotate(180deg)' },
+                }
+            }
         },
 
     },

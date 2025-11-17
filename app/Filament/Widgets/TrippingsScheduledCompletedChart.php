@@ -9,43 +9,51 @@ use Carbon\CarbonImmutable;
 
 class TrippingsScheduledCompletedChart extends ChartWidget
 {
-    protected static ?string $heading = 'Scheduled vs Completed (Last 8 Weeks)';
+    protected static ?string $heading = 'Scheduled vs Completed Trips (Last 8 Weeks)';
     protected static ?int $sort = -30;
+    protected static ?string $pollingInterval = '120s';
+    protected static ?string $maxHeight = '500px';
 
-    protected function getType(): string { return 'bar'; }
+    protected function getType(): string
+    {
+        return 'bar';
+    }
+
+    public function getHeight(): string
+    {
+        return '500px';
+    }
 
     public function getColumnSpan(): int|string|array
     {
-        return ['default' => 1, 'md' => 2, 'xl' => 2];
+        return ['default' => 1, 'md' => 2, 'xl' => 2, '2xl' => 2];
     }
-
 
     protected function getData(): array
     {
         if (!Schema::hasTable('property_trippings')) {
-            return ['labels' => [], 'datasets' => [['data' => []]]];
+            return $this->getEmptyData();
         }
 
         $tz    = 'Asia/Manila';
-        $end   = CarbonImmutable::now($tz)->endOfWeek();          // inclusive end
-        $start = $end->subWeeks(7)->startOfWeek();                 // cover 8 weeks
+        $end   = CarbonImmutable::now($tz)->endOfWeek();
+        $start = $end->subWeeks(7)->startOfWeek();
 
         // Choose the most appropriate date column
         $candidateDateCols = ['scheduled_at', 'tripping_at', 'created_at', 'updated_at'];
         $dateCol = collect($candidateDateCols)->first(fn ($c) => Schema::hasColumn('property_trippings', $c));
         if (!$dateCol) {
-            return ['labels' => [], 'datasets' => [['data' => []]]];
+            return $this->getEmptyData();
         }
 
         // Pull counts per ISO week + normalized status (lowercased)
-        // YEARWEEK(...,3) matches ISO year-week (Mon-based); aligns with PHP oW.
         $rows = DB::table('property_trippings')
             ->selectRaw("YEARWEEK($dateCol, 3) as wk, LOWER(COALESCE(status,'')) as s, COUNT(*) as c")
             ->whereBetween($dateCol, [$start, $end])
             ->groupBy('wk', 's')
             ->get();
 
-        // Map a variety of status aliases into 3 buckets
+        // Map status aliases into 3 buckets
         $aliasToBucket = [
             'accepted'   => 'scheduled',
             'scheduled'  => 'scheduled',
@@ -83,10 +91,8 @@ class TrippingsScheduledCompletedChart extends ChartWidget
 
         $cursor = $start;
         while ($cursor->lte($end)) {
-            // ISO year+week like 202544 (matches YEARWEEK(...,3))
             $wkIso = (int) $cursor->format('oW');
 
-            // Pretty label for week range (Mon–Sun)
             $weekStart = $cursor->startOfWeek();
             $weekEnd   = $cursor->endOfWeek();
             $labels[]  = $weekStart->format('M j') . '–' . $weekEnd->format('M j');
@@ -105,28 +111,34 @@ class TrippingsScheduledCompletedChart extends ChartWidget
                     'label' => 'Scheduled',
                     'data'  => $scheduled,
                     'stack' => 'trips',
-                    'backgroundColor' => '#60a5fa', // blue-400
-                    'borderWidth' => 0,
-                    'barPercentage' => 0.8,
-                    'categoryPercentage' => 0.7,
+                    'backgroundColor' => '#10B981',
+                    'borderColor' => '#059669',
+                    'borderWidth' => 1,
+                    'borderRadius' => 6,
+                    'barPercentage' => 0.7,
+                    'categoryPercentage' => 0.8,
                 ],
                 [
                     'label' => 'Completed',
                     'data'  => $completed,
                     'stack' => 'trips',
-                    'backgroundColor' => '#22c55e', // green-500
-                    'borderWidth' => 0,
-                    'barPercentage' => 0.8,
-                    'categoryPercentage' => 0.7,
+                    'backgroundColor' => '#065F46',
+                    'borderColor' => '#064E3B',
+                    'borderWidth' => 1,
+                    'borderRadius' => 6,
+                    'barPercentage' => 0.7,
+                    'categoryPercentage' => 0.8,
                 ],
                 [
                     'label' => 'Cancelled',
                     'data'  => $cancelled,
                     'stack' => 'trips',
-                    'backgroundColor' => '#f97316', // orange-500
-                    'borderWidth' => 0,
-                    'barPercentage' => 0.8,
-                    'categoryPercentage' => 0.7,
+                    'backgroundColor' => '#DC2626',
+                    'borderColor' => '#B91C1C',
+                    'borderWidth' => 1,
+                    'borderRadius' => 6,
+                    'barPercentage' => 0.7,
+                    'categoryPercentage' => 0.8,
                 ],
             ],
         ];
@@ -136,35 +148,135 @@ class TrippingsScheduledCompletedChart extends ChartWidget
     {
         return [
             'responsive' => true,
-            'maintainAspectRatio' => false, // honor getMaxHeight()
+            'maintainAspectRatio' => true,
             'plugins' => [
                 'legend' => [
-                    'position' => 'bottom',
-                ],
-                // Clear, labeled hover tooltips
-                'tooltip' => [
-                    'enabled' => true,
-                    'mode' => 'index',
-                    'intersect' => false,
-                    'callbacks' => [
-                        // e.g., "Completed: 12 trips"
-                        'label' => fn ($ctx) =>
-                            ($ctx->dataset->label ?? 'Value') . ': ' . (int) $ctx->raw . ' trips',
-                        // Optional: show total on footer
-                        'footer' => fn ($ctxs) => 'Total: ' . array_sum(array_map(fn($c) => (int) $c->raw, $ctxs)) . ' trips',
+                    'position' => 'top',
+                    'labels' => [
+                        'color' => '#374151',
+                        'font' => [
+                            'size' => 12,
+                            'weight' => '600',
+                        ],
+                        'padding' => 15,
+                        'usePointStyle' => true,
+                        'pointStyle' => 'rect',
                     ],
                 ],
+                // Using default tooltip - no custom configuration
             ],
             'scales' => [
                 'x' => [
                     'stacked' => true,
-                    'ticks' => ['maxRotation' => 0, 'minRotation' => 0],
+                    'grid' => [
+                        'display' => false,
+                    ],
+                    'ticks' => [
+                        'color' => '#374151',
+                        'maxRotation' => 0,
+                        'minRotation' => 0,
+                        'font' => [
+                            'size' => 11,
+                        ],
+                    ],
                 ],
                 'y' => [
                     'stacked' => true,
                     'beginAtZero' => true,
-                    'ticks' => ['precision' => 0],
-                    'title' => ['display' => true, 'text' => 'Trips'],
+                    'ticks' => [
+                        'precision' => 0,
+                        'color' => '#374151',
+                        'font' => [
+                            'size' => 12,
+                        ],
+                    ],
+                    'grid' => [
+                        'color' => 'rgba(5, 150, 105, 0.1)',
+                    ],
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Number of Trips',
+                        'color' => '#374151',
+                        'font' => [
+                            'size' => 12,
+                            'weight' => '600',
+                        ],
+                    ],
+                ],
+            ],
+            'layout' => [
+                'padding' => [
+                    'top' => 20,
+                    'right' => 20,
+                    'bottom' => 20,
+                    'left' => 20,
+                ],
+            ],
+        ];
+    }
+
+    /** ========== CHART DESCRIPTION ========== */
+    public function getDescription(): ?string
+    {
+        if (!Schema::hasTable('property_trippings')) {
+            return 'No tripping data available';
+        }
+
+        $data = $this->getData();
+        $scheduled = $data['datasets'][0]['data'] ?? [];
+        $completed = $data['datasets'][1]['data'] ?? [];
+
+        if (empty($scheduled) || array_sum($scheduled) === 0) {
+            return 'No trip data for the last 8 weeks';
+        }
+
+        $totalScheduled = array_sum($scheduled);
+        $totalCompleted = array_sum($completed);
+        $completionRate = $totalScheduled > 0 ? round(($totalCompleted / $totalScheduled) * 100, 1) : 0;
+
+        return "Completion Rate: {$completionRate}% • Scheduled: {$totalScheduled} • Completed: {$totalCompleted}";
+    }
+
+    private function getEmptyData(): array
+    {
+        $labels = [];
+        $cursor = CarbonImmutable::now('Asia/Manila')->subWeeks(7)->startOfWeek();
+
+        for ($i = 0; $i < 8; $i++) {
+            $weekStart = $cursor->copy()->addWeeks($i)->startOfWeek();
+            $weekEnd = $cursor->copy()->addWeeks($i)->endOfWeek();
+            $labels[] = $weekStart->format('M j') . '–' . $weekEnd->format('M j');
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Scheduled',
+                    'data'  => array_fill(0, 8, 0),
+                    'stack' => 'trips',
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.3)',
+                    'borderColor' => '#10B981',
+                    'borderWidth' => 1,
+                    'borderRadius' => 6,
+                ],
+                [
+                    'label' => 'Completed',
+                    'data'  => array_fill(0, 8, 0),
+                    'stack' => 'trips',
+                    'backgroundColor' => 'rgba(6, 95, 70, 0.3)',
+                    'borderColor' => '#065F46',
+                    'borderWidth' => 1,
+                    'borderRadius' => 6,
+                ],
+                [
+                    'label' => 'Cancelled',
+                    'data'  => array_fill(0, 8, 0),
+                    'stack' => 'trips',
+                    'backgroundColor' => 'rgba(220, 38, 38, 0.3)',
+                    'borderColor' => '#DC2626',
+                    'borderWidth' => 1,
+                    'borderRadius' => 6,
                 ],
             ],
         ];

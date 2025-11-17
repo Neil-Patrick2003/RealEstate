@@ -6,12 +6,13 @@ use App\Models\PropertyTripping;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Filament\Widgets\Widget;
+use Illuminate\Support\Facades\Schema;
 
 class TrippingCalendarWeek extends Widget
 {
     protected static ?string $heading = 'Tripping Calendar (Week)';
     protected static ?int $sort = -12;
-    protected static ?string $pollingInterval = '300s'; // 5 minutes
+    protected static ?string $pollingInterval = '300s';
     protected static string $view = 'filament.widgets.tripping-calendar-week';
 
     public function getColumnSpan(): int|string|array
@@ -19,88 +20,101 @@ class TrippingCalendarWeek extends Widget
         return ['default' => 'full', 'md' => 'full', 'xl' => 6];
     }
 
-
-    /** Livewire filter state */
     public string $agentId = 'all';
 
-    /** Setter triggered from Blade filter */
     public function setAgentId(string $id): void
     {
-        $this->agentId = $id;
+        if ($id === 'all' || User::where('id', (int) $id)->exists()) {
+            $this->agentId = $id;
+        } else {
+            $this->agentId = 'all';
+        }
     }
 
     protected function getViewData(): array
     {
-        $tz    = 'Asia/Manila';
-        $now   = CarbonImmutable::now($tz);
-        $start = $now->startOfWeek(CarbonImmutable::MONDAY);
-        $end   = $now->endOfWeek(CarbonImmutable::SUNDAY);
+        try {
+            $tz = 'Asia/Manila';
+            $now = CarbonImmutable::now($tz);
+            $start = $now->startOfWeek(CarbonImmutable::MONDAY);
+            $end = $now->endOfWeek(CarbonImmutable::SUNDAY);
 
-        $trip  = new PropertyTripping();
-        $table = $trip->getTable();
+            $query = PropertyTripping::query()
+                ->with([
+                    'agent:id,name',
+                    'property:id,title',
+                    'buyer:id,name,contact_number'
+                ])
+                ->whereBetween('visit_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                ->orderBy('visit_date')
+                ->orderBy('visit_time');
 
-        // Determine which datetime columns exist
-        $dateColStart = \Schema::hasColumn($table, 'scheduled_start')
-            ? 'scheduled_start'
-            : (\Schema::hasColumn($table, 'scheduled_at') ? 'scheduled_at' : 'created_at');
+            if ($this->agentId !== 'all') {
+                $query->where('agent_id', (int) $this->agentId);
+            }
 
-        $dateColEnd = \Schema::hasColumn($table, 'scheduled_end') ? 'scheduled_end' : null;
+            $trippings = $query->get();
 
-        $q = PropertyTripping::query()
-            ->with([
-                'agent:id,name',               // Agent assigned
-                'property:id,title',           // Related property
-                'buyer:id,name,contact_number' // Buyer info
-            ])
-            ->whereBetween($dateColStart, [$start, $end]);
+            $events = $trippings->map(function ($tripping) use ($tz) {
+                $agentName = $tripping->agent->name ?? 'Unassigned';
+                $propertyTitle = $tripping->property->title ?? 'Property';
 
-        // Optional agent filter
-        if ($this->agentId !== 'all' && \Schema::hasColumn($table, 'agent_id')) {
-            $q->where('agent_id', (int) $this->agentId);
-        }
+                // Combine date and time
+                $startDateTime = $tripping->visit_date . ' ' . $tripping->visit_time;
+                $start = CarbonImmutable::parse($startDateTime, $tz);
+                $end = $start->addHour();
 
-        $rows = $q->get();
+                // Generate color based on agent
+                $agentId = $tripping->agent->id ?? 0;
+                $hue = ($agentId * 37) % 360;
+                $color = "hsl($hue, 70%, 45%)";
 
-        // Convert to FullCalendar events
-        $events = $rows->map(function ($r) use ($dateColStart, $dateColEnd) {
-            $agentName = $r->agent->name ?? 'Unassigned';
-            $propTitle = $r->property->title ?? 'Property';
-            $title     = "{$propTitle} • {$agentName}";
+                return [
+                    'id' => (string) $tripping->id,
+                    'title' => "{$propertyTitle} • {$agentName}",
+                    'start' => $start->toIso8601String(),
+                    'end' => $end->toIso8601String(),
+                    'backgroundColor' => $color,
+                    'borderColor' => $color,
+                    'textColor' => '#ffffff',
+                    'extendedProps' => [
+                        'property' => $propertyTitle,
+                        'agent' => $agentName,
+                        'buyer' => $tripping->buyer->name ?? null,
+                        'phone' => $tripping->buyer->contact_number ?? null,
+                        'status' => $tripping->status ?? null,
+                        'notes' => $tripping->notes ?? null,
+                        'visit_date' => $tripping->visit_date,
+                        'visit_time' => $tripping->visit_time,
+                    ],
+                ];
+            })->values()->all();
 
-            // Generate stable color per agent
-            $aid = $r->agent->id ?? 0;
-            $hue = ($aid * 37) % 360;
-            $color = "hsl($hue, 70%, 55%)";
+            $agents = User::query()
+                ->when(
+                    Schema::hasColumn((new User())->getTable(), 'role'),
+                    fn ($q) => $q->where('role', 'agent')
+                )
+                ->orderBy('name')
+                ->get(['id', 'name']);
 
             return [
-                'id'              => (string) $r->id,
-                'title'           => $title,
-                'start'           => optional($r->{$dateColStart})->toIso8601String(),
-                'end'             => $dateColEnd ? optional($r->{$dateColEnd})->toIso8601String() : null,
-                'backgroundColor' => $color,
-                'borderColor'     => $color,
-                'extendedProps'   => [
-                    'property' => $propTitle,
-                    'agent'    => $agentName,
-                    'buyer'    => $r->buyer->name ?? null,
-                    'phone'    => $r->buyer->contact_number ?? null,
-                    'status'   => $r->status ?? null,
-                ],
+                'events' => $events,
+                'agents' => $agents,
+                'weekRange' => $start->format('M j') . ' – ' . $end->format('M j, Y'),
+                'agentId' => $this->agentId,
+                'totalEvents' => count($events),
             ];
-        })->values()->all();
 
-        // Agent dropdown list
-        $agents = User::query()
-            ->when(\Schema::hasColumn((new User())->getTable(), 'role'), fn ($q) => $q->where('role', 'agent'))
-            ->orderBy('name')
-            ->get(['id','name']);
-
-        return [
-            'events'    => $events,
-            'weekRange' => $start->format('M j') . ' – ' . $end->format('M j, Y'),
-            'agents'    => $agents,
-            'agentId'   => $this->agentId,
-            'projects'  => collect(), // ✅ avoid "Undefined variable $projects"
-        ];
+        } catch (\Exception $e) {
+            return [
+                'events' => [],
+                'agents' => collect(),
+                'weekRange' => 'Error loading calendar',
+                'agentId' => $this->agentId,
+                'totalEvents' => 0,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 }

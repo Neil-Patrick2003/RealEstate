@@ -20,6 +20,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -29,72 +30,156 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Actions\Action;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DeveloperResource extends Resource
 {
     protected static ?string $model = Developer::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
-    protected static ?string $navigationGroup = 'Directory';
+    protected static ?string $navigationGroup = '🏢 Directory';
     protected static ?string $modelLabel = 'Developer';
     protected static ?string $pluralModelLabel = 'Developers';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Section::make('Identity')
-                ->schema([
-                    FileUpload::make('company_logo')
-                        ->label('Company Logo')
-                        ->disk('public')
-                        ->directory('company_logo')
-                        ->image()->imageEditor()
-                        ->imageCropAspectRatio('1:1')
-                        ->imagePreviewHeight('150')
-                        ->openable()->downloadable()
-                        ->columnSpanFull(),
+            Forms\Components\Tabs::make('Developer Information')->tabs([
+                Forms\Components\Tabs\Tab::make('Company Profile')
+                    ->icon('heroicon-o-building-office')
+                    ->schema([
+                        Section::make('Company Identity')
+                            ->description('Basic company information and branding')
+                            ->schema([
+                                FileUpload::make('company_logo')
+                                    ->label('Company Logo')
+                                    ->disk('public')
+                                    ->directory('developers/logos')
+                                    ->image()
+                                    ->imageEditor()
+                                    ->imageCropAspectRatio('1:1')
+                                    ->imageResizeTargetWidth(200)
+                                    ->imageResizeTargetHeight(200)
+                                    ->imagePreviewHeight('120')
+                                    ->openable()
+                                    ->downloadable()
+                                    ->columnSpanFull()
+                                    ->helperText('Upload a square logo for best results'),
 
-                    TextInput::make('name')->label('Developer Name')->required()->maxLength(255),
-                    TextInput::make('trade_name')->label('Trade Name')->maxLength(255),
+                                TextInput::make('name')
+                                    ->label('Developer Name')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->placeholder('e.g., Ayala Land, Inc.')
+                                    ->columnSpan(2),
 
-                    Select::make('status')->label('Status')->required()
-                        ->options(['pending'=>'Pending','verified'=>'Verified','inactive'=>'Inactive'])
-                        ->default('pending')->native(false),
+                                TextInput::make('trade_name')
+                                    ->label('Trade Name')
+                                    ->maxLength(255)
+                                    ->placeholder('e.g., Alveo, Avida')
+                                    ->columnSpan(2),
 
-                    TextInput::make('email')->email()->required()->maxLength(255),
-                ])
-                ->columns(2)
-                ->compact(),
+                                Select::make('status')
+                                    ->label('Status')
+                                    ->required()
+                                    ->options([
+                                        'pending' => '🟡 Pending Review',
+                                        'verified' => '🟢 Verified & Active',
+                                        'inactive' => '🔴 Inactive'
+                                    ])
+                                    ->default('pending')
+                                    ->native(false)
+                                    ->columnSpan(1),
 
-            Section::make('Contact & Compliance')
-                ->schema([
-                    TextInput::make('head_office_address')->label('Head Office Address')->maxLength(255)->columnSpan(3),
-                    TextInput::make('registration_number')->label('Registration No.')->required()->maxLength(255),
-                    TextInput::make('license_number')->label('License No.')->required()->maxLength(255),
-                    Hidden::make('broker_id')->default(fn () => auth()->id()),
-                ])
-                ->columns(3)
-                ->compact(),
+                                TextInput::make('email')
+                                    ->email()
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->placeholder('company@email.com')
+                                    ->columnSpan(1),
+                            ])->columns(4),
+                    ]),
 
-            Section::make('Links')
-                ->schema([
-                    TextInput::make('website_url')->label('Website')->url()->maxLength(255),
-                    TextInput::make('facebook_url')->label('Facebook Page')->url()->maxLength(255),
-                ])
-                ->columns(2)
-                ->collapsible()
-                ->compact(),
+                Forms\Components\Tabs\Tab::make('Contact & Compliance')
+                    ->icon('heroicon-o-document-text')
+                    ->schema([
+                        Section::make('Business Information')
+                            ->description('Legal and compliance details')
+                            ->schema([
+                                TextInput::make('head_office_address')
+                                    ->label('Head Office Address')
+                                    ->maxLength(255)
+                                    ->placeholder('Complete business address')
+                                    ->columnSpanFull(),
 
-            Section::make('About')
-                ->schema([
-                    RichEditor::make('description')
-                        ->toolbarButtons(['bold','italic','strike','bulletList','orderedList','link','blockquote','redo','undo'])
-                        ->columnSpanFull(),
-                ])
-                ->columns(1)
-                ->compact(),
+                                TextInput::make('registration_number')
+                                    ->label('Registration Number')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->placeholder('SEC/DTI Registration No.')
+                                    ->columnSpan(2),
+
+                                TextInput::make('license_number')
+                                    ->label('License Number')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->placeholder('HLURB/LGU License No.')
+                                    ->columnSpan(2),
+
+                                Hidden::make('broker_id')->default(fn () => auth()->id()),
+                            ])->columns(4),
+                    ]),
+
+                Forms\Components\Tabs\Tab::make('Online Presence')
+                    ->icon('heroicon-o-globe-alt')
+                    ->schema([
+                        Section::make('Digital Channels')
+                            ->description('Company websites and social media')
+                            ->schema([
+                                TextInput::make('website_url')
+                                    ->label('Official Website')
+                                    ->url()
+                                    ->maxLength(255)
+                                    ->placeholder('https://company-website.com')
+                                    ->prefixIcon('heroicon-o-globe-alt')
+                                    ->columnSpan(2),
+
+                                TextInput::make('facebook_url')
+                                    ->label('Facebook Page')
+                                    ->url()
+                                    ->maxLength(255)
+                                    ->placeholder('https://facebook.com/company-page')
+                                    ->prefixIcon('heroicon-o-face-smile')
+                                    ->columnSpan(2),
+                            ])->columns(4),
+                    ]),
+
+                Forms\Components\Tabs\Tab::make('Company Story')
+                    ->icon('heroicon-o-book-open')
+                    ->schema([
+                        Section::make('About the Developer')
+                            ->description('Tell the story and vision of your company')
+                            ->schema([
+                                RichEditor::make('description')
+                                    ->label('Company Description')
+                                    ->toolbarButtons([
+                                        'bold', 'italic', 'underline', 'strike',
+                                        'bulletList', 'orderedList',
+                                        'link', 'blockquote',
+                                        'h2', 'h3', 'paragraph',
+                                        'redo', 'undo'
+                                    ])
+                                    ->fileAttachmentsDirectory('developers/attachments')
+                                    ->maxLength(5000)
+                                    ->columnSpanFull()
+                                    ->helperText('Describe your company history, vision, and key achievements (max 5000 characters)'),
+                            ]),
+                    ]),
+            ])->columnSpanFull(),
         ]);
     }
 
@@ -103,332 +188,525 @@ class DeveloperResource extends Resource
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                ImageColumn::make('company_logo')->label('Logo')->disk('public')->height(40)->width(40)->circular(),
-                TextColumn::make('name')->label('Developer')->searchable()->sortable()->weight('semibold'),
+                ImageColumn::make('company_logo')
+                    ->label('Logo')
+                    ->disk('public')
+                    ->height(50)
+                    ->width(50)
+                    ->circular()
+                    ->defaultImageUrl(asset('images/default-company-logo.png')),
+
+                TextColumn::make('name')
+                    ->label('Developer')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn ($record) => $record->trade_name)
+                    ->wrap(),
+
                 BadgeColumn::make('status')
-                    ->colors(['warning'=>'pending','success'=>'verified','gray'=>'inactive'])
-                    ->icons(['heroicon-o-clock'=>'pending','heroicon-o-check-circle'=>'verified','heroicon-o-pause-circle'=>'inactive'])
+                    ->formatStateUsing(fn ($state) => match($state) {
+                        'pending' => '🟡 Pending',
+                        'verified' => '🟢 Verified',
+                        'inactive' => '🔴 Inactive',
+                        default => $state
+                    })
+                    ->colors([
+                        'warning' => 'pending',
+                        'success' => 'verified',
+                        'danger' => 'inactive'
+                    ])
                     ->sortable(),
-                TextColumn::make('email')->searchable()->copyable(),
-                TextColumn::make('trade_name')->toggleable(isToggledHiddenByDefault: true)->searchable()->wrap(),
-                TextColumn::make('website_url')->label('Website')->url(fn ($r) => $r->website_url, true)
-                    ->openUrlInNewTab()->copyable()->limit(30)->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('facebook_url')->label('Facebook')->url(fn ($r) => $r->facebook_url, true)
-                    ->openUrlInNewTab()->copyable()->limit(30)->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('registration_number')->label('Reg. No.')->limit(18)->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('license_number')->label('License No.')->limit(18)->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('created_at')->dateTime('Y-m-d H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')->dateTime('Y-m-d H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('email')
+                    ->searchable()
+                    ->copyable()
+                    ->icon('heroicon-o-envelope')
+                    ->color('gray')
+                    ->toggleable(),
+
+                TextColumn::make('projects_count')
+                    ->label('Projects')
+                    ->counts('projects')
+                    ->badge()
+                    ->color('info')
+                    ->sortable(),
+
+                TextColumn::make('registration_number')
+                    ->label('Reg. No.')
+                    ->limit(12)
+                    ->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('website_url')
+                    ->label('Website')
+                    ->url(fn ($record) => $record->website_url, true)
+                    ->openUrlInNewTab()
+                    ->copyable()
+                    ->limit(20)
+                    ->icon('heroicon-o-link')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('created_at')
+                    ->label('Created')
+                    ->dateTime('M j, Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('status')->options([
-                    'pending'  => 'Pending',
-                    'verified' => 'Verified',
-                    'inactive' => 'Inactive',
-                ]),
+                SelectFilter::make('status')
+                    ->options([
+                        'pending'  => 'Pending Review',
+                        'verified' => 'Verified & Active',
+                        'inactive' => 'Inactive',
+                    ])
+                    ->label('Status'),
+
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->color('primary')
+                        ->icon('heroicon-o-eye'),
 
-                Tables\Actions\Action::make('setupProjectAndUnits')
-                    ->label('Setup Project & Units')
-                    ->icon('heroicon-o-plus-circle')
-                    ->color('success')
-                    ->modalHeading('Create Project, House Types & Units')
-                    ->form([
-                        /* Project */
-                        Section::make('Project Info')->schema([
-                            FileUpload::make('project.project_img')
-                                ->label('Project Cover Image')
-                                ->disk('public')->directory('projects')->visibility('public')
-                                ->image()->imageEditor()->imageCropAspectRatio('16:9')
-                                ->imagePreviewHeight('180')
-                                ->preserveFilenames()
-                                ->openable()->downloadable()
-                                ->columnSpanFull(),
+                    Tables\Actions\EditAction::make()
+                        ->color('warning')
+                        ->icon('heroicon-o-pencil'),
 
-                            TextInput::make('project.name')->label('Project Name')->required()->maxLength(150),
-                            Select::make('project.type')->label('Project Type')->options([
-                                'subdivision'=>'Subdivision','condo'=>'Condo','mixed'=>'Mixed Use',
-                            ])->required()->native(false),
-                            TextInput::make('project.address')->label('Address')->maxLength(255),
-                            TextInput::make('project.city')->label('City')->maxLength(100),
-                            TextInput::make('project.province')->label('Province')->maxLength(100),
-                            Select::make('project.status')->label('Status')
-                                ->options(['active'=>'Active','draft'=>'Draft'])->default('active')->native(false),
-                        ])->columns(2),
+                    Action::make('setupProjectAndUnits')
+                        ->label('Quick Setup')
+                        ->icon('heroicon-o-rocket-launch')
+                        ->color('success')
+                        ->modalHeading('Create Complete Project Structure')
+                        ->modalDescription('Set up projects, blocks, house types, and units in one go')
+                        ->form([
+                            Section::make('🏢 Project Information')
+                                ->description('Basic project details and location')
+                                ->schema([
+                                    FileUpload::make('project.project_img')
+                                        ->label('Project Cover Image')
+                                        ->disk('public')
+                                        ->directory('projects/covers')
+                                        ->image()
+                                        ->imageEditor()
+                                        ->imageCropAspectRatio('16:9')
+                                        ->imagePreviewHeight('160')
+                                        ->columnSpanFull()
+                                        ->helperText('Recommended ratio 16:9 for best display'),
 
-                        /* Blocks */
-                        Section::make('Blocks / Towers')->description('Add block codes (B1, B2) or tower names.')
-                            ->schema([
-                                Repeater::make('blocks')->schema([
-                                    TextInput::make('block_code')
-                                        ->label('Block / Tower Code')
-                                        ->required()->maxLength(50),
-                                ])->minItems(0)->addActionLabel('Add Block / Tower')->columns(1),
-                            ]),
+                                    TextInput::make('project.name')
+                                        ->label('Project Name')
+                                        ->required()
+                                        ->maxLength(150)
+                                        ->placeholder('e.g., Avida Settings Cebu')
+                                        ->columnSpan(2),
 
-                        /* House Types (labels only) */
-                        Section::make('House Types / Models')->description('Labels only (code + display name).')
-                            ->schema([
-                                Repeater::make('house_types')->schema([
-                                    TextInput::make('code')->label('Code')
-                                        ->placeholder('SINGLE / DUPLEX / STUDIO')
-                                        ->required()->maxLength(50),
-                                    TextInput::make('name')->label('Display Name')
-                                        ->placeholder('Single / Duplex / Studio')
-                                        ->required()->maxLength(120),
-                                ])->minItems(0)->addActionLabel('Add House Type')->columns(2),
-                            ]),
-
-                        /* Units → Properties (with images & features) */
-                        Section::make('Units → Properties')
-                            ->description('Define units per block. Will create Property rows with images & features.')
-                            ->schema([
-                                Repeater::make('units')->schema([
-                                    /* Select block from previous section */
-                                    Select::make('block_code')->label('Block / Tower')
-                                        ->options(fn (Get $get) => collect($get('../../blocks') ?? [])
-                                            ->pluck('block_code', 'block_code')
-                                            ->filter()
-                                            ->all())
-                                        ->native(false)->searchable()->required(),
-
-                                    TextInput::make('count')->label('How many units?')
-                                        ->numeric()->minValue(1)->required()->default(1),
-
-                                    /* Tie to house type (code) from labels section */
-                                    Select::make('house_type_code')->label('House Type')
-                                        ->options(fn (Get $get) => collect($get('../../house_types') ?? [])
-                                            ->pluck('code', 'code')
-                                            ->filter()
-                                            ->all())
-                                        ->native(false)->searchable()->preload(),
-
-                                    /* Specs → go straight to properties */
-                                    TextInput::make('lot_area')->label('Lot Area (sqm)')->numeric()->minValue(0)->step(0.01),
-                                    TextInput::make('floor_area')->label('Floor Area (sqm)')->numeric()->minValue(0)->step(0.01),
-                                    TextInput::make('bedrooms')->label('Bedrooms')->numeric()->minValue(0)->step(1),
-                                    TextInput::make('bathrooms')->label('Bathrooms')->numeric()->minValue(0)->step(1),
-                                    TextInput::make('car_slots')->label('Car Slots')->numeric()->minValue(0)->step(1),
-
-                                    TextInput::make('price')->label('List Price')->numeric()->prefix('₱')->minValue(0)->step(0.01),
-                                    TextInput::make('reservation')->label('Reservation Fee')->numeric()->prefix('₱')->minValue(0)->step(0.01),
-
-                                    Forms\Components\Toggle::make('isPresell')->default(true)->label('Pre-Sell'),
-                                    Forms\Components\Toggle::make('isFixPrice')->default(true)->label('Fixed Price'),
-
-                                    /* Main image → properties.image_url */
-                                    FileUpload::make('main_image')
-                                        ->label('Main Image')
-                                        ->disk('public')->directory('properties')
-                                        ->visibility('public')
-                                        ->image()->imageEditor()
-                                        ->imagePreviewHeight('140')
-                                        ->openable()->downloadable(),
-
-                                    /* Gallery → property_images.image_url[] */
-                                    FileUpload::make('gallery')
-                                        ->label('Gallery Images')
-                                        ->disk('public')->directory('properties/gallery')
-                                        ->visibility('public')
-                                        ->image()->imageEditor()
-                                        ->multiple()
-                                        ->imagePreviewHeight('100')
-                                        ->openable()->downloadable(),
-
-                                    /* Features → property_features.name[] */
-                                    Repeater::make('features')
-                                        ->label('Features')
-                                        ->schema([
-                                            TextInput::make('name')->label('Feature')->maxLength(120)->required(),
+                                    Select::make('project.type')
+                                        ->label('Project Type')
+                                        ->options([
+                                            'subdivision' => '🏡 Subdivision',
+                                            'condo' => '🏢 Condominium',
+                                            'mixed' => '🏬 Mixed Use',
+                                            'commercial' => '🏪 Commercial',
                                         ])
-                                        ->minItems(0)
-                                        ->addActionLabel('Add Feature')
+                                        ->required()
+                                        ->native(false)
+                                        ->columnSpan(2),
+
+                                    TextInput::make('project.address')
+                                        ->label('Complete Address')
+                                        ->maxLength(255)
+                                        ->placeholder('Street, Barangay, City')
+                                        ->columnSpan(3),
+
+
+                                    Select::make('project.status')
+                                        ->label('Project Status')
+                                        ->options([
+                                            'active' => '🟢 Active',
+                                            'draft' => '🟡 Draft',
+                                            'upcoming' => '🔵 Upcoming'
+                                        ])
+                                        ->default('active')
+                                        ->native(false)
+                                        ->columnSpan(1),
+                                ])->columns(4),
+
+                            Section::make('🏗️ Project Structure')
+                                ->description('Define blocks/towers and house types')
+                                ->schema([
+                                    Repeater::make('blocks')
+                                        ->label('Blocks / Towers')
+                                        ->schema([
+                                            TextInput::make('block_code')
+                                                ->label('Block/Tower Code')
+                                                ->required()
+                                                ->maxLength(50)
+                                                ->placeholder('e.g., B1, TOWER-A')
+                                                ->hintIcon('heroicon-o-information-circle', 'Use codes like B1, B2 for blocks or T1, T2 for towers'),
+                                        ])
+                                        ->minItems(1)
+                                        ->defaultItems(1)
+                                        ->addActionLabel('Add Block/Tower')
                                         ->columns(1),
 
-                                ])->minItems(1)->addActionLabel('Add Unit Row')->columns(3),
-                            ]),
-                    ])
-                    ->action(function (array $data, Developer $record) {
+                                    Repeater::make('house_types')
+                                        ->label('House Types / Unit Models')
+                                        ->schema([
+                                            TextInput::make('code')
+                                                ->label('Model Code')
+                                                ->required()
+                                                ->maxLength(50)
+                                                ->placeholder('e.g., SINGLE, DUPLEX, STUDIO')
+                                                ->hint('Internal code for reference'),
 
-                        DB::transaction(function () use ($data, $record) {
+                                            TextInput::make('name')
+                                                ->label('Display Name')
+                                                ->required()
+                                                ->maxLength(120)
+                                                ->placeholder('e.g., Single Family Home, Duplex, Studio Unit')
+                                                ->hint('Customer-facing name'),
+                                        ])
+                                        ->minItems(1)
+                                        ->defaultItems(1)
+                                        ->addActionLabel('Add House Type')
+                                        ->columns(2),
+                                ])->columns(1),
 
-                            /* 1) Project */
-                            $p = Arr::get($data, 'project', []);
-                            $project = Project::create([
-                                'developer_id' => $record->id,
-                                'name'         => $p['name'] ?? 'Untitled Project',
-                                'type'         => $p['type'] ?? 'subdivision', // harmless if you later drop property_type
-                                'address'      => $p['address'] ?? null,
-                                'city'         => $p['city'] ?? null,
-                                'province'     => $p['province'] ?? null,
-                                'status'       => $p['status'] ?? 'active',
-                                'project_img'  => $p['project_img'] ?? null,
-                            ]);
+                            Section::make('🏠 Unit Configuration')
+                                ->description('Define unit specifications and pricing')
+                                ->schema([
+                                    Repeater::make('units')
+                                        ->label('Unit Templates')
+                                        ->schema([
+                                            Select::make('block_code')
+                                                ->label('Block / Tower')
+                                                ->options(fn (Get $get) => collect($get('../../blocks') ?? [])
+                                                    ->pluck('block_code', 'block_code')
+                                                    ->filter()
+                                                    ->mapWithKeys(fn ($code) => [$code => "Block {$code}"])
+                                                    ->all())
+                                                ->required()
+                                                ->native(false)
+                                                ->searchable()
+                                                ->columnSpan(1),
 
-                            /* 2) Blocks (normalize code to uppercase) */
-                            $blocksInput = collect($data['blocks'] ?? []);
-                            $blocksInput->each(function ($b) use ($project) {
-                                $code = strtoupper(trim((string)($b['block_code'] ?? '')));
-                                if ($code === '') return;
-                                Block::firstOrCreate([
-                                    'project_id' => $project->id,
-                                    'block_code' => $code,
+                                            TextInput::make('count')
+                                                ->label('Number of Units')
+                                                ->numeric()
+                                                ->minValue(1)
+                                                ->maxValue(100)
+                                                ->required()
+                                                ->default(1)
+                                                ->columnSpan(1)
+                                                ->helperText('How many units of this type?'),
+
+                                            Select::make('house_type_code')
+                                                ->label('House Type')
+                                                ->options(fn (Get $get) => collect($get('../../house_types') ?? [])
+                                                    ->pluck('code', 'code')
+                                                    ->filter()
+                                                    ->mapWithKeys(fn ($code, $index) => [
+                                                        $code => $get("../../house_types.{$index}.name") ?? $code
+                                                    ])
+                                                    ->all())
+                                                ->required()
+                                                ->native(false)
+                                                ->searchable()
+                                                ->columnSpan(1),
+
+                                            Forms\Components\Grid::make(3)
+                                                ->schema([
+                                                    TextInput::make('lot_area')
+                                                        ->label('Lot Area (sqm)')
+                                                        ->numeric()
+                                                        ->minValue(0)
+                                                        ->step(0.01)
+                                                        ->suffix('sqm'),
+
+                                                    TextInput::make('floor_area')
+                                                        ->label('Floor Area (sqm)')
+                                                        ->numeric()
+                                                        ->minValue(0)
+                                                        ->step(0.01)
+                                                        ->suffix('sqm'),
+
+                                                    TextInput::make('price')
+                                                        ->label('List Price')
+                                                        ->numeric()
+                                                        ->prefix('₱')
+                                                        ->minValue(0)
+                                                        ->step(0.01)
+                                                        ->required(),
+                                                ]),
+
+                                            Forms\Components\Grid::make(4)
+                                                ->schema([
+                                                    TextInput::make('bedrooms')
+                                                        ->label('Bedrooms')
+                                                        ->numeric()
+                                                        ->minValue(0)
+                                                        ->step(1)
+                                                        ->suffixIcon('heroicon-o-home'),
+
+                                                    TextInput::make('bathrooms')
+                                                        ->label('Bathrooms')
+                                                        ->numeric()
+                                                        ->minValue(0)
+                                                        ->step(1)
+                                                        ->suffixIcon('heroicon-o-home'),
+
+                                                    TextInput::make('car_slots')
+                                                        ->label('Car Slots')
+                                                        ->numeric()
+                                                        ->minValue(0)
+                                                        ->step(1)
+                                                        ->suffixIcon('heroicon-o-truck'),
+
+                                                    TextInput::make('reservation')
+                                                        ->label('Reservation Fee')
+                                                        ->numeric()
+                                                        ->prefix('₱')
+                                                        ->minValue(0)
+                                                        ->step(0.01),
+                                                ]),
+
+                                            Forms\Components\Grid::make(2)
+                                                ->schema([
+                                                    Toggle::make('isPresell')
+                                                        ->label('Pre-Sell Unit')
+                                                        ->default(true)
+                                                        ->inline()
+                                                        ->helperText('Available for pre-selling'),
+
+                                                    Toggle::make('isFixPrice')
+                                                        ->label('Fixed Price')
+                                                        ->default(true)
+                                                        ->inline()
+                                                        ->helperText('Price is non-negotiable'),
+                                                ]),
+
+                                            FileUpload::make('main_image')
+                                                ->label('Unit Main Image')
+                                                ->disk('public')
+                                                ->directory('properties/units')
+                                                ->image()
+                                                ->imageEditor()
+                                                ->imagePreviewHeight('120')
+                                                ->columnSpan(1)
+                                                ->helperText('Primary display image for this unit type'),
+
+                                            FileUpload::make('gallery')
+                                                ->label('Gallery Images')
+                                                ->disk('public')
+                                                ->directory('properties/gallery')
+                                                ->multiple()
+                                                ->image()
+                                                ->imagePreviewHeight('80')
+                                                ->maxFiles(10)
+                                                ->columnSpan(1)
+                                                ->helperText('Additional images (max 10)'),
+
+                                            Repeater::make('features')
+                                                ->label('Unit Features')
+                                                ->schema([
+                                                    TextInput::make('name')
+                                                        ->label('Feature')
+                                                        ->maxLength(120)
+                                                        ->required()
+                                                        ->placeholder('e.g., Swimming Pool, Garden, Balcony'),
+                                                ])
+                                                ->minItems(0)
+                                                ->addActionLabel('Add Feature')
+                                                ->columns(1)
+                                                ->columnSpanFull(),
+                                        ])
+                                        ->minItems(1)
+                                        ->defaultItems(1)
+                                        ->addActionLabel('Add Unit Template')
+                                        ->columns(1),
+                                ]),
+                        ])
+                        ->action(function (array $data, Developer $record) {
+                            DB::transaction(function () use ($data, $record) {
+                                $createdCount = 0;
+                                $projectData = Arr::get($data, 'project', []);
+
+                                // 1) Create Project
+                                $project = Project::create([
+                                    'developer_id' => $record->id,
+                                    'name'         => $projectData['name'] ?? 'Untitled Project',
+                                    'type'         => $projectData['type'] ?? 'subdivision',
+                                    'address'      => $projectData['address'] ?? null,
+                                    'city'         => $projectData['city'] ?? null,
+                                    'province'     => $projectData['province'] ?? null,
+                                    'status'       => $projectData['status'] ?? 'active',
+                                    'project_img'  => $projectData['project_img'] ?? null,
                                 ]);
-                            });
 
-                            /* 3) House Types (labels only, in-memory map) */
-                            $typesInput = collect($data['house_types'] ?? []);
-                            $typesByCode = []; // code => name
-                            $typesInput->each(function ($t) use (&$typesByCode) {
-                                $code = trim((string)($t['code'] ?? ''));
-                                if ($code === '') return;
-                                $typesByCode[$code] = $t['name'] ?? $code;
-                            });
+                                // 2) Create Blocks
+                                $blocksInput = collect($data['blocks'] ?? []);
+                                $blocksInput->each(function ($b) use ($project) {
+                                    $code = strtoupper(trim((string)($b['block_code'] ?? '')));
+                                    if ($code === '') return;
+                                    Block::firstOrCreate([
+                                        'project_id' => $project->id,
+                                        'block_code' => $code,
+                                    ]);
+                                });
 
-                            /* 4) Units → create Properties (+ images + features) */
-                            $createdCount = 0;
-                            $unitsInput = collect($data['units'] ?? []);
+                                // 3) Prepare House Types Map
+                                $typesInput = collect($data['house_types'] ?? []);
+                                $typesByCode = [];
+                                $typesInput->each(function ($t) use (&$typesByCode) {
+                                    $code = trim((string)($t['code'] ?? ''));
+                                    if ($code === '') return;
+                                    $typesByCode[$code] = $t['name'] ?? $code;
+                                });
 
-                            $unitsInput->each(function ($u) use ($project, $typesByCode, &$createdCount) {
+                                // 4) Create Properties from Units
+                                $unitsInput = collect($data['units'] ?? []);
+                                $unitsInput->each(function ($unit) use ($project, $typesByCode, &$createdCount) {
+                                    $blockCode = strtoupper(trim((string)($unit['block_code'] ?? '')));
+                                    $count = (int)($unit['count'] ?? 0);
+                                    $typeCode = trim((string)($unit['house_type_code'] ?? ''));
+                                    $typeName = $typeCode ? ($typesByCode[$typeCode] ?? $typeCode) : null;
 
-                                $blockCode   = strtoupper(trim((string)($u['block_code'] ?? '')));
-                                $count       = (int)($u['count'] ?? 0);
+                                    if ($count <= 0 || $blockCode === '') return;
 
-                                $typeCode    = trim((string)($u['house_type_code'] ?? ''));
-                                $typeName    = $typeCode ? ($typesByCode[$typeCode] ?? $typeCode) : null;
+                                    // Get existing lot numbers to avoid duplicates
+                                    $existingLots = Property::query()
+                                        ->where('project_id', $project->id)
+                                        ->where('block_code', $blockCode)
+                                        ->when($typeCode !== '', fn($q) => $q->where('sub_type', $typeCode))
+                                        ->pluck('lot_no')
+                                        ->filter()
+                                        ->map(fn($v) => (string)$v)
+                                        ->all();
 
-                                $lotArea     = $u['lot_area'] ?? null;
-                                $floorArea   = $u['floor_area'] ?? null;
-                                $bedrooms    = $u['bedrooms'] ?? null;
-                                $bathrooms   = $u['bathrooms'] ?? null;
-                                $carSlots    = $u['car_slots'] ?? null;
+                                    $taken = array_flip($existingLots);
+                                    $made = 0;
+                                    $cursor = 1;
 
-                                $price       = $u['price'] ?? null;
-                                $reservation = $u['reservation'] ?? null;
-                                $isPresell   = (bool)($u['isPresell'] ?? true);
-                                $isFixPrice  = (bool)($u['isFixPrice'] ?? true);
+                                    while ($made < $count && $cursor <= ($count * 3)) {
+                                        $lotNo = (string)$cursor;
+                                        if (!isset($taken[$lotNo])) {
+                                            // Create Property
+                                            $prop = Property::create([
+                                                'seller_id' => null,
+                                                'project_id' => $project->id,
+                                                'block_code' => $blockCode,
+                                                'lot_no' => $lotNo,
+                                                'property_type' => $project->type,
+                                                'title' => trim(
+                                                    $project->name .
+                                                    ($typeName ? " • {$typeName}" : '') .
+                                                    " • Block {$blockCode} Lot {$lotNo}"
+                                                ),
+                                                'description' => "Beautiful unit in {$project->name}. " .
+                                                    ($typeName ? "This {$typeName} features " : "Features ") .
+                                                    "spacious living areas and modern amenities.",
+                                                'sub_type' => $typeCode ?: null,
+                                                'price' => $unit['price'] ?? 0,
+                                                'reservation' => $unit['reservation'] ?? null,
+                                                'isFixPrice' => (bool)($unit['isFixPrice'] ?? true) ? 1 : 0,
+                                                'isPresell' => (bool)($unit['isPresell'] ?? true) ? 1 : 0,
+                                                'address' => $project->address,
+                                                'lot_area' => $unit['lot_area'] ?? null,
+                                                'floor_area' => $unit['floor_area'] ?? null,
+                                                'bedrooms' => $unit['bedrooms'] ?? null,
+                                                'bathrooms' => $unit['bathrooms'] ?? null,
+                                                'car_slots' => $unit['car_slots'] ?? null,
+                                                'image_url' => $unit['main_image'] ?? null,
+                                                'status' => 'Published',
+                                                'views' => 0,
+                                                'allow_multi_agents' => 0,
+                                            ]);
 
-                                // Files/arrays coming from FileUpload / Repeater
-                                $mainImage   = $u['main_image'] ?? null;               // single string or null
-                                $gallery     = collect($u['gallery'] ?? [])->filter();  // array of strings
-                                $features    = collect($u['features'] ?? [])           // array of ['name'=>...]
-                                ->pluck('name')->filter();
+                                            // Create Gallery Images
+                                            $gallery = collect($unit['gallery'] ?? [])->filter();
+                                            if ($gallery->isNotEmpty()) {
+                                                $galleryRows = $gallery->map(fn ($path) => [
+                                                    'property_id' => $prop->id,
+                                                    'image_url' => $path,
+                                                    'created_at' => now(),
+                                                    'updated_at' => now(),
+                                                ])->all();
+                                                PropertyImage::insert($galleryRows);
+                                            }
 
-                                if ($count <= 0 || $blockCode === '') return;
+                                            // Create Features
+                                            $features = collect($unit['features'] ?? [])->pluck('name')->filter();
+                                            if ($features->isNotEmpty()) {
+                                                $featureRows = $features->map(fn ($name) => [
+                                                    'property_id' => $prop->id,
+                                                    'name' => $name,
+                                                    'created_at' => now(),
+                                                    'updated_at' => now(),
+                                                ])->all();
+                                                PropertyFeature::insert($featureRows);
+                                            }
 
-                                // existing lot numbers for this project+block+(typeCode if provided)
-                                $existingLots = Property::query()
-                                    ->where('project_id', $project->id)
-                                    ->where('block_code', $blockCode)
-                                    ->when($typeCode !== '', fn($q) => $q->where('sub_type', $typeCode))
-                                    ->pluck('lot_no')
-                                    ->filter()
-                                    ->map(fn($v) => (string)$v)
-                                    ->all();
-
-                                $taken  = array_flip($existingLots);
-                                $made   = 0;
-                                $cursor = 1;
-
-                                while ($made < $count && $cursor <= ($count * 3)) {
-                                    $lotNo = (string)$cursor;
-                                    if (!isset($taken[$lotNo])) {
-
-                                        // Create property row
-                                        $prop = Property::create([
-                                            'seller_id'     => null,            // set default if required
-                                            'project_id'    => $project->id,
-                                            'block_code'    => $blockCode,
-                                            'lot_no'        => $lotNo,
-                                            'property_type' => $project->type,
-
-                                            'title'         => trim(
-                                                $project->name
-                                                . ($typeName ? " • {$typeName}" : '')
-                                                . " • B{$blockCode} L{$lotNo}"
-                                            ),
-                                            'description'   => "Auto-generated unit under {$project->name}.",
-
-                                            // Only sub_type used (house type code)
-                                            'sub_type'      => $typeCode ?: null,
-
-                                            // pricing & flags
-                                            'price'         => $price ?? 0,
-                                            'reservation'   => $reservation,
-                                            'isFixPrice'    => $isFixPrice ? 1 : 0,
-                                            'isPresell'     => $isPresell ? 1 : 0,
-
-                                            // specs
-                                            'address'       => $project->address,
-                                            'lot_area'      => $lotArea,
-                                            'floor_area'    => $floorArea,
-                                            'bedrooms'      => $bedrooms,
-                                            'bathrooms'     => $bathrooms,
-                                            'car_slots'     => $carSlots,
-
-                                            // images/state
-                                            'image_url'     => $mainImage,
-                                            'status'        => 'Published',
-                                            'views'         => 0,
-                                            'allow_multi_agents' => 0,
-                                        ]);
-
-                                        // Gallery → property_images rows
-                                        if ($gallery->isNotEmpty()) {
-                                            $rows = $gallery->map(fn ($path) => [
-                                                'property_id' => $prop->id,
-                                                'image_url'   => $path,
-                                                'created_at'  => now(),
-                                                'updated_at'  => now(),
-                                            ])->all();
-                                            PropertyImage::insert($rows);
+                                            $made++;
+                                            $createdCount++;
+                                            $taken[$lotNo] = true;
                                         }
-
-                                        // Features → property_features rows
-                                        if ($features->isNotEmpty()) {
-                                            $frows = $features->map(fn ($name) => [
-                                                'property_id' => $prop->id,
-                                                'name'        => $name,
-                                                'created_at'  => now(),
-                                                'updated_at'  => now(),
-                                            ])->all();
-                                            PropertyFeature::insert($frows);
-                                        }
-
-                                        $made++;
-                                        $createdCount++;
-                                        $taken[$lotNo] = true;
+                                        $cursor++;
                                     }
-                                    $cursor++;
-                                }
+                                });
+
+                                Notification::make()
+                                    ->title('🎉 Project Setup Complete!')
+                                    ->body("Successfully created '{$project->name}' with {$createdCount} properties, complete with images and features.")
+                                    ->success()
+                                    ->send();
                             });
+                        }),
 
-                            Notification::make()
-                                ->title('Setup complete')
-                                ->body("Project created. Generated {$createdCount} properties (with images & features).")
-                                ->success()
-                                ->send();
-                        });
+//                    Action::make('viewProjects')
+//                        ->label('View Projects')
+//                        ->icon('heroicon-o-building-storefront')
+//                        ->color('info')
+//                        ->url(fn ($record) => ProjectResource::getUrl('index', ['tableFilters[developer_id][value]' => $record->id])),
 
-                        Notification::make()
-                            ->title('Project saved')
-                            ->body('Your project, house types, and units were created successfully.')
-                            ->success()
-                            ->send();
-                    }),
+                    Tables\Actions\DeleteAction::make()
+                        ->color('danger')
+                        ->icon('heroicon-o-trash'),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+
+                    Tables\Actions\BulkAction::make('markVerified')
+                        ->label('Mark as Verified')
+                        ->icon('heroicon-o-check-badge')
+                        ->color('success')
+                        ->action(fn ($records) => $records->each->update(['status' => 'verified'])),
+
+                    Tables\Actions\BulkAction::make('markInactive')
+                        ->label('Mark as Inactive')
+                        ->icon('heroicon-o-pause-circle')
+                        ->color('warning')
+                        ->action(fn ($records) => $records->each->update(['status' => 'inactive'])),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('No developers found')
+            ->emptyStateDescription('Once you add your first developer, it will appear here.')
+            ->emptyStateIcon('heroicon-o-building-office-2')
+            ->emptyStateActions([
+                Tables\Actions\CreateAction::make()
+                    ->label('Add Developer')
+                    ->icon('heroicon-o-plus'),
+            ])
+            ->deferLoading()
+            ->striped();
     }
 
     public static function getRelations(): array
     {
         return [
+            // Relations can be added here if needed
             AmenitiesRelationManager::class,
             ProjectsRelationManager::class,
         ];
@@ -437,9 +715,19 @@ class DeveloperResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListDevelopers::route('/'),
+            'index' => Pages\ListDevelopers::route('/'),
             'create' => Pages\CreateDeveloper::route('/create'),
-            'edit'   => Pages\EditDeveloper::route('/{record}/edit'),
+            'edit' => Pages\EditDeveloper::route('/{record}/edit'),
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'success';
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
@@ -41,29 +40,29 @@ class StatsOverview extends BaseWidget
     {
         // Cache everything briefly to keep the dashboard snappy
         return Cache::remember('dash.kpi.overview.v1', 60, function () {
-            $tz = 'Asia/Manila';
+            $tz  = 'Asia/Manila';
             $now = CarbonImmutable::now($tz);
 
             // Windows
-            $last30Start   = $now->subDays(30)->startOfDay();
-            $prev30Start   = $now->subDays(60)->startOfDay();
-            $prev30End     = $last30Start->subSecond();
-            $mtdStart      = $now->startOfMonth();
-            $prevMonthEnd  = $mtdStart->subSecond();
-            $prevMonthStart= $mtdStart->subMonth()->startOfMonth();
-            $next7Start    = $now->startOfDay();
-            $next7End      = $now->addDays(7)->endOfDay();
+            $last30Start    = $now->subDays(30)->startOfDay();
+            $prev30Start    = $now->subDays(60)->startOfDay();
+            $prev30End      = $last30Start->subSecond();
+            $mtdStart       = $now->startOfMonth();
+            $prevMonthEnd   = $mtdStart->subSecond();
+            $prevMonthStart = $mtdStart->subMonth()->startOfMonth();
+            $next7Start     = $now->startOfDay();
+            $next7End       = $now->addDays(7)->endOfDay();
 
             // ===== Raw counts / sums =====
-            $totalProps     = Property::count();
+            $totalProps  = Property::count();
             // Adjust "active" to match your enum/status (e.g., 'Published' or 'Active')
-            $activeProps    = Property::where('status', 'Published')->count();
+            $activeProps = Property::where('status', 'Published')->count();
 
-            $inq30          = Inquiry::whereBetween('created_at', [$last30Start, $now->endOfDay()])->count();
-            $inqPrev30      = Inquiry::whereBetween('created_at', [$prev30Start, $prev30End])->count();
+            $inq30     = Inquiry::whereBetween('created_at', [$last30Start, $now->endOfDay()])->count();
+            $inqPrev30 = Inquiry::whereBetween('created_at', [$prev30Start, $prev30End])->count();
 
             // Prefer scheduled_at; fallback to created_at if you don't have it
-            $tripsNext7     = PropertyTripping::when(
+            $tripsNext7 = PropertyTripping::when(
                 Schema()->hasColumn((new PropertyTripping)->getTable(), 'scheduled_at'),
                 fn($q) => $q->whereBetween('scheduled_at', [$next7Start, $next7End]),
                 fn($q) => $q->whereBetween('created_at',   [$next7Start, $next7End])
@@ -72,15 +71,22 @@ class StatsOverview extends BaseWidget
             // Deals closed MTD (use closed_at if available)
             $dealDateCol    = Schema()->hasColumn((new Deal)->getTable(), 'closed_at') ? 'closed_at' : 'created_at';
             $dealsMTD       = Deal::whereBetween($dealDateCol, [$mtdStart, $now->endOfDay()])
-                ->when(Schema()->hasColumn((new Deal)->getTable(), 'status'),
-                    fn($q) => $q->where('status', 'closed'))
+                ->when(
+                    Schema()->hasColumn((new Deal)->getTable(), 'status'),
+                    fn($q) => $q->where('status', 'closed')
+                )
                 ->count();
             $dealsPrevMonth = Deal::whereBetween($dealDateCol, [$prevMonthStart, $prevMonthEnd])
-                ->when(Schema()->hasColumn((new Deal)->getTable(), 'status'),
-                    fn($q) => $q->where('status', 'closed'))
+                ->when(
+                    Schema()->hasColumn((new Deal)->getTable(), 'status'),
+                    fn($q) => $q->where('status', 'closed')
+                )
                 ->count();
 
-            // Average feedback (⭐)
+            // New properties added (supply growth) 30d vs prior 30d
+            $newProps30     = Property::whereBetween('created_at', [$last30Start, $now->endOfDay()])->count();
+            $newPropsPrev30 = Property::whereBetween('created_at', [$prev30Start, $prev30End])->count();
+
             // Average feedback (⭐) over last 30 days vs prior 30 days
             $avgFeedbackCurrent = (float) (DB::table('feedbacks')
                 ->whereBetween('created_at', [$last30Start, $now->endOfDay()])
@@ -92,29 +98,21 @@ class StatsOverview extends BaseWidget
                 ->selectRaw('AVG((communication + negotiation + professionalism + knowledge) / 4) AS avg_rating')
                 ->value('avg_rating') ?? 0.0);
 
-// Absolute delta (not %)
+            // Absolute delta (not %)
             $deltaFb = round($avgFeedbackCurrent - $avgFeedbackPrev, 2);
 
-
-            // Revenue (MTD) — assumes 'amount' column (decimal) on deals
-            $revMTD       = (float) Deal::whereBetween($dealDateCol, [$mtdStart, $now->endOfDay()])
-                ->sum('amount');
-            $revPrevMonth = (float) Deal::whereBetween($dealDateCol, [$prevMonthStart, $prevMonthEnd])
-                ->sum('amount');
-
             // Lead → Deal Rate (conversion) over last 30 days
-            $deals30      = Deal::whereBetween($dealDateCol, [$last30Start, $now->endOfDay()])->count();
-            $rate         = ($inq30 > 0) ? round($deals30 / max(1, $inq30) * 100, 1) : 0.0;
+            $deals30 = Deal::whereBetween($dealDateCol, [$last30Start, $now->endOfDay()])->count();
+            $rate    = ($inq30 > 0) ? round($deals30 / max(1, $inq30) * 100, 1) : 0.0;
 
             // ===== Deltas / Trends =====
-            $deltaInq30   = $this->pctDelta($inq30, $inqPrev30);
-            $deltaDealsM  = $this->pctDelta($dealsMTD, $dealsPrevMonth);
-            $deltaRevM    = $this->pctDelta($revMTD, $revPrevMonth);
-            $deltaFb      = $this->diff($avgFeedbackCurrent, $avgFeedbackPrev); // absolute difference, not %
+            $deltaInq30      = $this->pctDelta($inq30, $inqPrev30);
+            $deltaDealsM     = $this->pctDelta($dealsMTD, $dealsPrevMonth);
+            $deltaNewProps30 = $this->pctDelta($newProps30, $newPropsPrev30);
+            $deltaFb         = $this->diff($avgFeedbackCurrent, $avgFeedbackPrev); // absolute difference, not %
 
             // Formatters
-            $peso = static fn(float $n) => '₱' . number_format($n, 2);
-            $num  = static fn(int|float $n) => number_format((float) $n);
+            $num = static fn(int|float $n) => number_format((float) $n);
 
             // ===== Cards =====
             return [
@@ -156,21 +154,19 @@ class StatsOverview extends BaseWidget
                     ->icon('heroicon-o-star')
                     ->color($avgFeedbackCurrent >= $avgFeedbackPrev ? 'success' : 'danger'),
 
-
-                // 7) Revenue (MTD) + trend
-                Card::make('Revenue (MTD)', $peso($revMTD))
-                    ->description($this->trendText($deltaRevM) . ' vs last month')
-                    ->descriptionIcon($deltaRevM >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
-                    ->color($deltaRevM >= 0 ? 'success' : 'danger')
-                    ->icon('heroicon-o-banknotes'),
+                // 7) New Properties (30d) + trend vs prior 30d
+                Card::make('New Properties (30d)', $num($newProps30))
+                    ->description($this->trendText($deltaNewProps30) . ' vs prior 30d')
+                    ->descriptionIcon($deltaNewProps30 >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
+                    ->color($deltaNewProps30 >= 0 ? 'success' : 'danger')
+                    ->icon('heroicon-o-building-office-2'),
 
                 // 8) Lead → Deal Rate (Gauge-style)
                 Card::make('Lead → Deal Rate', $rate . '%')
                     ->description($inq30 . ' inq • ' . $deals30 . ' deals (30d)')
                     ->icon('heroicon-o-arrow-path-rounded-square')
                     ->color($this->rateColor($rate))
-//                        ->progress((int) round($rate)) // renders a progress bar under the number
-                    ->extraAttributes(['class' => 'overflow-hidden']), // keeps progress tidy
+                    ->extraAttributes(['class' => 'overflow-hidden']),
             ];
         });
     }
@@ -179,7 +175,10 @@ class StatsOverview extends BaseWidget
 
     protected function pctDelta(int|float $current, int|float $previous): float
     {
-        if ($previous == 0) return $current > 0 ? 100.0 : 0.0;
+        if ($previous == 0) {
+            return $current > 0 ? 100.0 : 0.0;
+        }
+
         return round((($current - $previous) / $previous) * 100, 1);
     }
 

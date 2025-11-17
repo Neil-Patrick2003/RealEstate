@@ -1,44 +1,130 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import { Link } from '@inertiajs/react';
+import { useEffect, useRef } from 'react';
 
 export default function GuestLayout({ children }) {
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
+
+        // Set canvas size
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Subtle particle system
+        const particles = [];
+        const particleCount = 30;
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 0.8 - 0.4;
+                this.speedY = Math.random() * 0.8 - 0.4;
+                const goldVariation = Math.random() * 0.4 + 0.6;
+                this.color = `rgba(255, ${180 * goldVariation}, ${50 * goldVariation}, ${Math.random() * 0.2 + 0.05})`;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
+                if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Very subtle background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(254, 243, 199, 0.02)'); // amber-50
+            gradient.addColorStop(1, 'rgba(255, 237, 213, 0.02)'); // orange-50
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw particles
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            // Very subtle connection lines
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(255, 215, 0, ${0.08 * (1 - distance / 100)})`;
+                        ctx.lineWidth = 0.3;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(animate);
+        };
+
+        animate();
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+            window.removeEventListener('resize', resizeCanvas);
+        };
+    }, []);
+
     return (
-        <div className="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0 dark:bg-gray-900">
-            <div>
-                <Link href="/">
-                    <ApplicationLogo className="h-20 w-20 fill-current text-gray-500" />
-                </Link>
-            </div>
-            <div>
-                <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
- width="300.000000pt" height="300.000000pt" viewBox="0 0 300.000000 300.000000"
- preserveAspectRatio="xMidYMid meet">
-<metadata>
-Created by potrace 1.10, written by Peter Selinger 2001-2011
-</metadata>
-<g transform="translate(0.000000,300.000000) scale(0.100000,-0.100000)"
-fill="#000000" stroke="none">
-<path d="M733 2593 c-12 -2 -36 -20 -53 -39 l-30 -35 0 -1019 0 -1020 34 -38
-34 -37 160 0 c147 0 163 2 189 21 55 41 53 23 50 662 -1 325 1 592 4 592 3 0
-12 -15 21 -33 41 -87 753 -1210 776 -1225 22 -14 53 -17 195 -17 l169 0 34 37
-34 38 0 1020 0 1020 -34 38 -34 37 -160 0 c-147 0 -163 -2 -189 -21 -55 -41
--53 -24 -51 -642 2 -314 2 -572 2 -572 -1 0 -33 53 -72 118 -39 64 -210 335
--379 602 -261 410 -313 488 -343 502 -29 15 -60 18 -185 17 -82 -1 -160 -4
--172 -6z m361 -65 c13 -13 184 -277 381 -588 196 -311 366 -573 378 -583 21
--18 22 -18 44 8 l23 26 0 553 c0 545 0 554 21 580 l20 26 154 0 154 0 20 -26
-c21 -27 21 -30 21 -1024 0 -994 0 -997 -21 -1024 l-20 -26 -159 0 c-151 0
--160 1 -183 22 -14 13 -188 284 -387 603 -199 319 -371 590 -382 603 -27 28
--43 28 -62 0 -14 -20 -16 -93 -16 -599 0 -568 0 -577 -21 -603 l-20 -26 -152
-0 c-141 0 -152 1 -174 22 l-23 21 0 1006 0 1005 22 23 c21 22 27 23 189 23
-160 0 169 -1 193 -22z"/>
-</g>
-</svg>
+        <div className="relative flex min-h-screen flex-col items-center justify-center bg-white">
+            {/* Very subtle animated background */}
+            <canvas
+                ref={canvasRef}
+                className="absolute inset-0 pointer-events-none"
+            />
 
-            </div>
+            {/* Header with Logo */}
 
-            <div className="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg dark:bg-gray-800">
+            {/* Content Card */}
+            <div className="relative z-10 w-full overflow-hidden bg-white px-6 py-6 shadow-lg sm:max-w-md sm:rounded-xl border border-amber-100 transition-all duration-300 hover:shadow-amber-100 hover:border-amber-200">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-400" />
                 {children}
             </div>
+
+            {/* Subtle floating elements */}
+            <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-amber-200 rounded-full animate-pulse opacity-60" />
+            <div className="absolute bottom-1/3 right-1/4 w-1 h-1 bg-orange-200 rounded-full animate-pulse opacity-40" />
         </div>
     );
 }
