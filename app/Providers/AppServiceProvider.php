@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Models\Deal;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
@@ -25,12 +27,37 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        /**
+         * This should always run, even in console/queue workers,
+         * so your verify email notification keeps the custom template.
+         */
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Verify Email Address')
+                ->line('Click the button below to verify your email address.')
+                ->action('Verify Email Address', $url);
+        });
 
-        Vite::prefetch(concurrency: 3);
+        /**
+         * If we are in console (artisan commands, Forge deploy, queue workers, etc.),
+         * DO NOT run any Vite / Inertia / heavy UI boot logic.
+         */
+        if (App::runningInConsole()) {
+            return;
+        }
+
+        // ---- WEB REQUESTS ONLY BELOW THIS LINE ----
+
+        // Only call Vite::prefetch if the manifest actually exists
+        if (File::exists(public_path('build/manifest.json'))) {
+            Vite::prefetch(concurrency: 3);
+        }
 
         Inertia::share('pendingFeedback', function () {
             $user = Auth::user();
-            if (!$user) return [];
+            if (! $user) {
+                return [];
+            }
 
             // Normalize "closed" states you consider eligible for feedback
             $closedStatuses = [
@@ -52,7 +79,6 @@ class AppServiceProvider extends ServiceProvider
                     'propertyListing.agent:id,name,photo_url',
                 ])
                 ->latest() // uses created_at
-                // IMPORTANT: only select columns that actually exist on 'deals'
                 ->get(['id','property_listing_id','buyer_id','status','updated_at','created_at'])
                 ->take(5);
 
@@ -78,16 +104,5 @@ class AppServiceProvider extends ServiceProvider
                 ];
             })->values();
         });
-
-
-        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
-            return (new MailMessage)
-                ->subject('Verify Email Address')
-                ->line('Click the button below to verify your email address.')
-                ->action('Verify Email Address', $url);
-        });
-
-
-
     }
 }
