@@ -26,17 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
-        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
-            return (new MailMessage)
-                ->subject('Verify Email Address')
-                ->line('Click the button below to verify your email address.')
-                ->action('Verify Email Address', $url);
-        });
-
-
         Vite::prefetch(concurrency: 3);
-
-
 
         Inertia::share('pendingFeedback', function () {
             $user = Auth::user();
@@ -87,6 +77,14 @@ class AppServiceProvider extends ServiceProvider
                     'feedback_link' => route('deals.feedback.create', ['deal' => $d->id]),
                 ];
             })->values();
+        });
+
+
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Verify Email Address')
+                ->line('Click the button below to verify your email address.')
+                ->action('Verify Email Address', $url);
         });
 
 
