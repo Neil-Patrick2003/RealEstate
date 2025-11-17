@@ -7,6 +7,7 @@ use App\Models\Deal;
 use App\Models\Feedback;
 use App\Models\FeedbackCharacteristic;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class FeedbackController extends Controller
 {
@@ -23,7 +24,9 @@ class FeedbackController extends Controller
 
     public function store(Request $request, Deal $deal)
     {
-        $this->authorize('update', $deal); // optional policy
+
+
+        $this->authorize('update', $deal);
 
         $data = $request->validate([
             'communication'   => 'nullable|integer|min:1|max:5',
@@ -35,9 +38,8 @@ class FeedbackController extends Controller
 
         Feedback::create([
             'deal_id'  => $deal->id,
-            'agent_id' => optional(optional($deal->propertyListing)->agent)->id ?? $deal->agent_id,
-            'buyer_id' => $request->user()->id,
-            'sender_id'=> $request->user()->id, // sender is buyer here
+            'agent_id' => $request->agent_id,
+            'sender_id'=> auth()->id(),// sender is buyer here
             ...$data,
         ]);
 

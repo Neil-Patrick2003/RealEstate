@@ -77,9 +77,8 @@ export const sellerSidebarConfig = {
     mainMenus: [
         { name: "Dashboard", Icon: Home, path: "/seller/dashboard", description: "Seller insights & overview" },
         { name: "My Properties", Icon: Building, path: "/seller/properties", description: "Manage your property listings" },
-        { name: "Message", Icon: MessageSquare, path: "/seller/messages", description: "All messages for your Inquiries" },
+        { name: "Message", Icon: MessageSquare, path: "/seller/chat", description: "All messages for your Inquiries" },
         { name: "Inquiries", Icon: Mail, path: "/seller/inquiries", description: "Buyer inquiries for your listings" },
-        { name: "Transactions", Icon: BarChart3, path: "/seller/transaction", description: "Sales history & payments" },
     ],
     quickActions: [
         { label: "List Property", Icon: Plus, onClick: () => router.get('/seller/properties/create') }

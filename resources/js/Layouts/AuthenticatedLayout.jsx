@@ -627,7 +627,7 @@
 
 
         return (
-            <div className="h-screen bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-800 flex overflow-hidden">
+            <div className="h-screen bg-white dark:from-neutral-900 dark:to-neutral-800 flex overflow-hidden">
                 {/* Desktop Sidebar */}
                 {mode !== "mobile" && (
                     <div className="hidden md:block">
@@ -769,7 +769,7 @@
                                                     {auth?.user?.name}
                                                 </p>
                                                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                                                    Buyer Account
+                                                    {auth?.user?.role} Account
                                                 </p>
                                             </div>
                                         </div>

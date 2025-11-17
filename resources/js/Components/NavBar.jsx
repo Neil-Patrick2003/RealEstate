@@ -1,13 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Menu, X, Search, User, ChevronDown } from 'lucide-react';
+import { Link, usePage, router } from '@inertiajs/react';
 
 import logo from '../../assets//framer_logo.png';
-import {router} from "@inertiajs/react";
 
 function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // ⬇️ Get auth user from Inertia (make sure you're sharing this from Laravel)
+    const { props } = usePage();
+    const user = props.auth?.user || null;
+
+    // Helper: decide where to send user based on role
+    const getDashboardPath = (user) => {
+        if (!user) return '/login';
+
+        const role = (user.role || '').toLowerCase();
+
+        if (role === 'buyer') return '/';
+        if (role === 'seller') return '/seller/dashboard';
+        if (role === 'agent') return '/agents/dashboard';
+        if (role === 'broker') return '/broker/dashboard';
+
+        // fallback
+        return '/dashboard';
+    };
+
+    const dashboardHref = getDashboardPath(user);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -41,7 +62,7 @@ function Navbar() {
                 <div className="flex items-center justify-between h-20">
                     {/* Logo */}
                     <motion.a
-                        href="#home"
+                        href="/"
                         className="flex items-center gap-2 group"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -49,11 +70,13 @@ function Navbar() {
                         <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center group-hover:shadow-lg transition-shadow">
                             <img src={logo} alt="Logo" className="w-8 h-8" />
                         </div>
-                        <span className={`text-xl font-bold transition-colors ${
-                            isScrolled ? 'text-neutral-900' : 'text-white'
-                        }`}>
-              RealSync
-            </span>
+                        <span
+                            className={`text-xl font-bold transition-colors ${
+                                isScrolled ? 'text-neutral-900' : 'text-white'
+                            }`}
+                        >
+                            RealSync
+                        </span>
                     </motion.a>
 
                     {/* Desktop Navigation */}
@@ -66,13 +89,13 @@ function Navbar() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.4, delay: index * 0.1 }}
                                 className={`relative font-medium transition-colors group ${
-                                    isScrolled ? 'text-neutral-700 hover:text-primary-600' : 'text-white hover:text-primary-400'
+                                    isScrolled
+                                        ? 'text-neutral-700 hover:text-primary-600'
+                                        : 'text-white hover:text-primary-400'
                                 }`}
                             >
                                 {link.name}
-                                <motion.span
-                                    className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 to-secondary-500 group-hover:w-full transition-all duration-300"
-                                />
+                                <motion.span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 to-secondary-500 group-hover:w-full transition-all duration-300" />
                             </motion.a>
                         ))}
                     </div>
@@ -90,14 +113,14 @@ function Navbar() {
                         >
                             <Search className="w-5 h-5" />
                         </motion.button>
-                        <motion.button
-                            onClick={() => router.visit('/login')}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+
+                        {/* ⬇️ If authenticated: Dashboard, else: Sign In */}
+                        <Link
+                            href={dashboardHref}
                             className="px-6 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
                         >
-                            Sign In
-                        </motion.button>
+                            {user ? 'Dashboard' : 'Sign In'}
+                        </Link>
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -143,13 +166,19 @@ function Navbar() {
                                     {link.name}
                                 </motion.a>
                             ))}
+
+                            {/* ⬇️ Mobile: Same logic — Dashboard vs Sign In */}
                             <motion.button
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: 0.3 }}
                                 className="w-full px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-lg font-semibold shadow-lg"
+                                onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    router.visit(dashboardHref);
+                                }}
                             >
-                                Sign In
+                                {user ? 'Dashboard' : 'Sign In'}
                             </motion.button>
                         </div>
                     </motion.div>

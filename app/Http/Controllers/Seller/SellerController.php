@@ -44,11 +44,29 @@ class SellerController extends Controller
             ->orderBy('ym')
             ->get();
 
-        // Recent lists
-        $recentProperties = Property::where('seller_id', $sellerId)
+        // Pie chart data for inquiry status distribution
+        $inquiryStatusDistribution = Inquiry::where('seller_id', $sellerId)
+            ->select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'name' => $item->status,
+                    'value' => $item->total,
+                    'color' => $this->getStatusColor($item->status)
+                ];
+            });
+
+        // Recent pending inquiries (replacing recent properties)
+        $recentPendingInquiries = Inquiry::with([
+            'property:id,title,image_url,address,price',
+            'agent:id,name,photo_url,email,contact_number',
+        ])
+            ->where('seller_id', $sellerId)
+            ->where('status', 'Pending')
             ->latest()
             ->take(6)
-            ->get(['id','title','address','image_url','status','created_at','views','price']);
+            ->get(['id','status','created_at','property_id','agent_id','notes',]);
 
         $recentInquiries = Inquiry::with([
             'property:id,title,image_url,address,price',
@@ -75,12 +93,27 @@ class SellerController extends Controller
             'charts' => [
                 'propertiesByMonth' => $propertiesByMonth,
                 'inquiriesByMonth'  => $inquiriesByMonth,
+                'inquiryStatusDistribution' => $inquiryStatusDistribution,
             ],
             'queues' => [
-                'recent_properties' => $recentProperties,
+                'recent_pending_inquiries' => $recentPendingInquiries, // New data
                 'recent_inquiries'  => $recentInquiries,
             ],
             'auth_user' => auth()->user(),
         ]);
+    }
+
+    /**
+     * Get color for inquiry status
+     */
+    private function getStatusColor($status)
+    {
+        return match($status) {
+            'Pending'   => '#f59e0b', // Amber
+            'Accepted'  => '#10b981', // Green
+            'Rejected'  => '#ef4444', // Red
+            'Cancelled' => '#6b7280', // Gray
+            default     => '#9ca3af', // Default gray
+        };
     }
 }
