@@ -115,19 +115,6 @@ export default function GuestLayout({ children }) {
             />
 
             {/* Header with Logo */}
-            <div className="relative z-10 mb-8 text-center">
-                <Link
-                    href="/"
-                    className="inline-block transition-all duration-300 hover:scale-105"
-                >
-                    <div className="relative">
-                        <ApplicationLogo className="h-20 w-20 fill-current text-amber-500" />
-                        <div className="absolute inset-0 bg-amber-200 rounded-full opacity-0 transition-opacity duration-300 hover:opacity-40 blur-md" />
-                    </div>
-                </Link>
-
-
-            </div>
 
             {/* Content Card */}
             <div className="relative z-10 w-full overflow-hidden bg-white px-6 py-6 shadow-lg sm:max-w-md sm:rounded-xl border border-amber-100 transition-all duration-300 hover:shadow-amber-100 hover:border-amber-200">
