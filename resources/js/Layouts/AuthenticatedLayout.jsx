@@ -1,4 +1,3 @@
-    // resources/js/Layouts/BuyerLayout.jsx
     import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
     import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
     import {

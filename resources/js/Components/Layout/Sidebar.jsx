@@ -219,7 +219,7 @@ const NavItem = ({
                      isOpen,
                      isActive,
                      count,
-                     onMarkRead,
+                     // onMarkRead,
                      hasSubMenu = false,
                      isSubMenuOpen = false,
                      onToggleSubMenu
@@ -423,6 +423,8 @@ const Sidebar = ({
     const markAllOfPathAsRead = useCallback(async (path) => {
         if (!unreads.length) return;
 
+
+
         // const ids = [];
         // for (const n of unreads) {
         //     const p = categorizeNotification ? categorizeNotification(n) : null;
@@ -452,12 +454,12 @@ const Sidebar = ({
         [counts]
     );
 
-    const withMarkRead = useCallback((path, originalOnClick) => {
-        return (e) => {
-            try { markAllOfPathAsRead(path); } catch {}
-            originalOnClick?.(e);
-        };
-    }, [markAllOfPathAsRead]);
+    // const withMarkRead = useCallback((path, originalOnClick) => {
+    //     return (e) => {
+    //         try { markAllOfPathAsRead(path); } catch {}
+    //         originalOnClick?.(e);
+    //     };
+    // }, [markAllOfPathAsRead]);
 
     // Close sidebar when clicking outside on mobile
     useEffect(() => {
@@ -573,7 +575,7 @@ const Sidebar = ({
                                         isOpen={shouldShowExpanded} // Use shouldShowExpanded here
                                         isActive={isActive}
                                         count={totalCount}
-                                        onMarkRead={withMarkRead}
+                                        // onMarkRead={withMarkRead}
                                         hasSubMenu={hasSubMenu}
                                         isSubMenuOpen={isSectionOpen}
                                         onToggleSubMenu={() => setOpenedIndex(isSectionOpen ? null : i)}
@@ -606,7 +608,7 @@ const Sidebar = ({
                                                 isOpen={shouldShowExpanded} // Use shouldShowExpanded here
                                                 isActive={isActive}
                                                 count={count}
-                                                onMarkRead={withMarkRead}
+                                                // onMarkRead={withMarkRead}
                                             />
                                         </motion.li>
                                     );
