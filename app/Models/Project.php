@@ -18,23 +18,29 @@ class Project extends Model
         'project_img'
     ];
 
-    public function developer()
+    public function developer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Developer::class);
     }
 
-    public function blocks()
+    public function blocks(): Project|\Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Block::class);
     }
 
-    public function house_types()
+    public function house_types(): Project|\Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(HouseType::class);
     }
 
-    public function inventoryPools()
+    public function inventoryPools(): Project|\Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(InventoryPool::class);
     }
+
+    public function properties(): Project|\Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Property::class);
+    }
 }
+
