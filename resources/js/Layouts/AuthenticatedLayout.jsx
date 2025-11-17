@@ -719,19 +719,6 @@
 
                             {/* Right Section */}
                             <div className="flex items-center gap-3">
-                                {/* Theme Toggle */}
-                                <button
-                                    onClick={toggleTheme}
-                                    className="p-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200"
-                                    aria-label="Toggle theme"
-                                >
-                                    {theme === "dark" ? (
-                                        <Sun className="w-5 h-5 text-amber-400" />
-                                    ) : (
-                                        <Moon className="w-5 h-5 text-neutral-600" />
-                                    )}
-                                </button>
-
                                 {/* Notifications */}
                                 <button
                                     onClick={() => setIsNotificationsOpen(true)}
