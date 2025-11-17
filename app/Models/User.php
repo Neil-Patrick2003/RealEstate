@@ -211,8 +211,10 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         return $this->contact_number;
     }
 
-    public function canAccessFilament(): bool
+
+
+    public function canAccessPanel(Panel $panel): bool
     {
-        return in_array($this->role, ['Admin']);
+        return in_array($this->role, ['Admin', 'Broker']);
     }
 }
