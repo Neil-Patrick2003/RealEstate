@@ -72,7 +72,7 @@ const SlidingLoginSignup = () => {
                 isSignUpMode ? "opacity-0 z-10" : ""
               }`}
           >
-            <SigninForm buttonClasses={buttonClasses} buttonForGFT={buttonForGFT} />
+            <SigninForm buttonClasses={buttonClasses} buttonForGFT={buttonForGFT} toggleSignUpMode={toggleSignUpMode}/>
           </div>
 
           {/* Signup Form */}
@@ -84,7 +84,7 @@ const SlidingLoginSignup = () => {
               }`}
           >
             <div className="max-h-[80vh] mb-[28vh] overflow-y-auto md:max-h-[100vh] md:mb-0 md:overflow-hidden w-full scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-              <SignupForm buttonClasses={buttonClasses} buttonForGFT={buttonForGFT} />
+              <SignupForm buttonClasses={buttonClasses} buttonForGFT={buttonForGFT} toggleSignUpMode={toggleSignUpMode} />
             </div>
           </div>
         </div>

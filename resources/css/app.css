@@ -726,3 +726,94 @@ code::selection {
     background-color: rgba(16, 185, 129, 0.16);
     color: rgba(4, 120, 87, 1);
 }
+
+/* Add these badge classes to your utilities */
+.badge-warning {
+    @apply badge bg-amber-50 text-amber-700 border-amber-200;
+}
+
+.badge-success {
+    @apply badge bg-emerald-50 text-emerald-700 border-emerald-200;
+}
+
+.badge-secondary {
+    @apply badge bg-gray-50 text-gray-700 border-gray-200;
+}
+
+.badge-error {
+    @apply badge bg-rose-50 text-rose-700 border-rose-200;
+}
+
+
+/* Enhanced dark mode support */
+.dark .card-hover:hover {
+    @apply bg-gray-750 border-gray-600;
+}
+
+.dark .gray-card {
+    @apply bg-gray-800 border-gray-700;
+}
+
+.dark .skeleton {
+    @apply bg-gray-700;
+}
+
+.dark .skeleton-text {
+    @apply bg-gray-700;
+}
+
+.dark .skeleton-circle {
+    @apply bg-gray-700;
+}
+
+/* Badge dark mode variants */
+.dark .badge-primary {
+    @apply bg-emerald-900/40 text-emerald-200 border-emerald-700;
+}
+
+.dark .badge-secondary {
+    @apply bg-gray-700 text-gray-200 border-gray-600;
+}
+
+.dark .badge-success {
+    @apply bg-emerald-900/40 text-emerald-200 border-emerald-700;
+}
+
+.dark .badge-warning {
+    @apply bg-amber-900/40 text-amber-200 border-amber-700;
+}
+
+.dark .badge-error {
+    @apply bg-rose-900/40 text-rose-200 border-rose-700;
+}
+
+.dark .badge-gray {
+    @apply bg-gray-700 text-gray-200 border-gray-600;
+}
+
+/* Form dark mode */
+.dark .form-input {
+    @apply bg-gray-800 border-gray-600 text-white placeholder-gray-400;
+}
+
+.dark .form-input:focus {
+    @apply border-primary-500 ring-primary-900;
+}
+
+.dark .form-select {
+    @apply bg-gray-800 border-gray-600 text-white;
+}
+
+/* Navigation dark mode */
+.dark .nav-item {
+    @apply text-gray-300 hover:bg-gray-800 hover:text-white;
+}
+
+.dark .nav-item.active {
+    @apply bg-emerald-900/40 text-emerald-200 border-emerald-700;
+}
+
+/* Custom gray shade for dark mode hover states */
+.bg-gray-750 {
+    background-color: #374151;
+}

@@ -18,12 +18,21 @@ import {
     Search,
     ChevronDown,
     Calendar,
-    Eye, // Added for View Button
+    Eye,
+    Plus,
+    FileText,
+    Download,
+    Upload
 } from "lucide-react";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
 // PHP Currency Formatter
-const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }); // Reduced fraction digits for brevity
+const currency = new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    maximumFractionDigits: 0
+});
 
 /** Normalize listing row to avoid 0/1 vs boolean, mixed types, etc. */
 function normalizeListing(row = {}) {
@@ -32,61 +41,89 @@ function normalizeListing(row = {}) {
         ...row,
         status: row.status || "Published",
         created_at: row.created_at,
+        updated_at: row.updated_at,
         property: {
             ...property,
             title: property.title || "Property",
             address: property.address || "",
             image_url: property.image_url || null,
             price: Number(property.price ?? 0),
-            property_type: (property.property_type || "").toLowerCase(), // "house" | "condo" | "land" | etc
+            property_type: (property.property_type || "").toLowerCase(),
             lot_area: property.lot_area,
             floor_area: property.floor_area,
             isPresell: typeof property.isPresell === "boolean" ? property.isPresell : !!Number(property.isPresell),
+            bedrooms: property.bedrooms || 0,
+            bathrooms: property.bathrooms || 0,
         },
         seller: row.seller || null,
         agents: Array.isArray(row.agents) ? row.agents : [],
+        views: row.views || 0,
+        inquiries: row.inquiries || 0,
     };
 }
 
-// Badge Refinement: Subtle, rounded edges
+// Badge using utility classes
 function TypeBadge({ type }) {
     const t = (type || "").toLowerCase();
     const map = {
-        house: { icon: Home, cls: "bg-blue-50 text-blue-700" },
-        condo: { icon: Building2, cls: "bg-violet-50 text-violet-700" },
-        land:  { icon: Ruler, cls: "bg-emerald-50 text-emerald-700" },
-        default:{ icon: Tag, cls: "bg-gray-100 text-gray-700" },
+        house: {
+            icon: Home,
+            cls: "badge-primary",
+            iconCls: "text-primary-600"
+        },
+        condo: {
+            icon: Building2,
+            cls: "badge-accent",
+            iconCls: "text-emerald-600"
+        },
+        land:  {
+            icon: Ruler,
+            cls: "badge-success",
+            iconCls: "text-emerald-600"
+        },
+        default:{
+            icon: Tag,
+            cls: "badge-gray",
+            iconCls: "text-gray-600"
+        },
     };
     const Item = map[t] || map.default;
     const Icon = Item.icon;
     return (
-        <span className={cn("inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ring-1 ring-inset", Item.cls, Item.cls.replace('-50', '-200'))}>
-            <Icon className="w-3 h-3" />
+        <span className={cn("badge text-xs font-semibold inline-flex items-center gap-1", Item.cls)}>
+            <Icon className={cn("w-3 h-3", Item.iconCls)} />
             {type || "Property"}
         </span>
     );
 }
 
-// Status Badge Refinement: Bolder, cleaner indicators
+// Status Badge using utility classes
 function StatusBadge({ status }) {
     const s = (status || "").toLowerCase();
     if (s === "assigned") {
         return (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-sky-600 text-white px-2 py-0.5 rounded-full shadow-md">
+            <span className="badge badge-primary text-xs font-semibold inline-flex items-center gap-1">
                 <BadgeCheck className="w-3 h-3" /> Assigned
             </span>
         );
     }
     if (s === "sold") {
         return (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-green-600 text-white px-2 py-0.5 rounded-full shadow-md">
+            <span className="badge badge-success text-xs font-semibold inline-flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" /> Sold
+            </span>
+        );
+    }
+    if (s === "draft") {
+        return (
+            <span className="badge badge-warning text-xs font-semibold inline-flex items-center gap-1">
+                <FileText className="w-3 h-3" /> Draft
             </span>
         );
     }
     // Default/Published
     return (
-        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-gray-600 text-white px-2 py-0.5 rounded-full shadow-md">
+        <span className="badge badge-secondary text-xs font-semibold inline-flex items-center gap-1">
             <Clock3 className="w-3 h-3" /> Published
         </span>
     );
@@ -96,20 +133,22 @@ function SellerChip({ seller }) {
     if (!seller) return null;
     const initials = (seller.name || "?").slice(0, 1).toUpperCase();
     return (
-        <div className="inline-flex items-center gap-1.5 p-0.5 rounded-full bg-gray-100/70 transition hover:bg-gray-100">
+        <div className="inline-flex items-center gap-1.5 p-0.5 rounded-full bg-gray-100/70 dark:bg-gray-700/50 transition hover:bg-gray-100 dark:hover:bg-gray-600">
             {seller.photo_url ? (
                 <img
                     src={`/storage/${seller.photo_url}`}
                     alt={seller.name}
-                    className="w-4 h-4 rounded-full object-cover ring-1 ring-white"
+                    className="w-4 h-4 rounded-full object-cover ring-1 ring-white dark:ring-gray-600"
                     onError={(e)=>{e.currentTarget.src="/placeholder.png";}}
                 />
             ) : (
-                <div className="w-4 h-4 rounded-full bg-gray-500 text-white text-[8px] flex items-center justify-center">
+                <div className="avatar-sm bg-gray-500 text-white">
                     {initials}
                 </div>
             )}
-            <span className="text-xs text-gray-700 font-medium truncate max-w-[80px]">{seller.name}</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300 font-medium truncate max-w-[80px]">
+                {seller.name}
+            </span>
         </div>
     );
 }
@@ -136,13 +175,13 @@ function AgentsStack({ agents = [] }) {
                         src={src}
                         alt={a?.name ? `${a.name} (Agent)` : "Agent"}
                         title={a?.name || "Agent"}
-                        className="w-5 h-5 rounded-full object-cover ring-2 ring-white border border-gray-200 bg-white"
+                        className="w-5 h-5 rounded-full object-cover ring-2 ring-white dark:ring-gray-800 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700"
                         onError={(e) => { e.currentTarget.src = "/placeholder.png"; }}
                     />
                 ) : (
                     <div
                         key={key}
-                        className="w-5 h-5 rounded-full bg-gray-500 text-white text-[9px] flex items-center justify-center ring-2 ring-white border border-gray-200"
+                        className="avatar-sm bg-gray-500 dark:bg-gray-600 text-white ring-2 ring-white dark:ring-gray-800 border border-gray-200 dark:border-gray-600"
                         title={a?.name || "Agent"}
                         aria-label={a?.name || "Agent"}
                     >
@@ -152,7 +191,7 @@ function AgentsStack({ agents = [] }) {
             })}
 
             {agents.length > 3 && (
-                <div className="w-5 h-5 rounded-full bg-gray-100 ring-2 ring-white border border-gray-200 flex items-center justify-center text-[9px] text-gray-600">
+                <div className="avatar-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 ring-2 ring-white dark:ring-gray-800 border border-gray-200 dark:border-gray-600">
                     +{agents.length - 3}
                 </div>
             )}
@@ -160,20 +199,35 @@ function AgentsStack({ agents = [] }) {
     );
 }
 
+// Stats component for listing metrics
+function ListingStats({ views, inquiries }) {
+    return (
+        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-2">
+            <div className="flex items-center gap-1">
+                <Eye className="w-3 h-3" />
+                <span>{views} views</span>
+            </div>
+            <div className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                <span>{inquiries} inquiries</span>
+            </div>
+        </div>
+    );
+}
 
-function Card({ listing, onView, onShare }) {
+function Card({ listing, onView, onShare, onEdit }) {
     const p = listing.property;
     const img = p.image_url ? `/storage/${p.image_url}` : "/placeholder.png";
     const area = p.property_type === "land" ? p.lot_area : p.floor_area;
 
     return (
-        <article className="group bg-white rounded-xl shadow-lg hover:shadow-xl transition overflow-hidden flex flex-col transform hover:scale-[1.01] duration-300 border border-gray-100">
+        <article className="card-hover property-card group flex flex-col">
             {/* Image & Overlay Actions */}
             <div className="relative">
                 <img
                     src={img}
                     alt={p.title}
-                    className="w-full aspect-[16/11] object-cover bg-gray-100 transition duration-300 group-hover:scale-[1.05]"
+                    className="property-card-image"
                     onError={(e)=>{e.currentTarget.src="/placeholder.png";}}
                     loading="lazy"
                 />
@@ -181,12 +235,22 @@ function Card({ listing, onView, onShare }) {
                 {/* Overlays */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition duration-300 flex items-center justify-center">
-                    <button
-                        onClick={onView}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold shadow-xl hover:bg-green-700 transform translate-y-2 group-hover:translate-y-0"
-                    >
-                        <Eye className="w-4 h-4" /> View Details
-                    </button>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0">
+                        <button
+                            onClick={onView}
+                            className="btn btn-primary text-sm font-semibold"
+                        >
+                            <Eye className="w-4 h-4" /> View
+                        </button>
+                        {onEdit && (
+                            <button
+                                onClick={onEdit}
+                                className="btn btn-secondary text-sm font-semibold"
+                            >
+                                Edit
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Badges */}
@@ -205,45 +269,65 @@ function Card({ listing, onView, onShare }) {
             </div>
 
             {/* Body: Main Details */}
-            <div className="p-4 pb-2 flex flex-col gap-2 flex-1">
-                <h3 className="text-lg font-extrabold text-gray-900 leading-snug line-clamp-2 min-h-[48px]">{p.title}</h3>
+            <div className="card-body flex flex-col gap-2 flex-1 p-0">
+                <div className="p-4 pb-2">
+                    <h3 className="text-lg font-extrabold text-gray-900 dark:text-white leading-snug line-clamp-2 min-h-[48px]">
+                        {p.title}
+                    </h3>
 
-                {/* Price (Primary Focus) */}
-                <p className="text-2xl font-black text-green-700 mt-1">
-                    {currency.format(p.price)}
-                </p>
+                    {/* Price (Primary Focus) */}
+                    <p className="text-2xl font-black text-green-700 dark:text-green-400 mt-1">
+                        {currency.format(p.price)}
+                    </p>
 
-                {/* Location & Area (Combined into one section) */}
-                <div className="flex flex-col gap-1 text-xs text-gray-600 border-t border-gray-100 pt-3 mt-1">
-                    <div className="flex items-center gap-2">
-                        <MapPin className="w-3 h-3 shrink-0 text-green-500" />
-                        <span className="line-clamp-1" title={p.address}>{p.address || "Location Unknown"}</span>
+                    {/* Property Features */}
+                    {(p.bedrooms > 0 || p.bathrooms > 0) && (
+                        <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mt-2">
+                            {p.bedrooms > 0 && (
+                                <span>🛏 {p.bedrooms} bed{p.bedrooms !== 1 ? 's' : ''}</span>
+                            )}
+                            {p.bathrooms > 0 && (
+                                <span>🚿 {p.bathrooms} bath{p.bathrooms !== 1 ? 's' : ''}</span>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Location & Area */}
+                    <div className="flex flex-col gap-1 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+                        <div className="flex items-center gap-2">
+                            <MapPin className="w-3 h-3 shrink-0 text-green-500 dark:text-green-400" />
+                            <span className="line-clamp-1" title={p.address}>
+                                {p.address || "Location Unknown"}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Ruler className="w-3 h-3 shrink-0 text-gray-400" />
+                            <span className="font-semibold">{area ? `${area} sqm` : "Area Unknown"}</span>
+                            <span className="text-gray-400">•</span>
+                            <Calendar className="w-3 h-3 text-gray-400" />
+                            <span>{dayjs(listing.updated_at || listing.created_at).format("MMM D, YYYY")}</span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Ruler className="w-3 h-3 shrink-0 text-gray-400" />
-                        <span className="font-semibold">{area ? `${area} sqm` : "Area Unknown"}</span>
-                        <span className="text-gray-400">•</span>
-                        <Calendar className="w-3 h-3 text-gray-400" />
-                        <span>{dayjs(listing.created_at).format("MMM D, YYYY")}</span>
+
+                    {/* Stats */}
+                    <ListingStats views={listing.views} inquiries={listing.inquiries} />
+                </div>
+
+                {/* Footer: Metadata & Actions */}
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-750 flex items-center justify-between border-t border-gray-100 dark:border-gray-700">
+                    <SellerChip seller={listing.seller} />
+                    <div className="flex items-center gap-3 shrink-0">
+                        <AgentsStack agents={listing.agents} />
+                        <button
+                            onClick={onShare}
+                            className="btn-ghost p-1.5 rounded-full"
+                            title="Share Listing"
+                        >
+                            <Share2 className="h-4 w-4" />
+                        </button>
                     </div>
                 </div>
             </div>
-
-            {/* Footer: Metadata (Seller & Agents) & Share Button - Recessed look */}
-            <div className="px-4 py-3 bg-gray-50 flex items-center justify-between border-t border-gray-100">
-                <SellerChip seller={listing.seller} />
-                <div className="flex items-center gap-3 shrink-0">
-                    <AgentsStack agents={listing.agents} />
-                    <button
-                        onClick={onShare}
-                        className="p-1.5 rounded-full text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 transition shadow-sm"
-                        title="Share Listing"
-                    >
-                        <Share2 className="h-4 w-4" />
-                    </button>
-                </div>
-            </div>
-
         </article>
     );
 }
@@ -251,44 +335,52 @@ function Card({ listing, onView, onShare }) {
 // Utility to ensure array is used
 const ArrayOf = (arr) => (Array.isArray(arr) ? arr : []);
 
-export default function MyListings({ listings }) {
+// Export/Import Controls Component
 
-    // listings is your paginator payload from controller
+export default function MyListings({ listings, canCreate = true }) {
     const normalized = useMemo(() => ArrayOf(listings?.data).map(normalizeListing), [listings?.data]);
 
-    // filters/sort/search (client-side for now)
-    const [status, setStatus] = useState("all"); // all | assigned | published | sold
+    // filters/sort/search
+    const [status, setStatus] = useState("all");
     const [q, setQ] = useState("");
-    const [sort, setSort] = useState("newest"); // newest | price_asc | price_desc
+    const [sort, setSort] = useState("newest");
+    const [viewMode, setViewMode] = useState("grid");
 
     const filtered = useMemo(() => {
         let arr = [...normalized];
+
+        // Status filter
         if (status !== "all") {
             arr = arr.filter((r) => (r.status || "").toLowerCase() === status);
         }
+
+        // Search filter
         const query = q.trim().toLowerCase();
         if (query) {
             arr = arr.filter((r) => {
                 const p = r.property || {};
-                const hay = `${p.title || ""} ${p.address || ""} ${r.status || ""}`.toLowerCase();
+                const hay = `${p.title || ""} ${p.address || ""} ${r.status || ""} ${p.property_type || ""}`.toLowerCase();
                 return hay.includes(query);
             });
         }
-        // sort
+
+        // Sort
         arr.sort((a, b) => {
             if (sort === "price_asc") return (a.property.price ?? Infinity) - (b.property.price ?? Infinity);
             if (sort === "price_desc") return (b.property.price ?? -Infinity) - (a.property.price ?? -Infinity);
+            if (sort === "views") return (b.views || 0) - (a.views || 0);
+            if (sort === "inquiries") return (b.inquiries || 0) - (a.inquiries || 0);
             // newest by created_at
             const A = new Date(a.created_at || 0).valueOf();
             const B = new Date(b.created_at || 0).valueOf();
             return B - A;
         });
+
         return arr;
     }, [normalized, status, q, sort]);
 
-    // share helper
+    // Share helper
     async function shareListing(listing) {
-        // NOTE: Adjusted URL to use a standard format for sharing
         const url = `${window.location.origin}/properties/${listing.id}`;
         const title = listing.property.title || "Property Listing";
         try {
@@ -312,39 +404,67 @@ export default function MyListings({ listings }) {
         }
     }
 
-    // counts for tabs
+    // Bulk actions
+    const handleExport = () => {
+        console.log("Export listings");
+    };
+
+    const handleImport = () => {
+        console.log("Import listings");
+    };
+
+    const handleCreate = () => {
+        router.visit(route('agents.listings.create'));
+    };
+
+    // Counts for tabs
     const counts = useMemo(() => {
-        const c = { all: normalized.length, assigned: 0, published: 0, sold: 0 };
+        const c = { all: normalized.length, assigned: 0, published: 0, sold: 0, draft: 0 };
         normalized.forEach((r) => {
             const s = (r.status || "").toLowerCase();
             if (s === "assigned") c.assigned++;
             else if (s === "sold") c.sold++;
-            else c.published++; // Treat non-assigned/non-sold as 'published' for the tab
+            else if (s === "draft") c.draft++;
+            else c.published++;
         });
         return c;
     }, [normalized]);
 
+    // Summary stats
+    const summaryStats = useMemo(() => {
+        return {
+            totalValue: normalized.reduce((sum, listing) => sum + (listing.property?.price || 0), 0),
+            totalViews: normalized.reduce((sum, listing) => sum + (listing.views || 0), 0),
+            totalInquiries: normalized.reduce((sum, listing) => sum + (listing.inquiries || 0), 0),
+        };
+    }, [normalized]);
+
     return (
-        <AgentLayout>
-            <div className="px-4 md:px-6 lg:px-8 py-8 space-y-8">
+        <AuthenticatedLayout>
+            <div className="page-content space-y-8">
                 {/* --- Header --- */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div className="section-header">
                     <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900">My Listings</h1>
-                        <p className="text-gray-600 text-sm mt-1">Manage and track properties you are responsible for.</p>
+                        <h1 className="section-title">My Listings</h1>
+                        <p className="section-description">
+                            Manage and track properties you are responsible for.
+                        </p>
                     </div>
+
                 </div>
 
+
                 {/* --- Controls / Filter Panel --- */}
-                <div className="bg-white rounded-xl p-4 sm:p-5 shadow-lg border border-gray-100">
+                <div className="card p-4">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4">
 
                         {/* Status Tabs */}
-                        <div className="inline-flex rounded-xl bg-gray-100 p-1 shrink-0 overflow-x-auto">
+                        <div className="inline-flex rounded-xl bg-gray-100 dark:bg-gray-700 p-1 shrink-0 overflow-x-auto">
                             {[
                                 ["all", "All"],
                                 ["assigned", "Assigned"],
                                 ["published", "Published"],
+                                ["draft", "Draft"],
                                 ["sold", "Sold"],
                             ].map(([val, label]) => (
                                 <button
@@ -353,8 +473,8 @@ export default function MyListings({ listings }) {
                                     className={cn(
                                         "px-3 py-1.5 text-sm font-semibold rounded-lg transition duration-200 whitespace-nowrap",
                                         status === val
-                                            ? "bg-white text-gray-900 shadow-md ring-1 ring-gray-200"
-                                            : "text-gray-600 hover:text-gray-900"
+                                            ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-md ring-1 ring-gray-200 dark:ring-gray-600"
+                                            : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                                     )}
                                 >
                                     {label} <span className="opacity-70">({counts[val] || 0})</span>
@@ -364,6 +484,32 @@ export default function MyListings({ listings }) {
 
                         <div className="flex-1" />
 
+                        {/* View Mode Toggle */}
+                        <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                            <button
+                                onClick={() => setViewMode("grid")}
+                                className={cn(
+                                    "p-2 rounded-md transition",
+                                    viewMode === "grid"
+                                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
+                                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                                )}
+                            >
+                                Grid
+                            </button>
+                            <button
+                                onClick={() => setViewMode("list")}
+                                className={cn(
+                                    "p-2 rounded-md transition",
+                                    viewMode === "list"
+                                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
+                                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                                )}
+                            >
+                                List
+                            </button>
+                        </div>
+
                         {/* Search Input */}
                         <div className="relative w-full sm:w-[260px] shrink-0">
                             <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -371,44 +517,102 @@ export default function MyListings({ listings }) {
                                 value={q}
                                 onChange={(e) => setQ(e.target.value)}
                                 placeholder="Search title or address…"
-                                className="pl-9 pr-3 py-2.5 text-sm rounded-xl bg-gray-100 text-gray-700 border-none focus:ring-2 focus:ring-green-400 focus:bg-white focus:outline-none w-full transition"
+                                className="form-input pl-9"
                             />
                         </div>
 
                         {/* Sort Dropdown */}
                         <div className="relative inline-flex items-center shrink-0">
-                            <Filter className="w-4 h-4 text-gray-600 absolute left-3" />
+                            <Filter className="w-4 h-4 text-gray-600 dark:text-gray-400 absolute left-3" />
                             <select
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value)}
-                                className="pl-8 pr-8 py-2.5 text-sm rounded-xl border border-gray-300 bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-green-400 transition"
+                                className="form-select pl-8 pr-8 cursor-pointer"
                             >
                                 <option value="newest">Newest</option>
                                 <option value="price_asc">Price: Low → High</option>
                                 <option value="price_desc">Price: High → Low</option>
+                                <option value="views">Most Views</option>
+                                <option value="inquiries">Most Inquiries</option>
                             </select>
-                            <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 pointer-events-none" />
+                            <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400 absolute right-3 pointer-events-none" />
                         </div>
                     </div>
                 </div>
 
-                {/* --- Listings Grid --- */}
+                {/* --- Listings Grid/List --- */}
                 {filtered.length === 0 ? (
-                    <div className="p-12 text-center text-gray-500 bg-white rounded-xl shadow-lg border border-gray-200">
-                        <Home className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-                        <h3 className="font-semibold text-gray-800">No Listings Found</h3>
-                        <p className="text-sm mt-1">Adjust your filters or create a new listing.</p>
+                    <div className="card text-center py-12">
+                        <Home className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-200">No Listings Found</h3>
+                        <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">Adjust your filters or create a new listing.</p>
+                        {canCreate && (
+                            <button
+                                onClick={handleCreate}
+                                className="btn btn-primary mt-4"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Create Your First Listing
+                            </button>
+                        )}
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5   gap-6">
+                ) : viewMode === "grid" ? (
+                    <div className="grid-properties">
                         {filtered.map((listing) => (
                             <Card
                                 key={listing.id}
                                 listing={listing}
-                                // NOTE: Assuming route name is correct, otherwise replace with hardcoded path
                                 onView={() => router.visit(route('agents.my-listings.show', listing.id))}
+                                onEdit={canCreate ? () => router.visit(route('agents.listings.edit', listing.id)) : undefined}
                                 onShare={() => shareListing(listing)}
                             />
+                        ))}
+                    </div>
+                ) : (
+                    // List View
+                    <div className="space-y-4">
+                        {filtered.map((listing) => (
+                            <div
+                                key={listing.id}
+                                className="card-hover p-4"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <img
+                                        src={listing.property.image_url ? `/storage/${listing.property.image_url}` : "/placeholder.png"}
+                                        alt={listing.property.title}
+                                        className="w-16 h-16 rounded-lg object-cover"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                                                {listing.property.title}
+                                            </h3>
+                                            <TypeBadge type={listing.property.property_type} />
+                                            <StatusBadge status={listing.status} />
+                                        </div>
+                                        <p className="text-green-600 dark:text-green-400 font-bold text-lg">
+                                            {currency.format(listing.property.price)}
+                                        </p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {listing.property.address}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => router.visit(route('agents.my-listings.show', listing.id))}
+                                            className="btn btn-primary btn-sm"
+                                        >
+                                            View
+                                        </button>
+                                        <button
+                                            onClick={() => shareListing(listing)}
+                                            className="btn btn-ghost btn-sm"
+                                        >
+                                            <Share2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         ))}
                     </div>
                 )}
@@ -422,15 +626,15 @@ export default function MyListings({ listings }) {
                                     key={idx}
                                     href={link.url}
                                     className={cn(
-                                        "px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm",
-                                        link.active ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-100"
+                                        "btn btn-outline btn-sm",
+                                        link.active && "btn-primary"
                                     )}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             ) : (
                                 <span
                                     key={idx}
-                                    className="px-4 py-2 text-sm text-gray-400 bg-white rounded-lg shadow-sm cursor-not-allowed"
+                                    className="btn btn-outline btn-sm opacity-50 cursor-not-allowed"
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             )
@@ -438,6 +642,6 @@ export default function MyListings({ listings }) {
                     </div>
                 )}
             </div>
-        </AgentLayout>
+        </AuthenticatedLayout>
     );
 }

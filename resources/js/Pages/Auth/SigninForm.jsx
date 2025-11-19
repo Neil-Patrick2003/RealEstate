@@ -5,9 +5,15 @@ import { motion } from 'framer-motion';
 import Modal from "@/Components/Modal.jsx";
 import LoadingText from "@/Components/Loding/LoadingText.jsx";
 
-const SigninForm = ({ buttonClasses, buttonForGFT }) => {
+const SigninForm = ({ buttonClasses, buttonForGFT, toggleSignUpMode }) => {
     const [openSignUpModal, setOpenSignUpModal] = React.useState(false);
     const [redirecting, setRedirecting] = React.useState(false);
+    const [validationErrors, setValidationErrors] = React.useState({});
+    const [touched, setTouched] = React.useState({
+        email: false,
+        password: false
+    });
+    const [showPassword, setShowPassword] = React.useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
@@ -15,8 +21,90 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
         remember: false,
     });
 
+    // Validation rules
+    const validateField = (name, value) => {
+        const newErrors = { ...validationErrors };
+
+        switch (name) {
+            case 'email':
+                if (!value.trim()) {
+                    newErrors.email = 'Email is required';
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                    newErrors.email = 'Please enter a valid email address';
+                } else {
+                    delete newErrors.email;
+                }
+                break;
+
+            case 'password':
+                if (!value) {
+                    newErrors.password = 'Password is required';
+                } else if (value.length < 1) {
+                    newErrors.password = 'Password is required';
+                } else {
+                    delete newErrors.password;
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        setValidationErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // Validate all fields
+    const validateForm = () => {
+        const fieldsToValidate = ['email', 'password'];
+        let isValid = true;
+
+        fieldsToValidate.forEach(field => {
+            if (!validateField(field, data[field])) {
+                isValid = false;
+            }
+        });
+
+        return isValid;
+    };
+
+    // Handle field blur
+    const handleBlur = (field) => {
+        setTouched(prev => ({ ...prev, [field]: true }));
+        validateField(field, data[field]);
+    };
+
+    // Handle field change with validation
+    const handleChange = (field, value) => {
+        setData(field, value);
+
+        // Validate field if it has been touched before
+        if (touched[field]) {
+            validateField(field, value);
+        }
+    };
+
     const submit = (e) => {
         e.preventDefault();
+
+        // Mark all fields as touched
+        setTouched({
+            email: true,
+            password: true
+        });
+
+        // Validate all fields
+        if (!validateForm()) {
+            // Scroll to first error
+            const firstErrorField = Object.keys(validationErrors)[0];
+            const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
+            if (errorElement) {
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                errorElement.focus();
+            }
+            return;
+        }
+
         post(route('login'));
     };
 
@@ -24,6 +112,24 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
         window.location.href = '/google/auth';
     };
 
+    // Check if form is valid for submit button
+    const isFormValid = () => {
+        return Object.keys(validationErrors).length === 0 &&
+            data.email &&
+            data.password;
+    };
+
+    // Get input border color based on validation state
+    const getInputBorderColor = (field) => {
+        if (!touched[field]) return 'border-gray-300';
+        if (validationErrors[field]) return 'border-red-500';
+        return 'border-green-500';
+    };
+
+    // Toggle password visibility
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
 
     return (
         <motion.div
@@ -44,7 +150,6 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
                 </div>
             )}
 
-
             <div className="p-6 space-y-6 md:space-y-7 sm:p-8">
                 <h1 className="text-xl font-bold leading-tight tracking-tight text-backgroundColor md:text-2xl text-center">
                     Welcome Back
@@ -53,60 +158,85 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
                     </p>
                 </h1>
 
-                <form onSubmit={submit} className="space-y-5 md:space-y-6" action="#">
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg
-                                className="w-5 h-5 text-gray-500"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                            </svg>
+                <form onSubmit={submit} className="space-y-5 md:space-y-6" noValidate>
+                    {/* Email Field */}
+                    <div>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg
+                                    className="w-5 h-5 text-gray-500"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                                </svg>
+                            </div>
+                            <input
+                                type="email"
+                                name="email"
+                                autoComplete='email'
+                                id="email"
+                                className={`bg-[#d5f2ec] border-2 ${getInputBorderColor('email')} text-gray-900 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full pl-10 p-3 transition-all duration-200 shadow-sm`}
+                                placeholder="Email address"
+                                required
+                                onChange={(e) => handleChange('email', e.target.value)}
+                                onBlur={() => handleBlur('email')}
+                                value={data.email}
+                            />
                         </div>
-                        <input
-                            type="email"
-                            name="email"
-                            autoComplete='email'
-                            id="email"
-                            className="bg-[#d5f2ec] border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full pl-10 p-3 transition-all duration-200 shadow-sm"
-                            placeholder="Email address"
-                            required
-                            onChange={(e) => setData('email', e.target.value)}
-                            value={data.email}
-                        />
+                        <InputError message={validationErrors.email || errors.email} className="mt-2" />
                     </div>
-                    <InputError message={errors.email} className="mt-2" />
 
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg
-                                className="w-5 h-5 text-gray-500"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg"
+                    {/* Password Field */}
+                    <div>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg
+                                    className="w-5 h-5 text-gray-500"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                        clipRule="evenodd"
+                                    ></path>
+                                </svg>
+                            </div>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                id="password"
+                                autoComplete='current-password'
+                                className={`bg-[#d5f2ec] border-2 ${getInputBorderColor('password')} text-gray-900 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full pl-10 pr-10 p-3 transition-all duration-200 shadow-sm`}
+                                placeholder="Password"
+                                required
+                                onChange={(e) => handleChange('password', e.target.value)}
+                                onBlur={() => handleBlur('password')}
+                                value={data.password}
+                            />
+                            <button
+                                type="button"
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+                                onClick={togglePasswordVisibility}
                             >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                    clipRule="evenodd"
-                                ></path>
-                            </svg>
+                                {showPassword ? (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m9.02 9.02l3.83 3.83" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                )}
+                            </button>
                         </div>
-                        <input
-                            type="password"
-                            name="password"
-                            id="password"
-                            className="bg-[#d5f2ec] border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full pl-10 p-3 transition-all duration-200 shadow-sm"
-                            placeholder="Password"
-                            required
-                            onChange={(e) => setData('password', e.target.value)}
-                            value={data.password}
-                        />
+                        <InputError message={validationErrors.password || errors.password} className="mt-2" />
                     </div>
-                    <InputError message={errors.password} className="mt-2" />
 
                     <div className="flex items-center justify-between">
                         <div className="flex items-start">
@@ -116,7 +246,7 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
                                     type="checkbox"
                                     checked={data.remember}
                                     onChange={e => setData('remember', e.target.checked)}
-                                    className="w-4 h-4 rounded bg-gray-50"
+                                    className="w-4 h-4 rounded bg-gray-50 border-gray-300 focus:ring-brightColor"
                                 />
                             </div>
                             <div className="ml-3 text-sm">
@@ -129,88 +259,28 @@ const SigninForm = ({ buttonClasses, buttonForGFT }) => {
                             </div>
                         </div>
                         <a
-                            href="#"
+                            href={route('password.request')}
                             className="text-sm font-medium text-brightColor hover:underline transition-colors"
                         >
                             Forgot password?
                         </a>
                     </div>
 
-                    <button type="submit" className={buttonClasses} disabled={processing}>
+                    <button
+                        type="submit"
+                        className={`${buttonClasses} ${!isFormValid() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!isFormValid() || processing}
+                    >
                         {processing ? 'Signing in...' : 'Sign in'}
                     </button>
                 </form>
 
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">
-              Or continue with
-            </span>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                    {/* Google */}
-                    <button
-                        type="button"
-                        className={`${buttonForGFT} bg-[#22c55e] hover:bg-[#16a34a] text-gray-600`}
-                        onClick={() => window.location.href = '/google/auth'}
-                        aria-label="Continue with Google"
-                    >
-                        <svg
-                            className="h-5 w-5 mx-auto"
-                            aria-hidden="true"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-                        </svg>
-                    </button>
-
-
-                    {/* Facebook */}
-                    <button
-                        type="button"
-                        className={`${buttonForGFT} bg-[#3b5998] hover:bg-[#2d4373] text-gray-600`}
-                        aria-label="Continue with Facebook"
-                    >
-                        <svg
-                            className="h-5 w-5 mx-auto"
-                            aria-hidden="true"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                fillRule="evenodd"
-                                d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
-                                clipRule="evenodd"
-                            />
-                        </svg>
-                    </button>
-
-                    {/* Twitter */}
-                    <button
-                        type="button"
-                        className={`${buttonForGFT} bg-[#1da1f2] hover:bg-[#0d8ddb] ttext-gray-600`}
-                        aria-label="Continue with Twitter"
-                    >
-                        <svg
-                            className="h-5 w-5 mx-auto"
-                            aria-hidden="true"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
-                        </svg>
-                    </button>
-                </div>
-
-                <p className="text-sm text-center text-gray-600 mt-4 border-t border-gray-100 pt-4">
+                <button
+                    onClick={toggleSignUpMode}
+                    className="text-sm text-center text-gray-600 mt-4 border-t border-gray-100 pt-4 w-full hover:text-brightColor transition-colors"
+                >
                     If you don&apos;t have an account, Do Sign Up
-                </p>
+                </button>
             </div>
         </motion.div>
     );
