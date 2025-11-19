@@ -44,6 +44,19 @@ class PropertyListing extends Model
         return $this->hasManyThrough(User::class, Deal::class, 'property_listing_id', 'id', 'id', 'buyer_id');
     }
 
+    public function inquiries()
+    {
+        return $this->hasManyThrough(
+            Inquiry::class,
+            Property::class,
+            'listing_id',   // Foreign key on properties table
+            'property_id',  // Foreign key on inquiries table
+            'id',           // Local key on listings table
+            'id'            // Local key on properties table
+        );
+    }
+
+
 
 
 }

@@ -96,6 +96,7 @@ export const brokerSidebarConfig = {
         { name: "Dashboard", Icon: Home, path: "/broker/dashboard", description: "Broker activity overview" },
         { name: "Agent Management", Icon: Users, path: "/broker/agents", description: "Manage agents & assignments" },
         { name: "Properties", Icon: Building, path: "/broker/properties", description: "All property listings" },
+        { name: "Handle Properties", Icon: Building, path: "/broker/my-properties", description: "All Handle listings" },
         { name: "Inquiries", Icon: Mail, path: "/broker/inquiries", description: "All buyer inquiries" },
         { name: "Message", Icon: MessageSquare, path: "/broker/messages", description: "All messages for your Inquiries" },
 
@@ -119,6 +120,7 @@ export const agentSidebarConfig = {
     mainMenus: [
         { name: "Dashboard", Icon: Home, path: "/agents/dashboard", description: "Agent performance overview" },
         { name: "Properties", Icon: Building, path: "/agents/properties", description: "Listed & assigned properties" },
+        { name: "Handle Properties", Icon: Building, path: "/agents/my-listings", description: "All Handle listings" },
         { name: "Inquiries", Icon: Mail, path: "/agents/inquiries", description: "Client inquiries" },
         { name: "Message", Icon: MessageSquare, path: "/agents/messages", description: "All messages for your Inquiries" },
         { name: "Trippings", Icon: Calendar, path: "/agents/trippings", description: "Property tours & schedules" },

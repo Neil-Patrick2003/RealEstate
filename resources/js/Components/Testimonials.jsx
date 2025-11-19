@@ -125,7 +125,7 @@ function Testimonials() {
                         </motion.div>
                     ))}
                 </div>
-                
+
             </div>
         </section>
     );

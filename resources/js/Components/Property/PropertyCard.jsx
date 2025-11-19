@@ -10,18 +10,22 @@ import {
     Star,
     Heart,
     Camera,
+    Eye,
+    Sparkles,
+    Clock,
+    Bath,
+    Bed,
 } from "lucide-react";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
 
-// Standard ₱ formatter
+// Utility functions
 const currency = new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: "PHP",
     maximumFractionDigits: 2,
 });
 
-// ₱ short format (K/M)
 const formatPriceShort = (num) => {
     const n = Number(num ?? 0);
     const a = Math.abs(n);
@@ -38,263 +42,398 @@ const daysSince = (dateString) => {
     return Math.floor(ms / (1000 * 60 * 60 * 24));
 };
 
+// Badge Components
 function TypeBadge({ type }) {
-    const t = (type || "").toLowerCase();
-    const map = {
-        house: { icon: Home, cls: "bg-blue-600 text-white" },
-        condo: { icon: Building2, cls: "bg-violet-600 text-white" },
-        land: { icon: LandPlot, cls: "bg-emerald-600 text-white" },
-        default: { icon: Star, cls: "bg-gray-700 text-white" },
+    const typeConfig = {
+        house: {
+            icon: Home,
+            badgeClass: "badge-primary",
+            gradient: "from-primary-400 to-primary-600"
+        },
+        condo: {
+            icon: Building2,
+            badgeClass: "badge-accent",
+            gradient: "from-emerald-400 to-cyan-500"
+        },
+        land: {
+            icon: LandPlot,
+            badgeClass: "badge-success",
+            gradient: "from-emerald-500 to-green-600"
+        },
+        default: {
+            icon: Star,
+            badgeClass: "badge-gray",
+            gradient: "from-gray-400 to-gray-600"
+        },
     };
-    const Item = map[t] || map.default;
-    const Icon = Item.icon;
+
+    const config = typeConfig[type?.toLowerCase()] || typeConfig.default;
+    const Icon = config.icon;
+
     return (
-        <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-1 rounded-full shadow", Item.cls)}>
-      <Icon className="w-3.5 h-3.5" />
+        <span className={cn("badge", config.badgeClass)}>
+            <div className={cn("p-1 rounded-lg bg-gradient-to-br", config.gradient)}>
+                <Icon className="w-3 h-3 text-white" />
+            </div>
             {type || "Property"}
-    </span>
+        </span>
     );
 }
 
 function PresellRibbon({ isPresell }) {
     return (
-        <span
-            className={cn(
-                "inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full shadow-lg",
-                isPresell ? "bg-orange-500 text-white" : "bg-green-600 text-white"
+        <span className={cn("badge", isPresell ? "badge-warning" : "badge-success")}>
+            {isPresell ? (
+                <>
+                    <Clock className="w-3 h-3" />
+                    Preselling
+                </>
+            ) : (
+                <>
+                    <Sparkles className="w-3 h-3" />
+                    Available
+                </>
             )}
-        >
-      {isPresell ? "Preselling" : "Available"}
-    </span>
+        </span>
     );
 }
 
 function AreaChip({ property }) {
-    const area =
-        (property?.property_type?.toLowerCase() === "land" ? property?.lot_area : property?.floor_area) ?? null;
+    const area = property?.property_type?.toLowerCase() === "land"
+        ? property?.lot_area
+        : property?.floor_area;
+
     return (
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded-full shrink-0">
-      <Ruler className="w-3 h-3" />
+        <span className="badge badge-gray">
+            <div className="p-1 rounded-lg bg-gradient-to-br from-gray-400 to-gray-600">
+                <Ruler className="w-3 h-3 text-white" />
+            </div>
             {area ? `${area} sqm` : "N/A"}
-    </span>
+        </span>
     );
 }
 
-export default function PropertyCard({
-                                         property = {},
-                                         onView, // optional
-                                         onInquiry, // optional
-                                         onShare = () => {}, // optional
-                                         onToggleFavorite = () => {},
-                                         isFavorite = false,
-                                     }) {
-
-
+function PropertyImage({ property, isFavorited, onFavorite, onShare, imagesCount }) {
     const [imgErr, setImgErr] = useState(false);
     const [imgLoaded, setImgLoaded] = useState(false);
 
-    const imgSrc =
-        !imgErr && property?.image_url ? `/storage/${property.image_url}` : "/placeholder.png";
+    const imgSrc = !imgErr && property?.image_url
+        ? `/storage/${property.image_url}`
+        : "/placeholder.png";
 
-    const features = useMemo(() => {
-        const list = property?.features ?? [];
-        return { show: list.slice(0, 2), extra: Math.max(0, list.length - 2) };
-    }, [property?.features]);
-
-    const priceDisplay = formatPriceShort(Number(property?.price ?? 0));
-    const isPresell = !!(typeof property.isPresell === "boolean" ? property.isPresell : Number(property.isPresell));
     const isNew = daysSince(property?.created_at) <= 14;
-    const imagesCount = Array.isArray(property?.images) ? property.images.length : 0;
 
-    const handleFav = (e) => {
+    const handleFavorite = (e) => {
         e.stopPropagation();
         e.preventDefault();
-        onToggleFavorite(property);
+        onFavorite();
     };
 
     const handleShare = (e) => {
         e.stopPropagation();
         e.preventDefault();
+        onShare();
+    };
+
+    return (
+        <Link
+            href={`/properties/${property.id}`}
+            className="relative block rounded-t-lg overflow-hidden outline-none group"
+        >
+            <div className="w-full aspect-[16/11] bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                {!imgLoaded && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
+                )}
+                <img
+                    src={imgSrc}
+                    alt={property?.title || "Property image"}
+                    onLoad={() => setImgLoaded(true)}
+                    onError={() => {
+                        setImgErr(true);
+                        setImgLoaded(true);
+                    }}
+                    className={cn(
+                        "property-card-image w-full h-full object-cover",
+                        imgLoaded ? "opacity-100" : "opacity-0"
+                    )}
+                    loading="lazy"
+                    decoding="async"
+                />
+            </div>
+
+            {/* Top-left badges */}
+            <div className="absolute left-4 top-4 z-10 flex items-center gap-2">
+                <TypeBadge type={property?.property_type} />
+                {isNew && (
+                    <span className="badge badge-success">
+                        <Sparkles className="w-3 h-3" />
+                        New
+                    </span>
+                )}
+            </div>
+
+            {/* Top-right counters */}
+            <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
+                {imagesCount > 0 && (
+                    <span className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-black/70 backdrop-blur-lg text-white text-xs font-medium border border-white/20">
+                        <Camera className="h-3.5 w-3.5" />
+                        {imagesCount}
+                    </span>
+                )}
+
+
+            </div>
+
+            {/* Status + price */}
+            <div className="absolute left-4 right-4 bottom-4 z-10 flex items-center justify-between">
+                <PresellRibbon isPresell={!!property?.isPresell} />
+                <span className="inline-flex px-4 py-2.5 rounded-xl bg-white/95 backdrop-blur-lg text-gray-900 text-sm font-bold shadow-soft border border-white/60">
+                    {formatPriceShort(Number(property?.price ?? 0))}
+                </span>
+            </div>
+
+            {/* Hover overlay */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
+
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+        </Link>
+    );
+}
+
+function PropertySpecs({ property }) {
+    return (
+        <div className="flex items-center justify-between text-sm mb-4">
+            <div className="flex items-center gap-2">
+                {property?.bedrooms > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-50/80 text-primary-700 text-sm font-semibold border border-primary-200/60">
+                        <Bed className="w-3.5 h-3.5" />
+                        {property.bedrooms} BR
+                    </span>
+                )}
+                {property?.bathrooms > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50/80 text-emerald-700 text-sm font-semibold border border-emerald-200/60">
+                        <Bath className="w-3.5 h-3.5" />
+                        {property.bathrooms} BA
+                    </span>
+                )}
+            </div>
+            <AreaChip property={property} />
+        </div>
+    );
+}
+
+function PropertyFeatures({ features }) {
+    const featureList = useMemo(() => {
+        const list = features ?? [];
+        return { show: list.slice(0, 3), extra: Math.max(0, list.length - 3) };
+    }, [features]);
+
+    if (featureList.show.length === 0) return null;
+
+    return (
+        <div className="mb-4">
+            <div className="flex flex-wrap gap-2">
+                {featureList.show.map((feature, index) => (
+                    <span key={index} className="badge badge-gray text-xs">
+                        {String(feature).replace(/^./, (c) => c.toUpperCase())}
+                    </span>
+                ))}
+                {featureList.extra > 0 && (
+                    <span className="badge badge-primary text-xs">
+                        +{featureList.extra} more
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function PropertyActions({
+                             property,
+                             isFavorited,
+                             onFavorite,
+                             onShare,
+                             onView,
+                             showMobileActions = false
+                         }) {
+    const handleViewDetails = (e) => {
+        e.stopPropagation();
+        onView?.(property);
+    };
+
+    const handleFavorite = (e) => {
+        e.stopPropagation();
+        onFavorite();
+    };
+
+    const handleShare = (e) => {
+        e.stopPropagation();
+        onShare();
+    };
+
+    if (showMobileActions) {
+        return (
+            <div className="grid grid-cols-2 gap-3 mt-4">
+                <button
+                    onClick={handleFavorite}
+                    className={cn(
+                        "btn-outline text-sm py-2.5 rounded-xl transition-all duration-300",
+                        isFavorited
+                            ? "border-rose-200 text-rose-600 bg-rose-50/50 hover:bg-rose-100/50"
+                            : "hover:border-gray-300"
+                    )}
+                    aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                    aria-pressed={isFavorited}
+                >
+                    <Heart className={cn("w-4 h-4 transition-all", isFavorited ? "fill-current scale-110" : "")} />
+                    {isFavorited ? "Saved" : "Save"}
+                </button>
+                <button
+                    onClick={handleShare}
+                    className="btn-outline text-sm py-2.5 rounded-xl hover:border-gray-300 transition-all duration-300"
+                    aria-label="Share property"
+                >
+                    <Share2 className="w-4 h-4" /> Share
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="mt-auto flex items-center justify-between">
+            <Link
+                href={`/properties/${property.id}`}
+                onClick={handleViewDetails}
+                className="btn-primary text-sm py-3 px-6 rounded-xl"
+            >
+                <Eye className="w-4 h-4" />
+                View Details
+            </Link>
+
+            <div className="hidden sm:flex items-center gap-1">
+                <button
+                    onClick={handleFavorite}
+                    className={cn(
+                        "btn-ghost p-2.5 rounded-xl transition-all duration-300",
+                        isFavorited
+                            ? "text-rose-500 bg-rose-50/80 hover:bg-rose-100/80 shadow-sm"
+                            : "hover:bg-gray-100/80"
+                    )}
+                    aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                    aria-pressed={isFavorited}
+                    title="Toggle favorite"
+                >
+                    <Heart className={cn("h-4 w-4 transition-all", isFavorited ? "fill-current scale-110" : "")} />
+                </button>
+                <button
+                    onClick={handleShare}
+                    className="btn-ghost p-2.5 rounded-xl hover:bg-gray-100/80 transition-all duration-300"
+                    aria-label="Share property"
+                    title="Share property"
+                >
+                    <Share2 className="h-4 w-4" />
+                </button>
+            </div>
+        </div>
+    );
+}
+
+// Main Component
+export default function PropertyCard({
+                                         property = {},
+                                         onView,
+                                         onInquiry,
+                                         onShare = () => {},
+                                         onToggleFavorite = () => {},
+                                         isFavorite = false,
+                                         favoriteIds = [],
+                                         toggleFavorite,
+                                     }) {
+    const isFavorited = favoriteIds?.includes(property?.id) || isFavorite;
+    const imagesCount = Array.isArray(property?.images) ? property.images.length : 0;
+    const priceDisplay = formatPriceShort(Number(property?.price ?? 0));
+
+    const handleFavorite = () => {
+        if (toggleFavorite && property?.id) {
+            toggleFavorite(property.id);
+        } else {
+            onToggleFavorite(property);
+        }
+    };
+
+    const handleShare = () => {
         onShare(property);
+    };
+
+    const handleView = () => {
+        onView?.(property);
     };
 
     return (
         <article
-            className="
-        group relative bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl
-        transition-all flex flex-col focus-within:ring-2 focus-within:ring-amber-500
-      "
+            className="property-card group animate-fade-in"
             tabIndex={-1}
             aria-label={property?.title || "Property"}
         >
-            {/* Media */}
-            <Link href={`/properties/${property.id}`} className="relative block rounded-t-2xl overflow-hidden outline-none">
-                <div className="w-full aspect-[16/10] bg-gray-100">
-                    {/* skeleton */}
-                    {!imgLoaded && (
-                        <div className="h-full w-full animate-pulse bg-gradient-to-br from-gray-100 to-gray-200" />
-                    )}
-                    <img
-                        src={imgSrc}
-                        alt={property?.title || "Property image"}
-                        onLoad={() => setImgLoaded(true)}
-                        onError={() => {
-                            setImgErr(true);
-                            setImgLoaded(true);
-                        }}
-                        className={cn(
-                            "h-full w-full object-cover transition-transform duration-500",
-                            imgLoaded ? "group-hover:scale-[1.03]" : "opacity-0"
-                        )}
-                        loading="lazy"
-                        decoding="async"
-                    />
-                </div>
+            {/* Media Section */}
+            <PropertyImage
+                property={property}
+                isFavorited={isFavorited}
+                onFavorite={handleFavorite}
+                onShare={handleShare}
+                imagesCount={imagesCount}
+            />
 
-                {/* top-left badges */}
-                <div className="absolute left-4 top-4 z-10 flex items-center gap-2">
-                    <TypeBadge type={property?.property_type} />
-                    {isNew && <span className="px-2 py-1 rounded-full text-[11px] font-semibold bg-emerald-600 text-white shadow">New</span>}
-                </div>
-
-                {/* top-right counters */}
-                <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
-                    {imagesCount > 0 && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-black/60 text-white text-xs">
-              <Camera className="h-4 w-4" />
-                            {imagesCount}
-            </span>
-                    )}
-                </div>
-
-                {/* status + price */}
-                <div className="absolute left-4 right-4 bottom-4 z-10 flex items-center justify-between">
-                    <PresellRibbon isPresell={isPresell} />
-                    <span className="inline-flex px-2.5 py-1.5 rounded-lg bg-white text-gray-900 text-sm font-extrabold shadow-sm">
-            {priceDisplay}
-          </span>
-                </div>
-
-                {/* hover overlay */}
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            </Link>
-
-            {/* Body */}
-            <div className="p-5 flex flex-col gap-4 flex-1">
-                {/* Specs/Area + Address */}
-                <div className="flex items-center justify-between text-xs text-gray-600">
-                    <div className="flex items-center gap-3">
-                        {property?.bedrooms ? (
-                            <span className="font-medium text-gray-700">{property.bedrooms} BR</span>
-                        ) : null}
-                        {property?.bathrooms ? (
-                            <span className="font-medium text-gray-700">{property.bathrooms} BA</span>
-                        ) : null}
-                    </div>
-                    <AreaChip property={property} />
-                </div>
+            {/* Content Section */}
+            <div className="property-card-content">
+                {/* Specs */}
+                <PropertySpecs property={property} />
 
                 {/* Title */}
-                <h3 className="text-lg font-bold text-gray-900 leading-snug hover:text-amber-600 transition">
-                    <Link href={`/properties/${property.id}`} className="focus:outline-none focus:ring-2 focus:ring-amber-500 rounded">
+                <h3 className="text-xl font-bold text-gray-900 leading-tight mb-3 hover:text-primary-600 transition-colors duration-300 line-clamp-2">
+                    <Link
+                        href={`/properties/${property.id}`}
+                        className="focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-xl"
+                    >
                         {truncate(property?.title, 72)}
                     </Link>
                 </h3>
 
                 {/* Address */}
-                <p className="flex items-start gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
-                    <span className="line-clamp-1" title={property?.address}>
-            {property?.address || "—"}
-          </span>
+                <p className="flex items-start gap-2 text-sm text-gray-600 mb-4">
+                    <MapPin className="w-4 h-4 shrink-0 text-primary-500 mt-0.5" />
+                    <span className="line-clamp-2 leading-relaxed" title={property?.address}>
+                        {property?.address || "Address not available"}
+                    </span>
                 </p>
 
-                {/* Price row (for small cards where bottom overlay may be out of view) – optional duplicate display */}
-                <div className="sm:hidden -mt-1 text-base font-bold text-amber-600">{priceDisplay}</div>
+                {/* Mobile Price Display */}
+                <div className="sm:hidden text-lg font-bold bg-gradient-to-r from-primary-500 to-emerald-600 bg-clip-text text-transparent mb-4">
+                    {priceDisplay}
+                </div>
+
+                {/* Features */}
+                <PropertyFeatures features={property?.features} />
+
+                {/* Description (truncated) */}
+                {property?.description && (
+                    <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-2">
+                        {truncate(property.description, 120)}
+                    </p>
+                )}
 
                 {/* Divider */}
-                <div className="h-px bg-gray-100 mt-1" />
+                <div className="h-px bg-gradient-to-r from-transparent via-gray-200/60 to-transparent my-4" />
 
                 {/* Actions */}
-                <div className="mt-auto flex items-center justify-between">
-                    <Link
-                        href={`/properties/${property.id}`}
-                        className="
-              w-full sm:w-auto text-center px-4 py-2.5 bg-secondary text-white rounded-lg
-              text-sm font-semibold hover:bg-amber-700 transition shadow-md shadow-amber-200
-              focus:outline-none focus:ring-2 focus:ring-amber-500
-            "
-                    >
-                        View Details
-                    </Link>
-
-                    <div className="hidden sm:flex items-center gap-2">
-                        <button
-                            onClick={handleFav}
-                            className={cn(
-                                "p-2 rounded-full transition focus:outline-none focus:ring-2 focus:ring-amber-500",
-                                isFavorite
-                                    ? "bg-rose-500 text-white hover:bg-rose-600 shadow-md shadow-rose-200"
-                                    : "text-gray-600 border border-gray-200 hover:bg-gray-100"
-                            )}
-                            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                            aria-pressed={isFavorite}
-                            title="Toggle favorite"
-                        >
-                            <Heart className={cn("h-4 w-4", isFavorite ? "fill-current" : "")} />
-                        </button>
-                        <button
-                            onClick={handleShare}
-                            className="p-2 rounded-full text-gray-600 border border-gray-200 hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-amber-500"
-                            aria-label="Share property"
-                            title="Share property"
-                        >
-                            <Share2 className="h-4 w-4" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Secondary row (mobile actions) */}
-                <div className="sm:hidden grid grid-cols-2 gap-2">
-                    <button
-                        onClick={handleFav}
-                        className={cn(
-                            "inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium",
-                            isFavorite
-                                ? "bg-rose-500 text-white hover:bg-rose-600"
-                                : "border border-gray-200 text-gray-700 hover:bg-gray-50"
-                        )}
-                        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                        aria-pressed={isFavorite}
-                    >
-                        <Heart className={cn("w-4 h-4", isFavorite ? "fill-current" : "")} /> Favorite
-                    </button>
-                    <button
-                        onClick={handleShare}
-                        className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium"
-                        aria-label="Share property"
-                    >
-                        <Share2 className="w-4 h-4" /> Share
-                    </button>
-                </div>
-
-                {/* Optional features preview */}
-                {features.show.length > 0 && (
-                    <div className="pt-1">
-                        <div className="flex flex-wrap gap-1.5">
-                            {features.show.map((f, i) => (
-                                <span key={i} className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-                                    {String(f)}
-                                </span>
-                            ))}
-                            {features.extra > 0 && (
-                                <span className="px-2 py-1 text-xs rounded-full bg-gray-50 text-gray-600">
-                                  +{features.extra} more
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                )}
+                <PropertyActions
+                    property={property}
+                    isFavorited={isFavorited}
+                    onFavorite={handleFavorite}
+                    onShare={handleShare}
+                    onView={handleView}
+                />
             </div>
         </article>
     );
