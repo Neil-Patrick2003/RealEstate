@@ -25,7 +25,7 @@ const ChatView = ({ channels = [], channel = null }) => {
     }, [channels, search]);
 
     return (
-        <div className="flex h-[calc(100vh-120px)] border border-gray-200 shadow-lg rounded-2xl bg-white">
+        <div className="flex h-[80vh] border border-gray-200 shadow-lg rounded-2xl bg-white">
             {/* Sidebar */}
             <div className="mt-2 w-1/4 min-h-[85vh] overflow-y-auto border-r border-gray-200 px-4">
                 {/* Search Input */}
