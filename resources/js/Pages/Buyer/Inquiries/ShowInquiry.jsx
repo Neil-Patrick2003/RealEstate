@@ -14,6 +14,10 @@ import {
     MessageSquare,
     MapPin,
     AlertTriangle,
+    User,
+    Heart,
+    ChevronDown,
+    ChevronUp,
 } from "lucide-react";
 import DealFormModal from "@/Components/Deals/DealFormModal.jsx";
 import Stepper from "@/Components/Stepper.jsx";
@@ -21,9 +25,11 @@ import ScheduleVisitModal from "@/Components/modal/ScheduleVisitModal.jsx";
 import Modal from "@/Components/Modal.jsx";
 import ChannelView from "@/Components/Chat/ChannelView.jsx";
 import StepperNotes from "@/Components/StepperNotes.jsx";
+import { motion, AnimatePresence } from "framer-motion";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 
-/* ---------- Small helpers ---------- */
-const cx = (...c) => c.filter(Boolean).join(" ");
+/* ---------- Professional Utils ---------- */
+const cn = (...c) => c.filter(Boolean).join(" ");
 const peso = new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: "PHP",
@@ -52,48 +58,44 @@ function looksSafeHtml(html = "") {
     });
 }
 
-/* ---------- Status Badge (flat + legible) ---------- */
+/* ---------- Professional Status Badge ---------- */
 function StatusBadge({ phase = "draft" }) {
-    const map = {
-        pending: "bg-amber-100 text-amber-800",
-        draft: "bg-gray-100 text-gray-800",
-        sent: "bg-amber-100 text-amber-800",
-        countered: "bg-amber-100 text-amber-800",
-        accepted: "bg-green-100 text-green-800",
-        processing: "bg-purple-100 text-purple-800",
-        closed: "bg-emerald-100 text-emerald-800",
-        rejected: "bg-rose-100 text-rose-800",
-        expired: "bg-zinc-100 text-zinc-800",
-        sold: "bg-emerald-100 text-emerald-800",
-        terminated: "bg-rose-100 text-rose-800",
-        completed: "bg-indigo-100 text-indigo-800",
-        declined: "bg-rose-100 text-rose-800",
+    const variantMap = {
+        pending: "warning",
+        draft: "secondary",
+        sent: "primary",
+        countered: "primary",
+        accepted: "success",
+        processing: "primary",
+        closed: "success",
+        rejected: "error",
+        expired: "secondary",
+        sold: "success",
+        terminated: "error",
+        completed: "success",
+        declined: "error",
     };
-    const cls = map[phase] || map.draft;
+
+    const variant = variantMap[phase] || "secondary";
+
     return (
-        <span
-            className={cx(
-                "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide",
-                cls
-            )}
-            aria-label={`Status: ${phase}`}
-        >
-      {phase.charAt(0).toUpperCase() + phase.slice(1)}
-    </span>
+        <span className={`badge badge-${variant} text-xs sm:text-sm`}>
+            {phase.charAt(0).toUpperCase() + phase.slice(1)}
+        </span>
     );
 }
 
-/* ---------- Small info row ---------- */
+/* ---------- Professional Info Row ---------- */
 function Row({ label, children }) {
     return (
-        <div className="flex items-start justify-between gap-3 py-2 border-b border-gray-100 last:border-b-0">
-            <div className="text-xs font-medium text-gray-500">{label}</div>
-            <div className="text-sm font-semibold text-gray-900">{children ?? "—"}</div>
+        <div className="flex items-start justify-between gap-3 py-3 border-b border-gray-100 last:border-b-0">
+            <div className="text-sm font-medium text-gray-600">{label}</div>
+            <div className="text-sm font-semibold text-gray-900 text-right">{children ?? "—"}</div>
         </div>
     );
 }
 
-/* ---------- Deal Details Modal (flat) ---------- */
+/* ---------- Mobile-Optimized Deal Details Modal ---------- */
 function DealDetailsModal({
                               open,
                               onClose,
@@ -108,88 +110,99 @@ function DealDetailsModal({
 
     const phase = (deal.status || "draft").toLowerCase();
     const updatedAt = deal.updated_at ? new Date(deal.updated_at) : null;
+    const notesPreview = safeStr(deal.notes).trim();
+    const notesShort = notesPreview.length > 240 ? `${notesPreview.slice(0, 240)}…` : notesPreview || "—";
 
-    const lastEditedByYou =
-        !!deal.amount_last_updated_by &&
-        Number(deal.amount_last_updated_by) === Number(authId);
-    const someoneElseEdited =
-        !!deal.amount_last_updated_by &&
-        Number(deal.amount_last_updated_by) !== Number(authId);
-    const isPending = phase === "pending" || phase === "countered";
+    const lastEditedByYou = deal.amount_last_updated_by && Number(deal.amount_last_updated_by) === Number(authId);
+    const someoneElseEdited = deal.amount_last_updated_by && Number(deal.amount_last_updated_by) !== Number(authId);
+    const isPending = ["pending", "countered"].includes(phase);
 
     const handleStatus = async (next) => {
         const ok = window.confirm(
-            next === "Accepted"
+            next === "accepted"
                 ? "Accept this offer? This will notify the other party and proceed to payment."
                 : "Decline this offer? This action cannot be easily undone."
         );
         if (!ok) return;
 
         try {
-            await router.put(`/deal/${deal.id}/${next}`, { status: next }, { preserveScroll: true });
+            await router.put(`/deals/${deal.id}`, { status: next }, { preserveScroll: true });
             onClose?.();
         } catch (e) {
             alert("Something went wrong updating status.");
         }
     };
 
-    const notesPreview = safeStr(deal.notes).trim();
-    const notesShort = notesPreview.length > 240 ? `${notesPreview.slice(0, 240)}…` : notesPreview || "—";
-
     return (
         <Modal show={open} onClose={onClose} maxWidth="lg">
-            <div className="relative rounded-2xl bg-white p-6">
-                <button
-                    onClick={onClose}
-                    className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 focus:outline-none rounded-full p-2"
-                    aria-label="Close modal"
-                    type="button"
-                >
-                    ✕
-                </button>
-
-                <div className="mb-4 flex items-start justify-between">
+            <div className="card p-4 sm:p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900">Your Offer</h3>
-                        <div className="text-xs text-gray-500 mt-0.5">Review the latest terms of this deal.</div>
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900">Deal Details</h3>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1">Review and manage your property offer</p>
                     </div>
-                    <StatusBadge phase={phase} />
+                    <button
+                        onClick={onClose}
+                        className="btn-ghost p-2 rounded-full"
+                        aria-label="Close modal"
+                    >
+                        ✕
+                    </button>
                 </div>
 
-                <div className="rounded-xl bg-amber-50 p-4 mb-5">
-                    <div className="mb-3 flex items-center justify-between">
-                        <div className="text-2xl font-extrabold text-amber-800">
-                            {typeof deal.amount === "number" || /^\d/.test(String(deal.amount))
-                                ? peso.format(Number(deal.amount))
-                                : "—"}
+                {/* Deal Information */}
+                <div className="glass-card p-4 sm:p-5 mb-4 sm:mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                        <div>
+                            <div className="text-sm font-medium text-primary-700 mb-1">Offer Amount</div>
+                            <div className="text-2xl sm:text-3xl font-bold text-gray-900">
+                                {deal.amount ? peso.format(Number(deal.amount)) : "—"}
+                            </div>
                         </div>
-                        <div className="text-xs font-semibold text-gray-600">Deal #{deal.id}</div>
+                        <div className="text-right">
+                            <StatusBadge phase={phase} />
+                            <div className="text-xs text-gray-500 mt-1">Deal #{deal.id}</div>
+                        </div>
                     </div>
 
+                    {/* Counter-offer Alert */}
                     {someoneElseEdited && isPending && (
-                        <div className="mb-3 rounded-lg bg-amber-100 px-3 py-2 text-xs font-medium text-amber-900 flex items-center gap-2">
-                            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-                            <span>Counter-offer received. Please respond.</span>
+                        <div className="alert alert-warning mb-4 text-sm">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4" />
+                                <span className="font-medium">
+                                    Counter-offer received. Please respond.
+                                </span>
+                            </div>
                         </div>
                     )}
 
-                    <div className="space-y-1 rounded-lg bg-white p-3">
-                        <Row label="Notes">{notesShort}</Row>
+                    {/* Deal Details */}
+                    <div className="card-flat p-3 sm:p-4">
+                        <Row label="Notes">
+                            <span className="text-gray-700 text-sm">{notesShort}</span>
+                        </Row>
                         <Row label="Listing ID">{listingId || "—"}</Row>
-                        <Row label="Last Update">
-                            {updatedAt ? `${updatedAt.toLocaleDateString()} (${timeAgo(updatedAt)})` : "—"}
+                        <Row label="Last Updated">
+                            {updatedAt ? (
+                                <div className="text-right">
+                                    <div className="text-sm">{updatedAt.toLocaleDateString()}</div>
+                                    <div className="text-xs text-gray-500">{timeAgo(updatedAt)}</div>
+                                </div>
+                            ) : "—"}
                         </Row>
                     </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-4">
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 justify-end border-t border-gray-100 pt-4">
                     {lastEditedByYou && isPending && (
                         <button
-                            type="button"
                             onClick={onEdit}
-                            className="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                            className="btn-outline text-sm"
                         >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4 mr-2" />
                             Revise Offer
                         </button>
                     )}
@@ -197,31 +210,34 @@ function DealDetailsModal({
                     {someoneElseEdited && isPending && (
                         <>
                             <button
-                                type="button"
-                                onClick={() => handleStatus("Rejected")}
-                                className="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-400"
-                                title="Decline this counter-offer"
+                                onClick={() => handleStatus("rejected")}
+                                className="btn-outline text-rose-600 border-rose-200 hover:bg-rose-50 text-sm order-3 sm:order-1"
                             >
                                 Decline
                             </button>
-
                             <button
-                                type="button"
                                 onClick={onEdit}
-                                className="inline-flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                className="btn-outline text-amber-600 border-amber-200 hover:bg-amber-50 text-sm order-2 sm:order-2"
                             >
-                                <Pencil className="h-4 w-4" />
-                                Counter
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Counter Offer
                             </button>
-
                             <PrimaryButton
-                                onClick={() => handleStatus("Accepted")}
-                                title="Accept this offer"
-                                className="px-4 py-2 text-sm font-semibold"
+                                onClick={() => handleStatus("accepted")}
+                                className="order-1 sm:order-3 text-sm"
                             >
                                 Accept Offer
                             </PrimaryButton>
                         </>
+                    )}
+
+                    {phase === "accepted" && (
+                        <PrimaryButton
+                            onClick={onCheckout}
+                            className="text-sm"
+                        >
+                            Proceed to Payment
+                        </PrimaryButton>
                     )}
                 </div>
             </div>
@@ -229,18 +245,80 @@ function DealDetailsModal({
     );
 }
 
-/* ---------- Fact Card (flat + compact) ---------- */
+/* ---------- Mobile-Optimized Fact Card ---------- */
 function FactCard({ icon: Icon, label, value }) {
     return (
-        <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-gray-50">
-            <Icon className="h-5 w-5 text-amber-700 mb-1" />
-            <div className="text-lg font-extrabold text-gray-900">{value ?? "—"}</div>
-            <div className="text-xs text-gray-600 font-medium tracking-tight mt-0.5">{label}</div>
+        <div className="card-flat p-3 sm:p-4 text-center">
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600 mb-1 sm:mb-2 mx-auto" />
+            <div className="text-base sm:text-lg font-bold text-gray-900">{value ?? "—"}</div>
+            <div className="text-xs text-gray-600 font-medium mt-1">{label}</div>
         </div>
     );
 }
 
-/* ---------- Page ---------- */
+/* ---------- Mobile-Optimized Favorite Button ---------- */
+function FavoriteButton({ isFavorite, onClick, propertyId }) {
+    const handleClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick(propertyId);
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            className={`btn-ghost p-2 rounded-full ${
+                isFavorite ? 'text-rose-500 hover:text-rose-600' : 'text-gray-600 hover:text-gray-700'
+            }`}
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+            <Heart className={`h-4 w-4 sm:h-5 sm:w-5 ${isFavorite ? 'fill-current' : ''}`} />
+        </button>
+    );
+}
+
+/* ---------- Mobile Property Facts Section ---------- */
+function MobilePropertyFacts({ property }) {
+    const [expanded, setExpanded] = useState(false);
+
+    return (
+        <div className="lg:hidden">
+            <div className="card p-4">
+                <button
+                    onClick={() => setExpanded(!expanded)}
+                    className="flex items-center justify-between w-full text-left"
+                >
+                    <h3 className="text-lg font-bold text-gray-900">Property Facts</h3>
+                    {expanded ? (
+                        <ChevronUp className="h-5 w-5 text-gray-400" />
+                    ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                    )}
+                </button>
+
+                <AnimatePresence>
+                    {expanded && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="grid grid-cols-2 gap-3 mt-4">
+                                <FactCard icon={Bed} label="Bedrooms" value={property.bedrooms} />
+                                <FactCard icon={Bath} label="Bathrooms" value={property.bathrooms} />
+                                <FactCard icon={Ruler} label="Lot Area" value={property.lot_area ? `${property.lot_area} sqm` : "—"} />
+                                <FactCard icon={Maximize} label="Floor Area" value={property.floor_area ? `${property.floor_area} sqm` : "—"} />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </div>
+    );
+}
+
+/* ---------- Page Component ---------- */
 export default function ShowInquiry({
                                         property,
                                         deal,
@@ -280,18 +358,58 @@ export default function ShowInquiry({
 
     const pages = useMemo(
         () => [
-            { name: "Inquiries", href: "/inquiries", current: false },
+            { name: "Properties", href: "/properties", current: false },
+            { name: "My Inquiries", href: "/inquiries", current: false },
             { name: normalized.title, href: "#", current: true },
         ],
         [normalized.title]
     );
 
-    // --- Appointment/tripping status logic (ONLY allow: pending, accepted, completed, declined)
-    function deriveAppointmentStatus(inq) {
+    // Favorite state management
+    const [favoriteIds, setFavoriteIds] = useState(
+        Array.isArray(initialFavorites) ? [...new Set(initialFavorites)] : []
+    );
+    const isFavorite = normalized.id ? favoriteIds.includes(normalized.id) : false;
+
+    const toggleFavorite = useCallback((propertyId) => {
+        if (!propertyId) return;
+
+        const newFavorites = favoriteIds.includes(propertyId)
+            ? favoriteIds.filter(id => id !== propertyId)
+            : [...favoriteIds, propertyId];
+
+        setFavoriteIds(newFavorites);
+
+        // Sync with server
+        router.post(
+            `/properties/${propertyId}/favorites`,
+            {},
+            {
+                preserveScroll: true,
+                onError: () => {
+                    // Revert on error
+                    setFavoriteIds(favoriteIds);
+                },
+            }
+        );
+    }, [favoriteIds]);
+
+    // Modal states
+    const [isOpenDealForm, setIsOpenDealForm] = useState(false);
+    const [isOpenDealDetails, setIsOpenDealDetails] = useState(false);
+    const [isAddVisitModal, setIsAddVisitModal] = useState(false);
+    const [selectedVisitData, setSelectedVisitData] = useState(null);
+
+    // Status helpers
+    const iStatus = (inquiry?.status || "pending").toLowerCase();
+    const dealStatus = (deal?.status || "draft").toLowerCase();
+    const listingId = normalized?.property_listing?.id ?? null;
+
+    // Appointment status logic
+    const deriveAppointmentStatus = useCallback((inq) => {
         const trips = Array.isArray(inq?.trippings) ? inq.trippings : [];
         if (!trips.length) return "none";
 
-        // latest by created_at then id
         const latest = [...trips].sort((a, b) => {
             const ta = new Date(a.created_at || 0).getTime();
             const tb = new Date(b.created_at || 0).getTime();
@@ -299,33 +417,13 @@ export default function ShowInquiry({
         })[0];
 
         const s = String(latest?.status || "").toLowerCase();
-        if (["pending", "accepted", "completed", "declined"].includes(s)) return s;
-        return "none";
-    }
-
-    // Status helpers
-    const iStatus = (inquiry?.status || "pending").toLowerCase();
-    const apptStatus = useMemo(() => deriveAppointmentStatus(inquiry), [inquiry]);
-    const dealStatus = (deal?.status || "draft").toLowerCase();
-    const listingId = normalized?.property_listing?.id ?? null;
-
-    // Favorites (kept local)
-    const [favoriteIds, setFavoriteIds] = useState(
-        Array.isArray(initialFavorites) ? [...new Set(initialFavorites)] : []
-    );
-    const isFavorite = normalized.id ? favoriteIds.includes(normalized.id) : false;
-
-    const toggleFavorite = useCallback((id) => {
-        if (!id) return;
-        setFavoriteIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+        return ["pending", "accepted", "completed", "declined"].includes(s) ? s : "none";
     }, []);
 
-    const [isOpenDealForm, setIsOpenDealForm] = useState(false);
-    const [isOpenDealDetails, setIsOpenDealDetails] = useState(false);
-    const [isAddVisitModal, setIsAddVisitModal] = useState(false);
-    const [selectedVisitData, setSelectedVisitData] = useState(null);
+    const apptStatus = useMemo(() => deriveAppointmentStatus(inquiry), [inquiry, deriveAppointmentStatus]);
 
-    function getLatestTripping(inq) {
+    // Get latest tripping
+    const getLatestTripping = useCallback((inq) => {
         const trips = Array.isArray(inq?.trippings) ? inq.trippings : [];
         if (!trips.length) return null;
         return [...trips].sort((a, b) => {
@@ -333,8 +431,9 @@ export default function ShowInquiry({
             const tb = new Date(b.created_at || 0).getTime();
             return tb - ta || (b.id ?? 0) - (a.id ?? 0);
         })[0];
-    }
+    }, []);
 
+    // Schedule visit handler
     const openScheduleModal = useCallback(() => {
         if (!inquiry?.id) return;
 
@@ -342,38 +441,36 @@ export default function ShowInquiry({
         const isResched = !!latest && ["pending", "accepted"].includes(String(latest.status || "").toLowerCase());
 
         setSelectedVisitData({
-            property,
+            property: normalized,
             agent: inquiry?.agent ?? null,
             broker: inquiry?.broker ?? null,
             inquiryId: inquiry?.id,
             mode: isResched ? "reschedule" : "create",
-            tripping: latest
-                ? {
-                    id: latest.id,
-                    status: latest.status,
-                    visit_date: latest.visit_date,
-                    visit_time: latest.visit_time,
-                }
-                : null,
+            tripping: latest ? {
+                id: latest.id,
+                status: latest.status,
+                visit_date: latest.visit_date,
+                visit_time: latest.visit_time,
+            } : null,
             initialDate: latest?.visit_date ?? null,
             initialTime: latest?.visit_time ?? null,
         });
 
         setIsAddVisitModal(true);
-    }, [inquiry?.id, inquiry?.agent, inquiry?.broker, inquiry, property]);
+    }, [inquiry, normalized, getLatestTripping]);
 
+    // Action handlers
     const cancelVisit = useCallback(() => {
-        if (!inquiry?.id) return;
-        if (!window.confirm("Cancel this visit?")) return;
+        if (!inquiry?.id || !window.confirm("Are you sure you want to cancel this visit?")) return;
         router.post(`/inquiries/${inquiry.id}/appointment/cancel`, {}, { preserveScroll: true });
     }, [inquiry?.id]);
 
     const closeDeal = useCallback(() => {
-        if (!deal?.id) return;
-        if (!window.confirm("Close this deal?")) return;
+        if (!deal?.id || !window.confirm("Are you sure you want to close this deal?")) return;
         router.post(`/deals/${deal.id}/close`, {}, { preserveScroll: true });
     }, [deal?.id]);
 
+    // Action mappings
     const actions = {
         inquiry: () => {
             if (!normalized.id) return;
@@ -384,32 +481,25 @@ export default function ShowInquiry({
             openScheduleModal();
         },
         offer: () => {
-            // OFFER only accessible by UI when apptStatus === 'completed' (see stepStates)
-            if (deal?.id) setIsOpenDealDetails(true);
-            else setIsOpenDealForm(true);
+            deal?.id ? setIsOpenDealDetails(true) : setIsOpenDealForm(true);
         },
         payment: () => {
             if (deal?.id) router.visit(`/deals/${deal.id}/checkout`);
         },
-        close: () => closeDeal(),
+        close: closeDeal,
     };
 
-    /* ---------- Dynamic Step States & Lock Reasons ---------- */
+    // Step states
     const stepStates = useMemo(() => {
-        // INQUIRY
-        const inquiryState =
-            iStatus === "accepted" ? "complete" : iStatus === "pending" ? "current" : "complete";
+        const inquiryState = iStatus === "accepted" ? "complete" : iStatus === "pending" ? "current" : "complete";
 
-        // APPOINTMENT (tripping)
-        // allowed statuses: pending, accepted, completed, declined (or none)
         let appointmentState = "locked";
         if (iStatus === "accepted") {
             if (apptStatus === "completed") appointmentState = "complete";
             else if (["pending", "accepted"].includes(apptStatus)) appointmentState = "current";
-            else appointmentState = "upcoming"; // none or declined -> you may schedule again
+            else appointmentState = "upcoming";
         }
 
-        // OFFER — strictly unlock only when tripping is completed
         let offerState = "locked";
         if (apptStatus === "completed") {
             if (!deal) offerState = "upcoming";
@@ -418,57 +508,34 @@ export default function ShowInquiry({
             else offerState = "upcoming";
         }
 
-        // PAYMENT
         let paymentState = "locked";
         if (dealStatus === "accepted") paymentState = "upcoming";
         else if (dealStatus === "closed") paymentState = "complete";
 
-        return {
-            inquiry: inquiryState,
-            appointment: appointmentState,
-            offer: offerState,
-            payment: paymentState,
-        };
+        return { inquiry: inquiryState, appointment: appointmentState, offer: offerState, payment: paymentState };
     }, [iStatus, apptStatus, deal, dealStatus]);
 
-    const lockedReasons = useMemo(() => {
-        return {
-            inquiry:
-                iStatus === "pending"
-                    ? "Your inquiry is pending. Once accepted, you can schedule a visit."
-                    : undefined,
-            appointment:
-                iStatus !== "accepted"
-                    ? "Appointment unlocks after your inquiry is accepted."
-                    : undefined,
-            offer:
-                apptStatus !== "completed"
-                    ? "Offer unlocks only after your tripping is marked completed."
-                    : undefined,
-            payment:
-                dealStatus !== "accepted"
-                    ? "Payment unlocks after your offer is accepted."
-                    : undefined,
-        };
-    }, [iStatus, apptStatus, dealStatus]);
+    const lockedReasons = useMemo(() => ({
+        inquiry: iStatus === "pending" ? "Your inquiry is pending. Once accepted, you can schedule a visit." : undefined,
+        appointment: iStatus !== "accepted" ? "Appointment unlocks after your inquiry is accepted." : undefined,
+        offer: apptStatus !== "completed" ? "Offer unlocks only after your visit is completed." : undefined,
+        payment: dealStatus !== "accepted" ? "Payment unlocks after your offer is accepted." : undefined,
+    }), [iStatus, apptStatus, dealStatus]);
 
-    const appointmentStatusProp = apptStatus === "none" ? "none" : apptStatus;
-
-    const descHtml = normalized.description || "<p>No description provided for this listing.</p>";
+    // Content rendering
+    const descHtml = normalized.description || "<p>No description provided.</p>";
     const descIsSafe = looksSafeHtml(descHtml);
-
-    const hasImg = !!normalized.image_url;
-    const imgSrc = hasImg ? `/storage/${normalized.image_url}` : null;
+    const imgSrc = normalized.image_url ? `/storage/${normalized.image_url}` : null;
 
     return (
-        <BuyerLayout>
-            <Head title={`Inquiry ${inquiry.id}`} />
+        <AuthenticatedLayout>
+            <Head title={`Inquiry - ${normalized.title}`} />
 
             {/* Modals */}
             <DealFormModal
                 isOpen={isOpenDealForm}
                 setIsOpen={setIsOpenDealForm}
-                property={property}
+                property={normalized}
                 initialValue={deal}
             />
             <DealDetailsModal
@@ -484,169 +551,202 @@ export default function ShowInquiry({
                 onCloseDeal={closeDeal}
                 authId={auth?.id}
             />
-            <ScheduleVisitModal open={isAddVisitModal} setOpen={setIsAddVisitModal} visitData={selectedVisitData} />
+            <ScheduleVisitModal
+                open={isAddVisitModal}
+                setOpen={setIsAddVisitModal}
+                visitData={selectedVisitData}
+            />
 
-            {/* Breadcrumb */}
-            <div className="mx-4 mb-6">
-                <Breadcrumb pages={pages} />
-            </div>
+            <div className="page-container">
+                <div className="page-content">
+                    {/* Breadcrumb */}
+                    <div className="mb-6 sm:mb-8">
+                        <Breadcrumb pages={pages} />
+                    </div>
 
-            {/* Header / Inquiries summary */}
-            <header className="mx-4 mb-8">
-                <h1 className="sr-only">Inquiry for {normalized.title}</h1>
-                <div className="rounded-2xl bg-white p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                        {/* Image */}
-                        <div className="md:col-span-4">
-                            <div className="overflow-hidden rounded-xl bg-gray-50">
-                                {imgSrc ? (
-                                    <img src={imgSrc} alt={normalized.title} className="w-full aspect-video object-cover" loading="lazy" />
-                                ) : (
-                                    <div className="w-full aspect-video grid place-items-center text-sm text-gray-400">No image available</div>
-                                )}
+                    {/* Property Header */}
+                    <div className="mb-6 sm:mb-8">
+                        <div className="card p-4 sm:p-6">
+                            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 sm:gap-6">
+                                {/* Property Image */}
+                                <div className="lg:col-span-5">
+                                    <div className="relative rounded-xl sm:rounded-2xl overflow-hidden bg-gray-100 aspect-[4/3] shadow-inner">
+                                        {imgSrc ? (
+                                            <img
+                                                src={imgSrc}
+                                                alt={normalized.title}
+                                                className="w-full h-full object-cover property-card-image"
+                                                onError={(e) => {
+                                                    e.target.src = '/placeholder-property.jpg';
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                <div className="text-center">
+                                                    <MapPin className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2" />
+                                                    <div className="text-sm">No image available</div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
+                                            <FavoriteButton
+                                                isFavorite={isFavorite}
+                                                onClick={toggleFavorite}
+                                                propertyId={normalized.id}
+                                            />
+                                        </div>
+                                        <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 badge-primary text-base sm:text-lg font-bold">
+                                            {peso.format(normalized.price)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Property Details */}
+                                <div className="lg:col-span-7">
+                                    <div className="flex items-start justify-between mb-3 sm:mb-4">
+                                        <div className="flex-1">
+                                            <div className="text-xs sm:text-sm font-semibold text-primary-600 uppercase tracking-wide mb-1">
+                                                {normalized.property_type}
+                                            </div>
+                                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                                                {normalized.title}
+                                            </h1>
+                                            <div className="flex items-center gap-2 text-gray-600 mb-3 sm:mb-4">
+                                                <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+                                                <span className="text-xs sm:text-sm">{normalized.address}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Desktop Property Facts */}
+                                    <div className="hidden lg:grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 sm:mb-6">
+                                        <FactCard icon={Bed} label="Bedrooms" value={normalized.bedrooms} />
+                                        <FactCard icon={Bath} label="Bathrooms" value={normalized.bathrooms} />
+                                        <FactCard icon={Ruler} label="Lot Area" value={normalized.lot_area ? `${normalized.lot_area} sqm` : "—"} />
+                                        <FactCard icon={Maximize} label="Floor Area" value={normalized.floor_area ? `${normalized.floor_area} sqm` : "—"} />
+                                    </div>
+
+                                    {/* Status Overview */}
+                                    <div className="glass-card p-3 sm:p-4">
+                                        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4">
+                                            <div className="flex items-center gap-2">
+                                                <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                                                <span className="text-xs sm:text-sm font-medium text-gray-700">Inquiry:</span>
+                                                <StatusBadge phase={iStatus} />
+                                            </div>
+                                            {apptStatus !== "none" && (
+                                                <div className="flex items-center gap-2">
+                                                    <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                                                    <span className="text-xs sm:text-sm font-medium text-gray-700">Visit:</span>
+                                                    <StatusBadge phase={apptStatus} />
+                                                </div>
+                                            )}
+                                            {deal && (
+                                                <div className="flex items-center gap-2">
+                                                    <User className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                                                    <span className="text-xs sm:text-sm font-medium text-gray-700">Deal:</span>
+                                                    <StatusBadge phase={dealStatus} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Details */}
-                        <div className="md:col-span-8">
-                            <div className="flex items-start justify-between gap-4">
-                                <div>
-                                    <div className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
-                                        {normalized.property_type || "Property"}
-                                        {normalized?.property_listing?.updated_at && <> · Updated {timeAgo(normalized.property_listing.updated_at)}</>}
-                                    </div>
-                                    <h2 className="mt-1 text-2xl md:text-3xl font-black text-gray-900 leading-tight">
-                                        {normalized.title}
-                                    </h2>
-                                    <p className="text-sm text-gray-600 mt-2 flex items-center gap-1">
-                                        <MapPin className="h-4 w-4 text-gray-400" />
-                                        {normalized.address || "—"}
-                                    </p>
+                    {/* Mobile Property Facts */}
+                    <MobilePropertyFacts property={normalized} />
+
+                    {/* Main Content */}
+                    <div className="mb-8 sm:mb-12">
+                        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 sm:gap-8">
+                            {/* Left Column - Progress & Details */}
+                            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+                                {/* Progress Stepper */}
+                                <div className="card p-4 sm:p-6">
+                                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Inquiry Progress</h2>
+
+                                    <Stepper
+                                        steps={stepStates}
+                                        appointmentStatus={apptStatus === "none" ? "none" : apptStatus}
+                                        onAction={actions}
+                                        lockedReasons={lockedReasons}
+                                    />
+
+                                    <StepperNotes
+                                        iStatus={iStatus}
+                                        apptStatus={apptStatus}
+                                        deal={deal}
+                                        dealStatus={dealStatus}
+                                        onResched={openScheduleModal}
+                                        onSchedule={openScheduleModal}
+                                        onOffer={actions.offer}
+                                        onPay={actions.payment}
+                                    />
+
+                                    {/* Visit Actions */}
+                                    {iStatus === "accepted" && (
+                                        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-2 sm:gap-3">
+                                            {apptStatus === "accepted" && (
+                                                <>
+                                                    <button
+                                                        onClick={openScheduleModal}
+                                                        className="btn-outline text-sm"
+                                                    >
+                                                        <CalendarDays className="h-4 w-4 mr-2" />
+                                                        Reschedule Visit
+                                                    </button>
+                                                    <button
+                                                        onClick={cancelVisit}
+                                                        className="btn-secondary text-sm"
+                                                    >
+                                                        Cancel Visit
+                                                    </button>
+                                                </>
+                                            )}
+                                            {apptStatus === "declined" && (
+                                                <button
+                                                    onClick={openScheduleModal}
+                                                    className="btn-primary text-sm"
+                                                >
+                                                    <CalendarDays className="h-4 w-4 mr-2" />
+                                                    Schedule New Visit
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="text-right flex-shrink-0 pt-1">
-                                    <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-green-700">
-                                        {peso.format(Number(normalized.price || 0))}
+
+                                {/* Property Description */}
+                                <div className="card p-4 sm:p-6">
+                                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Property Details</h3>
+                                    <div className="prose prose-sm max-w-none text-gray-700 text-sm sm:text-base">
+                                        {descIsSafe ? (
+                                            <div dangerouslySetInnerHTML={{ __html: descHtml }} />
+                                        ) : (
+                                            <div className="whitespace-pre-wrap">{descHtml}</div>
+                                        )}
                                     </div>
-                                    <div className="text-xs text-gray-500 mt-0.5">Listed Price</div>
                                 </div>
                             </div>
 
-                            {/* Facts */}
-                            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-gray-100 pt-4">
-                                <FactCard icon={Bed} label="Bedrooms" value={normalized.bedrooms} />
-                                <FactCard icon={Bath} label="Bathrooms" value={normalized.bathrooms} />
-                                <FactCard icon={Ruler} label="Lot Area" value={normalized.lot_area ? `${normalized.lot_area} sqm` : "—"} />
-                                <FactCard icon={Maximize} label="Floor Area" value={normalized.floor_area ? `${normalized.floor_area} sqm` : "—"} />
-                            </div>
-
-                            {/* Statuses */}
-                            <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-gray-100 pt-4">
-                                <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                                    <MessageSquare className="h-4 w-4 text-gray-500" />
-                                    Inquiry: <StatusBadge phase={iStatus} />
+                            {/* Right Column - Chat */}
+                            <div className="lg:col-span-1">
+                                <div className="card p-4 sm:p-6 lg:sticky lg:top-4">
+                                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                                        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600" />
+                                        <h3 className="text-base sm:text-lg font-bold text-gray-900">Direct Messages</h3>
+                                    </div>
+                                    <div className="h-64 sm:h-80 lg:h-96">
+                                        <ChannelView channel={channel} />
+                                    </div>
                                 </div>
-                                {apptStatus && apptStatus !== "none" && (
-                                    <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                                        Tripping: <StatusBadge phase={apptStatus} />
-                                    </div>
-                                )}
-                                {dealStatus && (
-                                    <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                                        Deal: <StatusBadge phase={dealStatus} />
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>
                 </div>
-            </header>
-
-            {/* Main Content Area: Stepper & Chat */}
-            <div className="mx-4 mb-12">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <div className="rounded-2xl bg-white p-6">
-                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Inquiry Progress</h3>
-
-                            <Stepper
-                                steps={stepStates}
-                                appointmentStatus={appointmentStatusProp}
-                                onAction={{
-                                    inquiry: actions.inquiry,
-                                    appointment: actions.appointment,
-                                    offer: actions.offer,
-                                    payment: actions.payment,
-                                }}
-                                lockedReasons={lockedReasons}
-                            />
-
-                            <StepperNotes
-                                iStatus={iStatus}
-                                apptStatus={apptStatus}
-                                deal={deal}
-                                dealStatus={dealStatus}
-                                onResched={openScheduleModal}
-                                onSchedule={openScheduleModal}
-                                onOffer={() => (deal?.id ? setIsOpenDealDetails(true) : setIsOpenDealForm(true))}
-                                onPay={() => deal?.id && router.visit(`/deals/${deal.id}/checkout`)}
-                            />
-
-                            {/* Tripping actions reflect the new statuses */}
-                            {iStatus === "accepted" && apptStatus === "accepted" && (
-                                <div className="mt-6 flex flex-wrap gap-3">
-                                    <button
-                                        onClick={openScheduleModal}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                    >
-                                        <CalendarDays className="h-4 w-4" />
-                                        Reschedule Visit
-                                    </button>
-                                    <button
-                                        onClick={cancelVisit}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                                    >
-                                        Cancel Visit
-                                    </button>
-                                </div>
-                            )}
-
-                            {iStatus === "accepted" && apptStatus === "declined" && (
-                                <div className="mt-6">
-                                    <button
-                                        onClick={openScheduleModal}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                    >
-                                        <CalendarDays className="h-4 w-4" />
-                                        Schedule Visit Again
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Property Description */}
-                        <div className="rounded-2xl bg-white p-6">
-                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Property Description</h3>
-                            <div className="text-sm text-gray-700 leading-relaxed">
-                                {descIsSafe ? <div dangerouslySetInnerHTML={{ __html: descHtml }} /> : <p className="whitespace-pre-wrap">{descHtml}</p>}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right Column: Direct Messages */}
-                    <div className="lg:col-span-1">
-                        <div className="rounded-2xl bg-white p-6 lg:sticky lg:top-8">
-                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3 border-b border-gray-100 pb-2 flex items-center gap-2">
-                                <MessageSquare className="h-5 w-5 text-amber-700" />
-                                Direct Messages
-                            </h3>
-                            <div className="pt-1">
-                                <ChannelView channel={channel} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
-        </BuyerLayout>
+        </AuthenticatedLayout>
     );
 }
