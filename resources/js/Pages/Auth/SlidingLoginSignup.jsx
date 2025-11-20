@@ -8,6 +8,7 @@ import register from "../../../assets/real estate 2.png";
   import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "@inertiajs/react";
+import BackButton from "@/Components/BackButton.jsx";
 // Main component
 const SlidingLoginSignup = () => {
   const [isSignUpMode, setIsSignUpMode] = useState(false);
@@ -49,9 +50,7 @@ const SlidingLoginSignup = () => {
 
 
       <div className="text-yellow-900 fixed z-50 left-3 md:left-5 top-3 md:top-5">
-        <Link href='/'>
-          <FontAwesomeIcon icon={faArrowLeft} className={` h-5 w-5, ${isSignUpMode ? "text-primary":  "text-white"}`} />
-        </Link>
+        <BackButton />
       </div>
       {/* Form container */}
       <div className="absolute w-full h-full top-0 left-0">
