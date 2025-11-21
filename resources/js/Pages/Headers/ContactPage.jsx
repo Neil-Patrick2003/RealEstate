@@ -15,6 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, useForm } from "@inertiajs/react";
 import Footer from "@/Components/Footer.jsx";
+import NavBar from "@/Components/NavBar.jsx";
 
 export default function ContactPage() {
     const { data, setData, post, processing, errors, recentlySuccessful, reset } = useForm({
@@ -67,33 +68,8 @@ export default function ContactPage() {
         <div className="min-h-screen bg-white">
             {/* Simple Background */}
             <div className="fixed inset-0 -z-10 bg-gradient-to-br from-blue-50/30 via-white to-emerald-50/30" />
+            <NavBar />
 
-            {/* Header */}
-            <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-4">
-                        <div className="flex items-center">
-                            <FontAwesomeIcon icon={faHome} className="h-8 w-8 text-primary-600 mr-3" />
-                            <span className="text-2xl font-bold text-gray-900">MJVI REALTY</span>
-                        </div>
-
-                        <nav className="hidden md:flex items-center space-x-8">
-                            {['Properties', 'Services', 'About', 'Blog', 'Contact'].map((item) => (
-                                <a
-                                    key={item}
-                                    href="#"
-                                    className="text-gray-700 hover:text-primary-600 font-medium"
-                                >
-                                    {item}
-                                </a>
-                            ))}
-                            <button className="btn-primary">
-                                Get Started
-                            </button>
-                        </nav>
-                    </div>
-                </div>
-            </header>
 
             {/* Hero Section */}
             <div className="relative bg-gray-900">

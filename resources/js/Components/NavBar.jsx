@@ -43,7 +43,7 @@ function Navbar() {
         { name: 'Home', href: '/' },
         { name: 'Properties', href: '/all-properties' },
         { name: 'About', href: '/about' },
-        { name: 'Services', href: '/services' },
+        { name: 'Blogs', href: '/blogs' },
         { name: 'Contact', href: '/contact' },
     ];
 

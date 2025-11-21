@@ -89,7 +89,7 @@ Route::get('/explores/projects/{project}', [ProjectController::class, 'show']);
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
-Route::get('/services', [HomePageController::class, 'services'])->name('services');
+Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
 
 
 
