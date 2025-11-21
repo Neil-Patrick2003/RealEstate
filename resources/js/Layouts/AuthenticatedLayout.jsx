@@ -29,7 +29,12 @@ import Drawer from "@/Components/Drawer.jsx";
 import { buildSidebarCounts } from "@/utils/sidebarCounts.js";
 import FeedbackReminder from "@/Components/reminder/FeedbackReminder.jsx";
 import Sidebar from "@/Components/Layout/Sidebar.jsx";
-import { agentSidebarConfig, buyerSidebarConfig, sellerSidebarConfig } from "@/Components/Layout/SidebarConfigs.js";
+import {
+    agentSidebarConfig,
+    brokerSidebarConfig,
+    buyerSidebarConfig,
+    sellerSidebarConfig
+} from "@/Components/Layout/SidebarConfigs.js";
 import { useNotification } from "../../hooks/useNotifications.js";
 
 /* ================================
@@ -427,8 +432,9 @@ export default function AuthenticatedLayout({ children }) {
             case 'admin':
                 return adminSidebarConfig;
             case 'agent':
-            case 'broker':
                 return agentSidebarConfig;
+            case 'broker':
+                return brokerSidebarConfig;
             case 'seller':
                 return sellerSidebarConfig;
             case 'buyer':

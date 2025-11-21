@@ -11,23 +11,36 @@ class AgentController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        $sort = $request->input('sort', 'asc');
+        $search  = $request->input('search');
+        $sort    = $request->input('sort', 'asc');
         $perPage = $request->input('perPage', 10);
 
         $agents = User::where('broker_id', auth()->id())
-            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($search, function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            })
             ->withCount([
-                // These assume a many-to-many relation named 'listings'
-                'property_listings as assigned_listings_count' => fn($q) => $q->where('status', 'Assigned'),
-                'property_listings as published_listings_count' => fn($q) => $q->where('status', 'Published'),
-                'property_listings as sold_listings_count' => fn($q) => $q->where('status', 'Sold'),
+                    'propertyListings as assigned_listings_count' => function ($q) {
+                    $q->where('status', 'Assigned');
+                },
+                'propertyListings as published_listings_count' => function ($q) {
+                    $q->where('status', 'Published');
+                },
+                'propertyListings as sold_listings_count' => function ($q) {
+                    $q->where('status', 'Sold');
+                },
             ])
             ->orderBy('name', $sort)
             ->paginate($perPage)
             ->withQueryString();
 
-        return Inertia::render('Broker/Agent/Index', compact('agents', 'search', 'sort', 'perPage'));
+
+        return Inertia::render('Broker/Agent/Index', [
+            'agents'  => $agents,
+            'search'  => $search,
+            'sort'    => $sort,
+            'perPage' => $perPage,
+        ]);
     }
 
 

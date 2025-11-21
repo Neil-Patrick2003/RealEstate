@@ -96,17 +96,16 @@ export const brokerSidebarConfig = {
         { name: "Dashboard", Icon: Home, path: "/broker/dashboard", description: "Broker activity overview" },
         { name: "Agent Management", Icon: Users, path: "/broker/agents", description: "Manage agents & assignments" },
         { name: "Properties", Icon: Building, path: "/broker/properties", description: "All property listings" },
-        { name: "Handle Properties", Icon: Building, path: "/broker/my-properties", description: "All Handle listings" },
         { name: "Inquiries", Icon: Mail, path: "/broker/inquiries", description: "All buyer inquiries" },
-        { name: "Message", Icon: MessageSquare, path: "/broker/messages", description: "All messages for your Inquiries" },
+        // { name: "Message", Icon: MessageSquare, path: "/broker/messages", description: "All messages for your Inquiries" },
 
         { name: "Trippings", Icon: Calendar, path: "/broker/trippings", description: "Scheduled property viewings" },
         { name: "Deals", Icon: Handshake, path: "/broker/deals", description: "Offers & deal monitoring" },
         { name: "Transactions", Icon: BarChart3, path: "/broker/transactions", description: "Transaction & payment records" },
-        { name: "Reports", Icon: FileText, path: "/broker/reports", description: "Exportable reports & analytics" },
+        { name: "Partners", Icon: FileText, path: "/broker/partners", description: "View & manage partners" },
     ],
     quickActions: [
-        { label: "Add User", Icon: Plus, onClick: () => router.get('/broker/users/create') }
+        { label: "Add Agent", Icon: Plus, onClick: () => router.get('/broker/agents') }
     ],
     showSearch: true,
     categorizeNotification: categorizeNotifToPath

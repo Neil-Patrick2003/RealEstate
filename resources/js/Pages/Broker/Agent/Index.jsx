@@ -17,9 +17,14 @@ import {
     faUserPlus,
     faChevronLeft,
     faChevronRight,
+    faUsers,
+    faHome,
+    faChartLine,
 } from "@fortawesome/free-solid-svg-icons";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
+import StatsCard from "@/Components/ui/StatsCard.jsx";
 
-// tiny avatar helper
+// Avatar helper
 const Avatar = ({ name = "", photo }) => {
     const [err, setErr] = useState(false);
     const initial = (name || "?").trim().charAt(0).toUpperCase();
@@ -29,12 +34,12 @@ const Avatar = ({ name = "", photo }) => {
         <img
             src={`/storage/${photo}`}
             alt={name}
-            className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
+            className="avatar-md rounded-full object-cover border-2 border-white shadow-sm"
             onError={() => setErr(true)}
         />
     ) : (
         <div
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-teal-500 text-white grid place-items-center text-sm font-semibold ring-2 ring-white shadow-sm"
+            className="avatar-md rounded-full bg-gradient-to-br from-primary-600 to-emerald-500 text-white font-semibold border-2 border-white shadow-sm"
             aria-hidden
         >
             {initial}
@@ -215,7 +220,7 @@ export default function Index({
     }, [currentData]);
 
     return (
-        <BrokerLayout>
+        <AuthenticatedLayout>
             {/* Modals */}
             <ConfirmDialog
                 open={openDeleteModal}
@@ -233,339 +238,372 @@ export default function Index({
                 setOpenEditAgent={setOpenEditAgent}
             />
 
-            {/* Header */}
-            <div className="px-2 py-2">
-                <div className="flex items-center justify-between mb-2">
-                    <h1 className="text-2xl text-primary font-bold">My Agents</h1>
-                    <button
-                        onClick={() => setOpenAddAgent(true)}
-                        className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 text-sm rounded-md hover:bg-primary/90"
-                    >
-                        <FontAwesomeIcon icon={faUserPlus} />
-                        Add Agent
-                    </button>
-                </div>
-                <p className="text-gray-700 mb-4 text-sm md:text-base">
-                    View and manage the agents who handle property listings for sellers.
-                </p>
-
-                {/* KPIs */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                        <div className="flex items-center justify-between">
+            <div className="page-container">
+                <div className="page-content space-y-6">
+                    {/* Header */}
+                    <div className="section">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
-                                <p className="text-gray-600 text-sm">Assigned Listings</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-1">
-                                    {totals.assigned.toLocaleString()}
+                                <h1 className="text-3xl font-extrabold text-gray-900 gradient-text">Agent Management</h1>
+                                <p className="section-description">
+                                    View and manage the agents who handle property listings for sellers.
                                 </p>
                             </div>
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center" />
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm">Published</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-1">
-                                    {totals.published.toLocaleString()}
-                                </p>
-                            </div>
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center" />
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm">Sold</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-1">
-                                    {totals.sold.toLocaleString()}
-                                </p>
-                            </div>
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Toolbar */}
-                <div className="rounded-xl border border-gray-100 shadow-sm">
-                    <div className="p-4 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <div className="relative w-full md:max-w-xs">
-                            <input
-                                id="search"
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => handleSearchTermChange(e.target.value)}
-                                placeholder="Search agents..."
-                                className="border border-gray-300 rounded-md h-10 px-4 pl-10 text-sm text-gray-800 w-full"
-                            />
-                            <FontAwesomeIcon
-                                icon={faSearch}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
-                            />
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
                             <button
-                                type="button"
-                                onClick={exportSelectedCSV}
-                                className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
-                                title="Export current / selected as CSV"
+                                onClick={() => setOpenAddAgent(true)}
+                                className="btn btn-primary btn-sm"
                             >
-                                <FontAwesomeIcon icon={faDownload} />
-                                Export CSV
+                                <FontAwesomeIcon icon={faUserPlus} />
+                                Add Agent
                             </button>
-
-                            <select
-                                value={selectedSort}
-                                onChange={(e) => handleSortChange(e.target.value)}
-                                className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 bg-white px-3"
-                                aria-label="Sort order"
-                            >
-                                <option value="asc">A → Z</option>
-                                <option value="desc">Z → A</option>
-                            </select>
-
-                            <select
-                                value={itemsPerPage}
-                                onChange={(e) => handlePerPageChange(e.target.value)}
-                                className="border border-gray-300 rounded-md h-10 text-sm text-gray-800 bg-white px-3"
-                                aria-label="Items per page"
-                            >
-                                <option value="5">5 / page</option>
-                                <option value="10">10 / page</option>
-                                <option value="20">20 / page</option>
-                                <option value="50">50 / page</option>
-                            </select>
                         </div>
                     </div>
 
-                    {/* Multi-select action bar */}
-                    {selectedIds.size > 0 && (
-                        <div className="px-4 md:px-6 py-3 bg-emerald-50 border-t border-emerald-200 flex items-center justify-between">
-                            <p className="text-sm text-emerald-800">{selectedIds.size} selected</p>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={mailtoSelected}
-                                    className="px-3 py-1.5 text-sm rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
-                                    title="Email selected agents"
-                                >
-                                    <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
-                                    Email selected
-                                </button>
-                                <button
-                                    onClick={clearSelection}
-                                    className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50"
-                                >
-                                    Clear
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    {/* KPIs */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <StatsCard title="Total Agents" value={agents?.total ?? 0} />
+                        <StatsCard title="Total Assigned Listings" value={totals.assigned} />
+                        <StatsCard title="Total Published Listings" value={totals.published} />
+                        <StatsCard title="Total Sold Listings" value={totals.sold} />
 
-                    {/* Desktop table */}
-                    <div className="hidden md:block overflow-auto max-h-[56vh] bg-white">
-                        <table className="min-w-full text-sm text-left text-gray-700">
-                            <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wide sticky top-0 z-10 shadow-sm">
-                            <tr>
-                                <th className="p-3 text-center w-10">
-                                    <input
-                                        type="checkbox"
-                                        checked={isAllSelected}
-                                        onChange={toggleAll}
-                                        aria-label="Select all"
+                    </div>
+
+                    {/* Toolbar Card */}
+                    <div className="card">
+                        <div className="card-body">
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <div className="relative flex-1 max-w-md">
+                                    <FontAwesomeIcon
+                                        icon={faSearch}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                                     />
-                                </th>
-                                <th className="p-3">Name</th>
-                                <th className="p-3">Address</th>
-                                <th className="p-3">Phone</th>
-                                <th className="p-3">Email</th>
-                                <th className="p-3">Rating</th>
-                                <th className="p-3">Assigned</th>
-                                <th className="p-3">Published</th>
-                                <th className="p-3">Sold</th>
-                                <th className="p-3">Action</th>
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-dashed">
+                                    <input
+                                        type="text"
+                                        value={searchTerm}
+                                        onChange={(e) => handleSearchTermChange(e.target.value)}
+                                        placeholder="Search agents by name, email, or phone..."
+                                        className="form-input pl-10"
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-3">
+
+                                    <select
+                                        value={selectedSort}
+                                        onChange={(e) => handleSortChange(e.target.value)}
+                                        className="form-select text-sm"
+                                        aria-label="Sort order"
+                                    >
+                                        <option value="asc">A → Z</option>
+                                        <option value="desc">Z → A</option>
+                                    </select>
+
+                                    <select
+                                        value={itemsPerPage}
+                                        onChange={(e) => handlePerPageChange(e.target.value)}
+                                        className="form-select text-sm"
+                                        aria-label="Items per page"
+                                    >
+                                        <option value="5">5 / page</option>
+                                        <option value="10">10 / page</option>
+                                        <option value="20">20 / page</option>
+                                        <option value="50">50 / page</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Multi-select action bar */}
+                            {selectedIds.size > 0 && (
+                                <div className="mt-4 p-3 bg-primary-50 border border-primary-200 rounded-lg flex items-center justify-between">
+                                    <p className="text-sm text-primary-800 font-medium">
+                                        {selectedIds.size} agent{selectedIds.size !== 1 ? 's' : ''} selected
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={mailtoSelected}
+                                            className="btn btn-primary btn-sm"
+                                            title="Email selected agents"
+                                        >
+                                            <FontAwesomeIcon icon={faEnvelope} />
+                                            Email Selected
+                                        </button>
+                                        <button
+                                            onClick={clearSelection}
+                                            className="btn btn-outline btn-sm"
+                                        >
+                                            Clear Selection
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Desktop table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-700">
+                                <thead className="bg-gray-50">
+                                <tr className="text-xs text-gray-500 uppercase tracking-wider">
+                                    <th className="p-4 text-center w-12">
+                                        <input
+                                            type="checkbox"
+                                            checked={isAllSelected}
+                                            onChange={toggleAll}
+                                            className="form-checkbox"
+                                            aria-label="Select all"
+                                        />
+                                    </th>
+                                    <th className="p-4 font-semibold">Agent</th>
+                                    <th className="p-4 font-semibold">Contact</th>
+                                    <th className="p-4 font-semibold">Address</th>
+                                    <th className="p-4 font-semibold text-center">Rating</th>
+                                    <th className="p-4 font-semibold text-center">Assigned</th>
+                                    <th className="p-4 font-semibold text-center">Published</th>
+                                    <th className="p-4 font-semibold text-center">Sold</th>
+                                    <th className="p-4 font-semibold text-center">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                {currentData.length ? (
+                                    currentData.map((agent) => (
+                                        <tr key={agent.id} className="hover:bg-gray-50 transition">
+                                            <td className="p-4 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.has(agent.id)}
+                                                    onChange={() => toggleRow(agent.id)}
+                                                    className="form-checkbox"
+                                                    aria-label={`Select ${agent.name}`}
+                                                />
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar name={agent.name} photo={agent.photo_url} />
+                                                    <div>
+                                                        <p className="font-semibold text-gray-900">{agent.name}</p>
+                                                        <p className="text-xs text-gray-500">{agent.email || "—"}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="space-y-1">
+                                                    <p className="text-gray-900">{agent.email || "—"}</p>
+                                                    <p className="text-xs text-gray-500">{agent.contact_number || "—"}</p>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <p className="text-gray-700 max-w-xs truncate">{agent.address || "—"}</p>
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                <span className="badge badge-primary">
+                                                    {agent.rating || "—"}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                <span className="font-semibold text-gray-900">
+                                                    {agent.assigned_listings_count ?? 0}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                <span className="font-semibold text-green-600">
+                                                    {agent.published_listings_count ?? 0}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                <span className="font-semibold text-blue-600">
+                                                    {agent.sold_listings_count ?? 0}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => onEdit(agent)}
+                                                        className="btn btn-ghost btn-sm p-2 text-primary-600 hover:bg-primary-50"
+                                                        title="Edit agent"
+                                                    >
+                                                        <FontAwesomeIcon icon={faPen} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => onAskDelete(agent.id)}
+                                                        className="btn btn-ghost btn-sm p-2 text-red-600 hover:bg-red-50"
+                                                        title="Delete agent"
+                                                    >
+                                                        <FontAwesomeIcon icon={faTrash} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={9} className="text-center py-12 text-gray-500">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <FontAwesomeIcon icon={faUsers} className="text-4xl text-gray-300" />
+                                                <p className="text-lg font-medium text-gray-400">No agents found</p>
+                                                <p className="text-sm text-gray-500">
+                                                    {searchTerm ? "Try adjusting your search terms" : "Get started by adding your first agent"}
+                                                </p>
+                                                {!searchTerm && (
+                                                    <button
+                                                        onClick={() => setOpenAddAgent(true)}
+                                                        className="btn btn-primary btn-sm mt-2"
+                                                    >
+                                                        <FontAwesomeIcon icon={faUserPlus} />
+                                                        Add First Agent
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile card list */}
+                        <div className="md:hidden divide-y divide-gray-100">
                             {currentData.length ? (
                                 currentData.map((agent) => (
-                                    <tr key={agent.id} className="hover:bg-gray-50">
-                                        <td className="p-3 text-center">
+                                    <div key={agent.id} className="p-4">
+                                        <div className="flex items-start gap-3">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedIds.has(agent.id)}
                                                 onChange={() => toggleRow(agent.id)}
+                                                className="form-checkbox mt-4"
                                                 aria-label={`Select ${agent.name}`}
                                             />
-                                        </td>
-                                        <td className="p-3">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar name={agent.name} photo={agent.photo_url} />
-                                                <span className="font-medium">{agent.name}</span>
+                                            <Avatar name={agent.name} photo={agent.photo_url} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="font-semibold text-gray-900">{agent.name}</p>
+                                                        <p className="text-sm text-gray-500">{agent.email || "—"}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            onClick={() => onEdit(agent)}
+                                                            className="btn btn-ghost btn-sm p-1 text-primary-600"
+                                                            title="Edit"
+                                                        >
+                                                            <FontAwesomeIcon icon={faPen} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onAskDelete(agent.id)}
+                                                            className="btn btn-ghost btn-sm p-1 text-red-600"
+                                                            title="Delete"
+                                                        >
+                                                            <FontAwesomeIcon icon={faTrash} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-3 grid grid-cols-3 gap-2">
+                                                    <div className="gray-card text-center p-2">
+                                                        <p className="text-xs text-gray-500">Assigned</p>
+                                                        <p className="font-semibold text-gray-900">
+                                                            {agent.assigned_listings_count ?? 0}
+                                                        </p>
+                                                    </div>
+                                                    <div className="gray-card text-center p-2">
+                                                        <p className="text-xs text-gray-500">Published</p>
+                                                        <p className="font-semibold text-green-600">
+                                                            {agent.published_listings_count ?? 0}
+                                                        </p>
+                                                    </div>
+                                                    <div className="gray-card text-center p-2">
+                                                        <p className="text-xs text-gray-500">Sold</p>
+                                                        <p className="font-semibold text-blue-600">
+                                                            {agent.sold_listings_count ?? 0}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-2 text-xs text-gray-600 space-y-1">
+                                                    {agent.contact_number && (
+                                                        <p>📞 {agent.contact_number}</p>
+                                                    )}
+                                                    {agent.address && (
+                                                        <p className="truncate">📍 {agent.address}</p>
+                                                    )}
+                                                    {agent.rating && (
+                                                        <p>⭐ Rating: {agent.rating}</p>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </td>
-                                        <td className="p-3">{agent.address || "—"}</td>
-                                        <td className="p-3">{agent.contact_number || "—"}</td>
-                                        <td className="p-3">{agent.email || "—"}</td>
-                                        <td className="p-3">{agent.rating || "—"}</td>
-                                        <td className="p-3">{agent.assigned_listings_count ?? 0}</td>
-                                        <td className="p-3">{agent.published_listings_count ?? 0}</td>
-                                        <td className="p-3">{agent.sold_listings_count ?? 0}</td>
-                                        <td className="p-3">
-                                            <div className="flex items-center gap-3">
-                                                <button
-                                                    onClick={() => onEdit(agent)}
-                                                    className="text-gray-600 hover:text-gray-800"
-                                                    title="Edit agent"
-                                                >
-                                                    <FontAwesomeIcon icon={faPen} />
-                                                </button>
-                                                <button
-                                                    onClick={() => onAskDelete(agent.id)}
-                                                    className="text-gray-600 hover:text-red-600"
-                                                    title="Delete agent"
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                        </div>
+                                    </div>
                                 ))
                             ) : (
-                                <tr>
-                                    <td colSpan={10} className="text-center py-10 text-gray-400">
-                                        No agents found.
-                                    </td>
-                                </tr>
-                            )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Mobile card list */}
-                    <div className="md:hidden divide-y">
-                        {currentData.length ? (
-                            currentData.map((agent) => (
-                                <div key={agent.id} className="p-4 bg-white">
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedIds.has(agent.id)}
-                                            onChange={() => toggleRow(agent.id)}
-                                            aria-label={`Select ${agent.name}`}
-                                        />
-                                        <Avatar name={agent.name} photo={agent.photo_url} />
-                                        <div className="flex-1">
-                                            <p className="font-semibold">{agent.name}</p>
-                                            <p className="text-xs text-gray-500">{agent.email || "—"}</p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                onClick={() => onEdit(agent)}
-                                                className="text-gray-600 hover:text-gray-800"
-                                                title="Edit"
-                                            >
-                                                <FontAwesomeIcon icon={faPen} />
-                                            </button>
-                                            <button
-                                                onClick={() => onAskDelete(agent.id)}
-                                                className="text-gray-600 hover:text-red-600"
-                                                title="Delete"
-                                            >
-                                                <FontAwesomeIcon icon={faTrash} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                                        <div className="p-2 bg-gray-50 rounded">
-                                            <p className="text-gray-500">Assigned</p>
-                                            <p className="font-semibold">
-                                                {agent.assigned_listings_count ?? 0}
-                                            </p>
-                                        </div>
-                                        <div className="p-2 bg-gray-50 rounded">
-                                            <p className="text-gray-500">Published</p>
-                                            <p className="font-semibold">
-                                                {agent.published_listings_count ?? 0}
-                                            </p>
-                                        </div>
-                                        <div className="p-2 bg-gray-50 rounded">
-                                            <p className="text-gray-500">Sold</p>
-                                            <p className="font-semibold">
-                                                {agent.sold_listings_count ?? 0}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-2 text-xs text-gray-600">
-                                        <p>{agent.address || "—"}</p>
-                                        <p>{agent.contact_number || "—"}</p>
-                                    </div>
+                                <div className="p-8 text-center text-gray-500">
+                                    <FontAwesomeIcon icon={faUsers} className="text-3xl text-gray-300 mb-2" />
+                                    <p>No agents found</p>
                                 </div>
-                            ))
-                        ) : (
-                            <div className="p-8 text-center text-gray-400">No agents found.</div>
-                        )}
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="flex flex-wrap gap-2 justify-center items-center p-4 border-t">
-                        <div className="flex items-center gap-2">
-                            {agents?.prev_page_url ? (
-                                <Link
-                                    href={agents.prev_page_url}
-                                    className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
-                                    aria-label="Previous page"
-                                >
-                                    <FontAwesomeIcon icon={faChevronLeft} />
-                                </Link>
-                            ) : (
-                                <span className="px-3 py-2 text-sm rounded-md border bg-white text-gray-300">
-                  <FontAwesomeIcon icon={faChevronLeft} />
-                </span>
-                            )}
-
-                            <div className="flex gap-2">
-                                {agents?.links?.map((link, index) =>
-                                    link.url ? (
-                                        <Link
-                                            key={index}
-                                            href={link.url}
-                                            className={`px-3 py-2 text-sm rounded-md border transition ${
-                                                link.active
-                                                    ? "bg-primary text-white font-semibold"
-                                                    : "bg-white text-gray-600 hover:bg-gray-100"
-                                            }`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ) : (
-                                        <span
-                                            key={index}
-                                            className="px-3 py-2 text-sm text-slate-400 bg-white border rounded-md cursor-not-allowed"
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    )
-                                )}
-                            </div>
-
-                            {agents?.next_page_url ? (
-                                <Link
-                                    href={agents.next_page_url}
-                                    className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
-                                    aria-label="Next page"
-                                >
-                                    <FontAwesomeIcon icon={faChevronRight} />
-                                </Link>
-                            ) : (
-                                <span className="px-3 py-2 text-sm rounded-md border bg-white text-gray-300">
-                  <FontAwesomeIcon icon={faChevronRight} />
-                </span>
                             )}
                         </div>
+
+                        {/* Pagination */}
+                        {agents?.links && agents.links.length > 1 && (
+                            <div className="card-footer">
+                                <div className="flex flex-wrap items-center justify-between gap-4">
+                                    <p className="text-sm text-gray-600">
+                                        Showing {((page - 1) * itemsPerPage) + 1} to {Math.min(page * itemsPerPage, agents.total)} of {agents.total} agents
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        {agents?.prev_page_url ? (
+                                            <Link
+                                                href={agents.prev_page_url}
+                                                className="btn btn-outline btn-sm p-2"
+                                                aria-label="Previous page"
+                                            >
+                                                <FontAwesomeIcon icon={faChevronLeft} />
+                                            </Link>
+                                        ) : (
+                                            <span className="btn btn-outline btn-sm p-2 opacity-50 cursor-not-allowed">
+                                                <FontAwesomeIcon icon={faChevronLeft} />
+                                            </span>
+                                        )}
+
+                                        <div className="flex gap-1">
+                                            {agents?.links?.map((link, index) =>
+                                                link.url ? (
+                                                    <Link
+                                                        key={index}
+                                                        href={link.url}
+                                                        className={`btn btn-sm ${
+                                                            link.active ? 'btn-primary' : 'btn-outline'
+                                                        }`}
+                                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                                    />
+                                                ) : (
+                                                    <span
+                                                        key={index}
+                                                        className="btn btn-outline btn-sm opacity-50 cursor-not-allowed"
+                                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                                    />
+                                                )
+                                            )}
+                                        </div>
+
+                                        {agents?.next_page_url ? (
+                                            <Link
+                                                href={agents.next_page_url}
+                                                className="btn btn-outline btn-sm p-2"
+                                                aria-label="Next page"
+                                            >
+                                                <FontAwesomeIcon icon={faChevronRight} />
+                                            </Link>
+                                        ) : (
+                                            <span className="btn btn-outline btn-sm p-2 opacity-50 cursor-not-allowed">
+                                                <FontAwesomeIcon icon={faChevronRight} />
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-        </BrokerLayout>
+        </AuthenticatedLayout>
     );
 }

@@ -217,4 +217,19 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     {
         return in_array($this->role, ['Admin', 'Broker']);
     }
+
+    public function propertyListings()
+    {
+        {
+            // pivot table: property_listing_agents
+            // FK to this model (User): agent_id
+            // FK to PropertyListing: property_listing_id
+            return $this->belongsToMany(
+                \App\Models\PropertyListing::class,
+                'property_listing_agents',
+                'agent_id',
+                'property_listing_id'
+            );
+        }
+    }
 }

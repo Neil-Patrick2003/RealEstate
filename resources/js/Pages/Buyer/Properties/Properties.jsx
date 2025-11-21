@@ -12,6 +12,21 @@ import {
     Grid as GridIcon,
     X,
     SlidersHorizontal,
+    Search,
+    MapPin,
+    Home,
+    Building2,
+    Ruler,
+    Star,
+    TrendingUp,
+    Shield,
+    Heart,
+    Play,
+    CheckCircle,
+    Headphones,
+    Award,
+    ChevronDown,
+    Sparkles
 } from "lucide-react";
 
 /* ---------- helpers ---------- */
@@ -39,16 +54,17 @@ const peso = (n) =>
 
 const areaFormatter = (n) => `${n} m²`;
 
-function CheckboxFilter({ label, value, checked, onChange }) {
+function CheckboxFilter({ label, value, checked, onChange, icon: Icon }) {
     return (
-        <label className="group flex items-center gap-3 text-gray-700 cursor-pointer">
+        <label className="group flex items-center gap-3 text-gray-700 dark:text-gray-300 cursor-pointer p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
             <input
                 type="checkbox"
-                className="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                className="form-checkbox h-5 w-5 text-primary-600 rounded-lg border-2"
                 checked={checked}
                 onChange={(e) => onChange(value, e.target.checked)}
             />
-            <span className="text-sm">{label}</span>
+            {Icon && <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />}
+            <span className="text-sm font-medium flex-1">{label}</span>
         </label>
     );
 }
@@ -57,21 +73,21 @@ function Checkbox({ id, label, checked, onChange }) {
     return (
         <label
             htmlFor={id}
-            className="group flex items-center gap-3 text-gray-700 cursor-pointer"
+            className="group flex items-center gap-3 text-gray-700 dark:text-gray-300 cursor-pointer p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
         >
             <input
                 id={id}
                 type="checkbox"
-                className="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                className="form-checkbox h-5 w-5 text-primary-600 rounded-lg border-2"
                 checked={checked}
                 onChange={(e) => onChange(e.target.checked)}
             />
-            <span className="text-sm">{label}</span>
+            <span className="text-sm font-medium">{label}</span>
         </label>
     );
 }
 
-/* Dual range (two sliders + numeric inputs) */
+/* Enhanced Dual Range with better mobile UX */
 function DualRange({
                        label,
                        min = 0,
@@ -88,12 +104,12 @@ function DualRange({
     const onMax = (v) => setValueMax(Math.max(Number(v), valueMin));
 
     return (
-        <div className="mt-4 md:mt-0">
+        <div className="form-group space-y-4">
             {label && (
-                <h4 className="text-sm font-medium text-gray-700 mb-2">{label}</h4>
+                <label className="form-label text-base font-semibold">{label}</label>
             )}
 
-            <div className="px-1">
+            <div className="px-2 space-y-1">
                 <input
                     type="range"
                     min={min}
@@ -101,7 +117,7 @@ function DualRange({
                     step={step}
                     value={valueMin}
                     onChange={(e) => onMin(e.target.value)}
-                    className="w-full accent-emerald-600"
+                    className="w-full h-2 accent-primary-600 cursor-pointer"
                 />
                 <input
                     type="range"
@@ -110,13 +126,13 @@ function DualRange({
                     step={step}
                     value={valueMax}
                     onChange={(e) => onMax(e.target.value)}
-                    className="w-full accent-emerald-600 -mt-2"
+                    className="w-full h-2 accent-primary-600 cursor-pointer -mt-2"
                 />
             </div>
 
-            <div className="mt-2 grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-10">Min</span>
+            <div className="grid grid-cols-2 gap-3">
+                <div className="form-group">
+                    <label className="form-label text-xs font-medium text-gray-600 dark:text-gray-400">Min</label>
                     <input
                         type="number"
                         inputMode="numeric"
@@ -125,11 +141,11 @@ function DualRange({
                         step={step}
                         value={valueMin}
                         onChange={(e) => onMin(e.target.value)}
-                        className="w-full p-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-200 text-base min-h-[44px]"
+                        className="form-input text-sm py-2 px-3 border-2 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-10">Max</span>
+                <div className="form-group">
+                    <label className="form-label text-xs font-medium text-gray-600 dark:text-gray-400">Max</label>
                     <input
                         type="number"
                         inputMode="numeric"
@@ -138,12 +154,12 @@ function DualRange({
                         step={step}
                         value={valueMax}
                         onChange={(e) => onMax(e.target.value)}
-                        className="w-full p-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-200 text-base min-h-[44px]"
+                        className="form-input text-sm py-2 px-3 border-2 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
                 </div>
             </div>
 
-            <div className="mt-1 text-xs text-gray-500">
+            <div className="text-sm font-semibold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 py-2 px-3 rounded-lg text-center">
                 {format(valueMin)}
                 {unit} – {format(valueMax)}
                 {unit}
@@ -156,9 +172,17 @@ function DualRange({
 function useLockBodyScroll(locked) {
     useEffect(() => {
         const el = document.documentElement;
-        if (locked) el.classList.add("overflow-hidden");
-        else el.classList.remove("overflow-hidden");
-        return () => el.classList.remove("overflow-hidden");
+        if (locked) {
+            el.classList.add("overflow-hidden");
+            document.body.classList.add("overflow-hidden");
+        } else {
+            el.classList.remove("overflow-hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+        return () => {
+            el.classList.remove("overflow-hidden");
+            document.body.classList.remove("overflow-hidden");
+        };
     }, [locked]);
 }
 
@@ -187,14 +211,17 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
     // view
     const [viewMode, setViewMode] = useState("grid");
     const [sortOrder, setSortOrder] = useState("default");
-    const [showFilters, setShowFilters] = useState(false); // desktop auto
-    const [showFiltersMobile, setShowFiltersMobile] = useState(false); // mobile drawer
+    const [showFilters, setShowFilters] = useState(false);
+    const [showFiltersMobile, setShowFiltersMobile] = useState(false);
     useLockBodyScroll(showFiltersMobile);
 
     // favorites + UX
     const [favoriteIds, setFavoriteIds] = useState([]);
     const [toast, setToast] = useState(null);
     const [isFiltering, setIsFiltering] = useState(false);
+
+    // Mobile state
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
 
     // smart visibility
     const hasType = selectedTypes.length > 0;
@@ -208,10 +235,19 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         !hasType ||
         (includesLand && selectedTypes.some((t) => t !== "Land"));
 
+    // Property type icons mapping
+    const typeIcons = {
+        "House": Home,
+        "Condominium": Building2,
+        "Apartment": Building2,
+        "Commercial": Building2,
+        "Land": Ruler
+    };
+
     // sync toast auto-hide
     useEffect(() => {
         if (!toast) return;
-        const t = setTimeout(() => setToast(null), 2200);
+        const t = setTimeout(() => setToast(null), 3000);
         return () => clearTimeout(t);
     }, [toast]);
 
@@ -225,7 +261,7 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         return () => mq.removeEventListener?.("change", handler);
     }, []);
 
-    /* Persist favorites (optional enhancement) */
+    /* Persist favorites */
     useEffect(() => {
         if (typeof window === "undefined") return;
         try {
@@ -310,13 +346,13 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         );
     };
 
-    /* -------- unified filter function (for list & map) -------- */
+    /* -------- unified filter function -------- */
     const buildFilterFn = useCallback(
         () =>
             (arr) => {
                 let out = Array.isArray(arr) ? [...arr] : [];
 
-                // availability (if false → "For Sale", if true → "Pre-Selling")
+                // availability
                 out = out.filter((p) =>
                     isPresell ? p?.isPresell : !p?.isPresell
                 );
@@ -471,7 +507,7 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         const run = debounce(() => {
             setFiltered(filterFn(properties));
             setIsFiltering(false);
-        }, 200);
+        }, 300);
 
         run();
         return () => {
@@ -480,7 +516,7 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         };
     }, [properties, buildFilterFn]);
 
-    // sort is applied only once here (no double sorting)
+    // sort is applied only once here
     const sortedProperties = useMemo(() => {
         const base = Array.isArray(filtered) ? [...filtered] : [];
         switch (sortOrder) {
@@ -509,7 +545,7 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         }
     }, [filtered, sortOrder]);
 
-    // map data uses same filter function (no duplicated logic)
+    // map data uses same filter function
     const filteredMapProps = useMemo(() => {
         const filterFn = buildFilterFn();
         return filterFn(propertiesWithMap);
@@ -520,7 +556,7 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
         const c = [];
         if (searchTerm)
             c.push({
-                label: `“${searchTerm}”`,
+                label: `"${searchTerm}"`,
                 clear: () => setSearchTerm(""),
             });
         if (selectedTypes.length)
@@ -636,381 +672,507 @@ export default function Properties({ properties = [], propertiesWithMap = [] }) 
     ]);
 
     return (
-        <div className="bg-gray-50 min-h-screen">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <Head title="Explore Properties" />
-            {/*<NavBar />*/}
 
             {/* Toast */}
             {toast && (
                 <div
-                    className="fixed bottom-5 right-5 z-50"
+                    className="fixed bottom-5 right-5 z-50 max-w-sm w-full"
                     aria-live="assertive"
                 >
                     <div
-                        className={`px-4 py-3 rounded-xl shadow-xl backdrop-blur-md ${
-                            toast.type === "success"
-                                ? "bg-emerald-600/90"
-                                : "bg-red-600/90"
-                        } text-white font-medium`}
+                        className={`alert ${
+                            toast.type === "success" ? "alert-success" : "alert-error"
+                        } shadow-lg transform transition-all duration-300 animate-in slide-in-from-right-full`}
                     >
-                        {toast.msg}
+                        <div className="flex items-center gap-3">
+                            {toast.type === "success" ? (
+                                <CheckCircle className="w-5 h-5" />
+                            ) : (
+                                <X className="w-5 h-5" />
+                            )}
+                            <span className="flex-1">{toast.msg}</span>
+                        </div>
                     </div>
                 </div>
             )}
+            <NavBar/>
 
-            <div className="px-4 py-8 lg:py-10 flex flex-col lg:flex-row gap-8 mx-auto ">
-                {/* DESKTOP SIDEBAR */}
-                {showFilters && (
-                    <aside className="w-full lg:w-80 shrink-0 bg-white p-6 rounded-3xl shadow-lg ring-1 ring-gray-100 space-y-7 sticky top-8 h-fit">
-                        <FilterPanel
-                            {...{
-                                searchTerm,
-                                setSearchTerm,
-                                isPresell,
-                                setIsPresell,
-                                selectedTypes,
-                                handleTypeChange,
-                                withPhotos,
-                                setWithPhotos,
-                                priceMin,
-                                priceMax,
-                                setPriceMin,
-                                setPriceMax,
-                                floorAreaMin,
-                                floorAreaMax,
-                                setFloorAreaMin,
-                                setFloorAreaMax,
-                                lotAreaMin,
-                                lotAreaMax,
-                                setLotAreaMin,
-                                setLotAreaMax,
-                                bedroomsMin,
-                                setBedroomsMin,
-                                bathroomsMin,
-                                setBathroomsMin,
-                                carSlotsMin,
-                                setCarSlotsMin,
-                                totalRoomsMin,
-                                setTotalRoomsMin,
-                                resetFilters,
-                                isOnlyHouse,
-                                isOnlyLand,
-                                showFloorArea,
-                                showLotArea,
-                            }}
-                        />
-                    </aside>
-                )}
+            {/* ENHANCED HEADER SECTION */}
+            <div className="pt-16 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white relative overflow-hidden">
+                {/* Background Elements */}
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-10 left-10 w-20 h-20 bg-white rounded-full blur-xl"></div>
+                    <div className="absolute bottom-20 right-20 w-32 h-32 bg-primary-300 rounded-full blur-2xl"></div>
+                    <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-primary-200 rounded-full blur-lg"></div>
+                </div>
 
-                {/* MOBILE FILTER BUTTON + DRAWER */}
-                {!showFilters && (
-                    <>
-                        <div className="lg:hidden -mt-8 -mb-4">
-                            <button
-                                onClick={() => setShowFiltersMobile(true)}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300 bg-white hover:bg-gray-100 shadow-sm text-sm font-medium"
-                            >
-                                <FilterIcon className="w-4 h-4" />
-                                Filters
-                            </button>
+                <div className="container mx-auto px-4 py-8 lg:py-12 relative z-10">
+                    <div className="max-w-6xl mx-auto">
+                        {/* Quick Search Bar - Enhanced for Mobile */}
+                        <div className="max-w-2xl mx-auto">
+                            <div className="relative">
+                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary-400" />
+                                <input
+                                    type="text"
+                                    id="property-search"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onFocus={() => setIsSearchFocused(true)}
+                                    onBlur={() => setIsSearchFocused(false)}
+                                    placeholder="Search by title, address, or location..."
+                                    className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl pl-12 pr-24 py-4 text-white placeholder-primary-200 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all duration-300 text-base"
+                                />
+                                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-2">
+                                    <button
+                                        onClick={() => setShowFiltersMobile(true)}
+                                        className="lg:hidden bg-white/20 hover:bg-white/30 border border-white/30 text-white p-2 rounded-xl font-semibold transition-colors duration-300"
+                                    >
+                                        <FilterIcon className="w-4 h-4" />
+                                    </button>
+                                    <button className="bg-white text-primary-700 px-4 py-2 rounded-xl font-semibold hover:bg-gray-100 transition-colors duration-300 text-sm">
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
-                        {showFiltersMobile && (
-                            <div className="fixed inset-0 z-50">
-                                {/* Backdrop */}
-                                <div
-                                    className="absolute inset-0 bg-black/50"
-                                    onClick={() => setShowFiltersMobile(false)}
-                                />
+                        {/* Mobile Quick Stats */}
+                        <div className="lg:hidden mt-6">
+                            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4">
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <div className="text-lg font-bold text-white">{properties.length}+</div>
+                                        <div className="text-xs text-primary-200">Properties</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-lg font-bold text-white">
+                                            {properties.filter(p => !p.isPresell).length}+
+                                        </div>
+                                        <div className="text-xs text-primary-200">For Sale</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-lg font-bold text-white">
+                                            {properties.filter(p => p.isPresell).length}+
+                                        </div>
+                                        <div className="text-xs text-primary-200">Pre-Selling</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                                {/* Panel */}
-                                <div
-                                    className="
-                                        absolute right-0 top-0 h-dvh w-[92vw] max-w-sm bg-white shadow-2xl
-                                        pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]
-                                        flex flex-col
-                                      "
-                                    role="dialog"
-                                    aria-modal="true"
-                                    aria-label="Filter properties"
+            <div className="container mx-auto px-4 py-6">
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {/* DESKTOP SIDEBAR */}
+                    {showFilters && (
+                        <aside className="card sticky top-6 h-fit w-80 shrink-0 shadow-xl border-0 rounded-2xl overflow-hidden">
+                            <FilterPanel
+                                {...{
+                                    searchTerm,
+                                    setSearchTerm,
+                                    isPresell,
+                                    setIsPresell,
+                                    selectedTypes,
+                                    handleTypeChange,
+                                    withPhotos,
+                                    setWithPhotos,
+                                    priceMin,
+                                    priceMax,
+                                    setPriceMin,
+                                    setPriceMax,
+                                    floorAreaMin,
+                                    floorAreaMax,
+                                    setFloorAreaMin,
+                                    setFloorAreaMax,
+                                    lotAreaMin,
+                                    lotAreaMax,
+                                    setLotAreaMin,
+                                    setLotAreaMax,
+                                    bedroomsMin,
+                                    setBedroomsMin,
+                                    bathroomsMin,
+                                    setBathroomsMin,
+                                    carSlotsMin,
+                                    setCarSlotsMin,
+                                    totalRoomsMin,
+                                    setTotalRoomsMin,
+                                    resetFilters,
+                                    isOnlyHouse,
+                                    isOnlyLand,
+                                    showFloorArea,
+                                    showLotArea,
+                                    typeIcons,
+                                }}
+                            />
+                        </aside>
+                    )}
+
+                    {/* MOBILE FILTER BUTTON + DRAWER */}
+                    {!showFilters && (
+                        <>
+                            <div className="lg:hidden flex items-center gap-3 mb-4">
+                                <button
+                                    onClick={() => setShowFiltersMobile(true)}
+                                    className="btn btn-primary inline-flex items-center gap-2 flex-1 justify-center py-3 rounded-xl"
                                 >
-                                    {/* Sticky Header */}
-                                    <div className="px-5 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
-                                        <h3 className="text-lg font-bold text-gray-900">
-                                            Filter Options
-                                        </h3>
-                                        <button
-                                            onClick={() =>
-                                                setShowFiltersMobile(false)
-                                            }
-                                            className="p-2 rounded-full hover:bg-gray-100"
-                                            aria-label="Close filters"
-                                        >
-                                            <X className="w-5 h-5 text-gray-600" />
-                                        </button>
-                                    </div>
+                                    <FilterIcon className="w-4 h-4" />
+                                    Filters & Sort
+                                    {chips.length > 0 && (
+                                        <span className="badge badge-white text-primary-600 text-xs">
+                                            {chips.length}
+                                        </span>
+                                    )}
+                                </button>
 
-                                    {/* Scrollable Content */}
-                                    <div className="flex-1 overflow-y-auto px-5 pb-6">
-                                        <FilterPanel
-                                            {...{
-                                                searchTerm,
-                                                setSearchTerm,
-                                                isPresell,
-                                                setIsPresell,
-                                                selectedTypes,
-                                                handleTypeChange,
-                                                withPhotos,
-                                                setWithPhotos,
-                                                priceMin,
-                                                priceMax,
-                                                setPriceMin,
-                                                setPriceMax,
-                                                floorAreaMin,
-                                                floorAreaMax,
-                                                setFloorAreaMin,
-                                                setFloorAreaMax,
-                                                lotAreaMin,
-                                                lotAreaMax,
-                                                setLotAreaMin,
-                                                setLotAreaMax,
-                                                bedroomsMin,
-                                                setBedroomsMin,
-                                                bathroomsMin,
-                                                setBathroomsMin,
-                                                carSlotsMin,
-                                                setCarSlotsMin,
-                                                totalRoomsMin,
-                                                setTotalRoomsMin,
-                                                resetFilters,
-                                                isOnlyHouse,
-                                                isOnlyLand,
-                                                showFloorArea,
-                                                showLotArea,
-                                            }}
-                                        />
-                                    </div>
+                                {/* Mobile View Toggle */}
+                                <div className="flex rounded-xl border border-gray-300 dark:border-gray-600 overflow-hidden shadow-sm">
+                                    <button
+                                        onClick={() => setViewMode("grid")}
+                                        className={`p-3 ${
+                                            viewMode === "grid"
+                                                ? "bg-primary-600 text-white"
+                                                : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                                        }`}
+                                    >
+                                        <GridIcon className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode("list")}
+                                        className={`p-3 border-l border-gray-300 dark:border-gray-600 ${
+                                            viewMode === "list"
+                                                ? "bg-primary-600 text-white"
+                                                : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                                        }`}
+                                    >
+                                        <ListIcon className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
 
-                                    {/* Sticky Footer */}
-                                    <div className="px-5 py-4 border-t bg-white sticky bottom-0 flex gap-3">
+                            {showFiltersMobile && (
+                                <div className="fixed inset-0 z-50 lg:hidden">
+                                    {/* Backdrop */}
+                                    <div
+                                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                                        onClick={() => setShowFiltersMobile(false)}
+                                    />
+
+                                    {/* Panel */}
+                                    <div
+                                        className="
+                                        absolute right-0 top-0 h-dvh w-[90vw] max-w-md bg-white dark:bg-gray-800 shadow-2xl
+                                        flex flex-col
+                                        animate-in slide-in-from-right-full duration-300
+                                      "
+                                        role="dialog"
+                                        aria-modal="true"
+                                        aria-label="Filter properties"
+                                    >
+                                        {/* Sticky Header */}
+                                        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Filters & Sort</h3>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                    Refine your property search
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => setShowFiltersMobile(false)}
+                                                className="btn btn-ghost p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                aria-label="Close filters"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+
+                                        {/* Scrollable Content */}
+                                        <div className="flex-1 overflow-y-auto p-6">
+                                            <div className="space-y-6">
+                                                {/* Sort Section */}
+                                                <div className="form-group">
+                                                    <label className="form-label text-lg font-semibold">Sort By</label>
+                                                    <select
+                                                        value={sortOrder}
+                                                        onChange={(e) => setSortOrder(e.target.value)}
+                                                        className="form-select py-3 text-base border-2 rounded-xl"
+                                                    >
+                                                        <option value="default">Recommended</option>
+                                                        <option value="newest">Newest Listings</option>
+                                                        <option value="low-to-high">Price: Low to High</option>
+                                                        <option value="high-to-low">Price: High to Low</option>
+                                                        <option value="oldest">Oldest Listings</option>
+                                                    </select>
+                                                </div>
+
+                                                <FilterPanel
+                                                    {...{
+                                                        searchTerm,
+                                                        setSearchTerm,
+                                                        isPresell,
+                                                        setIsPresell,
+                                                        selectedTypes,
+                                                        handleTypeChange,
+                                                        withPhotos,
+                                                        setWithPhotos,
+                                                        priceMin,
+                                                        priceMax,
+                                                        setPriceMin,
+                                                        setPriceMax,
+                                                        floorAreaMin,
+                                                        floorAreaMax,
+                                                        setFloorAreaMin,
+                                                        setFloorAreaMax,
+                                                        lotAreaMin,
+                                                        lotAreaMax,
+                                                        setLotAreaMin,
+                                                        setLotAreaMax,
+                                                        bedroomsMin,
+                                                        setBedroomsMin,
+                                                        bathroomsMin,
+                                                        setBathroomsMin,
+                                                        carSlotsMin,
+                                                        setCarSlotsMin,
+                                                        totalRoomsMin,
+                                                        setTotalRoomsMin,
+                                                        resetFilters,
+                                                        isOnlyHouse,
+                                                        isOnlyLand,
+                                                        showFloorArea,
+                                                        showLotArea,
+                                                        typeIcons,
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Sticky Footer */}
+                                        <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-white dark:bg-gray-800 space-y-3">
+                                            <div className="flex gap-3">
+                                                <button
+                                                    onClick={() => {
+                                                        resetFilters();
+                                                    }}
+                                                    className="btn btn-outline flex-1 py-3 rounded-xl border-2"
+                                                >
+                                                    Reset All
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowFiltersMobile(false);
+                                                    }}
+                                                    className="btn btn-primary flex-1 py-3 rounded-xl"
+                                                >
+                                                    Apply Filters
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* MAIN RESULTS AREA */}
+                    <main className="flex-1 flex flex-col">
+                        {/* Top bar - Enhanced for Mobile */}
+                        <div className="section-header mb-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        onClick={() => setShowFilters(!showFilters)}
+                                        className="hidden lg:inline-flex btn btn-outline items-center gap-2 py-2 px-4 rounded-xl border-2"
+                                        title="Toggle filters"
+                                        aria-pressed={showFilters}
+                                    >
+                                        <SlidersHorizontal className="w-4 h-4" />
+                                        {showFilters ? "Hide Filters" : "Show Filters"}
+                                        {chips.length > 0 && (
+                                            <span className="badge badge-primary text-xs">
+                                                {chips.length}
+                                            </span>
+                                        )}
+                                    </button>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="section-description text-sm sm:text-base">
+                                            Found {sortedProperties.length} properties matching your criteria
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-row items-center gap-3">
+                                    {/* Sort Dropdown - Hidden on mobile since it's in filter drawer */}
+                                    <select
+                                        value={sortOrder}
+                                        onChange={(e) => setSortOrder(e.target.value)}
+                                        className="hidden lg:block form-select py-2 rounded-xl border-2 min-w-[180px]"
+                                    >
+                                        <option value="default">Sort By:</option>
+                                        <option value="newest">Newest Listings</option>
+                                        <option value="low-to-high">Price: Low to High</option>
+                                        <option value="high-to-low">Price: High to Low</option>
+                                        <option value="oldest">Oldest Listings</option>
+                                    </select>
+
+                                    {/* View Mode Toggle - Hidden on mobile since it's in header */}
+                                    <div className="hidden lg:flex rounded-xl border border-gray-300 dark:border-gray-600 overflow-hidden shadow-sm">
                                         <button
-                                            onClick={() => {
-                                                resetFilters();
-                                                setShowFiltersMobile(false);
-                                            }}
-                                            className="px-4 py-3 rounded-xl border text-gray-700 hover:bg-gray-50 font-medium flex-1"
+                                            onClick={() => setViewMode("grid")}
+                                            className={`btn btn-ghost rounded-none p-3 ${
+                                                viewMode === "grid"
+                                                    ? "bg-primary-600 text-white"
+                                                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                                            }`}
                                         >
-                                            Reset
+                                            <GridIcon className="w-4 h-4" />
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                setShowFiltersMobile(false);
-                                            }}
-                                            className="px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-semibold flex-1"
+                                            onClick={() => setViewMode("list")}
+                                            className={`btn btn-ghost rounded-none border-l border-gray-300 dark:border-gray-600 p-3 ${
+                                                viewMode === "list"
+                                                    ? "bg-primary-600 text-white"
+                                                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                                            }`}
                                         >
-                                            Apply
+                                            <ListIcon className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        )}
-                    </>
-                )}
+                        </div>
 
-                {/* MAIN RESULTS AREA */}
-                <main className="flex-1 flex flex-col overflow-hidden">
-                    {/* Top bar */}
-                    <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => setShowFilters(!showFilters)}
-                                className="hidden lg:inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300 bg-white hover:bg-gray-100 shadow-sm text-sm font-medium transition"
-                                title="Toggle filters"
-                                aria-pressed={showFilters}
-                            >
-                                <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
-                                {showFilters ? "Hide Filters" : "Show Filters"}
-                            </button>
-                            <span className="text-xl font-semibold text-gray-800">
-                                {sortedProperties.length} Properties
-                            </span>
-                            {propertiesWithMap?.length > 0 && (
-                                <span className="hidden md:inline text-xs text-gray-500">
-                                    Showing {filteredMapProps.length} on map
-                                </span>
+                        {/* Active chips - Enhanced for Mobile */}
+                        {chips.length > 0 && (
+                            <div className="mb-6">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400 hidden sm:block">
+                                        Active filters:
+                                    </span>
+                                    {chips.map((chip, idx) => (
+                                        <button
+                                            key={`${chip.label}-${idx}`}
+                                            onClick={chip.clear}
+                                            className="badge badge-primary inline-flex items-center gap-1 py-2 px-3 rounded-lg text-sm font-medium hover:bg-primary-600 hover:text-white transition-all duration-200 group"
+                                        >
+                                            <span className="max-w-[120px] truncate">{chip.label}</span>
+                                            <X className="w-3 h-3 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={resetFilters}
+                                        className="badge badge-gray inline-flex items-center gap-1 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                        title="Clear all filters"
+                                    >
+                                        Clear all
+                                        <Sparkles className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Results Area */}
+                        <div className="flex-1">
+                            {isFiltering ? (
+                                // Enhanced Skeleton
+                                <div className={viewMode === "grid" ? "grid-properties" : "space-y-4"}>
+                                    {Array.from({ length: 8 }).map((_, i) => (
+                                        <div
+                                            key={`sk-${i}`}
+                                            className={`card p-4 animate-pulse space-y-3 ${
+                                                viewMode === "list" ? "flex flex-col sm:flex-row gap-4" : ""
+                                            }`}
+                                        >
+                                            <div className={`skeleton ${viewMode === "list" ? "sm:w-48 h-48" : "h-48"} w-full rounded-xl`} />
+                                            <div className="space-y-2 flex-1">
+                                                <div className="skeleton-text w-3/4" />
+                                                <div className="skeleton-text w-1/2" />
+                                                <div className="skeleton-text w-5/6" />
+                                                <div className="skeleton-text w-1/4 mt-4" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : sortedProperties.length === 0 ? (
+                                // Enhanced No Results
+                                <div className="card text-center py-16 sm:py-20 rounded-2xl border-0 shadow-lg">
+                                    <div className="feature-icon bg-primary-50 text-primary-600 mx-auto mb-6 w-16 h-16 rounded-2xl flex items-center justify-center">
+                                        <FilterIcon className="w-8 h-8" />
+                                    </div>
+                                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                                        No properties found
+                                    </h3>
+                                    <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto text-base">
+                                        Try adjusting your search criteria or filters to find more properties.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                        <button
+                                            onClick={resetFilters}
+                                            className="btn btn-primary py-3 px-6 rounded-xl font-semibold"
+                                        >
+                                            Clear All Filters
+                                        </button>
+                                        <button
+                                            onClick={() => setShowFiltersMobile(true)}
+                                            className="btn btn-outline py-3 px-6 rounded-xl font-semibold border-2"
+                                        >
+                                            Adjust Search
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : viewMode === "grid" ? (
+                                <div className="grid-properties">
+                                    {sortedProperties.map((p) => {
+                                        const isFav = favoriteIds.includes(p?.id);
+                                        return (
+                                            <PropertyCard
+                                                key={p?.id}
+                                                property={p}
+                                                isFavorite={isFav}
+                                                onToggleFavorite={() => toggleFavorite(p?.id)}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {sortedProperties.map((p) => {
+                                        const isFav = favoriteIds.includes(p?.id);
+                                        return (
+                                            <div
+                                                key={p?.id}
+                                                className="card-hover rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
+                                            >
+                                                <PropertyListCard
+                                                    property={p}
+                                                    isFavorite={isFav}
+                                                    onToggleFavorite={() => toggleFavorite(p?.id)}
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             )}
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            {/* Sort Dropdown */}
-                            <label className="sr-only" htmlFor="sort-order">
-                                Sort properties
-                            </label>
-                            <select
-                                id="sort-order"
-                                value={sortOrder}
-                                onChange={(e) =>
-                                    setSortOrder(e.target.value)
-                                }
-                                className="py-2.5 px-4 rounded-xl border-gray-300 bg-white text-sm focus:ring-emerald-500 shadow-sm text-base min-h-[44px]"
-                            >
-                                <option value="default">
-                                    Sort By: Default
-                                </option>
-                                <option value="low-to-high">
-                                    Price: Low to High
-                                </option>
-                                <option value="high-to-low">
-                                    Price: High to Low
-                                </option>
-                                <option value="newest">Newest Listings</option>
-                                <option value="oldest">Oldest Listings</option>
-                            </select>
-
-                            {/* View Mode Toggle */}
-                            <div className="flex rounded-xl border border-gray-300 overflow-hidden shadow-sm">
-                                <button
-                                    onClick={() => setViewMode("grid")}
-                                    className={`px-3 py-2 text-sm inline-flex items-center justify-center transition min-h-[44px] ${
-                                        viewMode === "grid"
-                                            ? "bg-emerald-600 text-white"
-                                            : "bg-white hover:bg-gray-50 text-gray-600"
-                                    }`}
-                                    aria-label="Grid view"
-                                    aria-pressed={viewMode === "grid"}
-                                >
-                                    <GridIcon className="w-5 h-5" />
+                        {/* Load More / Pagination for future implementation */}
+                        {sortedProperties.length > 0 && !isFiltering && (
+                            <div className="mt-8 text-center">
+                                <button className="btn btn-outline border-2 py-3 px-8 rounded-xl font-semibold hover:bg-primary-50 dark:hover:bg-gray-800 transition-colors">
+                                    Load More Properties
                                 </button>
-                                <button
-                                    onClick={() => setViewMode("list")}
-                                    className={`px-3 py-2 text-sm inline-flex items-center justify-center border-l transition min-h-[44px] ${
-                                        viewMode === "list"
-                                            ? "bg-emerald-600 text-white"
-                                            : "bg-white hover:bg-gray-50 text-gray-600"
-                                    }`}
-                                    aria-label="List view"
-                                    aria-pressed={viewMode === "list"}
-                                >
-                                    <ListIcon className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/*/!* Map (optional – if you want it visible on this page) *!/*/}
-                    {/*{filteredMapProps.length > 0 && (*/}
-                    {/*    <div className="mb-6 rounded-2xl overflow-hidden ring-1 ring-gray-100 bg-white shadow-sm">*/}
-                    {/*        <DisplayMap properties={filteredMapProps} />*/}
-                    {/*    </div>*/}
-                    {/*)}*/}
-
-                    {/* Active chips – horizontal scroll on mobile */}
-                    {chips.length > 0 && (
-                        <div className="mb-6 -mx-4 px-4 overflow-x-auto no-scrollbar">
-                            <div className="flex items-center gap-2 whitespace-nowrap">
-                                {chips.map((chip, idx) => (
-                                    <button
-                                        key={`${chip.label}-${idx}`}
-                                        onClick={chip.clear}
-                                        className="inline-flex items-center gap-1.5 bg-white text-gray-700 ring-1 ring-gray-200 rounded-full px-3 py-1.5 text-xs sm:text-sm font-medium hover:bg-gray-50 transition"
-                                    >
-                                        {chip.label}
-                                        <X className="w-3 h-3 text-gray-500" />
-                                    </button>
-                                ))}
-                                <button
-                                    onClick={resetFilters}
-                                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium transition"
-                                    title="Clear all filters"
-                                >
-                                    Clear all
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Results Area */}
-                    <div className="flex-1">
-                        {isFiltering ? (
-                            // Skeleton
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {Array.from({ length: 8 }).map((_, i) => (
-                                    <div
-                                        key={`sk-${i}`}
-                                        className="rounded-2xl ring-1 ring-gray-100 bg-white p-4 animate-pulse space-y-3 shadow-sm"
-                                    >
-                                        <div className="h-48 w-full bg-gray-100 rounded-xl" />
-                                        <div className="h-4 bg-gray-100 rounded w-5/6" />
-                                        <div className="h-4 bg-gray-100 rounded w-2/3" />
-                                        <div className="h-6 bg-gray-100 rounded w-1/4 mt-4" />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : sortedProperties.length === 0 ? (
-                            // No results
-                            <div className="py-20 text-center rounded-2xl bg-white ring-1 ring-gray-100 shadow-sm mx-auto my-10 max-w-xl">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 mb-4">
-                                    <FilterIcon className="w-6 h-6" />
-                                </div>
-                                <p className="text-xl font-semibold text-gray-800 mb-2">
-                                    No matching properties found
-                                </p>
-                                <p className="text-gray-500 mb-4">
-                                    Try adjusting your filters, or clear them
-                                    all to see every listing.
-                                </p>
-                                <button
-                                    onClick={resetFilters}
-                                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium px-4 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 transition shadow-sm"
-                                >
-                                    Clear All Filters
-                                </button>
-                            </div>
-                        ) : viewMode === "grid" ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {sortedProperties.map((p) => {
-                                    const isFav = favoriteIds.includes(p?.id);
-                                    return (
-                                        <PropertyCard
-                                            key={p?.id}
-                                            property={p}
-                                            isFavorite={isFav}
-                                            onToggleFavorite={() =>
-                                                toggleFavorite(p?.id)
-                                            }
-                                        />
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="space-y-5">
-                                {sortedProperties.map((p) => {
-                                    const isFav = favoriteIds.includes(p?.id);
-                                    return (
-                                        <div
-                                            key={p?.id}
-                                            className="relative bg-white rounded-xl shadow-md ring-1 ring-gray-100 hover:shadow-lg transition"
-                                        >
-                                            <PropertyListCard
-                                                property={p}
-                                                isFavorite={isFav}
-                                                onToggleFavorite={() =>
-                                                    toggleFavorite(p?.id)
-                                                }
-                                            />
-                                        </div>
-                                    );
-                                })}
                             </div>
                         )}
-                    </div>
-                </main>
+                    </main>
+                </div>
             </div>
         </div>
     );
 }
 
-/* ---------- Filter Panel (shared by desktop + mobile) ---------- */
+/* ---------- Enhanced Filter Panel ---------- */
 function FilterPanel(props) {
     const {
         searchTerm,
@@ -1046,201 +1208,126 @@ function FilterPanel(props) {
         isOnlyLand,
         showFloorArea,
         showLotArea,
+        typeIcons,
     } = props;
 
     return (
-        <>
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Filters</h3>
-                <button
-                    className="text-sm text-emerald-700 hover:text-emerald-900"
-                    onClick={resetFilters}
-                >
-                    Reset
-                </button>
-            </div>
-
-            {/* Search */}
-            <div>
-                <label
-                    className="block mt-4 md:mt-0 text-sm font-medium text-gray-700 mb-2"
-                    htmlFor="property-search"
-                >
-                    Search
-                </label>
-                <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-                        <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            className="fill-gray-400"
-                            aria-hidden="true"
+        <div className="space-y-8 p-1">
+            <div className="space-y-6">
+                {/* Availability */}
+                <div className="form-group">
+                    <label className="form-label text-lg font-semibold">Availability</label>
+                    <div className="grid grid-cols-2 rounded-xl border-2 border-gray-300 dark:border-gray-600 overflow-hidden bg-gray-50 dark:bg-gray-700/50 p-1">
+                        <button
+                            className={`btn rounded-lg py-3 font-semibold transition-all duration-200 ${
+                                !isPresell
+                                    ? "bg-white dark:bg-gray-800 text-primary-600 shadow-sm border-2 border-primary-200 dark:border-primary-600"
+                                    : "bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                            }`}
+                            onClick={() => setIsPresell(false)}
                         >
-                            <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-1.4 1.4l.28.27v.79l5 5 1.5-1.5-5-5zM10 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
-                        </svg>
-                    </span>
-                    <input
-                        id="property-search"
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400 text-base min-h-[44px]"
-                        placeholder="Title, address, or location"
-                    />
-                </div>
-            </div>
-
-            {/* Availability */}
-            <div>
-                <label className="block mt-4 md:mt-0 text-sm font-medium text-gray-700 mb-2">
-                    Availability
-                </label>
-                <div className="grid grid-cols-2 rounded-lg border border-gray-300 overflow-hidden">
-                    <button
-                        className={`py-2 text-sm transition min-h-[44px] ${
-                            !isPresell
-                                ? "bg-emerald-600 text-white"
-                                : "bg-white hover:bg-gray-50"
-                        }`}
-                        onClick={() => setIsPresell(false)}
-                    >
-                        For Sale
-                    </button>
-                    <button
-                        className={`py-2 text-sm transition min-h-[44px] ${
-                            isPresell
-                                ? "bg-emerald-600 text-white"
-                                : "bg-white hover:bg-gray-50"
-                        }`}
-                        onClick={() => setIsPresell(true)}
-                    >
-                        Pre-Selling
-                    </button>
-                </div>
-            </div>
-
-            {/* Types */}
-            <div>
-                <h4 className="text-sm mt-4 md:mt-0 font-medium text-gray-700 mb-2">
-                    Property Type
-                </h4>
-                <div className="space-y-2">
-                    {ALL_TYPES.map((t) => (
-                        <CheckboxFilter
-                            key={t}
-                            label={t}
-                            value={t}
-                            checked={includesSafe(selectedTypes, t)}
-                            onChange={handleTypeChange}
-                        />
-                    ))}
-                </div>
-            </div>
-
-            {/* Photos only */}
-            <Checkbox
-                id="withPhotos"
-                label="Show only listings with photos"
-                checked={withPhotos}
-                onChange={setWithPhotos}
-            />
-
-            {/* Price */}
-            <DualRange
-                label="Price Range (₱)"
-                min={PRICE_MIN}
-                max={PRICE_MAX}
-                step={50_000}
-                valueMin={priceMin}
-                valueMax={priceMax}
-                setValueMin={setPriceMin}
-                setValueMax={setPriceMax}
-                format={(v) =>
-                    new Intl.NumberFormat("en-PH", {
-                        style: "currency",
-                        currency: "PHP",
-                        maximumFractionDigits: 0,
-                    }).format(v)
-                }
-            />
-
-            {/* HOUSE-ONLY */}
-            {isOnlyHouse && (
-                <div className="space-y-4">
-                    <DualRange
-                        label="Floor Area (m²)"
-                        min={AREA_MIN}
-                        max={AREA_MAX}
-                        step={10}
-                        valueMin={floorAreaMin}
-                        valueMax={floorAreaMax}
-                        setValueMin={setFloorAreaMin}
-                        setValueMax={setFloorAreaMax}
-                        format={(v) => v}
-                        unit=" m²"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                        <Numeric
-                            label="Bedrooms (min)"
-                            value={bedroomsMin}
-                            onChange={setBedroomsMin}
-                        />
-                        <Numeric
-                            label="Bathrooms (min)"
-                            value={bathroomsMin}
-                            onChange={setBathroomsMin}
-                        />
-                        <Numeric
-                            label="Car Slots (min)"
-                            value={carSlotsMin}
-                            onChange={setCarSlotsMin}
-                        />
-                        <Numeric
-                            label="Total Rooms (min)"
-                            value={totalRoomsMin}
-                            onChange={setTotalRoomsMin}
-                        />
+                            For Sale
+                        </button>
+                        <button
+                            className={`btn rounded-lg py-3 font-semibold transition-all duration-200 ${
+                                isPresell
+                                    ? "bg-white dark:bg-gray-800 text-primary-600 shadow-sm border-2 border-primary-200 dark:border-primary-600"
+                                    : "bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                            }`}
+                            onClick={() => setIsPresell(true)}
+                        >
+                            Pre-Selling
+                        </button>
                     </div>
                 </div>
-            )}
 
-            {/* LAND-ONLY */}
-            {isOnlyLand && (
-                <DualRange
-                    label="Lot Area (m²)"
-                    min={AREA_MIN}
-                    max={AREA_MAX}
-                    step={10}
-                    valueMin={lotAreaMin}
-                    valueMax={lotAreaMax}
-                    setValueMin={setLotAreaMin}
-                    setValueMax={setLotAreaMax}
-                    format={(v) => v}
-                    unit=" m²"
+                {/* Types */}
+                <div className="form-group">
+                    <label className="form-label text-lg font-semibold">Property Type</label>
+                    <div className="space-y-2 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+                        {ALL_TYPES.map((t) => (
+                            <CheckboxFilter
+                                key={t}
+                                label={t}
+                                value={t}
+                                icon={typeIcons[t]}
+                                checked={includesSafe(selectedTypes, t)}
+                                onChange={handleTypeChange}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Photos only */}
+                <Checkbox
+                    id="withPhotos"
+                    label="Show only listings with photos"
+                    checked={withPhotos}
+                    onChange={setWithPhotos}
                 />
-            )}
+            </div>
 
-            {/* Mixed / Unselected */}
-            {!isOnlyLand && !isOnlyHouse && (
-                <div className="space-y-4">
-                    {showFloorArea && (
-                        <DualRange
-                            label="Floor Area (m²)"
-                            min={AREA_MIN}
-                            max={AREA_MAX}
-                            step={10}
-                            valueMin={floorAreaMin}
-                            valueMax={floorAreaMax}
-                            setValueMin={setFloorAreaMin}
-                            setValueMax={setFloorAreaMax}
-                            format={(v) => v}
-                            unit=" m²"
-                        />
+            <div className="space-y-6">
+                <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Property Details</h4>
+
+                    {/* Price */}
+                    <DualRange
+                        label="Price Range"
+                        min={PRICE_MIN}
+                        max={PRICE_MAX}
+                        step={50_000}
+                        valueMin={priceMin}
+                        valueMax={priceMax}
+                        setValueMin={setPriceMin}
+                        setValueMax={setPriceMax}
+                        format={(v) => peso(v)}
+                    />
+
+                    {/* HOUSE-ONLY */}
+                    {isOnlyHouse && (
+                        <div className="space-y-6">
+                            <DualRange
+                                label="Floor Area"
+                                min={AREA_MIN}
+                                max={AREA_MAX}
+                                step={10}
+                                valueMin={floorAreaMin}
+                                valueMax={floorAreaMax}
+                                setValueMin={setFloorAreaMin}
+                                setValueMax={setFloorAreaMax}
+                                format={(v) => v}
+                                unit=" m²"
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <Numeric
+                                    label="Bedrooms (min)"
+                                    value={bedroomsMin}
+                                    onChange={setBedroomsMin}
+                                />
+                                <Numeric
+                                    label="Bathrooms (min)"
+                                    value={bathroomsMin}
+                                    onChange={setBathroomsMin}
+                                />
+                                <Numeric
+                                    label="Car Slots (min)"
+                                    value={carSlotsMin}
+                                    onChange={setCarSlotsMin}
+                                />
+                                <Numeric
+                                    label="Total Rooms (min)"
+                                    value={totalRoomsMin}
+                                    onChange={setTotalRoomsMin}
+                                />
+                            </div>
+                        </div>
                     )}
-                    {showLotArea && (
+
+                    {/* LAND-ONLY */}
+                    {isOnlyLand && (
                         <DualRange
-                            label="Lot Area (m²)"
+                            label="Lot Area"
                             min={AREA_MIN}
                             max={AREA_MAX}
                             step={10}
@@ -1252,23 +1339,57 @@ function FilterPanel(props) {
                             unit=" m²"
                         />
                     )}
+
+                    {/* Mixed / Unselected */}
+                    {!isOnlyLand && !isOnlyHouse && (
+                        <div className="space-y-6">
+                            {showFloorArea && (
+                                <DualRange
+                                    label="Floor Area"
+                                    min={AREA_MIN}
+                                    max={AREA_MAX}
+                                    step={10}
+                                    valueMin={floorAreaMin}
+                                    valueMax={floorAreaMax}
+                                    setValueMin={setFloorAreaMin}
+                                    setValueMax={setFloorAreaMax}
+                                    format={(v) => v}
+                                    unit=" m²"
+                                />
+                            )}
+                            {showLotArea && (
+                                <DualRange
+                                    label="Lot Area"
+                                    min={AREA_MIN}
+                                    max={AREA_MAX}
+                                    step={10}
+                                    valueMin={lotAreaMin}
+                                    valueMax={lotAreaMax}
+                                    setValueMin={setLotAreaMin}
+                                    setValueMax={setLotAreaMax}
+                                    format={(v) => v}
+                                    unit=" m²"
+                                />
+                            )}
+                        </div>
+                    )}
                 </div>
-            )}
-        </>
+            </div>
+        </div>
     );
 }
 
 function Numeric({ label, value, onChange }) {
     return (
-        <div>
-            <label className="text-sm text-gray-700">{label}</label>
+        <div className="form-group">
+            <label className="form-label text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
             <input
                 type="number"
                 inputMode="numeric"
                 min="0"
                 value={value}
                 onChange={(e) => onChange(Number(e.target.value || 0))}
-                className="w-full p-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-200 text-base min-h-[44px]"
+                className="form-input text-sm py-2 px-3 border-2 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />
         </div>
     );

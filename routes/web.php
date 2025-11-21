@@ -209,7 +209,8 @@ Route::put('/agents/deal/{deal}', [\App\Http\Controllers\Agent\DealController::c
 Route::get('/agents/deal/{deal}/finalize-deal', [\App\Http\Controllers\Agent\DealController::class, 'show'])->name('agents.deals.finalize');
 Route::post('/agents/deal/{deal}/finalize-deal', [\App\Http\Controllers\TransactionController::class, 'store'])->name('agents.transaction.store');
 //Route::put('/agents/deal/{id}/$', [DealController::class, 'accept']);
-Route::put('/agents/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
+Route::put('/agents/deal/{id}/{status}', [DealController::class, 'handleUpdate'])->name('agents.deals.update_status');
+
 
 Route::get('/agents/transaction', [\App\Http\Controllers\Agent\TransactionController::class, 'index'])->name('agents.transaction.index');
 

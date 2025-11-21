@@ -25,8 +25,8 @@ class BrokerController extends Controller
     public function index()
     {
         $brokerId = auth()->id();
-        $today    = now()->toDateString();   // e.g. "2025-09-29"
-        $nowTime  = now()->format('H:i:s');  // e.g. "14:05:00"
+        $today    = now()->toDateString();
+        $nowTime  = now()->format('H:i:s');
 
         // KPI: listings
         $listingBase = PropertyListing::with('property')
@@ -36,13 +36,14 @@ class BrokerController extends Controller
             ->selectRaw('COUNT(*) as total')
             ->selectRaw("SUM(status = 'Published') as published")
             ->selectRaw("SUM(status = 'Unpublished') as unpublished")
+            ->selectRaw("SUM(status = 'Draft') as draft")
             ->first();
 
         $presell = $listingBase->clone()
             ->whereHas('property', fn($q) => $q->where('isPresell', 1))
             ->count();
 
-        // KPI: inquiries (scoped to broker’s listings)
+        // KPI: inquiries (scoped to broker's listings)
         $inquiriesBase = Inquiry::where('broker_id', $brokerId);
         $inquiriesKpi = $inquiriesBase->clone()
             ->selectRaw('COUNT(*) as total')
@@ -53,30 +54,84 @@ class BrokerController extends Controller
             ->first();
 
         // KPI: deals
-            $dealsBase = Deal::whereHas('property_listing', fn($q) => $q->where('broker_id', $brokerId));
+        $dealsBase = Deal::whereHas('property_listing', fn($q) => $q->where('broker_id', $brokerId));
         $dealsKpi = $dealsBase->clone()
             ->selectRaw('COUNT(*) as total')
             ->selectRaw("SUM(status = 'Pending') as pending")
             ->selectRaw("SUM(status = 'Accepted') as accepted")
             ->selectRaw("SUM(status = 'Closed' OR status = 'Sold') as sold")
             ->selectRaw("SUM(status = 'Cancelled' OR status = 'Declined') as cancelled")
-            ->selectRaw('COALESCE(SUM(CASE WHEN status IN ("Accepted","Closed","Sold") THEN amount END),0) as pipeline_value')
             ->first();
 
-        // Chart: deals value by month (last 12)
+        // Chart: deals by month (last 12) - Count instead of value
         $dealsByMonth = $dealsBase->clone()
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as ym")
-            ->selectRaw("SUM(amount) as total")
+            ->selectRaw("COUNT(*) as total")
             ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
             ->groupBy('ym')
             ->orderBy('ym')
             ->get();
 
-        // Chart: inquiries by status (this month)
-        $inquiriesThisMonth = $inquiriesBase->clone()
-            ->select('status', DB::raw('COUNT(*) as cnt'))
-            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
-            ->groupBy('status')->get();
+        // Chart: inquiries by month (last 12)
+        $inquiriesByMonth = $inquiriesBase->clone()
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as ym")
+            ->selectRaw("COUNT(*) as total")
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('ym')
+            ->orderBy('ym')
+            ->get();
+
+        // Chart: listings by status
+        $listingsByStatus = $listingBase->clone()
+            ->select('status')
+            ->selectRaw('COUNT(*) as count')
+            ->groupBy('status')
+            ->get();
+
+        // Chart: inquiries by source type
+        $inquiriesByType = $inquiriesBase->clone()
+            ->selectRaw("CASE
+            WHEN buyer_id IS NOT NULL AND seller_id IS NULL THEN 'Buyer Inquiry'
+            WHEN seller_id IS NOT NULL THEN 'Seller Request'
+            ELSE 'Internal Inquiry'
+        END as type")
+            ->selectRaw('COUNT(*) as count')
+            ->groupBy('type')
+            ->get();
+
+        // Chart: deal conversion rate by month
+        $conversionByMonth = $inquiriesBase->clone()
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as ym")
+            ->selectRaw("COUNT(*) as total_inquiries")
+            ->selectRaw("SUM(status = 'Accepted') as accepted_inquiries")
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('ym')
+            ->orderBy('ym')
+            ->get()
+            ->map(function ($item) {
+                $conversionRate = $item->total_inquiries > 0
+                    ? round(($item->accepted_inquiries / $item->total_inquiries) * 100, 1)
+                    : 0;
+                return [
+                    'ym' => $item->ym,
+                    'conversion_rate' => $conversionRate,
+                    'total_inquiries' => $item->total_inquiries,
+                    'accepted_inquiries' => $item->accepted_inquiries
+                ];
+            });
+
+        // Performance metrics
+        $performance = [
+            'inquiry_response_rate' => $inquiriesKpi->total > 0
+                ? round((($inquiriesKpi->accepted + $inquiriesKpi->rejected) / $inquiriesKpi->total) * 100, 1)
+                : 0,
+            'deal_conversion_rate' => $inquiriesKpi->total > 0
+                ? round(($dealsKpi->total / $inquiriesKpi->total) * 100, 1)
+                : 0,
+            'active_listing_rate' => $listings->total > 0
+                ? round(($listings->published / $listings->total) * 100, 1)
+                : 0,
+        ];
 
         // Work queue
         $latestPendingInquiries = $inquiriesBase->clone()
@@ -89,7 +144,26 @@ class BrokerController extends Controller
             ->where('status', 'Pending')
             ->latest()->limit(5)->get();
 
-        // Upcoming trippings (assuming Tripping model or reuse Inquiry with schedule)
+        // Recent activity (last 7 days)
+        $recentActivity = collect()
+            ->merge(
+                $inquiriesBase->clone()
+                    ->with(['property'])
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->selectRaw("'inquiry' as type, id, created_at, status, notes")
+                    ->get()
+            )
+            ->merge(
+                $dealsBase->clone()
+                    ->with(['propertyListing.property'])
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->selectRaw("'deal' as type, id, created_at, status, amount")
+                    ->get()
+            )
+            ->sortByDesc('created_at')
+            ->take(8);
+
+        // Upcoming trippings
         $upcomingTrippings = PropertyTripping::query()
             ->with([
                 'property:id,title,image_url,address',
@@ -98,11 +172,11 @@ class BrokerController extends Controller
             ->where('broker_id', $brokerId)
             ->whereNotNull('visit_date')
             ->where(function ($q) use ($today, $nowTime) {
-                $q->where('visit_date', '>', $today) // any future date
-                ->orWhere(function ($q2) use ($today, $nowTime) { // today but later time
-                    $q2->where('visit_date', $today)
-                        ->where('visit_time', '>=', $nowTime);
-                });
+                $q->where('visit_date', '>', $today)
+                    ->orWhere(function ($q2) use ($today, $nowTime) {
+                        $q2->where('visit_date', $today)
+                            ->where('visit_time', '>=', $nowTime);
+                    });
             })
             ->orderBy('visit_date')
             ->orderBy('visit_time')
@@ -121,15 +195,21 @@ class BrokerController extends Controller
                 'deals'      => $dealsKpi,
                 'agents'     => $agentsCount,
                 'partners'   => $partnersCount,
+                'performance' => $performance,
             ],
             'charts' => [
                 'dealsByMonth' => $dealsByMonth,
-                'inquiriesThisMonth' => $inquiriesThisMonth,
+                'inquiriesByMonth' => $inquiriesByMonth,
+                'inquiriesThisMonth' => $inquiriesKpi, // For the status pie chart
+                'listingsByStatus' => $listingsByStatus,
+                'inquiriesByType' => $inquiriesByType,
+                'conversionByMonth' => $conversionByMonth,
             ],
             'queues' => [
                 'pendingInquiries' => $latestPendingInquiries,
                 'pendingDeals' => $pendingDeals,
                 'upcomingTrippings' => $upcomingTrippings,
+                'recentActivity' => $recentActivity,
             ],
         ]);
     }
