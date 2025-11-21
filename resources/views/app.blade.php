@@ -6,6 +6,7 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta http-equiv="content-type" content="no-cache, no-store, must-revalidate" />
 
 
         <!-- Fonts -->
@@ -20,5 +21,6 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+
     </body>
 </html>

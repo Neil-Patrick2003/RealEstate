@@ -24,6 +24,7 @@ import {
     faBath,
     faCar,
     faRulerCombined,
+    faEdit,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Show({ property }) {
@@ -89,23 +90,25 @@ export default function Show({ property }) {
                 });
             } else {
                 await navigator.clipboard.writeText(shareUrl);
+                // You might want to show a toast notification here
             }
         } catch {/* noop */}
     };
 
     // Quick facts pills
     const keyFacts = [
-        { icon: faTag, label: isPresell ? "Pre-Selling" : "For Sale" },
-        { icon: faDoorClosed, label: p?.total_rooms ? `${p.total_rooms} rooms` : "—" },
-        { icon: faBed, label: p?.bedrooms != null ? `${p.bedrooms} beds` : "—" },
-        { icon: faBath, label: p?.bathrooms != null ? `${p.bathrooms} baths` : "—" },
-        { icon: faCar, label: p?.car_slots != null ? `${p.car_slots} car` : "—" },
+        { icon: faTag, label: isPresell ? "Pre-Selling" : "For Sale", type: "status" },
+        { icon: faDoorClosed, label: p?.total_rooms ? `${p.total_rooms} rooms` : "—", type: "rooms" },
+        { icon: faBed, label: p?.bedrooms != null ? `${p.bedrooms} beds` : "—", type: "beds" },
+        { icon: faBath, label: p?.bathrooms != null ? `${p.bathrooms} baths` : "—", type: "baths" },
+        { icon: faCar, label: p?.car_slots != null ? `${p.car_slots} car slot${p.car_slots !== 1 ? 's' : ''}` : "—", type: "parking" },
         {
             icon: faRulerCombined,
             label:
                 p?.lot_area || p?.floor_area
                     ? `${p?.lot_area ? `Lot ${p.lot_area} m²` : ""}${p?.lot_area && p?.floor_area ? " • " : ""}${p?.floor_area ? `Floor ${p.floor_area} m²` : ""}`
                     : "—",
+            type: "size"
         },
     ];
 
@@ -114,167 +117,236 @@ export default function Show({ property }) {
 
     return (
         <BrokerLayout>
-            {/* Top crumbs / back */}
-            <div className="flex items-center justify-between">
-                <Breadcrumb pages={pages} />
-                <Link
-                    href="/broker/properties"
-                    className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-white ring-1 ring-gray-200 hover:bg-gray-50 transition"
-                >
-                    <FontAwesomeIcon icon={faChevronLeft} />
-                    Back to list
-                </Link>
-            </div>
-
-            {/* Header */}
-            <div className="mt-4">
-                <PropertyHeader
-                    title={p?.title}
-                    address={p?.address}
-                    isPresell={isPresell}
-                />
-            </div>
-
-            {/* Main image */}
-            <div className="mt-3">
-                <MainImage image_url={p?.image_url} title={p?.title} />
-            </div>
-
-            {/* Thumbnails */}
-            <div className="mt-3">
-                <Thumbnail images={Array.isArray(p?.images) ? p.images : []} />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-                {/* LEFT / MAIN */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Price + quick facts */}
-                    <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-5">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <p className="text-2xl font-extrabold text-emerald-700">{priceText}</p>
-                                {p?.address && (
-                                    <p className="mt-0.5 text-sm text-gray-600">
-                                        <FontAwesomeIcon icon={faLocationDot} className="mr-1.5 text-gray-500" />
-                                        {p.address}
-                                    </p>
-                                )}
+            <div className="page-container">
+                <div className="page-content space-y-6">
+                    {/* Header with Breadcrumb and Actions */}
+                    <div className="section">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <Link
+                                    href="/broker/properties"
+                                    className="btn btn-ghost btn-sm p-2"
+                                >
+                                    <FontAwesomeIcon icon={faChevronLeft} />
+                                </Link>
+                                <Breadcrumb pages={pages} />
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                                {keyFacts.map((k, i) => (
-                                    <span
-                                        key={i}
-                                        className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-gray-50 ring-1 ring-gray-200 text-gray-700"
-                                    >
-                    <FontAwesomeIcon icon={k.icon} className="text-gray-500" />
-                                        {k.label}
-                  </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Description/specs */}
-                    <Descriptions
-                        property_type={p?.property_type}
-                        sub_type={p?.sub_type}
-                        price={p?.price}
-                        total_rooms={p?.total_rooms}
-                        bedrooms={p?.bedrooms}
-                        bathrooms={p?.bathrooms}
-                        car_slots={p?.car_slots}
-                        features={p?.features}
-                        description={p?.description}
-                    />
-
-                    {/* Map block */}
-                    <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-5">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold text-gray-900">Location</h2>
                             <div className="flex items-center gap-2">
-                                {gmapsHref && (
-                                    <a
-                                        href={gmapsHref}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-white ring-1 ring-gray-200 hover:bg-gray-50 transition"
-                                    >
-                                        <FontAwesomeIcon icon={faUpRightFromSquare} />
-                                        Directions
-                                    </a>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={onShare}
-                                    className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-white ring-1 ring-gray-200 hover:bg-gray-50 transition"
+                                <Link
+                                    href={`/broker/properties/${p.id}/edit`}
+                                    className="btn btn-primary btn-sm"
                                 >
-                                    <FontAwesomeIcon icon={faShareNodes} />
-                                    Share
-                                </button>
+                                    <FontAwesomeIcon icon={faEdit} />
+                                    Edit Property
+                                </Link>
                             </div>
                         </div>
-                        <PropertyMap coordinates={Array.isArray(p?.coordinate) ? p.coordinate : []} />
                     </div>
-                </div>
 
-                {/* RIGHT / RAIL */}
-                <div className="lg:col-span-1 space-y-6">
-                    {/* Agents list (or empty) */}
-                    <AssignedAgents agents={agents} auth={auth} />
+                    {/* Property Header */}
+                    <div className="card p-4 p-4">
+                        <PropertyHeader
+                            title={p?.title}
+                            address={p?.address}
+                            isPresell={isPresell}
+                        />
+                    </div>
 
-                    {/* Quick contact / actions (agents or broker fallback) */}
-                    <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-5 sticky top-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-3">Quick actions</h3>
+                    {/* Main Image */}
+                    <div className="card p-4 p-4 overflow-hidden p-0">
+                        <MainImage image_url={p?.image_url} title={p?.title} />
+                    </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                            {contacts.map((c, idx) => (
-                                <React.Fragment key={idx}>
-                                    {c?.contact_number && (
-                                        <a
-                                            href={`tel:${c.contact_number}`}
-                                            className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100 text-sm"
+                    {/* Thumbnails */}
+                    {Array.isArray(p?.images) && p.images.length > 0 && (
+                        <div className="card p-4">
+                            <Thumbnail images={p.images} />
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* LEFT / MAIN CONTENT */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* Price & Key Facts */}
+                            <div className="card p-4">
+                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                    <div>
+                                        <h2 className="text-3xl font-bold text-primary-600">{priceText}</h2>
+                                        {p?.address && (
+                                            <p className="text-gray-600 mt-2 flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faLocationDot} className="text-gray-400" />
+                                                {p.address}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {keyFacts.map((fact, index) => (
+                                            <span
+                                                key={index}
+                                                className="badge badge-secondary"
+                                            >
+                                                <FontAwesomeIcon icon={fact.icon} className="mr-1" />
+                                                {fact.label}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Description & Specifications */}
+                            <div className="card p-4">
+                                <Descriptions
+                                    property_type={p?.property_type}
+                                    sub_type={p?.sub_type}
+                                    price={p?.price}
+                                    total_rooms={p?.total_rooms}
+                                    bedrooms={p?.bedrooms}
+                                    bathrooms={p?.bathrooms}
+                                    car_slots={p?.car_slots}
+                                    features={p?.features}
+                                    description={p?.description}
+                                />
+                            </div>
+
+                            {/* Location Map */}
+                            <div className="card p-4">
+                                <div className="card p-4-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <h3 className="text-xl font-semibold text-gray-900">Location & Directions</h3>
+                                    <div className="flex items-center gap-2">
+                                        {gmapsHref && (
+                                            <a
+                                                href={gmapsHref}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn btn-outline btn-sm"
+                                            >
+                                                <FontAwesomeIcon icon={faUpRightFromSquare} />
+                                                Open in Maps
+                                            </a>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={onShare}
+                                            className="btn btn-outline btn-sm"
                                         >
-                                            <FontAwesomeIcon icon={faPhone} />
-                                            Call
-                                        </a>
-                                    )}
-                                    {c?.email && (
-                                        <a
-                                            href={`mailto:${c.email}?subject=${encodeURIComponent(`Inquiry: ${p?.title || "Property"}`)}`}
-                                            className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-blue-50 text-blue-700 ring-1 ring-blue-200 hover:bg-blue-100 text-sm"
-                                        >
-                                            <FontAwesomeIcon icon={faEnvelope} />
-                                            Email
-                                        </a>
-                                    )}
-                                </React.Fragment>
-                            ))}
-
-                            {contacts.length === 0 && (
-                                <div className="col-span-2 text-sm text-gray-500">No contact available.</div>
-                            )}
+                                            <FontAwesomeIcon icon={faShareNodes} />
+                                            Share Property
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="card p-4-body p-0">
+                                    <PropertyMap coordinates={Array.isArray(p?.coordinate) ? p.coordinate : []} />
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                            {gmapsHref && (
-                                <a
-                                    href={gmapsHref}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-white ring-1 ring-gray-200 hover:bg-gray-50 text-gray-700 text-sm"
-                                >
-                                    <FontAwesomeIcon icon={faLocationDot} />
-                                    Directions
-                                </a>
-                            )}
-                            <button
-                                type="button"
-                                onClick={onShare}
-                                className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-white ring-1 ring-gray-200 hover:bg-gray-50 text-gray-700 text-sm"
-                            >
-                                <FontAwesomeIcon icon={faShareNodes} />
-                                Share
-                            </button>
+                        {/* RIGHT SIDEBAR */}
+                        <div className="lg:col-span-1 space-y-6">
+                            {/* Assigned Agents */}
+                            <div className="card p-4">
+                                <AssignedAgents agents={agents} auth={auth} />
+                            </div>
+
+                            {/* Quick Actions */}
+                            <div className="card p-4 sticky top-6">
+                                <div className="card p-4-header">
+                                    <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                                </div>
+                                <div className="card p-4-body space-y-4">
+                                    {/* Contact Actions */}
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-medium text-gray-700">Contact Options</h4>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {contacts.map((contact, idx) => (
+                                                <React.Fragment key={idx}>
+                                                    {contact?.contact_number && (
+                                                        <a
+                                                            href={`tel:${contact.contact_number}`}
+                                                            className="btn btn-primary btn-sm w-full justify-center"
+                                                        >
+                                                            <FontAwesomeIcon icon={faPhone} />
+                                                            Call {contact.name || 'Agent'}
+                                                        </a>
+                                                    )}
+                                                    {contact?.email && (
+                                                        <a
+                                                            href={`mailto:${contact.email}?subject=${encodeURIComponent(`Inquiry: ${p?.title || "Property"}`)}`}
+                                                            className="btn btn-outline btn-sm w-full justify-center"
+                                                        >
+                                                            <FontAwesomeIcon icon={faEnvelope} />
+                                                            Email {contact.name || 'Agent'}
+                                                        </a>
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                            {contacts.length === 0 && (
+                                                <p className="text-sm text-gray-500 text-center py-2">
+                                                    No contact information available
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Property Actions */}
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-medium text-gray-700">Property Actions</h4>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {gmapsHref && (
+                                                <a
+                                                    href={gmapsHref}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="btn btn-outline btn-sm w-full justify-center"
+                                                >
+                                                    <FontAwesomeIcon icon={faLocationDot} />
+                                                    Get Directions
+                                                </a>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={onShare}
+                                                className="btn btn-outline btn-sm w-full justify-center"
+                                            >
+                                                <FontAwesomeIcon icon={faShareNodes} />
+                                                Share Property Link
+                                            </button>
+                                            <Link
+                                                href={`/broker/properties/${p.id}/edit`}
+                                                className="btn btn-primary btn-sm w-full justify-center"
+                                            >
+                                                <FontAwesomeIcon icon={faEdit} />
+                                                Edit Property Details
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Property Status */}
+                            <div className="card p-4">
+                                <div className="card p-4-header">
+                                    <h3 className="text-lg font-semibold text-gray-900">Property Status</h3>
+                                </div>
+                                <div className="card p-4-body">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-gray-600">Listing Status</span>
+                                        <span className={`badge ${isPresell ? 'badge-warning' : 'badge-success'}`}>
+                                            {isPresell ? 'Pre-Selling' : 'For Sale'}
+                                        </span>
+                                    </div>
+                                    {p?.status && (
+                                        <div className="flex items-center justify-between mt-2">
+                                            <span className="text-sm text-gray-600">Publication</span>
+                                            <span className={`badge ${
+                                                p.status === 'Published' ? 'badge-success' :
+                                                    p.status === 'Unpublished' ? 'badge-warning' : 'badge-gray'
+                                            }`}>
+                                                {p.status}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
