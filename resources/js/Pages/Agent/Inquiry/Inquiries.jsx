@@ -9,25 +9,22 @@ import ConfirmDialog from '@/Components/modal/ConfirmDialog.jsx';
 import {
     Search, ChevronDown, Check, X, Mail, Phone, MapPin, Home, Clock, Calendar, MessageSquare, User, Tag, Send
 } from 'lucide-react';
-// Keeping faPesoSign for specific currency clarity
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPesoSign } from '@fortawesome/free-solid-svg-icons';
-
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 
 dayjs.extend(relativeTime);
 
 const cn = (...c) => c.filter(Boolean).join(' ');
-// Consistent currency formatting
 const money = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 2 });
 
 /* ==== Professional Status Badges ==== */
 const STATUS_THEME = {
-    // Subtle colors with strong text for data clarity
-    accepted: 'bg-green-50 text-green-700 font-medium border border-green-200',
-    rejected: 'bg-red-50 text-red-600 font-medium border border-red-200',
-    pending: 'bg-amber-50 text-amber-700 font-medium border border-amber-200',
-    cancelled: 'bg-gray-100 text-gray-600 font-medium border border-gray-300',
-    default: 'bg-blue-50 text-blue-700 font-medium border border-blue-200',
+    accepted: 'badge-success',
+    rejected: 'badge-error',
+    pending: 'badge-warning',
+    cancelled: 'badge-gray',
+    default: 'badge-secondary',
 };
 
 function StatusBadge({ status = '' }) {
@@ -36,8 +33,8 @@ function StatusBadge({ status = '' }) {
     const Icon = s === 'accepted' ? Check : s === 'rejected' ? X : Clock;
 
     return (
-        <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-md text-xs transition-colors duration-150', cls)}>
-            <Icon className="w-3.5 h-3.5 mr-1" />
+        <span className={cn('badge', cls)}>
+            <Icon className="w-3.5 h-3.5" />
             {status}
         </span>
     );
@@ -48,20 +45,19 @@ function TypePill({ inquiry }) {
     const isAgentRequest = inquiry?.agent_id && inquiry?.property_id;
 
     let label = 'Internal Inquiry';
-    // Using simple, professional grays/primary for type identification
-    let cls = 'bg-gray-100 text-gray-700';
+    let cls = 'badge-gray';
 
     if (isBuyerInquiry) {
         label = 'Client Request';
-        cls = 'bg-primary/10 text-primary font-medium'; // Primary color for direct client business
+        cls = 'badge-primary';
     } else if (isAgentRequest) {
         label = inquiry?.seller_id ? 'Seller Request' : 'Agent Inquiry';
-        cls = 'bg-blue-100 text-blue-700 font-medium';
+        cls = 'badge-accent';
     }
 
     return (
-        <span className={cn("inline-flex items-center text-[11px] px-2 py-0.5 rounded-full", cls)}>
-            <Tag className="w-3 h-3 mr-1" />
+        <span className={cn("badge", cls)}>
+            <Tag className="w-3 h-3" />
             {label}
         </span>
     );
@@ -75,26 +71,26 @@ function Avatar({ name, photo_url }) {
             <img
                 src={`/storage/${photo_url}`}
                 alt={`${name || 'User'} avatar`}
-                className='w-10 h-10 rounded-full object-cover border-2 border-white bg-white shadow-sm shrink-0'
+                className='avatar-md rounded-full object-cover border-2 border-white shadow-sm shrink-0'
                 onError={(e) => {
                     e.currentTarget.src = '/placeholder.png';
                 }}
             />
         );
     }
-    // Professional neutral fallback
+
     return (
         <div
-            className='w-10 h-10 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center shrink-0 shadow-sm'
+            className='avatar-md rounded-full bg-gray-100 text-gray-600 flex items-center justify-center shrink-0 shadow-sm'
             title={name || 'User'}
         >
-            <span className="text-sm font-medium">{initials}</span>
+            <span className="text-sm font-semibold">{initials}</span>
         </div>
     );
 }
 
 export default function Inquiries({
-                                      inquiries,           // paginator
+                                      inquiries,
                                       inquiriesCount,
                                       rejectedCount,
                                       acceptedCount,
@@ -106,7 +102,7 @@ export default function Inquiries({
                                       buyerInquiryCount,
                                       sellerInquiryCount,
                                   }) {
-    /* ---------- local state (UNCHANGED LOGIC) ---------- */
+    /* ---------- local state ---------- */
     const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
     const [selectedType, setSelectedType] = useState('my');
     const [searchRaw, setSearchRaw] = useState('');
@@ -125,7 +121,7 @@ export default function Inquiries({
         return () => clearTimeout(id);
     }, [searchRaw]);
 
-    /* ---------- actions (UNCHANGED LOGIC) ---------- */
+    /* ---------- actions ---------- */
     const handleAccept = () => {
         if (!selectedId) return;
         setLoadingPatch(true);
@@ -175,7 +171,7 @@ export default function Inquiries({
         );
     };
 
-    /* ---------- derived data (UNCHANGED LOGIC) ---------- */
+    /* ---------- derived data ---------- */
     const rows = useMemo(() => {
         let list = Array.isArray(inquiries?.data) ? inquiries.data : [];
 
@@ -200,7 +196,7 @@ export default function Inquiries({
         return list;
     }, [inquiries?.data, search, sort]);
 
-    /* ---------- card (PROFESSIONAL REDESIGN) ---------- */
+    /* ---------- improved card component ---------- */
     const Card = ({ inquiry }) => {
         const property = inquiry.property ?? {};
         const buyer = inquiry.buyer ?? null;
@@ -210,116 +206,117 @@ export default function Inquiries({
         const contact = (seller || buyer);
         const agentStatus = inquiry.status?.toLowerCase();
 
-
         return (
-            <div className="bg-white rounded-xl  hover:shadow-xl transition-all duration-200 overflow-hidden  ">
-                <div className="p-5 grid grid-cols-12 gap-x-6 gap-y-4">
-
-                    {/* LEFT: Property & Message (Span 8/12) */}
-                    <div className="col-span-12 lg:col-span-8 flex gap-5">
-
-                        {/* Image */}
-                        <div className="relative rounded-lg overflow-hidden w-full max-w-[150px] h-[120px] shadow-md shrink-0 border border-gray-100">
+            <div className="card card-hover animate-fade-in">
+                <div className="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Property & Message Section */}
+                    <div className="lg:col-span-8 flex flex-col sm:flex-row gap-5">
+                        {/* Property Image */}
+                        <div className="relative rounded-lg overflow-hidden w-full sm:w-[150px] h-[120px] shadow-md shrink-0 border border-gray-200">
                             <img
                                 src={property.image_url ? `/storage/${property.image_url}` : '/placeholder.png'}
                                 onError={(e) => (e.currentTarget.src = '/placeholder.png')}
                                 alt={property.title ?? 'Property Image'}
-                                className="w-full h-full object-cover transition-transform duration-300"
+                                className="property-card-image"
                                 loading="lazy"
                             />
-                            {/* Price chip */}
-                            <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-semibold px-2 py-0.5 rounded-md flex items-center gap-1">
+                            {/* Price Overlay */}
+                            <div className="absolute top-2 left-2 bg-gray-900/80 text-white text-xs font-semibold px-2 py-1 rounded-md flex items-center gap-1">
                                 <FontAwesomeIcon icon={faPesoSign} className="h-3" />
                                 {price}
                             </div>
                         </div>
 
-                        {/* Details */}
+                        {/* Property Details */}
                         <div className="flex flex-col justify-between flex-1 min-w-0">
-                            <div className='mb-2'>
-                                <div className='flex items-start justify-between gap-4'>
-                                    <h3 className="text-xl font-bold text-gray-900 leading-tight line-clamp-1">
+                            <div className='mb-3'>
+                                <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3'>
+                                    <h3 className="text-xl font-bold text-gray-900 leading-tight line-clamp-2">
                                         {property.title ?? 'Unknown Property'}
                                     </h3>
                                     <StatusBadge status={inquiry.status} />
                                 </div>
 
-                                <p className="text-sm text-gray-600 mt-2 flex items-center gap-2 truncate">
-                                    <MapPin className="w-4 h-4 text-primary shrink-0" />
-                                    {property.address ?? 'No address provided'}
+                                <p className="text-sm text-gray-600 flex items-center gap-2 mb-3">
+                                    <MapPin className="w-4 h-4 text-primary-500 shrink-0" />
+                                    <span className="line-clamp-2">{property.address ?? 'No address provided'}</span>
                                 </p>
                             </div>
 
                             {/* Metadata & Message Preview */}
-                            <div className="flex flex-col gap-1 text-sm text-gray-500 pt-2 border-t border-gray-100">
-                                <div className='flex items-center justify-between'>
+                            <div className="space-y-2 text-sm text-gray-500 pt-3 border-t border-gray-100">
+                                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2'>
                                     <p className='flex items-center gap-1.5 font-medium text-gray-700'>
-                                        <Home className="w-4 h-4 text-primary" />
+                                        <Home className="w-4 h-4 text-primary-500" />
                                         {property.property_type ?? 'Type'}
                                         {property.sub_type ? ` - ${property.sub_type}` : ''}
                                     </p>
-                                    <p className='flex items-center gap-1.5'>
+                                    <p className='flex items-center gap-1.5 text-xs'>
                                         <Send className="w-4 h-4 text-gray-400" />
                                         Sent {dayjs(inquiry.created_at).fromNow()}
                                     </p>
                                 </div>
 
-                                {/* Message Preview (Subtle background highlight) */}
-                                <div className="p-2 bg-gray-50 border border-gray-200 rounded text-sm text-gray-800 mt-1">
-                                    <p className="flex items-start gap-2 max-w-full line-clamp-2">
-                                        <MessageSquare className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
-                                        <span className='font-medium'>Notes:</span> {inquiry?.notes || 'No message provided.'}
+                                {/* Message Preview */}
+                                <div className="gray-card p-3 rounded-md">
+                                    <p className="flex items-start gap-2 text-sm text-gray-800">
+                                        <MessageSquare className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                        <span>
+                                            <span className='font-semibold'>Notes:</span> {inquiry?.notes || 'No message provided.'}
+                                        </span>
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* RIGHT: Contact & Actions (Span 4/12) */}
-                    <div className="col-span-12 lg:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-gray-100 lg:pl-6 pt-4 lg:pt-0">
-
-                        {/* Who */}
-                        <div className="flex items-center pb-3 border-b border-gray-100 mb-3">
+                    {/* Contact & Actions Section */}
+                    <div className="lg:col-span-4 flex flex-col border-t lg:border-t-0 lg:border-l border-gray-100 lg:pl-6 pt-4 lg:pt-0">
+                        {/* Contact Header */}
+                        <div className="flex items-center pb-3 border-b border-gray-100 mb-4">
                             <Avatar name={contact?.name} photo_url={contact?.photo_url}/>
                             <div className="ml-3 min-w-0">
                                 <p className="text-sm font-bold text-gray-900 truncate">
                                     {contact?.name || '—'}
                                 </p>
-                                <p className="text-xs text-gray-500">{seller ? 'Seller' : buyer ? 'Buyer' : 'Client Profile'}</p>
+                                <p className="text-xs text-gray-500 font-medium">
+                                    {seller ? 'Seller' : buyer ? 'Buyer' : 'Client Profile'}
+                                </p>
                             </div>
                         </div>
 
                         {/* Contact Info */}
-                        <div className="text-sm text-gray-600 mb-3 space-y-2">
+                        <div className="text-sm text-gray-600 mb-4 space-y-2.5">
                             <p className='flex items-center gap-3'>
                                 <Mail className="w-4 h-4 text-gray-400 shrink-0" />
-                                <span className='truncate'>{(contact?.email) || 'N/A'}</span>
+                                <span className='truncate font-medium'>{contact?.email || 'N/A'}</span>
                             </p>
                             <p className='flex items-center gap-3'>
                                 <Phone className="w-4 h-4 text-gray-400 shrink-0" />
-                                <span>{(contact?.phone) || 'N/A'}</span>
+                                <span className='font-medium'>{contact?.phone || 'N/A'}</span>
                             </p>
                         </div>
 
-                        <div className='mt-auto pt-2'>
+                        {/* Inquiry Type */}
+                        <div className='mt-auto mb-4'>
                             <TypePill inquiry={inquiry} />
                         </div>
 
-                        {/* Actions (Clear, high-priority primary actions) */}
-                        <div className="flex gap-2 mt-3">
-                            {/* Agent-initiated */}
+                        {/* Actions */}
+                        <div className="flex flex-col gap-2">
+                            {/* Agent-initiated inquiries */}
                             {inquiry.seller_id && (
                                 agentStatus === 'accepted' ? (
                                     <Link
                                         href={`/agents/my-listings/${inquiry.property?.id}`}
-                                        className="flex-1 bg-primary text-white py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 text-center transition shadow-md"
+                                        className="btn btn-primary btn-sm text-center"
                                         aria-label="View in My Listing"
                                     >
                                         View Listing
                                     </Link>
                                 ) : (
                                     <button
-                                        className="flex-1 border border-gray-300 py-2 rounded-lg text-sm text-gray-600 bg-gray-50 cursor-not-allowed font-medium"
+                                        className="btn btn-secondary btn-sm cursor-not-allowed opacity-75"
                                         disabled
                                     >
                                         {inquiry.status}
@@ -331,29 +328,29 @@ export default function Inquiries({
                             {!inquiry.seller_id && (
                                 <>
                                     {agentStatus === 'pending' && (
-                                        <div className="flex gap-2 w-full">
+                                        <div className="flex gap-2">
                                             <button
                                                 type="button"
-                                                className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition shadow-md"
+                                                className="btn btn-success flex-1 btn-sm"
                                                 onClick={() => {
                                                     setSelectedId(inquiry.id);
                                                     setIsOpenAcceptDialog(true);
                                                 }}
                                                 aria-label={`Accept inquiry ${inquiry.id}`}
                                             >
-                                                <Check className="w-4 h-4 inline mr-1" />
+                                                <Check className="w-4 h-4" />
                                                 Accept
                                             </button>
                                             <button
                                                 type="button"
-                                                className="flex-1 px-3 py-2 border border-red-300 hover:bg-red-50 text-red-600 rounded-lg text-sm font-semibold transition"
+                                                className="btn btn-outline flex-1 btn-sm !border-red-300 !text-red-600 hover:!bg-red-50"
                                                 onClick={() => {
                                                     setSelectedId(inquiry.id);
                                                     setIsOpenRejectDialog(true);
                                                 }}
                                                 aria-label={`Reject inquiry ${inquiry.id}`}
                                             >
-                                                <X className="w-4 h-4 inline mr-1" />
+                                                <X className="w-4 h-4" />
                                                 Reject
                                             </button>
                                         </div>
@@ -362,7 +359,7 @@ export default function Inquiries({
                                     {agentStatus === 'accepted' && (
                                         <Link
                                             href={`/agents/trippings/create?inquiry=${inquiry.id}`}
-                                            className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold transition text-center text-sm hover:bg-primary/90 shadow-md"
+                                            className="btn btn-primary btn-sm text-center"
                                             aria-label={`Create tripping for inquiry ${inquiry.id}`}
                                         >
                                             Schedule Visit
@@ -370,9 +367,9 @@ export default function Inquiries({
                                     )}
 
                                     {/* Fallback for other statuses */}
-                                    {['pending', 'accepted'].includes(agentStatus) ? null : (
+                                    {!['pending', 'accepted'].includes(agentStatus) && (
                                         <button
-                                            className="flex-1 border border-gray-300 py-2 rounded-lg text-sm text-gray-600 bg-gray-50 cursor-not-allowed font-medium"
+                                            className="btn btn-secondary btn-sm cursor-not-allowed opacity-75"
                                             disabled
                                         >
                                             {inquiry.status}
@@ -389,8 +386,8 @@ export default function Inquiries({
 
     /* ---------- render ---------- */
     return (
-        <AgentLayout>
-            {/* --- Dialogs (UNCHANGED) --- */}
+        <AuthenticatedLayout>
+            {/* --- Dialogs --- */}
             <ConfirmDialog
                 open={openCancelDialog}
                 setOpen={setOpenCancelDialog}
@@ -422,99 +419,107 @@ export default function Inquiries({
                 loading={loadingPatch}
             />
 
-            <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            <div className="page-container">
+                <div className="page-content">
+                    {/* 🧭 Header & Controls */}
+                    <div className="section">
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900 gradient-text">Inquiry Management</h1>
+                                <p className="section-description">
+                                    View and process all client requests and internal property inquiries.
+                                </p>
+                            </div>
 
-                {/* 🧭 Header & Controls */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Inquiry Management Console</h1>
-                        <p className="text-sm text-gray-600 mt-1">View and process all client requests and internal property inquiries.</p>
-                    </div>
+                            <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                                {/* Search Input */}
+                                <div className="relative w-full sm:w-64">
+                                    <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        value={searchRaw}
+                                        onChange={(e) => setSearchRaw(e.target.value)}
+                                        placeholder="Search property, client, status…"
+                                        className="form-input pl-9 w-full"
+                                        aria-label="Search inquiries"
+                                    />
+                                </div>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-3">
-                        {/* Search Input (Standardized) */}
-                        <div className="relative w-full sm:w-[240px] shrink-0">
-                            <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                            <input
-                                value={searchRaw}
-                                onChange={(e) => setSearchRaw(e.target.value)}
-                                placeholder="Search property, client, status…"
-                                className="pl-9 pr-3 py-2.5 text-sm rounded-lg bg-gray-50 border border-gray-300 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none w-full transition"
-                                aria-label="Search inquiries"
+                                {/* Items Per Page Dropdown */}
+                                <div className="relative">
+                                    <select
+                                        value={selectedItemsPerPage}
+                                        onChange={handleItemsPerPageChange}
+                                        className="form-select w-32"
+                                        title="Items per page"
+                                    >
+                                        {[10, 20, 30, 50].map((n) => (
+                                            <option key={n} value={n}>{n} / page</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 🏷️ Status Tabs */}
+                        <div className="glass-card p-3">
+                            <AgentInquiriesFilterTab
+                                count={[inquiriesCount, sellerInquiryCount, buyerInquiryCount]}
+                                selectedStatus={status}
+                                selectedType={selectedType}
+                                setSelectedType={setSelectedType}
+                                page={page}
+                                selectedItemsPerPage={selectedItemsPerPage}
                             />
                         </div>
+                    </div>
 
-                        {/* Items Per Page Dropdown (Standardized) */}
-                        <div className="relative inline-flex items-center shrink-0">
-                            <select
-                                value={selectedItemsPerPage}
-                                onChange={handleItemsPerPageChange}
-                                className="pl-3 pr-8 py-2.5 text-sm rounded-lg border border-gray-300 bg-white appearance-none cursor-pointer focus:ring-1 focus:ring-primary/40 transition"
-                                title="Items per page"
-                            >
-                                {[10, 20, 30, 50].map((n) => (
-                                    <option key={n} value={n}>{n} / page</option>
+                    {/* 📝 Inquiry List */}
+                    <div className="section">
+                        {!inquiries?.data?.length ? (
+                            <div className="card p-12 text-center">
+                                <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                <h3 className="text-lg font-semibold text-gray-800 mb-2">No Inquiries Found</h3>
+                                <p className="text-gray-500">
+                                    You currently have no pending, accepted, or rejected inquiries based on the active filters.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {rows.map((inquiry) => (
+                                    <Card key={inquiry.id} inquiry={inquiry} />
                                 ))}
-                            </select>
-                            <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 pointer-events-none" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* 🏷️ Status Tabs (Clean, professional segment) */}
-                <div className="rounded-lg bg-white p-2 shadow-sm border border-gray-200 overflow-x-auto">
-                    <AgentInquiriesFilterTab
-                        count={[inquiriesCount, sellerInquiryCount, buyerInquiryCount]}
-                        selectedStatus={status}
-                        selectedType={selectedType}
-                        setSelectedType={setSelectedType}
-                        page={page}
-                        selectedItemsPerPage={selectedItemsPerPage}
-                    />
-                </div>
-
-                {/* 📝 List */}
-                {!inquiries?.data?.length ? (
-                    <div className="p-12 text-center text-gray-500 bg-white rounded-xl shadow-md border border-gray-200">
-                        <Clock className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                        <h3 className="text-lg font-semibold text-gray-800">No Inquiries Found</h3>
-                        <p className="text-sm mt-1">You currently have no pending, accepted, or rejected inquiries based on the active filters.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        {rows.map((inquiry) => (
-                            <Card key={inquiry.id} inquiry={inquiry} />
-                        ))}
-                    </div>
-                )}
-
-                {/* 📄 Pagination */}
-                {Array.isArray(inquiries?.links) && inquiries.links.length > 1 && (
-                    <div className="flex flex-wrap gap-2 justify-center items-center pt-6">
-                        {inquiries.links.map((link, idx) =>
-                            link.url ? (
-                                <Link
-                                    key={idx}
-                                    href={link.url}
-                                    className={cn(
-                                        'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border',
-                                        link.active
-                                            ? 'bg-primary text-white border-primary shadow-sm'
-                                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                    )}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            ) : (
-                                <span
-                                    key={idx}
-                                    className="px-4 py-2 text-sm text-gray-400 bg-white rounded-lg border border-gray-200 cursor-not-allowed"
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            )
+                            </div>
                         )}
                     </div>
-                )}
+
+                    {/* 📄 Pagination */}
+                    {Array.isArray(inquiries?.links) && inquiries.links.length > 1 && (
+                        <div className="flex flex-wrap gap-2 justify-center items-center pt-8">
+                            {inquiries.links.map((link, idx) =>
+                                link.url ? (
+                                    <Link
+                                        key={idx}
+                                        href={link.url}
+                                        className={cn(
+                                            'btn btn-sm',
+                                            link.active
+                                                ? 'btn-primary'
+                                                : 'btn-outline'
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ) : (
+                                    <span
+                                        key={idx}
+                                        className="btn btn-outline btn-sm cursor-not-allowed opacity-50"
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                )
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
-        </AgentLayout>
+        </AuthenticatedLayout>
     );
 }
