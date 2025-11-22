@@ -3,6 +3,8 @@
 use App\Http\Controllers\Buyer\FeedbackController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExportPdfController;
+use App\Http\Controllers\HomePage\ContactController;
+use App\Http\Controllers\HomePage\HomePageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
@@ -84,56 +86,11 @@ Route::get('/explores/projects/{project}', [ProjectController::class, 'show']);
 
 
 //<-----------------------Header Pages---------------------->
-Route::get('/contact', function () {
-    return Inertia::render('Headers/ContactPage');
-});
-Route::get('/security', function () {
-    return Inertia::render('Headers/SecurityPage');
-});
-Route::get('/findagent', function () {
-    return Inertia::render('Headers/FindAgentPage');
-});
-Route::get('/customer', function () {
-    return Inertia::render('Headers/CustomersPage');
-});
-Route::get('/collaboration', function () {
-    return Inertia::render('Headers/CollaborationPage');
-});
-Route::get('/enterprise', function () {
-    return Inertia::render('Headers/EnterprisePage');
-});
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::get('/about', [HomePageController::class, 'about'])->name('about');
+Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
 
-Route::get('/emergency', function () {
-    return Inertia::render('Headers/EmergencyPage');
-});
-Route::get('/community', function () {
-    return Inertia::render('Headers/CommunityPage');
-});
-Route::get('/help', function () {
-    return Inertia::render('Headers/HelpPage');
-});
-
-Route::get('/gallery', function () {
-    return Inertia::render('Headers/GalleryPage');
-});
-Route::get('/experts', function () {
-    return Inertia::render('Headers/ExpertsPage');
-});
-Route::get('/blog', function () {
-    return Inertia::render('Headers/BlogPage');
-});
-Route::get('/academy', function () {
-    return Inertia::render('Headers/AcademyPage');
-});
-Route::get('/meetups', function () {
-    return Inertia::render('Headers/MeetupsPage');
-});
-Route::get('/updates', function () {
-    return Inertia::render('Headers/UpdatesPage');
-});
-Route::get('/markplace', function () {
-    return Inertia::render('Headers/MarkplacePage');
-});
 
 
 //all auth user
