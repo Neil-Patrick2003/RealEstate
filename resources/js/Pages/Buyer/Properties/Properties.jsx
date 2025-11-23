@@ -1,1396 +1,1050 @@
-// resources/js/Pages/Buyer/Properties/Index.jsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, {useEffect, useMemo, useState, useCallback, useRef} from "react";
+import { router } from "@inertiajs/react";
 import { debounce } from "lodash";
-import { Head, router } from "@inertiajs/react";
-import NavBar from "@/Components/NavBar";
 import PropertyCard from "@/Components/Property/PropertyCard";
-import PropertyListCard from "@/Pages/Property/PropertyListCard";
-import DisplayMap from "@/Pages/Buyer/Properties/DisplayMap";
 import {
-    Filter as FilterIcon,
-    List as ListIcon,
-    Grid as GridIcon,
-    X,
-    SlidersHorizontal,
     Search,
+    Filter,
+    X,
     MapPin,
     Home,
     Building2,
-    Ruler,
-    Star,
+    LandPlot,
+    Sparkles,
+    Clock,
+    Camera,
+    Eye,
     TrendingUp,
-    Shield,
-    Heart,
-    Play,
-    CheckCircle,
-    Headphones,
-    Award,
+    Star,
+    Zap,
+    Crown,
+    Building,
+    House,
+    Landmark,
+    LucideMapPin,
     ChevronDown,
-    Sparkles
+    ChevronUp,
+    Bed,
+    Bath,
+    Car,
+    Square,
+    Ruler,
+    Calendar,
+    SlidersHorizontal,
+    ArrowUpDown
 } from "lucide-react";
+import Navbar from "@/Components/NavBar.jsx";
+import {motion, useScroll, useTransform} from "framer-motion";
 
-/* ---------- helpers ---------- */
-const A = (v) => (Array.isArray(v) ? v : []);
-const S = (v) => (typeof v === "string" ? v : "");
-const includesSafe = (src, needle) =>
-    Array.isArray(src)
-        ? src.includes(needle)
-        : typeof src === "string"
-            ? src.includes(String(needle))
-            : false;
+// Property Categories with Subcategories
+const PROPERTY_CATEGORIES = [
+    {
+        category: "Apartment",
+        subcategories: ["Penthouse", "Loft", "Bedspace", "Room", "Studio", "1-Bedroom", "2-Bedroom", "3-Bedroom"],
+        icon: Landmark,
+        color: "from-emerald-500 to-teal-500"
+    },
+    {
+        category: "Commercial",
+        subcategories: ["Retail", "Offices", "Building", "Warehouse", "Serviced Office", "Coworking Space", "Shop", "Showroom", "Restaurant", "Hotel", "Mall"],
+        icon: Building,
+        color: "from-emerald-600 to-green-500"
+    },
+    {
+        category: "Condominium",
+        subcategories: ["Loft", "Studio", "Penthouse", "Other", "Condotel", "1-Bedroom", "2-Bedroom", "3-Bedroom", "Executive Suite"],
+        icon: Building2,
+        color: "from-teal-500 to-emerald-500"
+    },
+    {
+        category: "House",
+        subcategories: ["Townhouse", "Beach House", "Single Family House", "Villas", "Bungalow", "Duplex", "Triplex", "Mansion", "Farm House"],
+        icon: House,
+        color: "from-green-500 to-emerald-400"
+    },
+    {
+        category: "Land",
+        subcategories: ["Beach Lot", "Memorial Lot", "Agricultural Lot", "Commercial Lot", "Residential Lot", "Parking Lot", "Industrial Lot", "Raw Land", "Subdivision Lot"],
+        icon: LucideMapPin,
+        color: "from-amber-500 to-emerald-500"
+    }
+];
 
-const ALL_TYPES = ["House", "Condominium", "Apartment", "Commercial", "Land"];
-const PRICE_MIN = 0;
-const PRICE_MAX = 100_000_000;
-const AREA_MIN = 0;
-const AREA_MAX = 2_000;
+// Property Features
+const PROPERTY_FEATURES = [
+    "Swimming Pool", "Garden", "Garage", "Security", "Furnished", "Pet Friendly",
+    "Near School", "Near Mall", "Near Hospital", "Near Transport", "Parking",
+    "Air Conditioning", "Heating", "Balcony", "Terrace", "Gym", "Spa"
+];
 
-const peso = (n) =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency: "PHP",
-        maximumFractionDigits: 0,
-    }).format(n);
+// Default filter state
+const DEFAULT_FILTERS = {
+    search: "",
+    category: [],
+    subcategory: [],
+    features: [],
+    is_presell: null,
+    with_photos: false,
+    price_min: "",
+    price_max: "",
+    floor_min: "",
+    floor_max: "",
+    lot_min: "",
+    lot_max: "",
+    bedrooms_min: "",
+    bedrooms_max: "",
+    bathrooms_min: "",
+    bathrooms_max: "",
+    car_slots_min: "",
+    car_slots_max: "",
+    year_built_min: "",
+    year_built_max: "",
+    location: "",
+    sort: "newest",
+};
 
-const areaFormatter = (n) => `${n} m²`;
-
-function CheckboxFilter({ label, value, checked, onChange, icon: Icon }) {
-    return (
-        <label className="group flex items-center gap-3 text-gray-700 dark:text-gray-300 cursor-pointer p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
-            <input
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-primary-600 rounded-lg border-2"
-                checked={checked}
-                onChange={(e) => onChange(value, e.target.checked)}
-            />
-            {Icon && <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />}
-            <span className="text-sm font-medium flex-1">{label}</span>
-        </label>
-    );
-}
-
-function Checkbox({ id, label, checked, onChange }) {
-    return (
-        <label
-            htmlFor={id}
-            className="group flex items-center gap-3 text-gray-700 dark:text-gray-300 cursor-pointer p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
-        >
-            <input
-                id={id}
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-primary-600 rounded-lg border-2"
-                checked={checked}
-                onChange={(e) => onChange(e.target.checked)}
-            />
-            <span className="text-sm font-medium">{label}</span>
-        </label>
-    );
-}
-
-/* Enhanced Dual Range with better mobile UX */
-function DualRange({
-                       label,
-                       min = 0,
-                       max = 100,
-                       step = 1,
-                       valueMin,
-                       valueMax,
-                       setValueMin,
-                       setValueMax,
-                       format = (v) => v,
-                       unit = "",
-                   }) {
-    const onMin = (v) => setValueMin(Math.min(Number(v), valueMax));
-    const onMax = (v) => setValueMax(Math.max(Number(v), valueMin));
-
-    return (
-        <div className="form-group space-y-4">
-            {label && (
-                <label className="form-label text-base font-semibold">{label}</label>
-            )}
-
-            <div className="px-2 space-y-1">
-                <input
-                    type="range"
-                    min={min}
-                    max={max}
-                    step={step}
-                    value={valueMin}
-                    onChange={(e) => onMin(e.target.value)}
-                    className="w-full h-2 accent-primary-600 cursor-pointer"
-                />
-                <input
-                    type="range"
-                    min={min}
-                    max={max}
-                    step={step}
-                    value={valueMax}
-                    onChange={(e) => onMax(e.target.value)}
-                    className="w-full h-2 accent-primary-600 cursor-pointer -mt-2"
-                />
+// Loading Skeleton Component
+const PropertyCardSkeleton = () => (
+    <div className="bg-white rounded-xl shadow-lg animate-pulse overflow-hidden border border-gray-100">
+        <div className="w-full h-48 bg-gradient-to-r from-gray-200 to-gray-300 rounded-t-xl"></div>
+        <div className="p-5 space-y-4">
+            <div className="flex gap-2">
+                <div className="w-20 h-6 bg-gray-200 rounded-full"></div>
+                <div className="w-16 h-6 bg-gray-200 rounded-full"></div>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-                <div className="form-group">
-                    <label className="form-label text-xs font-medium text-gray-600 dark:text-gray-400">Min</label>
-                    <input
-                        type="number"
-                        inputMode="numeric"
-                        min={min}
-                        max={valueMax}
-                        step={step}
-                        value={valueMin}
-                        onChange={(e) => onMin(e.target.value)}
-                        className="form-input text-sm py-2 px-3 border-2 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    />
-                </div>
-                <div className="form-group">
-                    <label className="form-label text-xs font-medium text-gray-600 dark:text-gray-400">Max</label>
-                    <input
-                        type="number"
-                        inputMode="numeric"
-                        min={valueMin}
-                        max={max}
-                        step={step}
-                        value={valueMax}
-                        onChange={(e) => onMax(e.target.value)}
-                        className="form-input text-sm py-2 px-3 border-2 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    />
-                </div>
+            <div className="space-y-2">
+                <div className="w-3/4 h-4 bg-gray-200 rounded"></div>
+                <div className="w-1/2 h-4 bg-gray-200 rounded"></div>
             </div>
-
-            <div className="text-sm font-semibold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 py-2 px-3 rounded-lg text-center">
-                {format(valueMin)}
-                {unit} – {format(valueMax)}
-                {unit}
+            <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                <div className="w-2/3 h-3 bg-gray-200 rounded"></div>
             </div>
+            <div className="w-1/2 h-6 bg-gray-200 rounded"></div>
+            <div className="flex gap-4">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="flex items-center gap-1">
+                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                        <div className="w-8 h-3 bg-gray-200 rounded"></div>
+                    </div>
+                ))}
+            </div>
+            <div className="w-full h-10 bg-gray-200 rounded-lg"></div>
         </div>
-    );
-}
+    </div>
+);
 
-/* Lock body scroll when mobile drawer is open */
-function useLockBodyScroll(locked) {
-    useEffect(() => {
-        const el = document.documentElement;
-        if (locked) {
-            el.classList.add("overflow-hidden");
-            document.body.classList.add("overflow-hidden");
-        } else {
-            el.classList.remove("overflow-hidden");
-            document.body.classList.remove("overflow-hidden");
+export default function Properties({ properties, filters, loading = false }) {
+    // Initialize state with proper filter handling
+    const [localFilters, setLocalFilters] = useState(() => {
+        const initial = { ...DEFAULT_FILTERS };
+
+        // Safely merge incoming filters from controller
+        if (filters) {
+            Object.keys(filters).forEach(key => {
+                if (filters[key] !== undefined && filters[key] !== null) {
+                    if (['category', 'subcategory', 'features'].includes(key)) {
+                        // Handle array filters
+                        initial[key] = Array.isArray(filters[key]) ? filters[key] : [filters[key]].filter(Boolean);
+                    } else if (key === 'with_photos') {
+                        initial[key] = Boolean(filters[key]);
+                    } else if (key === 'is_presell') {
+                        initial[key] = filters[key];
+                    } else {
+                        initial[key] = filters[key];
+                    }
+                }
+            });
         }
-        return () => {
-            el.classList.remove("overflow-hidden");
-            document.body.classList.remove("overflow-hidden");
+
+        return initial;
+    });
+
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [expandedCategories, setExpandedCategories] = useState({});
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const list = Array.isArray(properties?.data) ? properties.data : [];
+
+    // Check if Land category is selected
+    const isLandCategorySelected = useMemo(() => {
+        return localFilters.category.includes("Land");
+    }, [localFilters.category]);
+
+    // Scroll effect for header
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
         };
-    }, [locked]);
-}
-
-/* ---------- main ---------- */
-export default function Properties({ properties = [], propertiesWithMap = [] }) {
-    // base filters
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedTypes, setSelectedTypes] = useState([]);
-    const [isPresell, setIsPresell] = useState(false);
-    const [withPhotos, setWithPhotos] = useState(false);
-
-    // ranges
-    const [priceMin, setPriceMin] = useState(PRICE_MIN);
-    const [priceMax, setPriceMax] = useState(PRICE_MAX);
-    const [floorAreaMin, setFloorAreaMin] = useState(AREA_MIN);
-    const [floorAreaMax, setFloorAreaMax] = useState(AREA_MAX);
-    const [lotAreaMin, setLotAreaMin] = useState(AREA_MIN);
-    const [lotAreaMax, setLotAreaMax] = useState(AREA_MAX);
-
-    // house-only fields
-    const [bedroomsMin, setBedroomsMin] = useState(0);
-    const [bathroomsMin, setBathroomsMin] = useState(0);
-    const [carSlotsMin, setCarSlotsMin] = useState(0);
-    const [totalRoomsMin, setTotalRoomsMin] = useState(0);
-
-    // view
-    const [viewMode, setViewMode] = useState("grid");
-    const [sortOrder, setSortOrder] = useState("default");
-    const [showFilters, setShowFilters] = useState(false);
-    const [showFiltersMobile, setShowFiltersMobile] = useState(false);
-    useLockBodyScroll(showFiltersMobile);
-
-    // favorites + UX
-    const [favoriteIds, setFavoriteIds] = useState([]);
-    const [toast, setToast] = useState(null);
-    const [isFiltering, setIsFiltering] = useState(false);
-
-    // Mobile state
-    const [isSearchFocused, setIsSearchFocused] = useState(false);
-
-    // smart visibility
-    const hasType = selectedTypes.length > 0;
-    const isOnlyLand = hasType && selectedTypes.every((t) => t === "Land");
-    const isOnlyHouse = hasType && selectedTypes.every((t) => t === "House");
-    const includesLand = selectedTypes.includes("Land");
-    const showFloorArea =
-        (hasType && !isOnlyLand && !includesLand) || !hasType;
-    const showLotArea =
-        isOnlyLand ||
-        !hasType ||
-        (includesLand && selectedTypes.some((t) => t !== "Land"));
-
-    // Property type icons mapping
-    const typeIcons = {
-        "House": Home,
-        "Condominium": Building2,
-        "Apartment": Building2,
-        "Commercial": Building2,
-        "Land": Ruler
-    };
-
-    // sync toast auto-hide
-    useEffect(() => {
-        if (!toast) return;
-        const t = setTimeout(() => setToast(null), 3000);
-        return () => clearTimeout(t);
-    }, [toast]);
-
-    // desktop filter visibility
-    useEffect(() => {
-        if (typeof window === "undefined") return;
-        const mq = window.matchMedia("(min-width: 1024px)");
-        setShowFilters(mq.matches);
-        const handler = (e) => setShowFilters(e.matches);
-        mq.addEventListener?.("change", handler);
-        return () => mq.removeEventListener?.("change", handler);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    /* Persist favorites */
-    useEffect(() => {
-        if (typeof window === "undefined") return;
-        try {
-            const raw = window.localStorage.getItem("favorite-property-ids");
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) setFavoriteIds(parsed);
+    // Filter cleanup function
+    const cleanupFilters = useCallback((rawFilters) => {
+        const cleaned = {};
+
+        Object.keys(rawFilters).forEach((key) => {
+            const value = rawFilters[key];
+
+            // Skip empty values
+            if (value === "" || value === null || value === undefined) {
+                return;
             }
-        } catch {
-            // ignore
-        }
+
+            // Handle arrays
+            if (Array.isArray(value)) {
+                if (value.length > 0) {
+                    cleaned[key] = value;
+                }
+                return;
+            }
+
+            // Handle booleans
+            if (typeof value === "boolean") {
+                if (value === true) {
+                    cleaned[key] = value;
+                }
+                return;
+            }
+
+            // Handle is_presell (can be true, false, or null)
+            if (key === 'is_presell' && value !== null) {
+                cleaned[key] = value;
+                return;
+            }
+
+            // Handle strings
+            if (typeof value === "string" && value.trim() !== "") {
+                cleaned[key] = value;
+            }
+        });
+
+        return cleaned;
     }, []);
 
-    useEffect(() => {
-        if (typeof window === "undefined") return;
-        try {
-            window.localStorage.setItem(
-                "favorite-property-ids",
-                JSON.stringify(favoriteIds)
-            );
-        } catch {
-            // ignore
-        }
-    }, [favoriteIds]);
-
-    /* -------- favorites (optimistic) -------- */
-    const toggleFavorite = useCallback(
-        (id) => {
-            const willAdd = !favoriteIds.includes(id);
-            setFavoriteIds((p) =>
-                willAdd ? [...p, id] : p.filter((x) => x !== id)
-            );
-            router.post(
-                `/properties/${id}/favorites`,
-                { id },
-                {
+    // Debounced search
+    const debouncedVisit = useMemo(
+        () =>
+            debounce((nextFilters) => {
+                const cleanedFilters = cleanupFilters(nextFilters);
+                console.log('Sending filters:', cleanedFilters); // Debug log
+                router.get(route("all.properties"), cleanedFilters, {
+                    preserveState: true,
                     preserveScroll: true,
-                    onSuccess: () =>
-                        setToast({
-                            type: "success",
-                            msg: willAdd
-                                ? "Added to favorites"
-                                : "Removed from favorites",
-                        }),
-                    onError: () => {
-                        setFavoriteIds((p) =>
-                            willAdd
-                                ? p.filter((x) => x !== id)
-                                : [...p, id]
-                        );
-                        setToast({
-                            type: "error",
-                            msg: "Failed to update favorites",
-                        });
-                    },
-                }
-            );
-        },
-        [favoriteIds]
+                    replace: true,
+                });
+            }, 500),
+        [cleanupFilters]
     );
 
-    const resetFilters = useCallback(() => {
-        setSearchTerm("");
-        setSelectedTypes([]);
-        setIsPresell(false);
-        setWithPhotos(false);
-        setPriceMin(PRICE_MIN);
-        setPriceMax(PRICE_MAX);
-        setFloorAreaMin(AREA_MIN);
-        setFloorAreaMax(AREA_MAX);
-        setLotAreaMin(AREA_MIN);
-        setLotAreaMax(AREA_MAX);
-        setBedroomsMin(0);
-        setBathroomsMin(0);
-        setCarSlotsMin(0);
-        setTotalRoomsMin(0);
+    useEffect(() => {
+        return () => debouncedVisit.cancel();
+    }, [debouncedVisit]);
+
+    // Immediate filter application
+    const applyNow = useCallback((nextFilters) => {
+        debouncedVisit.cancel();
+        const cleanedFilters = cleanupFilters(nextFilters);
+        console.log('Applying filters immediately:', cleanedFilters); // Debug log
+        router.get(route("all.properties"), cleanedFilters, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    }, [debouncedVisit, cleanupFilters]);
+
+    // Filter updates
+    const updateFilter = useCallback((key, value, { immediate = false } = {}) => {
+        console.log('Updating filter:', key, value); // Debug log
+        setLocalFilters(prev => {
+            const next = { ...prev, [key]: value };
+
+            if (immediate) {
+                applyNow(next);
+            } else {
+                debouncedVisit(next);
+            }
+
+            return next;
+        });
+    }, [debouncedVisit, applyNow]);
+
+    // Multi-select handlers
+    const toggleArrayFilter = useCallback((key, value) => {
+        setLocalFilters(prev => {
+            const current = prev[key] || [];
+            let nextArray;
+
+            if (current.includes(value)) {
+                nextArray = current.filter(item => item !== value);
+            } else {
+                nextArray = [...current, value];
+            }
+
+            const next = { ...prev, [key]: nextArray };
+            applyNow(next);
+            return next;
+        });
+    }, [applyNow]);
+
+    // Toggle category expansion
+    const toggleCategoryExpansion = useCallback((categoryName) => {
+        setExpandedCategories(prev => ({
+            ...prev,
+            [categoryName]: !prev[categoryName]
+        }));
     }, []);
 
-    const handleTypeChange = (type, checked) => {
-        setSelectedTypes((prev) =>
-            checked ? [...prev, type] : prev.filter((t) => t !== type)
+    // Handle category selection with subcategory
+    const handleCategorySelect = useCallback((categoryName, subcategory = null) => {
+        setLocalFilters(prev => {
+            let newCategories = [...prev.category];
+            let newSubcategories = [...prev.subcategory];
+
+            if (subcategory) {
+                // Toggle subcategory
+                if (newSubcategories.includes(subcategory)) {
+                    newSubcategories = newSubcategories.filter(sc => sc !== subcategory);
+                } else {
+                    newSubcategories.push(subcategory);
+                }
+                // Ensure parent category is selected when subcategory is selected
+                if (!newCategories.includes(categoryName)) {
+                    newCategories.push(categoryName);
+                }
+            } else {
+                // Toggle main category
+                if (newCategories.includes(categoryName)) {
+                    newCategories = newCategories.filter(c => c !== categoryName);
+                    // Remove all subcategories of this category
+                    const category = PROPERTY_CATEGORIES.find(c => c.category === categoryName);
+                    if (category) {
+                        newSubcategories = newSubcategories.filter(sc =>
+                            !category.subcategories.includes(sc)
+                        );
+                    }
+                } else {
+                    newCategories.push(categoryName);
+                }
+            }
+
+            const next = {
+                ...prev,
+                category: newCategories,
+                subcategory: newSubcategories
+            };
+
+            applyNow(next);
+            return next;
+        });
+    }, [applyNow]);
+
+    // Remove individual filter
+    const removeFilter = useCallback((key, value = null) => {
+        setLocalFilters(prev => {
+            let next;
+
+            if (value === null) {
+                // Remove entire filter
+                next = { ...prev, [key]: DEFAULT_FILTERS[key] };
+            } else if (Array.isArray(prev[key])) {
+                // Remove specific value from array filter
+                next = {
+                    ...prev,
+                    [key]: prev[key].filter(item => item !== value)
+                };
+            } else {
+                // Reset single value filter
+                next = { ...prev, [key]: DEFAULT_FILTERS[key] };
+            }
+
+            applyNow(next);
+            return next;
+        });
+    }, [applyNow]);
+
+    // Availability handler
+    const handleAvailabilityChange = useCallback((value) => {
+        console.log('Availability changed to:', value); // Debug log
+
+        let is_presell;
+        switch (value) {
+            case "presell":
+                is_presell = "true";
+                break;
+            case "forsale":
+                is_presell = "false";
+                break;
+            case "all":
+            default:
+                is_presell = null;
+                break;
+        }
+
+        console.log('Setting is_presell to:', is_presell); // Debug log
+        updateFilter("is_presell", is_presell, { immediate: true });
+    }, [updateFilter]);
+
+    // Reset filters
+    const resetFilters = useCallback(() => {
+        setLocalFilters(DEFAULT_FILTERS);
+        setExpandedCategories({});
+        setShowAdvancedFilters(false);
+        applyNow(DEFAULT_FILTERS);
+        setMobileFiltersOpen(false);
+    }, [applyNow]);
+
+    // Current availability state
+    const currentAvailability = useMemo(() => {
+        if (localFilters.is_presell === true) return "presell";
+        if (localFilters.is_presell === false) return "forsale";
+        return "all";
+    }, [localFilters.is_presell]);
+
+    // Active filters count
+    const activeFiltersCount = useMemo(() => {
+        const filtersToCheck = [
+            localFilters.search,
+            localFilters.category,
+            localFilters.subcategory,
+            localFilters.features,
+            localFilters.is_presell,
+            localFilters.with_photos,
+            localFilters.price_min,
+            localFilters.price_max,
+            localFilters.floor_min,
+            localFilters.floor_max,
+            localFilters.lot_min,
+            localFilters.lot_max,
+            localFilters.bedrooms_min,
+            localFilters.bedrooms_max,
+            localFilters.bathrooms_min,
+            localFilters.bathrooms_max,
+            localFilters.car_slots_min,
+            localFilters.car_slots_max,
+            localFilters.year_built_min,
+            localFilters.year_built_max,
+            localFilters.location,
+            localFilters.sort
+        ];
+
+        return filtersToCheck.filter(value => {
+            if (Array.isArray(value)) return value.length > 0;
+            if (typeof value === 'boolean') return value === true;
+            if (typeof value === 'string') return value !== "" && value !== "newest";
+            return value !== null && value !== undefined;
+        }).length;
+    }, [localFilters]);
+
+    const hasActiveFilters = activeFiltersCount > 0;
+
+    // Safe toggle favorite function
+    const toggleFavourite = useCallback((propertyId) => {
+        router.post(
+            '/favourites',
+            { property_id: propertyId },
+            {
+                preserveScroll: true,
+                preserveState: true,
+            }
         );
+    }, []);
+
+    const getInputValue = (value) => {
+        if (value === null || value === undefined) return "";
+        return value;
     };
 
-    /* -------- unified filter function -------- */
-    const buildFilterFn = useCallback(
-        () =>
-            (arr) => {
-                let out = Array.isArray(arr) ? [...arr] : [];
+    // Featured properties (first 3)
+    const featuredProperties = list.slice(0, 3);
+    const ref = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: ref,
+        offset: ["start end", "end start"],
+    });
 
-                // availability
-                out = out.filter((p) =>
-                    isPresell ? p?.isPresell : !p?.isPresell
-                );
-
-                // search
-                const q = S(searchTerm).trim().toLowerCase();
-                if (q) {
-                    out = out.filter((p) => {
-                        const title = S(p?.title).toLowerCase();
-                        const addr = S(p?.address).toLowerCase();
-                        const loc = S(p?.location).toLowerCase();
-                        const desc = S(p?.description).toLowerCase();
-                        return (
-                            title.includes(q) ||
-                            addr.includes(q) ||
-                            loc.includes(q) ||
-                            desc.includes(q)
-                        );
-                    });
-                }
-
-                // type
-                if (selectedTypes.length > 0) {
-                    out = out.filter((p) =>
-                        includesSafe(selectedTypes, p?.property_type)
-                    );
-                }
-
-                // photos
-                if (withPhotos) {
-                    out = out.filter(
-                        (p) =>
-                            A(p?.images).length > 0 ||
-                            S(p?.image_url).length > 0
-                    );
-                }
-
-                // price
-                out = out.filter((p) => {
-                    const price = Number(p?.price) || 0;
-                    return price >= priceMin && price <= priceMax;
-                });
-
-                // land only
-                if (isOnlyLand) {
-                    out = out.filter((p) => {
-                        const la = Number(p?.lot_area || 0);
-                        const minOK =
-                            lotAreaMin <= AREA_MIN ? true : la >= lotAreaMin;
-                        const maxOK =
-                            lotAreaMax >= AREA_MAX ? true : la <= lotAreaMax;
-                        return minOK && maxOK;
-                    });
-                }
-
-                // house only
-                if (isOnlyHouse) {
-                    if (bedroomsMin)
-                        out = out.filter(
-                            (p) => Number(p?.bedrooms || 0) >= bedroomsMin
-                        );
-                    if (bathroomsMin)
-                        out = out.filter(
-                            (p) => Number(p?.bathrooms || 0) >= bathroomsMin
-                        );
-                    if (carSlotsMin)
-                        out = out.filter(
-                            (p) => Number(p?.car_slots || 0) >= carSlotsMin
-                        );
-                    if (totalRoomsMin)
-                        out = out.filter(
-                            (p) => Number(p?.total_rooms || 0) >= totalRoomsMin
-                        );
-
-                    out = out.filter((p) => {
-                        const fa = Number(p?.floor_area || 0);
-                        const minOK =
-                            floorAreaMin <= AREA_MIN
-                                ? true
-                                : fa >= floorAreaMin;
-                        const maxOK =
-                            floorAreaMax >= AREA_MAX
-                                ? true
-                                : fa <= floorAreaMax;
-                        return minOK && maxOK;
-                    });
-                }
-
-                // mixed / none
-                if (!isOnlyLand && !isOnlyHouse) {
-                    if (showFloorArea) {
-                        out = out.filter((p) => {
-                            const fa = Number(p?.floor_area || 0);
-                            const minOK =
-                                floorAreaMin <= AREA_MIN
-                                    ? true
-                                    : fa >= floorAreaMin;
-                            const maxOK =
-                                floorAreaMax >= AREA_MAX
-                                    ? true
-                                    : fa <= floorAreaMax;
-                            return minOK && maxOK;
-                        });
-                    }
-                    if (showLotArea) {
-                        out = out.filter((p) => {
-                            const la = Number(p?.lot_area || 0);
-                            const minOK =
-                                lotAreaMin <= AREA_MIN
-                                    ? true
-                                    : la >= lotAreaMin;
-                            const maxOK =
-                                lotAreaMax >= AREA_MAX
-                                    ? true
-                                    : la <= lotAreaMax;
-                            return minOK && maxOK;
-                        });
-                    }
-                }
-
-                return out;
-            },
-        [
-            isPresell,
-            searchTerm,
-            selectedTypes,
-            withPhotos,
-            priceMin,
-            priceMax,
-            bedroomsMin,
-            bathroomsMin,
-            carSlotsMin,
-            totalRoomsMin,
-            floorAreaMin,
-            floorAreaMax,
-            lotAreaMin,
-            lotAreaMax,
-            isOnlyLand,
-            isOnlyHouse,
-            showFloorArea,
-            showLotArea,
-        ]
-    );
-
-    const [filtered, setFiltered] = useState(properties);
-
-    // debounced filtering
-    useEffect(() => {
-        const filterFn = buildFilterFn();
-        setIsFiltering(true);
-
-        const run = debounce(() => {
-            setFiltered(filterFn(properties));
-            setIsFiltering(false);
-        }, 300);
-
-        run();
-        return () => {
-            run.cancel();
-            setIsFiltering(false);
-        };
-    }, [properties, buildFilterFn]);
-
-    // sort is applied only once here
-    const sortedProperties = useMemo(() => {
-        const base = Array.isArray(filtered) ? [...filtered] : [];
-        switch (sortOrder) {
-            case "low-to-high":
-                return base.sort(
-                    (a, b) => Number(a?.price || 0) - Number(b?.price || 0)
-                );
-            case "high-to-low":
-                return base.sort(
-                    (a, b) => Number(b?.price || 0) - Number(a?.price || 0)
-                );
-            case "newest":
-                return base.sort(
-                    (a, b) =>
-                        new Date(b?.created_at || 0) -
-                        new Date(a?.created_at || 0)
-                );
-            case "oldest":
-                return base.sort(
-                    (a, b) =>
-                        new Date(a?.created_at || 0) -
-                        new Date(b?.created_at || 0)
-                );
-            default:
-                return base;
-        }
-    }, [filtered, sortOrder]);
-
-    // map data uses same filter function
-    const filteredMapProps = useMemo(() => {
-        const filterFn = buildFilterFn();
-        return filterFn(propertiesWithMap);
-    }, [buildFilterFn, propertiesWithMap]);
-
-    // chips
-    const chips = useMemo(() => {
-        const c = [];
-        if (searchTerm)
-            c.push({
-                label: `"${searchTerm}"`,
-                clear: () => setSearchTerm(""),
-            });
-        if (selectedTypes.length)
-            c.push({
-                label: selectedTypes.join(" · "),
-                clear: () => setSelectedTypes([]),
-            });
-        c.push({
-            label: isPresell ? "Pre-Selling" : "For Sale",
-            clear: () => setIsPresell((v) => !v),
-        });
-        if (withPhotos)
-            c.push({
-                label: "With photos",
-                clear: () => setWithPhotos(false),
-            });
-
-        if (priceMin !== PRICE_MIN || priceMax !== PRICE_MAX) {
-            c.push({
-                label: `Price ${peso(priceMin)} – ${peso(priceMax)}`,
-                clear: () => {
-                    setPriceMin(PRICE_MIN);
-                    setPriceMax(PRICE_MAX);
-                },
-            });
-        }
-
-        if (isOnlyHouse) {
-            if (bedroomsMin)
-                c.push({
-                    label: `Bedrooms ≥ ${bedroomsMin}`,
-                    clear: () => setBedroomsMin(0),
-                });
-            if (bathroomsMin)
-                c.push({
-                    label: `Bathrooms ≥ ${bathroomsMin}`,
-                    clear: () => setBathroomsMin(0),
-                });
-            if (carSlotsMin)
-                c.push({
-                    label: `Car Slots ≥ ${carSlotsMin}`,
-                    clear: () => setCarSlotsMin(0),
-                });
-            if (totalRoomsMin)
-                c.push({
-                    label: `Total Rooms ≥ ${totalRoomsMin}`,
-                    clear: () => setTotalRoomsMin(0),
-                });
-            if (floorAreaMin > AREA_MIN || floorAreaMax < AREA_MAX)
-                c.push({
-                    label: `Floor ${areaFormatter(
-                        floorAreaMin
-                    )} – ${areaFormatter(floorAreaMax)}`,
-                    clear: () => {
-                        setFloorAreaMin(AREA_MIN);
-                        setFloorAreaMax(AREA_MAX);
-                    },
-                });
-        } else if (isOnlyLand) {
-            if (lotAreaMin > AREA_MIN || lotAreaMax < AREA_MAX)
-                c.push({
-                    label: `Lot ${areaFormatter(
-                        lotAreaMin
-                    )} – ${areaFormatter(lotAreaMax)}`,
-                    clear: () => {
-                        setLotAreaMin(AREA_MIN);
-                        setLotAreaMax(AREA_MAX);
-                    },
-                });
-        } else {
-            if (showFloorArea && (floorAreaMin > AREA_MIN || floorAreaMax < AREA_MAX))
-                c.push({
-                    label: `Floor ${areaFormatter(
-                        floorAreaMin
-                    )} – ${areaFormatter(floorAreaMax)}`,
-                    clear: () => {
-                        setFloorAreaMin(AREA_MIN);
-                        setFloorAreaMax(AREA_MAX);
-                    },
-                });
-            if (showLotArea && (lotAreaMin > AREA_MIN || lotAreaMax < AREA_MAX))
-                c.push({
-                    label: `Lot ${areaFormatter(
-                        lotAreaMin
-                    )} – ${areaFormatter(lotAreaMax)}`,
-                    clear: () => {
-                        setLotAreaMin(AREA_MIN);
-                        setLotAreaMax(AREA_MAX);
-                    },
-                });
-        }
-
-        return c;
-    }, [
-        searchTerm,
-        selectedTypes,
-        isPresell,
-        withPhotos,
-        priceMin,
-        priceMax,
-        bedroomsMin,
-        bathroomsMin,
-        carSlotsMin,
-        totalRoomsMin,
-        floorAreaMin,
-        floorAreaMax,
-        lotAreaMin,
-        lotAreaMax,
-        isOnlyHouse,
-        isOnlyLand,
-        showFloorArea,
-        showLotArea,
-    ]);
+    const y1 = useTransform(scrollYProgress, [0, 1], [100, -100]);
+    const y2 = useTransform(scrollYProgress, [0, 1], [-100, 100]);
+    const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            <Head title="Explore Properties" />
+        <div className="min-h-screen page-container overflow-hidden">
+            <Navbar />
+            {/* Header */}
+            <div className={`relative z-10 transition-all duration-300 bg-neutral-900`}>
+                <motion.div
+                    style={{ y: y1, opacity }}
+                    className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-primary-500/30 to-primary-600/30 rounded-full blur-3xl"
+                />
+                <motion.div
+                    style={{ y: y2, opacity }}
+                    className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-secondary-500/30 to-secondary-600/30 rounded-full blur-3xl"
+                />
+                <div className="pt-20 mx-auto px-4 sm:px-6 lg:px-8">
 
-            {/* Toast */}
-            {toast && (
-                <div
-                    className="fixed bottom-5 right-5 z-50 max-w-sm w-full"
-                    aria-live="assertive"
-                >
-                    <div
-                        className={`alert ${
-                            toast.type === "success" ? "alert-success" : "alert-error"
-                        } shadow-lg transform transition-all duration-300 animate-in slide-in-from-right-full`}
-                    >
-                        <div className="flex items-center gap-3">
-                            {toast.type === "success" ? (
-                                <CheckCircle className="w-5 h-5" />
-                            ) : (
-                                <X className="w-5 h-5" />
-                            )}
-                            <span className="flex-1">{toast.msg}</span>
+                    <div className="flex justify-between items-center py-8">
+                        <div className=''>
+                            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent">
+                                Discover Your Dream Property
+                            </h1>
+                            <p className="text-lg text-gray-700 mt-3 max-w-2xl">
+                                Explore our curated collection of premium properties
+                            </p>
                         </div>
-                    </div>
-                </div>
-            )}
-            <NavBar/>
-
-            {/* ENHANCED HEADER SECTION */}
-            <div className="pt-16 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white relative overflow-hidden">
-                {/* Background Elements */}
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-10 left-10 w-20 h-20 bg-white rounded-full blur-xl"></div>
-                    <div className="absolute bottom-20 right-20 w-32 h-32 bg-primary-300 rounded-full blur-2xl"></div>
-                    <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-primary-200 rounded-full blur-lg"></div>
-                </div>
-
-                <div className="container mx-auto px-4 py-8 lg:py-12 relative z-10">
-                    <div className="max-w-6xl mx-auto">
-                        {/* Quick Search Bar - Enhanced for Mobile */}
-                        <div className="max-w-2xl mx-auto">
-                            <div className="relative">
-                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary-400" />
-                                <input
-                                    type="text"
-                                    id="property-search"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    onFocus={() => setIsSearchFocused(true)}
-                                    onBlur={() => setIsSearchFocused(false)}
-                                    placeholder="Search by title, address, or location..."
-                                    className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl pl-12 pr-24 py-4 text-white placeholder-primary-200 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all duration-300 text-base"
-                                />
-                                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-2">
-                                    <button
-                                        onClick={() => setShowFiltersMobile(true)}
-                                        className="lg:hidden bg-white/20 hover:bg-white/30 border border-white/30 text-white p-2 rounded-xl font-semibold transition-colors duration-300"
-                                    >
-                                        <FilterIcon className="w-4 h-4" />
-                                    </button>
-                                    <button className="bg-white text-primary-700 px-4 py-2 rounded-xl font-semibold hover:bg-gray-100 transition-colors duration-300 text-sm">
-                                        Search
-                                    </button>
+                        <div className="text-right">
+                            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-emerald-100">
+                                <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                                    {properties?.total ?? 0}
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Mobile Quick Stats */}
-                        <div className="lg:hidden mt-6">
-                            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4">
-                                <div className="grid grid-cols-3 gap-4 text-center">
-                                    <div>
-                                        <div className="text-lg font-bold text-white">{properties.length}+</div>
-                                        <div className="text-xs text-primary-200">Properties</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-lg font-bold text-white">
-                                            {properties.filter(p => !p.isPresell).length}+
-                                        </div>
-                                        <div className="text-xs text-primary-200">For Sale</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-lg font-bold text-white">
-                                            {properties.filter(p => p.isPresell).length}+
-                                        </div>
-                                        <div className="text-xs text-primary-200">Pre-Selling</div>
-                                    </div>
-                                </div>
+                                <div className="text-sm text-gray-600 font-medium">Properties Available</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-6">
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* DESKTOP SIDEBAR */}
-                    {showFilters && (
-                        <aside className="card sticky top-6 h-fit w-80 shrink-0 shadow-xl border-0 rounded-2xl overflow-hidden">
-                            <FilterPanel
-                                {...{
-                                    searchTerm,
-                                    setSearchTerm,
-                                    isPresell,
-                                    setIsPresell,
-                                    selectedTypes,
-                                    handleTypeChange,
-                                    withPhotos,
-                                    setWithPhotos,
-                                    priceMin,
-                                    priceMax,
-                                    setPriceMin,
-                                    setPriceMax,
-                                    floorAreaMin,
-                                    floorAreaMax,
-                                    setFloorAreaMin,
-                                    setFloorAreaMax,
-                                    lotAreaMin,
-                                    lotAreaMax,
-                                    setLotAreaMin,
-                                    setLotAreaMax,
-                                    bedroomsMin,
-                                    setBedroomsMin,
-                                    bathroomsMin,
-                                    setBathroomsMin,
-                                    carSlotsMin,
-                                    setCarSlotsMin,
-                                    totalRoomsMin,
-                                    setTotalRoomsMin,
-                                    resetFilters,
-                                    isOnlyHouse,
-                                    isOnlyLand,
-                                    showFloorArea,
-                                    showLotArea,
-                                    typeIcons,
-                                }}
-                            />
-                        </aside>
-                    )}
-
-                    {/* MOBILE FILTER BUTTON + DRAWER */}
-                    {!showFilters && (
-                        <>
-                            <div className="lg:hidden flex items-center gap-3 mb-4">
-                                <button
-                                    onClick={() => setShowFiltersMobile(true)}
-                                    className="btn btn-primary inline-flex items-center gap-2 flex-1 justify-center py-3 rounded-xl"
-                                >
-                                    <FilterIcon className="w-4 h-4" />
-                                    Filters & Sort
-                                    {chips.length > 0 && (
-                                        <span className="badge badge-white text-primary-600 text-xs">
-                                            {chips.length}
-                                        </span>
-                                    )}
-                                </button>
-
-                                {/* Mobile View Toggle */}
-                                <div className="flex rounded-xl border border-gray-300 dark:border-gray-600 overflow-hidden shadow-sm">
-                                    <button
-                                        onClick={() => setViewMode("grid")}
-                                        className={`p-3 ${
-                                            viewMode === "grid"
-                                                ? "bg-primary-600 text-white"
-                                                : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-                                        }`}
-                                    >
-                                        <GridIcon className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode("list")}
-                                        className={`p-3 border-l border-gray-300 dark:border-gray-600 ${
-                                            viewMode === "list"
-                                                ? "bg-primary-600 text-white"
-                                                : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-                                        }`}
-                                    >
-                                        <ListIcon className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {showFiltersMobile && (
-                                <div className="fixed inset-0 z-50 lg:hidden">
-                                    {/* Backdrop */}
-                                    <div
-                                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                                        onClick={() => setShowFiltersMobile(false)}
-                                    />
-
-                                    {/* Panel */}
-                                    <div
-                                        className="
-                                        absolute right-0 top-0 h-dvh w-[90vw] max-w-md bg-white dark:bg-gray-800 shadow-2xl
-                                        flex flex-col
-                                        animate-in slide-in-from-right-full duration-300
-                                      "
-                                        role="dialog"
-                                        aria-modal="true"
-                                        aria-label="Filter properties"
-                                    >
-                                        {/* Sticky Header */}
-                                        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                                            <div>
-                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Filters & Sort</h3>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                    Refine your property search
-                                                </p>
-                                            </div>
-                                            <button
-                                                onClick={() => setShowFiltersMobile(false)}
-                                                className="btn btn-ghost p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                aria-label="Close filters"
-                                            >
-                                                <X className="w-5 h-5" />
-                                            </button>
-                                        </div>
-
-                                        {/* Scrollable Content */}
-                                        <div className="flex-1 overflow-y-auto p-6">
-                                            <div className="space-y-6">
-                                                {/* Sort Section */}
-                                                <div className="form-group">
-                                                    <label className="form-label text-lg font-semibold">Sort By</label>
-                                                    <select
-                                                        value={sortOrder}
-                                                        onChange={(e) => setSortOrder(e.target.value)}
-                                                        className="form-select py-3 text-base border-2 rounded-xl"
-                                                    >
-                                                        <option value="default">Recommended</option>
-                                                        <option value="newest">Newest Listings</option>
-                                                        <option value="low-to-high">Price: Low to High</option>
-                                                        <option value="high-to-low">Price: High to Low</option>
-                                                        <option value="oldest">Oldest Listings</option>
-                                                    </select>
-                                                </div>
-
-                                                <FilterPanel
-                                                    {...{
-                                                        searchTerm,
-                                                        setSearchTerm,
-                                                        isPresell,
-                                                        setIsPresell,
-                                                        selectedTypes,
-                                                        handleTypeChange,
-                                                        withPhotos,
-                                                        setWithPhotos,
-                                                        priceMin,
-                                                        priceMax,
-                                                        setPriceMin,
-                                                        setPriceMax,
-                                                        floorAreaMin,
-                                                        floorAreaMax,
-                                                        setFloorAreaMin,
-                                                        setFloorAreaMax,
-                                                        lotAreaMin,
-                                                        lotAreaMax,
-                                                        setLotAreaMin,
-                                                        setLotAreaMax,
-                                                        bedroomsMin,
-                                                        setBedroomsMin,
-                                                        bathroomsMin,
-                                                        setBathroomsMin,
-                                                        carSlotsMin,
-                                                        setCarSlotsMin,
-                                                        totalRoomsMin,
-                                                        setTotalRoomsMin,
-                                                        resetFilters,
-                                                        isOnlyHouse,
-                                                        isOnlyLand,
-                                                        showFloorArea,
-                                                        showLotArea,
-                                                        typeIcons,
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Sticky Footer */}
-                                        <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-white dark:bg-gray-800 space-y-3">
-                                            <div className="flex gap-3">
-                                                <button
-                                                    onClick={() => {
-                                                        resetFilters();
-                                                    }}
-                                                    className="btn btn-outline flex-1 py-3 rounded-xl border-2"
-                                                >
-                                                    Reset All
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setShowFiltersMobile(false);
-                                                    }}
-                                                    className="btn btn-primary flex-1 py-3 rounded-xl"
-                                                >
-                                                    Apply Filters
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+            <div className="relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Mobile Filter Button */}
+                    <div className="lg:hidden flex items-center gap-4">
+                        <button
+                            onClick={() => setMobileFiltersOpen(true)}
+                            className="flex items-center gap-3 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-emerald-100"
+                        >
+                            <Filter className="w-5 h-5 text-emerald-600" />
+                            <span className="font-semibold text-gray-700">Filters</span>
+                            {activeFiltersCount > 0 && (
+                                <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">
+                                    {activeFiltersCount}
+                                </span>
                             )}
-                        </>
-                    )}
-
-                    {/* MAIN RESULTS AREA */}
-                    <main className="flex-1 flex flex-col">
-                        {/* Top bar - Enhanced for Mobile */}
-                        <div className="section-header mb-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <button
-                                        onClick={() => setShowFilters(!showFilters)}
-                                        className="hidden lg:inline-flex btn btn-outline items-center gap-2 py-2 px-4 rounded-xl border-2"
-                                        title="Toggle filters"
-                                        aria-pressed={showFilters}
-                                    >
-                                        <SlidersHorizontal className="w-4 h-4" />
-                                        {showFilters ? "Hide Filters" : "Show Filters"}
-                                        {chips.length > 0 && (
-                                            <span className="badge badge-primary text-xs">
-                                                {chips.length}
-                                            </span>
-                                        )}
-                                    </button>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="section-description text-sm sm:text-base">
-                                            Found {sortedProperties.length} properties matching your criteria
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-row items-center gap-3">
-                                    {/* Sort Dropdown - Hidden on mobile since it's in filter drawer */}
-                                    <select
-                                        value={sortOrder}
-                                        onChange={(e) => setSortOrder(e.target.value)}
-                                        className="hidden lg:block form-select py-2 rounded-xl border-2 min-w-[180px]"
-                                    >
-                                        <option value="default">Sort By:</option>
-                                        <option value="newest">Newest Listings</option>
-                                        <option value="low-to-high">Price: Low to High</option>
-                                        <option value="high-to-low">Price: High to Low</option>
-                                        <option value="oldest">Oldest Listings</option>
-                                    </select>
-
-                                    {/* View Mode Toggle - Hidden on mobile since it's in header */}
-                                    <div className="hidden lg:flex rounded-xl border border-gray-300 dark:border-gray-600 overflow-hidden shadow-sm">
-                                        <button
-                                            onClick={() => setViewMode("grid")}
-                                            className={`btn btn-ghost rounded-none p-3 ${
-                                                viewMode === "grid"
-                                                    ? "bg-primary-600 text-white"
-                                                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-                                            }`}
-                                        >
-                                            <GridIcon className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode("list")}
-                                            className={`btn btn-ghost rounded-none border-l border-gray-300 dark:border-gray-600 p-3 ${
-                                                viewMode === "list"
-                                                    ? "bg-primary-600 text-white"
-                                                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-                                            }`}
-                                        >
-                                            <ListIcon className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Active chips - Enhanced for Mobile */}
-                        {chips.length > 0 && (
-                            <div className="mb-6">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400 hidden sm:block">
-                                        Active filters:
-                                    </span>
-                                    {chips.map((chip, idx) => (
-                                        <button
-                                            key={`${chip.label}-${idx}`}
-                                            onClick={chip.clear}
-                                            className="badge badge-primary inline-flex items-center gap-1 py-2 px-3 rounded-lg text-sm font-medium hover:bg-primary-600 hover:text-white transition-all duration-200 group"
-                                        >
-                                            <span className="max-w-[120px] truncate">{chip.label}</span>
-                                            <X className="w-3 h-3 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                                        </button>
-                                    ))}
-                                    <button
-                                        onClick={resetFilters}
-                                        className="badge badge-gray inline-flex items-center gap-1 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                        title="Clear all filters"
-                                    >
-                                        Clear all
-                                        <Sparkles className="w-3 h-3" />
-                                    </button>
-                                </div>
-                            </div>
+                        </button>
+                        {hasActiveFilters && (
+                            <button
+                                onClick={resetFilters}
+                                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors bg-white/80 backdrop-blur-sm px-4 py-3 rounded-xl shadow-sm border border-gray-200"
+                            >
+                                <X className="w-4 h-4" />
+                                Clear
+                            </button>
                         )}
+                    </div>
 
-                        {/* Results Area */}
-                        <div className="flex-1">
-                            {isFiltering ? (
-                                // Enhanced Skeleton
-                                <div className={viewMode === "grid" ? "grid-properties" : "space-y-4"}>
-                                    {Array.from({ length: 8 }).map((_, i) => (
-                                        <div
-                                            key={`sk-${i}`}
-                                            className={`card p-4 animate-pulse space-y-3 ${
-                                                viewMode === "list" ? "flex flex-col sm:flex-row gap-4" : ""
-                                            }`}
-                                        >
-                                            <div className={`skeleton ${viewMode === "list" ? "sm:w-48 h-48" : "h-48"} w-full rounded-xl`} />
-                                            <div className="space-y-2 flex-1">
-                                                <div className="skeleton-text w-3/4" />
-                                                <div className="skeleton-text w-1/2" />
-                                                <div className="skeleton-text w-5/6" />
-                                                <div className="skeleton-text w-1/4 mt-4" />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : sortedProperties.length === 0 ? (
-                                // Enhanced No Results
-                                <div className="card text-center py-16 sm:py-20 rounded-2xl border-0 shadow-lg">
-                                    <div className="feature-icon bg-primary-50 text-primary-600 mx-auto mb-6 w-16 h-16 rounded-2xl flex items-center justify-center">
-                                        <FilterIcon className="w-8 h-8" />
-                                    </div>
-                                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-3">
-                                        No properties found
-                                    </h3>
-                                    <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto text-base">
-                                        Try adjusting your search criteria or filters to find more properties.
-                                    </p>
-                                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    {/* FILTER SIDEBAR */}
+                    <div className={`
+                        fixed lg:sticky top-0 left-0 w-full lg:w-80 h-full lg:h-auto bg-white/90 backdrop-blur-xl z-50 lg:z-auto transform transition-transform duration-300 ease-in-out
+                        ${mobileFiltersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                        lg:rounded-2xl lg:shadow-xl border-r lg:border border-emerald-100
+                    `}>
+                        <div className="h-full flex flex-col">
+                            {/* Mobile Header */}
+                            <div className="flex items-center justify-between p-6 border-b border-emerald-100 lg:hidden">
+                                <h2 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                                    Refine Search
+                                </h2>
+                                <button
+                                    onClick={() => setMobileFiltersOpen(false)}
+                                    className="p-3 hover:bg-emerald-50 rounded-2xl transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-gray-600" />
+                                </button>
+                            </div>
+
+                            {/* Filter Content */}
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-bold text-gray-900">Filters</h3>
+                                    {hasActiveFilters && (
                                         <button
                                             onClick={resetFilters}
-                                            className="btn btn-primary py-3 px-6 rounded-xl font-semibold"
+                                            className="text-sm text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
                                         >
-                                            Clear All Filters
+                                            <X className="w-3 h-3" />
+                                            Reset All
                                         </button>
-                                        <button
-                                            onClick={() => setShowFiltersMobile(true)}
-                                            className="btn btn-outline py-3 px-6 rounded-xl font-semibold border-2"
-                                        >
-                                            Adjust Search
-                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Search & Location */}
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-900 mb-2 block">
+                                            Search Properties
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={getInputValue(localFilters.search)}
+                                                onChange={(e) => updateFilter("search", e.target.value)}
+                                                className="w-full bg-white border border-emerald-200 rounded-xl px-4 pl-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                                placeholder="Search properties..."
+                                            />
+                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-900 mb-2 block">
+                                            Location
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={getInputValue(localFilters.location)}
+                                                onChange={(e) => updateFilter("location", e.target.value)}
+                                                className="w-full bg-white border border-emerald-200 rounded-xl px-4 pl-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                                placeholder="Enter location..."
+                                            />
+                                            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                                        </div>
                                     </div>
                                 </div>
-                            ) : viewMode === "grid" ? (
-                                <div className="grid-properties">
-                                    {sortedProperties.map((p) => {
-                                        const isFav = favoriteIds.includes(p?.id);
-                                        return (
-                                            <PropertyCard
-                                                key={p?.id}
-                                                property={p}
-                                                isFavorite={isFav}
-                                                onToggleFavorite={() => toggleFavorite(p?.id)}
-                                            />
-                                        );
-                                    })}
+
+                                {/* Property Category with Subcategories */}
+                                <div>
+                                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Property Type</h4>
+                                    <div className="space-y-2">
+                                        {PROPERTY_CATEGORIES.map((cat) => {
+                                            const Icon = cat.icon;
+                                            const isExpanded = expandedCategories[cat.category];
+                                            const isCategorySelected = localFilters.category.includes(cat.category);
+
+                                            return (
+                                                <div key={cat.category} className="space-y-2">
+                                                    <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
+                                                        isCategorySelected ? 'border-emerald-500 bg-emerald-50 shadow-sm' : 'border-emerald-200 bg-white hover:border-emerald-300'
+                                                    }`}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isCategorySelected}
+                                                            onChange={() => handleCategorySelect(cat.category)}
+                                                            className="rounded text-emerald-600 focus:ring-emerald-500"
+                                                        />
+                                                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${cat.color} flex items-center justify-center shadow-sm`}>
+                                                            <Icon className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <span className="text-sm font-medium text-gray-700 flex-1">{cat.category}</span>
+                                                        {cat.subcategories.length > 0 && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleCategoryExpansion(cat.category);
+                                                                }}
+                                                                className="text-emerald-400 hover:text-emerald-600 transition-colors"
+                                                            >
+                                                                {isExpanded ? (
+                                                                    <ChevronUp className="w-4 h-4" />
+                                                                ) : (
+                                                                    <ChevronDown className="w-4 h-4" />
+                                                                )}
+                                                            </button>
+                                                        )}
+                                                    </label>
+
+                                                    {/* Subcategories */}
+                                                    {isCategorySelected && isExpanded && (
+                                                        <div className="ml-4 space-y-1 border-l-2 border-emerald-200 pl-4">
+                                                            {cat.subcategories.map((subcat) => (
+                                                                <label key={subcat} className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-50 cursor-pointer transition-colors">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={localFilters.subcategory.includes(subcat)}
+                                                                        onChange={() => handleCategorySelect(cat.category, subcat)}
+                                                                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                                                                    />
+                                                                    <span className="text-xs text-gray-600">{subcat}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {sortedProperties.map((p) => {
-                                        const isFav = favoriteIds.includes(p?.id);
-                                        return (
-                                            <div
-                                                key={p?.id}
-                                                className="card-hover rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
-                                            >
-                                                <PropertyListCard
-                                                    property={p}
-                                                    isFavorite={isFav}
-                                                    onToggleFavorite={() => toggleFavorite(p?.id)}
+
+                                {/* Price Range */}
+                                <div>
+                                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Price Range</h4>
+                                    <div className="space-y-3">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={getInputValue(localFilters.price_min)}
+                                                    onChange={(e) => updateFilter("price_min", e.target.value)}
+                                                    className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all duration-200"
+                                                    placeholder="Min"
                                                 />
+                                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-xs text-emerald-600 font-medium">₱</span>
                                             </div>
-                                        );
-                                    })}
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={getInputValue(localFilters.price_max)}
+                                                    onChange={(e) => updateFilter("price_max", e.target.value)}
+                                                    className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all duration-200"
+                                                    placeholder="Max"
+                                                />
+                                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-xs text-emerald-600 font-medium">₱</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Load More / Pagination for future implementation */}
-                        {sortedProperties.length > 0 && !isFiltering && (
-                            <div className="mt-8 text-center">
-                                <button className="btn btn-outline border-2 py-3 px-8 rounded-xl font-semibold hover:bg-primary-50 dark:hover:bg-gray-800 transition-colors">
-                                    Load More Properties
-                                </button>
-                            </div>
-                        )}
-                    </main>
-                </div>
-            </div>
-        </div>
-    );
-}
+                                {/* Quick Filters */}
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700 mb-2 block">Availability</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[
+                                                { value: "all", label: "All", icon: Star, color: "gray" },
+                                                { value: "presell", label: "Pre-sell", icon: Sparkles, color: "purple" },
+                                                { value: "forsale", label: "Ready", icon: Crown, color: "emerald" }
+                                            ].map(({ value, label, icon: Icon, color }) => (
+                                                <button
+                                                    key={value}
+                                                    onClick={() => handleAvailabilityChange(value)}
+                                                    className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all duration-200 ${
+                                                        currentAvailability === value
+                                                            ? `border-${color}-500 bg-${color}-500 text-white shadow-sm`
+                                                            : 'border-emerald-200 bg-white text-gray-700 hover:border-emerald-300'
+                                                    }`}
+                                                >
+                                                    <Icon className="w-4 h-4" />
+                                                    <span className="text-xs font-medium">{label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
 
-/* ---------- Enhanced Filter Panel ---------- */
-function FilterPanel(props) {
-    const {
-        searchTerm,
-        setSearchTerm,
-        isPresell,
-        setIsPresell,
-        selectedTypes,
-        handleTypeChange,
-        withPhotos,
-        setWithPhotos,
-        priceMin,
-        priceMax,
-        setPriceMin,
-        setPriceMax,
-        floorAreaMin,
-        floorAreaMax,
-        setFloorAreaMin,
-        setFloorAreaMax,
-        lotAreaMin,
-        lotAreaMax,
-        setLotAreaMin,
-        setLotAreaMax,
-        bedroomsMin,
-        setBedroomsMin,
-        bathroomsMin,
-        setBathroomsMin,
-        carSlotsMin,
-        setCarSlotsMin,
-        totalRoomsMin,
-        setTotalRoomsMin,
-        resetFilters,
-        isOnlyHouse,
-        isOnlyLand,
-        showFloorArea,
-        showLotArea,
-        typeIcons,
-    } = props;
+                                    <label className="flex items-center gap-3 p-3 rounded-xl border border-emerald-200 bg-white hover:border-emerald-300 cursor-pointer transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            checked={localFilters.with_photos}
+                                            onChange={(e) => updateFilter("with_photos", e.target.checked, { immediate: true })}
+                                            className="rounded text-emerald-600 focus:ring-emerald-500"
+                                        />
+                                        <Camera className="w-4 h-4 text-emerald-600" />
+                                        <span className="text-sm font-medium text-gray-700">With photos only</span>
+                                    </label>
+                                </div>
 
-    return (
-        <div className="space-y-8 p-1">
-            <div className="space-y-6">
-                {/* Availability */}
-                <div className="form-group">
-                    <label className="form-label text-lg font-semibold">Availability</label>
-                    <div className="grid grid-cols-2 rounded-xl border-2 border-gray-300 dark:border-gray-600 overflow-hidden bg-gray-50 dark:bg-gray-700/50 p-1">
-                        <button
-                            className={`btn rounded-lg py-3 font-semibold transition-all duration-200 ${
-                                !isPresell
-                                    ? "bg-white dark:bg-gray-800 text-primary-600 shadow-sm border-2 border-primary-200 dark:border-primary-600"
-                                    : "bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-                            }`}
-                            onClick={() => setIsPresell(false)}
-                        >
-                            For Sale
-                        </button>
-                        <button
-                            className={`btn rounded-lg py-3 font-semibold transition-all duration-200 ${
-                                isPresell
-                                    ? "bg-white dark:bg-gray-800 text-primary-600 shadow-sm border-2 border-primary-200 dark:border-primary-600"
-                                    : "bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-                            }`}
-                            onClick={() => setIsPresell(true)}
-                        >
-                            Pre-Selling
-                        </button>
-                    </div>
-                </div>
+                                {/* Advanced Filters Toggle */}
+                                <div className="border-t border-emerald-100 pt-4">
+                                    <button
+                                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                                        className="flex items-center justify-between w-full p-3 rounded-xl border border-emerald-200 bg-white hover:border-emerald-300 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
+                                            <span className="text-sm font-medium text-gray-700">Advanced Filters</span>
+                                        </div>
+                                        <ChevronDown className={`w-4 h-4 text-emerald-600 transition-transform duration-200 ${showAdvancedFilters ? 'rotate-180' : ''}`} />
+                                    </button>
+                                </div>
 
-                {/* Types */}
-                <div className="form-group">
-                    <label className="form-label text-lg font-semibold">Property Type</label>
-                    <div className="space-y-2 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-                        {ALL_TYPES.map((t) => (
-                            <CheckboxFilter
-                                key={t}
-                                label={t}
-                                value={t}
-                                icon={typeIcons[t]}
-                                checked={includesSafe(selectedTypes, t)}
-                                onChange={handleTypeChange}
-                            />
-                        ))}
-                    </div>
-                </div>
+                                {/* Advanced Filters */}
+                                {showAdvancedFilters && (
+                                    <div className="space-y-4 animate-fadeIn">
+                                        {/* Area Filters */}
+                                        <div className="space-y-3">
+                                            <h5 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Area</h5>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={getInputValue(localFilters.floor_min)}
+                                                        onChange={(e) => updateFilter("floor_min", e.target.value)}
+                                                        className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                                        placeholder="Floor min"
+                                                    />
+                                                    <Ruler className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                                                </div>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={getInputValue(localFilters.lot_min)}
+                                                        onChange={(e) => updateFilter("lot_min", e.target.value)}
+                                                        className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                                        placeholder="Lot min"
+                                                    />
+                                                    <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                                                </div>
+                                            </div>
+                                        </div>
 
-                {/* Photos only */}
-                <Checkbox
-                    id="withPhotos"
-                    label="Show only listings with photos"
-                    checked={withPhotos}
-                    onChange={setWithPhotos}
-                />
-            </div>
+                                        {/* Property Details - Hide for Land category */}
+                                        {!isLandCategorySelected && (
+                                            <div className="space-y-3">
+                                                <h5 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Property Details</h5>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={getInputValue(localFilters.bedrooms_min)}
+                                                            onChange={(e) => updateFilter("bedrooms_min", e.target.value)}
+                                                            className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                                            placeholder="Beds min"
+                                                        />
+                                                        <Bed className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                                                    </div>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={getInputValue(localFilters.bathrooms_min)}
+                                                            onChange={(e) => updateFilter("bathrooms_min", e.target.value)}
+                                                            className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                                            placeholder="Baths min"
+                                                        />
+                                                        <Bath className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                                                    </div>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={getInputValue(localFilters.car_slots_min)}
+                                                            onChange={(e) => updateFilter("car_slots_min", e.target.value)}
+                                                            className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                                            placeholder="Cars min"
+                                                        />
+                                                        <Car className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                                                    </div>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={getInputValue(localFilters.year_built_min)}
+                                                            onChange={(e) => updateFilter("year_built_min", e.target.value)}
+                                                            className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                                            placeholder="Year min"
+                                                        />
+                                                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
-            <div className="space-y-6">
-                <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Property Details</h4>
-
-                    {/* Price */}
-                    <DualRange
-                        label="Price Range"
-                        min={PRICE_MIN}
-                        max={PRICE_MAX}
-                        step={50_000}
-                        valueMin={priceMin}
-                        valueMax={priceMax}
-                        setValueMin={setPriceMin}
-                        setValueMax={setPriceMax}
-                        format={(v) => peso(v)}
-                    />
-
-                    {/* HOUSE-ONLY */}
-                    {isOnlyHouse && (
-                        <div className="space-y-6">
-                            <DualRange
-                                label="Floor Area"
-                                min={AREA_MIN}
-                                max={AREA_MAX}
-                                step={10}
-                                valueMin={floorAreaMin}
-                                valueMax={floorAreaMax}
-                                setValueMin={setFloorAreaMin}
-                                setValueMax={setFloorAreaMax}
-                                format={(v) => v}
-                                unit=" m²"
-                            />
-                            <div className="grid grid-cols-2 gap-4">
-                                <Numeric
-                                    label="Bedrooms (min)"
-                                    value={bedroomsMin}
-                                    onChange={setBedroomsMin}
-                                />
-                                <Numeric
-                                    label="Bathrooms (min)"
-                                    value={bathroomsMin}
-                                    onChange={setBathroomsMin}
-                                />
-                                <Numeric
-                                    label="Car Slots (min)"
-                                    value={carSlotsMin}
-                                    onChange={setCarSlotsMin}
-                                />
-                                <Numeric
-                                    label="Total Rooms (min)"
-                                    value={totalRoomsMin}
-                                    onChange={setTotalRoomsMin}
-                                />
+                                {/* Sort */}
+                                <div className="border-t border-emerald-100 pt-4">
+                                    <label className="text-sm font-semibold text-gray-900 mb-2 block">Sort Results</label>
+                                    <div className="relative">
+                                        <select
+                                            value={localFilters.sort}
+                                            onChange={(e) => updateFilter("sort", e.target.value, { immediate: true })}
+                                            className="w-full bg-white border border-emerald-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none"
+                                        >
+                                            <option value="newest">Newest First</option>
+                                            <option value="oldest">Oldest First</option>
+                                            <option value="low-to-high">Price: Low to High</option>
+                                            <option value="high-to-low">Price: High to Low</option>
+                                            <option value="largest">Largest Area</option>
+                                        </select>
+                                        <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400 pointer-events-none" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    )}
+                    </div>
 
-                    {/* LAND-ONLY */}
-                    {isOnlyLand && (
-                        <DualRange
-                            label="Lot Area"
-                            min={AREA_MIN}
-                            max={AREA_MAX}
-                            step={10}
-                            valueMin={lotAreaMin}
-                            valueMax={lotAreaMax}
-                            setValueMin={setLotAreaMin}
-                            setValueMax={setLotAreaMax}
-                            format={(v) => v}
-                            unit=" m²"
+                    {/* Overlay for mobile */}
+                    {mobileFiltersOpen && (
+                        <div
+                            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+                            onClick={() => setMobileFiltersOpen(false)}
                         />
                     )}
 
-                    {/* Mixed / Unselected */}
-                    {!isOnlyLand && !isOnlyHouse && (
-                        <div className="space-y-6">
-                            {showFloorArea && (
-                                <DualRange
-                                    label="Floor Area"
-                                    min={AREA_MIN}
-                                    max={AREA_MAX}
-                                    step={10}
-                                    valueMin={floorAreaMin}
-                                    valueMax={floorAreaMax}
-                                    setValueMin={setFloorAreaMin}
-                                    setValueMax={setFloorAreaMax}
-                                    format={(v) => v}
-                                    unit=" m²"
-                                />
-                            )}
-                            {showLotArea && (
-                                <DualRange
-                                    label="Lot Area"
-                                    min={AREA_MIN}
-                                    max={AREA_MAX}
-                                    step={10}
-                                    valueMin={lotAreaMin}
-                                    valueMax={lotAreaMax}
-                                    setValueMin={setLotAreaMin}
-                                    setValueMax={setLotAreaMax}
-                                    format={(v) => v}
-                                    unit=" m²"
-                                />
+                    {/* MAIN CONTENT */}
+                    <div className="flex-1 min-w-0">
+                        {/* Results Header */}
+                        <div className="bg-white rounded-2xl p-6 mb-6 shadow-lg border border-emerald-100">
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                        Properties
+                                    </h2>
+                                    <p className="text-gray-600">
+                                        {hasActiveFilters
+                                            ? `Found ${properties?.total ?? 0} matching properties`
+                                            : `Browse ${properties?.total ?? 0} properties`
+                                        }
+                                    </p>
+                                </div>
+
+                                <div className="flex items-center gap-4">
+                                    <div className="text-sm text-gray-600 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-100">
+                                        <span className="font-bold text-gray-800">
+                                            {properties?.from ?? 0}–{properties?.to ?? 0}
+                                        </span>{" "}
+                                        of{" "}
+                                        <span className="font-bold text-gray-800">
+                                            {properties?.total ?? 0}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Active Filters */}
+                            {hasActiveFilters && (
+                                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-emerald-100">
+                                    <span className="text-xs font-semibold text-gray-500">ACTIVE FILTERS:</span>
+                                    {localFilters.category.map(cat => (
+                                        <span key={cat} className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs px-3 py-1.5 rounded-full border border-emerald-200">
+                                            {cat}
+                                            <button
+                                                onClick={() => removeFilter('category', cat)}
+                                                className="hover:text-emerald-900 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                    {localFilters.subcategory.map(subcat => (
+                                        <span key={subcat} className="inline-flex items-center gap-1 bg-teal-100 text-teal-700 text-xs px-3 py-1.5 rounded-full border border-teal-200">
+                                            {subcat}
+                                            <button
+                                                onClick={() => removeFilter('subcategory', subcat)}
+                                                className="hover:text-teal-900 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                    {localFilters.is_presell !== null && (
+                                        <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 text-xs px-3 py-1.5 rounded-full border border-purple-200">
+                                            {localFilters.is_presell ? 'Pre-selling' : 'Ready for Occupancy'}
+                                            <button
+                                                onClick={() => removeFilter('is_presell')}
+                                                className="hover:text-purple-900 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </span>
+                                    )}
+                                    {localFilters.price_min && (
+                                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-xs px-3 py-1.5 rounded-full border border-amber-200">
+                                            Min ₱{localFilters.price_min}
+                                            <button
+                                                onClick={() => removeFilter('price_min')}
+                                                className="hover:text-amber-900 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </span>
+                                    )}
+                                    {activeFiltersCount > 3 && (
+                                        <span className="bg-gray-100 text-gray-600 text-xs px-3 py-1.5 rounded-full border border-gray-200">
+                                            +{activeFiltersCount - 3} more
+                                        </span>
+                                    )}
+                                </div>
                             )}
                         </div>
-                    )}
+
+                        {/* Loading State */}
+                        {loading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                                {[...Array(8)].map((_, index) => (
+                                    <PropertyCardSkeleton key={index} />
+                                ))}
+                            </div>
+                        ) : (
+                            <>
+                                {/* All Properties Grid */}
+                                {list.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                                        {list.map((property) => (
+                                            <div key={property.id} className="group">
+                                                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-emerald-100 hover:border-emerald-200">
+                                                    <PropertyCard
+                                                        onToggleFavorite={() => toggleFavourite(property.id)}
+                                                        property={property}
+                                                        isFavorite={property.is_favourite || false}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-emerald-100">
+                                        <div className="max-w-md mx-auto">
+                                            <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-200">
+                                                <Eye className="w-6 h-6 text-emerald-600" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-gray-800 mb-2">
+                                                No Properties Found
+                                            </h3>
+                                            <p className="text-gray-600 mb-6">
+                                                {hasActiveFilters
+                                                    ? "Try adjusting your filters to see more results."
+                                                    : "Check back later for new property listings."
+                                                }
+                                            </p>
+                                            {hasActiveFilters && (
+                                                <button
+                                                    onClick={resetFilters}
+                                                    className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                                                >
+                                                    Clear All Filters
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {/* Pagination */}
+                        {!loading && properties?.links && properties.links.length > 3 && (
+                            <div className="flex justify-center mt-8">
+                                <nav className="flex items-center gap-1 bg-white rounded-xl shadow-lg p-2 border border-emerald-100">
+                                    {properties.links.map((link, idx) => (
+                                        <button
+                                            key={idx}
+                                            disabled={!link.url}
+                                            onClick={() => {
+                                                if (!link.url) return;
+                                                router.get(link.url, {}, {
+                                                    preserveState: true,
+                                                    preserveScroll: true,
+                                                });
+                                            }}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                                link.active
+                                                    ? "bg-emerald-600 text-white shadow-sm"
+                                                    : "text-gray-700 hover:bg-emerald-50 hover:text-emerald-700"
+                                            } ${!link.url ? "opacity-50 cursor-not-allowed" : "hover:scale-105"}`}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ))}
+                                </nav>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
-}
 
-function Numeric({ label, value, onChange }) {
-    return (
-        <div className="form-group">
-            <label className="form-label text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-            <input
-                type="number"
-                inputMode="numeric"
-                min="0"
-                value={value}
-                onChange={(e) => onChange(Number(e.target.value || 0))}
-                className="form-input text-sm py-2 px-3 border-2 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-            />
+            {/* Custom CSS for smooth animations */}
+            <style jsx>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fadeIn {
+                    animation: fadeIn 0.3s ease-out;
+                }
+            `}</style>
         </div>
     );
 }

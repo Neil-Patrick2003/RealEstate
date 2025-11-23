@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Search, MapPin, Home, Pencil, Copy, ArchiveX, Trash2, ChevronDown } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Search, MapPin, Home, ChevronDown } from 'lucide-react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { useParallax } from "../../hooks/useParallax.js";
+
+// Property Categories matching your filter system
+const PROPERTY_CATEGORIES = [
+    { name: "Apartment", icon: Home },
+    { name: "Commercial", icon: Home },
+    { name: "Condominium", icon: Home },
+    { name: "House", icon: Home },
+    { name: "Land", icon: Home }
+];
 
 function ParallaxHero() {
     const { scrollY } = useScroll();
@@ -13,18 +23,66 @@ function ParallaxHero() {
     const opacity = useTransform(scrollY, [0, 300], [1, 0]);
     const scale = useTransform(scrollY, [0, 300], [1, 0.8]);
 
+    // Filter state
+    const [filters, setFilters] = useState({
+        search: '',
+        category: []
+    });
+
+    // Update filter function
+    const updateFilter = (key, value) => {
+        setFilters(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    };
+
+    // Handle category selection
+    const handleCategorySelect = (categoryName) => {
+        setFilters(prev => {
+            const currentCategories = [...prev.category];
+            const isSelected = currentCategories.includes(categoryName);
+
+            if (isSelected) {
+                // Remove category if already selected
+                return {
+                    ...prev,
+                    category: currentCategories.filter(cat => cat !== categoryName)
+                };
+            } else {
+                // Add category if not selected
+                return {
+                    ...prev,
+                    category: [...currentCategories, categoryName]
+                };
+            }
+        });
+    };
+
+    // Handle search
+    const handleSearch = () => {
+        // Prepare filters for URL
+        const searchParams = new URLSearchParams();
+
+        if (filters.search) searchParams.append('search', filters.search);
+        if (filters.category.length > 0) {
+            filters.category.forEach(cat => searchParams.append('category[]', cat));
+        }
+
+        // Redirect to all-properties with filters
+        router.get(`/all-properties?${searchParams.toString()}`);
+    };
+
+    // Handle Enter key press
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
     return (
         <div className="relative h-screen overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
             {/* Animated Background Layers */}
-            <motion.div
-                className="absolute inset-0 opacity-20"
-                // style={{
-                //     y: y1,
-                //     backgroundImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1920')",
-                //     backgroundSize: 'cover',
-                //     backgroundPosition: 'center',
-                // }}
-            />
             <motion.div
                 className="absolute inset-0 opacity-30"
                 style={{
@@ -106,14 +164,17 @@ function ParallaxHero() {
                 >
                     {/* Mobile Layout - Vertical */}
                     <div className="lg:hidden space-y-3">
-                        {/* Location Input - Mobile */}
+                        {/* Combined Search Input - Mobile */}
                         <div className="relative bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <MapPin className="w-5 h-5 text-neutral-400" />
+                                <Search className="w-5 h-5 text-neutral-400" />
                             </div>
                             <input
                                 type="text"
-                                placeholder="Enter location..."
+                                placeholder="Search properties or locations..."
+                                value={filters.search}
+                                onChange={(e) => updateFilter('search', e.target.value)}
+                                onKeyPress={handleKeyPress}
                                 className="w-full pl-12 pr-4 py-4 bg-transparent text-white placeholder-neutral-400 outline-none text-base"
                             />
                         </div>
@@ -126,7 +187,12 @@ function ParallaxHero() {
                                     <MenuButton className="w-full inline-flex items-center justify-between bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 px-4 py-4 text-white hover:bg-white/20 transition-colors duration-150">
                                         <span className="flex items-center gap-2">
                                             <Home className="w-5 h-5 text-neutral-400" />
-                                            <span className="text-sm font-medium">Type</span>
+                                            <span className="text-sm font-medium">
+                                                {filters.category.length > 0
+                                                    ? `${filters.category.length} selected`
+                                                    : 'Property Type'
+                                                }
+                                            </span>
                                         </span>
                                         <ChevronDown className="w-4 h-4 text-neutral-400" />
                                     </MenuButton>
@@ -136,42 +202,36 @@ function ParallaxHero() {
                                         anchor="bottom start"
                                         className="w-full origin-top-right z-50 rounded-xl border border-white/5 bg-neutral-800/95 backdrop-blur-lg p-2 text-sm text-white transition duration-100 ease-out [--anchor-gap:8px] focus:outline-none data-closed:scale-95 data-closed:opacity-0"
                                     >
-                                        <MenuItem>
-                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                                <Home className="w-4 h-4" />
-                                                Apartment
-                                            </button>
-                                        </MenuItem>
-                                        <MenuItem>
-                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                                <Home className="w-4 h-4" />
-                                                Commercial
-                                            </button>
-                                        </MenuItem>
-                                        <MenuItem>
-                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                                <Home className="w-4 h-4" />
-                                                Condominium
-                                            </button>
-                                        </MenuItem>
-                                        <MenuItem>
-                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                                <Home className="w-4 h-4" />
-                                                House
-                                            </button>
-                                        </MenuItem>
-                                        <MenuItem>
-                                            <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                                <Home className="w-4 h-4" />
-                                                Land
-                                            </button>
-                                        </MenuItem>
+                                        {PROPERTY_CATEGORIES.map((category) => {
+                                            const isSelected = filters.category.includes(category.name);
+                                            return (
+                                                <MenuItem key={category.name}>
+                                                    <button
+                                                        onClick={() => handleCategorySelect(category.name)}
+                                                        className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 transition-colors ${
+                                                            isSelected
+                                                                ? 'bg-primary/20 text-primary border border-primary/30'
+                                                                : 'data-focus:bg-white/10'
+                                                        }`}
+                                                    >
+                                                        <category.icon className="w-4 h-4" />
+                                                        <span className="flex-1 text-left">{category.name}</span>
+                                                        {isSelected && (
+                                                            <div className="w-2 h-2 bg-primary rounded-full" />
+                                                        )}
+                                                    </button>
+                                                </MenuItem>
+                                            );
+                                        })}
                                     </MenuItems>
                                 </Menu>
                             </div>
 
                             {/* Search Button - Mobile */}
-                            <button className="flex-shrink-0 inline-flex items-center justify-center bg-gradient-to-r from-primary to-accent rounded-xl text-white font-semibold px-6 py-4 hover:shadow-xl hover:scale-105 transition-all duration-300 min-w-[60px]">
+                            <button
+                                onClick={handleSearch}
+                                className="flex-shrink-0 inline-flex items-center justify-center bg-gradient-to-r from-primary to-accent rounded-xl text-white font-semibold px-6 py-4 hover:shadow-xl hover:scale-105 transition-all duration-300 min-w-[60px]"
+                            >
                                 <Search className="w-5 h-5" />
                             </button>
                         </div>
@@ -180,11 +240,16 @@ function ParallaxHero() {
                     {/* Desktop Layout - Horizontal */}
                     <div className="hidden lg:flex w-full bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden shadow-xl">
                         {/* Property Type Menu - Desktop */}
-                        <div className="flex items-center justify-center flex-initial bg-white/5 border-r border-white/10 min-w-[140px]">
+                        <div className="flex items-center justify-center flex-initial bg-white/5 border-r border-white/10 min-w-[160px]">
                             <Menu>
                                 <MenuButton className="inline-flex items-center justify-center gap-2 w-full h-full text-sm font-semibold text-white px-6 py-4 hover:bg-white/10 transition-colors duration-150">
                                     <Home className="w-5 h-5 text-neutral-400" />
-                                    <span>Type</span>
+                                    <span>
+                                        {filters.category.length > 0
+                                            ? `${filters.category.length} Type`
+                                            : 'All Types'
+                                        }
+                                    </span>
                                     <ChevronDown className="w-4 h-4 fill-white/60" />
                                 </MenuButton>
 
@@ -193,60 +258,91 @@ function ParallaxHero() {
                                     anchor="bottom start"
                                     className="w-52 origin-top-right z-50 rounded-xl border border-white/5 bg-neutral-800/95 backdrop-blur-lg p-2 text-sm text-white transition duration-100 ease-out [--anchor-gap:8px] focus:outline-none data-closed:scale-95 data-closed:opacity-0"
                                 >
-                                    <MenuItem>
-                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                            <Home className="w-4 h-4" />
-                                            Apartment
-                                        </button>
-                                    </MenuItem>
-                                    <MenuItem>
-                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                            <Home className="w-4 h-4" />
-                                            Commercial
-                                        </button>
-                                    </MenuItem>
-                                    <MenuItem>
-                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                            <Home className="w-4 h-4" />
-                                            Condominium
-                                        </button>
-                                    </MenuItem>
-                                    <MenuItem>
-                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                            <Home className="w-4 h-4" />
-                                            House
-                                        </button>
-                                    </MenuItem>
-                                    <MenuItem>
-                                        <button className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 data-focus:bg-white/10">
-                                            <Home className="w-4 h-4" />
-                                            Land
-                                        </button>
-                                    </MenuItem>
+                                    {PROPERTY_CATEGORIES.map((category) => {
+                                        const isSelected = filters.category.includes(category.name);
+                                        return (
+                                            <MenuItem key={category.name}>
+                                                <button
+                                                    onClick={() => handleCategorySelect(category.name)}
+                                                    className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 transition-colors ${
+                                                        isSelected
+                                                            ? 'bg-primary/20 text-primary border border-primary/30'
+                                                            : 'data-focus:bg-white/10'
+                                                    }`}
+                                                >
+                                                    <category.icon className="w-4 h-4" />
+                                                    <span className="flex-1 text-left">{category.name}</span>
+                                                    {isSelected && (
+                                                        <div className="w-2 h-2 bg-primary rounded-full" />
+                                                    )}
+                                                </button>
+                                            </MenuItem>
+                                        );
+                                    })}
                                 </MenuItems>
                             </Menu>
                         </div>
 
-                        {/* Location Input - Desktop */}
+                        {/* Combined Search Input - Desktop */}
                         <div className="flex items-center flex-grow bg-white/5 px-6 py-4">
                             <div className="flex items-center w-full">
-                                <MapPin className="w-5 h-5 text-neutral-400 mr-3" />
+                                <Search className="w-5 h-5 text-neutral-400 mr-3" />
                                 <input
                                     type="text"
-                                    placeholder="Enter location..."
+                                    placeholder="Search properties, locations, or addresses..."
+                                    value={filters.search}
+                                    onChange={(e) => updateFilter('search', e.target.value)}
+                                    onKeyPress={handleKeyPress}
                                     className="bg-transparent flex-1 text-white placeholder-neutral-400 outline-none text-base"
                                 />
                             </div>
                         </div>
 
                         {/* Search Button - Desktop */}
-                        <button className="flex-shrink-0 inline-flex items-center justify-center bg-gradient-to-r from-primary to-accent text-white font-semibold px-8 py-4 hover:shadow-xl hover:scale-105 transition-all duration-300 min-w-[180px] gap-2">
+                        <button
+                            onClick={handleSearch}
+                            className="flex-shrink-0 inline-flex items-center justify-center bg-gradient-to-r from-primary to-accent text-white font-semibold px-8 py-4 hover:shadow-xl hover:scale-105 transition-all duration-300 min-w-[180px] gap-2"
+                        >
                             <Search className="w-5 h-5" />
                             <span>Search</span>
                         </button>
                     </div>
-                </motion.div>
 
+                    {/* Active Filters Display */}
+                    {(filters.category.length > 0 || filters.search) && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-4 flex flex-wrap gap-2 justify-center"
+                        >
+                            {filters.category.map(category => (
+                                <div
+                                    key={category}
+                                    className="inline-flex items-center gap-1 bg-primary/20 text-primary text-xs px-3 py-1 rounded-full border border-primary/30"
+                                >
+                                    {category}
+                                    <button
+                                        onClick={() => handleCategorySelect(category)}
+                                        className="hover:text-primary/70 text-xs"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                            {filters.search && (
+                                <div className="inline-flex items-center gap-1 bg-blue-500/20 text-blue-300 text-xs px-3 py-1 rounded-full border border-blue-500/30">
+                                    Search: {filters.search}
+                                    <button
+                                        onClick={() => updateFilter('search', '')}
+                                        className="hover:text-blue-300/70 text-xs"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+                </motion.div>
 
                 {/* Scroll Indicator */}
                 <motion.div
