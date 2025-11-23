@@ -13,7 +13,7 @@ import Chatbot from "@/Components/Chatbot/Chatbot.jsx";
 
 
 
-export default function Welcome({featured}) {
+export default function Welcome({featured, members}) {
 
     return (
 
@@ -24,7 +24,7 @@ export default function Welcome({featured}) {
             <ParallaxFeatures />
             <AboutUs />
             <OurServices />
-            <OurTeam />
+            <OurTeam members={members} />
             <Testimonials />
             <CTASection />
             {/*<PropertyListings />*/}

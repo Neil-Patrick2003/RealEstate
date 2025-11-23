@@ -33,38 +33,14 @@ Route::get('/', function (Request $request) {
         ->take(3)
         ->get();
 
-//    dd($featured->toArray());
-
-    $properties = \App\Models\Property::where('status', 'Published')
-        ->when($request->search, function ($q) use ($request) {
-            $q->where(function ($query) use ($request) {
-                $query->where('title', 'like', '%' . $request->search . '%')
-                    ->orWhere('address', 'like', '%' . $request->search . '%');
-            });
-        })
-        ->when($request->type && $request->type !== 'All', function ($q) use ($request) {
-            $q->where('property_type', $request->type);
-        })
-        ->latest()
-        ->get();
-
     $developers = \App\Models\Developer::with('projects')
         ->latest()
         ->get();
 
-    // Get the user's favourited property IDs
-    $favouriteIds = auth()->check()
-        ? auth()->user()->favourites()->pluck('property_id')->toArray()
-        : [];
-
-    $properties = \App\Models\Property::where('status', 'Published')
-        ->latest()
+    $members = \App\Models\User::whereIn('role', [ 'Admin', 'Broker', 'Agent'])
+        ->orderByRaw("FIELD(role, 'Broker', 'Agent')")
+        ->oldest()
         ->get();
-
-    $projects = \App\Models\Project::with('inventoryPools', 'inventoryPools.block', 'inventoryPools.house_type', 'developer')
-        ->latest()
-        ->get();
-
 
 
     return Inertia::render('Welcome', [
@@ -72,11 +48,9 @@ Route::get('/', function (Request $request) {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
-        'favouriteIds' => $favouriteIds,
         'featured' => $featured,
-        'properties' => $properties,
         'developers' => $developers,
-        'projects' => $projects,
+        'members' => $members,
     ]);
 });
 
@@ -101,12 +75,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::post('/feedback', [\App\Http\Controllers\Buyer\FeedbackController::class,'store']);
-
     Route::post('/post-property', [\App\Http\Controllers\Seller\PropertyController::class,'store'])->name('post-property');
-
 });
 
-Route::middleware(['auth', 'role:Buyer'])->group(function () {
+Route::middleware(['auth', 'role:Seller'])->group(function () {
     Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
 
     Route::get('/seller/properties', [PropertyController::class, 'index']);
@@ -209,6 +181,7 @@ Route::middleware(['auth', 'role:Buyer' ])->group(function () {
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
     Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
     Route::get('/deals', [DealController::class, 'index']);
+    Route::get('/deals/{deal}', [DealController::class, 'store']);
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index'])->name('buyer.transactions.index');
     Route::get('/deals/{deal}/feedback', [FeedbackController::class, 'create'])->name('deals.feedback.create');
