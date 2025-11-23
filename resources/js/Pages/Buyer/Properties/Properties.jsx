@@ -472,7 +472,7 @@ export default function Properties({ properties, filters, loading = false }) {
         <div className="min-h-screen page-container overflow-hidden">
             <Navbar />
             {/* Header */}
-            <div className={`relative z-10 transition-all duration-300 bg-neutral-900`}>
+            <div className={`relative z-10 transition-all duration-300 bg-emerald-600`}>
                 <motion.div
                     style={{ y: y1, opacity }}
                     className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-primary-500/30 to-primary-600/30 rounded-full blur-3xl"
@@ -485,10 +485,10 @@ export default function Properties({ properties, filters, loading = false }) {
 
                     <div className="flex justify-between items-center py-8">
                         <div className=''>
-                            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent">
+                            <h1 className="text-4xl font-bold text-white bg-clip-text text-transparent">
                                 Discover Your Dream Property
                             </h1>
-                            <p className="text-lg text-gray-700 mt-3 max-w-2xl">
+                            <p className="text-lg text-white mt-3 max-w-2xl">
                                 Explore our curated collection of premium properties
                             </p>
                         </div>
