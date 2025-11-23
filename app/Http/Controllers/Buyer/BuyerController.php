@@ -194,7 +194,7 @@ class BuyerController extends Controller
         // Paginate
         $properties = $query
             ->with('project')
-            ->paginate(3) // Changed from 3 to 12 for better UX
+            ->paginate(12)
             ->withQueryString();
 
         // Map data
