@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Buyer\FavouriteController;
 use App\Http\Controllers\Buyer\FeedbackController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExportPdfController;
@@ -94,7 +95,7 @@ Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
 
 
 //all auth user
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
     });
@@ -105,7 +106,7 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:Buyer'])->group(function () {
     Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
 
     Route::get('/seller/properties', [PropertyController::class, 'index']);
@@ -206,7 +207,6 @@ Route::middleware(['auth', 'role:Buyer' ])->group(function () {
     Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
     Route::put('/trippings/{tripping}', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'update']);
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
-    Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
     Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
     Route::get('/deals', [DealController::class, 'index']);
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
@@ -214,6 +214,9 @@ Route::middleware(['auth', 'role:Buyer' ])->group(function () {
     Route::get('/deals/{deal}/feedback', [FeedbackController::class, 'create'])->name('deals.feedback.create');
     Route::post('/deals/{deal}/feedback', [FeedbackController::class, 'store'])->name('deals.feedback.store');
 });
+
+Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
+
 
 
 //---------------------------------broker----------------------------
