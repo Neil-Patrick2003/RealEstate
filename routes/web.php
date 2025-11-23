@@ -95,7 +95,7 @@ Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
 
 
 //all auth user
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
     });
@@ -106,7 +106,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
-Route::middleware(['auth', 'verified', 'role:Buyer'])->group(function () {
+Route::middleware(['auth', 'role:Buyer'])->group(function () {
     Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
 
     Route::get('/seller/properties', [PropertyController::class, 'index']);

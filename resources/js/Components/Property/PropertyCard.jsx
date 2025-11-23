@@ -26,8 +26,16 @@ const formatPriceShort = (num) => {
     return `₱${n?.toLocaleString()}`;
 };
 
-const truncate = (s, n = 60) => (s?.length > n ? s.slice(0, n - 1) + "…" : s || "");
+const truncateHTML = (html, maxLength = 100) => {
+    if (!html) return "";
 
+    // Remove HTML tags
+    const text = html.replace(/<[^>]+>/g, "");
+
+    if (text.length <= maxLength) return html; // Keep original HTML if short enough
+
+    return text.substring(0, maxLength) + "…";
+};
 const daysSince = (dateString) => {
     if (!dateString) return Infinity;
     const ms = Date.now() - new Date(dateString).getTime();
@@ -89,7 +97,7 @@ export default function PropertyCard({
     const isNew = daysSince(property?.created_at) <= 7;
 
     return (
-        <article className="group bg-white  hover:shadow-md transition-all duration-300 overflow-hidden">
+        <article className="group bg-white   transition-all duration-300 overflow-hidden">
             {/* Image Section - Reduced height */}
             <div className="relative aspect-[4/3] bg-gray-100">
                 <Link
@@ -98,7 +106,7 @@ export default function PropertyCard({
                 >
                     <img
                         src={property.image_url ? `/storage/${property.image_url}` : "/placeholder.png"}
-                        className="w-full h-full object-cover  transition-transform duration-300 group-hover:scale-105"
+                        className="w-full h-full object-cover  transition-transform duration-300 "
                         alt={property.title}
                     />
 
@@ -171,9 +179,12 @@ export default function PropertyCard({
                 </div>
 
                 {/* Compact description */}
-                <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-2">
-                    {truncate(property.description, 100)}
-                </p>
+                <p
+                    className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-2"
+                    dangerouslySetInnerHTML={{
+                        __html: truncateHTML(property.description, 100)
+                    }}
+                ></p>
 
                 {/* Property Features - Compact grid */}
                 <div className="grid grid-cols-2 gap-3 mb-4">

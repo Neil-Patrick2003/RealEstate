@@ -966,7 +966,7 @@ export default function Properties({ properties, filters, loading = false }) {
                                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                                         {list.map((property) => (
                                             <div key={property.id} className="group">
-                                                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-emerald-100 hover:border-emerald-200">
+                                                <div className="bg-white rounded-xl h-full shadow-lg hover:shadow-xl transition-all duration-300 border border-emerald-100 hover:border-emerald-200">
                                                     <PropertyCard
                                                         onToggleFavorite={() => toggleFavourite(property.id)}
                                                         property={property}
