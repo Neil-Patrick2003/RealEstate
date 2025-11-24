@@ -19,13 +19,11 @@ function Navbar() {
 
         const role = (user.role || '').toLowerCase();
 
-        if (role === 'buyer') return '/';
+        if (role === 'buyer') return '/dashboard';
         if (role === 'seller') return '/seller/dashboard';
         if (role === 'agent') return '/agents/dashboard';
         if (role === 'broker') return '/broker/dashboard';
-
-        // fallback
-        return '/dashboard';
+        return '/';
     };
 
     const dashboardHref = getDashboardPath(user);

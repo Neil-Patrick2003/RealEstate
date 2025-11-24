@@ -719,7 +719,7 @@ export default function AuthenticatedLayout({ children }) {
                                     <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all duration-200 cursor-pointer">
                                         {auth?.user?.photo_url ? (
                                             <img
-                                                src={auth.user.photo_url}
+                                                src={`/storage/${auth.user.photo_url}`}
                                                 alt={auth.user.name}
                                                 className="w-8 h-8 rounded-full object-cover ring-2 ring-amber-200 dark:ring-amber-700"
                                             />
