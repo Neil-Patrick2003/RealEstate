@@ -95,7 +95,7 @@ export default function Dashboard({ kpi = {}, charts = {}, queues = {} }) {
     return (
         <AuthenticatedLayout>
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-8 pt-10">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Seller Dashboard</h1>

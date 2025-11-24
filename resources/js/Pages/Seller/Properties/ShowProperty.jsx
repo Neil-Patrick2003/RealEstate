@@ -16,8 +16,11 @@ const ShowProperty = ({ property }) => {
 
     return (
         <AuthenticatedLayout>
-            <Breadcrumbs pages={pages} />
-            <SingleProperty property={property} />
+            <div className='pt-10'>
+                <Breadcrumbs pages={pages} />
+                <SingleProperty property={property} />
+            </div>
+
         </AuthenticatedLayout>
     );
 };

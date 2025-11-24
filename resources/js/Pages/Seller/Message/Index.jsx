@@ -73,7 +73,7 @@ export default function Index({ users, messages = [], auth, selectedUserId=null 
 
     return (
     <AuthenticatedLayout>
-      <div className="h-[80vh] flex border rounded-xl shadow overflow-hidden bg-white">
+      <div className="h-[80vh] pt-10 flex border rounded-xl shadow overflow-hidden bg-white">
         {/* Sidebar */}
         <aside className="w-1/4 border-r bg-gray-50 flex flex-col">
           <div className="p-3">
