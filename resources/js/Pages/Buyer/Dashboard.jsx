@@ -213,7 +213,7 @@ export default function Dashboard({ properties = [], inquiries = [], saveCount =
                                 Handpicked listings that match your preferences and search history
                             </p>
                         </div>
-                        <Link href="/buyer/properties" className="btn-ghost">
+                        <Link href="/all-properties" className="btn-ghost">
                             View All <FontAwesomeIcon icon={faChevronRight} />
                         </Link>
                     </div>

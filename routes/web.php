@@ -61,7 +61,9 @@ Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
 Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
-Route::get('/search', [SearchController::class, 'show']);
+
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+//Route::get('/search', [SearchController::class, 'show']);
 
 
 
@@ -136,23 +138,15 @@ Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\Prop
 Route::patch('/agents/trippings/{tripping}/reschedule', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'reschedule']);
 Route::patch('/agents/trippings/{tripping}/complete', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'complete']);
 Route::get('/agents/calendar', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'calendar']);
-
 Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::class, 'feedback']);
-
-
 Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
 Route::get('/all-properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
-
-
 //------------------------------------------buyer---------------------------------------------------
-
 Route::middleware(['auth'])->group(function () {
     Route::post('/property-listings/{propertyListing}/deals', [DealController::class, 'store'])->name('property-listings.deals.store');
     Route::put('/property-listings/{propertyListing}/deals/{deal}', [DealController::class, 'update'])->name('property-listings.deals.update');
 });
-
-
 Route::middleware(['auth', 'role:Buyer' ])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Buyer\BuyerController::class, 'index'])->name('dashboard');
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store'])->name('inquiry.store');

@@ -18,8 +18,11 @@ import {
     CreditCard,
     HelpCircle,
     Zap,
+    Calendar,
+    BarChart3,
     Sparkles,
-    CheckCircle
+    CheckCircle,
+    Mail
 } from "lucide-react";
 import { Link, router, usePage } from "@inertiajs/react";
 import Dropdown from "@/Components/Dropdown";
@@ -424,6 +427,11 @@ export default function AuthenticatedLayout({ children }) {
     const [isCommandOpen, setIsCommandOpen] = useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [activeNotifTab, setActiveNotifTab] = useState("unread");
+    const [searchSuggestions, setSearchSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const searchInputRef = useRef(null);
+    const suggestionsRef = useRef(null);
 
     const getSidebarConfig = () => {
         const role = auth?.user?.role?.toLowerCase();
@@ -473,6 +481,294 @@ export default function AuthenticatedLayout({ children }) {
         }
     }, [isSidebarOpen, mode]);
 
+    /* -------- Search Suggestions -------- */
+    const getUserQuickActions = (query) => {
+        const { user } = auth;
+        const role = user?.role?.toLowerCase();
+        const queryLower = query.toLowerCase();
+
+        // Base quick actions for all roles
+        const baseQuickActions = [
+            {
+                id: 'profile',
+                title: 'My Profile',
+                description: 'View and edit your profile',
+                type: 'profile',
+                icon: User,
+                href: `/profile`,
+                keywords: 'profile account me personal info'
+            },
+            {
+                id: 'notifications',
+                title: 'Notifications',
+                description: 'View your notifications',
+                type: 'notifications',
+                icon: Bell,
+                onClick: () => setIsNotificationsOpen(true),
+                keywords: 'notifications alerts updates'
+            },
+            {
+                id: 'dashboard',
+                title: 'Dashboard',
+                description: 'Go to your dashboard',
+                type: 'dashboard',
+                icon: Home,
+                href: `/${role ? role + '/' : ''}dashboard`,
+                keywords: 'dashboard overview home summary'
+            }
+        ];
+
+        // Role-specific quick actions
+        let roleQuickActions = [];
+
+        if (role === 'buyer') {
+            roleQuickActions = [
+                {
+                    id: 'messages',
+                    title: 'Messages',
+                    description: 'Chat with agents & sellers',
+                    type: 'messages',
+                    icon: MessageSquare,
+                    href: '/chat',
+                    keywords: 'messages chats conversations inbox'
+                },
+                {
+                    id: 'favorites',
+                    title: 'Favorites',
+                    description: 'Your saved properties',
+                    type: 'favorites',
+                    icon: Heart,
+                    href: '/favourites',
+                    keywords: 'favorites saved liked bookmarks'
+                },
+                {
+                    id: 'inquiries',
+                    title: 'Inquiries',
+                    description: 'Your inquiries and leads',
+                    type: 'inquiries',
+                    icon: Mail,
+                    href: '/inquiries',
+                    keywords: 'inquiries leads questions requests'
+                },
+                {
+                    id: 'trippings',
+                    title: 'Trippings',
+                    description: 'Scheduled property visits',
+                    type: 'trippings',
+                    icon: Calendar,
+                    href: '/trippings',
+                    keywords: 'trippings visits schedules appointments'
+                },
+                {
+                    id: 'properties',
+                    title: 'Browse Properties',
+                    description: 'Search all properties',
+                    type: 'properties',
+                    icon: Home,
+                    href: '/all-properties',
+                    keywords: 'properties listings homes search browse'
+                }
+            ];
+        } else if (role === 'seller') {
+            roleQuickActions = [
+                {
+                    id: 'properties',
+                    title: 'My Properties',
+                    description: 'Manage your property listings',
+                    type: 'properties',
+                    icon: Building,
+                    href: '/seller/properties',
+                    keywords: 'properties listings manage my properties'
+                },
+                {
+                    id: 'messages',
+                    title: 'Messages',
+                    description: 'All messages for your inquiries',
+                    type: 'messages',
+                    icon: MessageSquare,
+                    href: '/seller/chat',
+                    keywords: 'messages chats conversations inbox'
+                },
+                {
+                    id: 'inquiries',
+                    title: 'Inquiries',
+                    description: 'Buyer inquiries for your listings',
+                    type: 'inquiries',
+                    icon: Mail,
+                    href: '/seller/inquiries',
+                    keywords: 'inquiries leads buyer inquiries questions'
+                },
+                {
+                    id: 'list-property',
+                    title: 'List Property',
+                    description: 'Create new property listing',
+                    type: 'properties',
+                    icon: Plus,
+                    href: '/post-property',
+                    keywords: 'list property add new listing create'
+                }
+            ];
+        } else if (role === 'broker') {
+            roleQuickActions = [
+                {
+                    id: 'agents',
+                    title: 'Agent Management',
+                    description: 'Manage agents & assignments',
+                    type: 'management',
+                    icon: Users,
+                    href: '/broker/agents',
+                    keywords: 'agents management team assignments'
+                },
+                {
+                    id: 'properties',
+                    title: 'Properties',
+                    description: 'All property listings',
+                    type: 'properties',
+                    icon: Building,
+                    href: '/broker/properties',
+                    keywords: 'properties listings all properties'
+                },
+                {
+                    id: 'inquiries',
+                    title: 'Inquiries',
+                    description: 'All buyer inquiries',
+                    type: 'inquiries',
+                    icon: Mail,
+                    href: '/broker/inquiries',
+                    keywords: 'inquiries leads all inquiries'
+                },
+                {
+                    id: 'deals',
+                    title: 'Deals',
+                    description: 'Offers & deal monitoring',
+                    type: 'deals',
+                    icon: Handshake,
+                    href: '/broker/deals',
+                    keywords: 'deals offers negotiations monitoring'
+                },
+                {
+                    id: 'partners',
+                    title: 'Partners',
+                    description: 'View & manage partners',
+                    type: 'management',
+                    icon: FileText,
+                    href: '/broker/partners',
+                    keywords: 'partners management collaborators'
+                }
+            ];
+        } else if (role === 'agent') {
+            roleQuickActions = [
+                {
+                    id: 'properties',
+                    title: 'Properties',
+                    description: 'Listed & assigned properties',
+                    type: 'properties',
+                    icon: Building,
+                    href: '/agents/properties',
+                    keywords: 'properties listings assigned properties'
+                },
+                {
+                    id: 'handle-properties',
+                    title: 'Handle Properties',
+                    description: 'All handle listings',
+                    type: 'properties',
+                    icon: Building,
+                    href: '/agents/my-listings',
+                    keywords: 'handle properties my listings managed'
+                },
+                {
+                    id: 'inquiries',
+                    title: 'Inquiries',
+                    description: 'Client inquiries',
+                    type: 'inquiries',
+                    icon: Mail,
+                    href: '/agents/inquiries',
+                    keywords: 'inquiries leads client inquiries'
+                },
+                {
+                    id: 'messages',
+                    title: 'Messages',
+                    description: 'All messages for your inquiries',
+                    type: 'messages',
+                    icon: MessageSquare,
+                    href: '/agents/messages',
+                    keywords: 'messages chats conversations'
+                },
+                {
+                    id: 'deals',
+                    title: 'Deals',
+                    description: 'Negotiations & deal tracking',
+                    type: 'deals',
+                    icon: Handshake,
+                    href: '/agents/deal',
+                    keywords: 'deals negotiations tracking offers'
+                }
+            ];
+        }
+
+        const allQuickActions = [...baseQuickActions, ...roleQuickActions];
+
+        if (!query) {
+            // Show popular actions when empty (first 6)
+            return allQuickActions.slice(0, 6);
+        }
+
+        return allQuickActions.filter(action =>
+            action.title.toLowerCase().includes(queryLower) ||
+            action.description.toLowerCase().includes(queryLower) ||
+            action.keywords.includes(queryLower)
+        ).slice(0, 8);
+    };
+
+    useEffect(() => {
+        const query = searchQuery.trim();
+
+        if (query.length === 0) {
+            // Show popular actions when input is focused but empty
+            if (searchInputRef.current === document.activeElement) {
+                const popularActions = getUserQuickActions('');
+                setSearchSuggestions(popularActions);
+                setShowSuggestions(true);
+            } else {
+                setSearchSuggestions([]);
+                setShowSuggestions(false);
+            }
+            setIsSearching(false);
+            return;
+        }
+
+        setIsSearching(true);
+
+        const timeoutId = setTimeout(() => {
+            const suggestions = getUserQuickActions(query);
+            setSearchSuggestions(suggestions);
+            setShowSuggestions(suggestions.length > 0);
+            setIsSearching(false);
+        }, 200);
+
+        return () => {
+            clearTimeout(timeoutId);
+            setIsSearching(false);
+        };
+    }, [searchQuery]);
+
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                searchInputRef.current &&
+                !searchInputRef.current.contains(event.target) &&
+                suggestionsRef.current &&
+                !suggestionsRef.current.contains(event.target)
+            ) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     /* -------- Handlers -------- */
     const toggleTheme = useCallback(() => setTheme(t => t === "dark" ? "light" : "dark"), []);
 
@@ -494,11 +790,32 @@ export default function AuthenticatedLayout({ children }) {
         setIsMobileSidebarOpen(false);
     }, []);
 
+    // Enhanced suggestion click handler
+    const handleSuggestionClick = (suggestion) => {
+        setSearchQuery('');
+        setShowSuggestions(false);
+
+        if (suggestion.onClick) {
+            suggestion.onClick();
+        } else if (suggestion.href) {
+            if (suggestion.method === 'post') {
+                router.post(suggestion.href);
+            } else {
+                router.visit(suggestion.href);
+            }
+        }
+    };
+
     const handleSearch = useCallback((e) => {
         e.preventDefault();
         const q = searchQuery.trim();
         if (!q) return;
-        router.get("/search", { q }, { preserveScroll: true });
+
+        setShowSuggestions(false);
+        router.get("/search", { q }, {
+            preserveScroll: true,
+            preserveState: true
+        });
     }, [searchQuery]);
 
     const handleMarkAsRead = (notificationId) => {
@@ -510,60 +827,294 @@ export default function AuthenticatedLayout({ children }) {
     };
 
     /* -------- Command Palette Actions -------- */
-    const commandActions = useMemo(() => [
-        {
-            label: "Search Properties",
-            href: "/properties",
-            icon: Search,
-            kbd: "⌘P",
-            keywords: "find browse listings",
-            category: "Navigation"
-        },
-        {
-            label: "View Notifications",
-            onClick: () => setIsNotificationsOpen(true),
-            icon: Bell,
-            kbd: "⌘N",
-            keywords: "alerts messages",
-            category: "Navigation"
-        },
-        {
-            label: "My Favorites",
-            href: "/favorites",
-            icon: Heart,
-            keywords: "saved liked properties",
-            category: "Properties"
-        },
-        {
-            label: "My Inquiries",
-            href: "/inquiries",
-            icon: MessageSquare,
-            keywords: "messages contacts agents",
-            category: "Communication"
-        },
-        {
-            label: "Transactions",
-            href: "/buyer/transactions",
-            icon: CreditCard,
-            keywords: "payments deals closed",
-            category: "Transactions"
-        },
-        {
-            label: "Profile Settings",
-            href: "/profile",
-            icon: User,
-            keywords: "account preferences",
-            category: "Account"
-        },
-        {
-            label: "Toggle Theme",
-            onClick: toggleTheme,
-            icon: theme === "dark" ? Sun : Moon,
-            kbd: "⌘T",
-            keywords: "dark light mode",
-            category: "Preferences"
+    const commandActions = useMemo(() => {
+        const { user } = auth;
+        const role = user?.role?.toLowerCase();
+
+        // Base actions that are common to all roles
+        const baseActions = [
+            {
+                label: "Quick Search",
+                onClick: () => {
+                    const input = document.querySelector('input[type="search"]');
+                    if (input) {
+                        input.focus();
+                    }
+                },
+                icon: Search,
+                kbd: "⌘K",
+                keywords: "find search look up",
+                category: "Navigation"
+            },
+            {
+                label: "Toggle Theme",
+                onClick: toggleTheme,
+                icon: theme === "dark" ? Sun : Moon,
+                kbd: "⌘T",
+                keywords: "dark light mode",
+                category: "Preferences"
+            }
+        ];
+
+        // Role-specific actions
+        const roleSpecificActions = [];
+
+        // Buyer-specific actions
+        if (role === 'buyer') {
+            roleSpecificActions.push(
+                {
+                    label: "Browse Properties",
+                    href: "/all-properties",
+                    icon: Home,
+                    kbd: "⌘P",
+                    keywords: "properties listings homes search browse",
+                    category: "Properties"
+                },
+                {
+                    label: "Messages",
+                    href: "/chat",
+                    icon: MessageSquare,
+                    keywords: "messages chats conversations inbox",
+                    category: "Communication"
+                },
+                {
+                    label: "My Profile",
+                    href: "/profile",
+                    icon: User,
+                    keywords: "profile account settings",
+                    category: "Account"
+                },
+                {
+                    label: "My Favorites",
+                    href: "/favourites",
+                    icon: Heart,
+                    keywords: "favorites saved liked properties bookmarks",
+                    category: "Properties"
+                },
+                {
+                    label: "Inquiries",
+                    href: "/inquiries",
+                    icon: Mail,
+                    keywords: "inquiries leads questions requests",
+                    category: "Leads"
+                },
+                {
+                    label: "Trippings",
+                    href: "/trippings",
+                    icon: Calendar,
+                    keywords: "trippings visits schedules appointments",
+                    category: "Appointments"
+                },
+                {
+                    label: "Transactions",
+                    href: "/transactions",
+                    icon: BarChart3,
+                    keywords: "transactions payments billing history",
+                    category: "Financial"
+                }
+            );
         }
-    ], [toggleTheme, theme]);
+
+        // Seller-specific actions
+        else if (role === 'seller') {
+            roleSpecificActions.push(
+                {
+                    label: "My Properties",
+                    href: "/seller/properties",
+                    icon: Building,
+                    keywords: "properties listings manage my properties",
+                    category: "Properties"
+                },
+                {
+                    label: "Messages",
+                    href: "/seller/chat",
+                    icon: MessageSquare,
+                    keywords: "messages chats conversations inbox",
+                    category: "Communication"
+                },
+                {
+                    label: "My Profile",
+                    href: "/seller/profile",
+                    icon: User,
+                    keywords: "profile account settings",
+                    category: "Account"
+                },
+                {
+                    label: "Inquiries",
+                    href: "/seller/inquiries",
+                    icon: Mail,
+                    keywords: "inquiries leads buyer inquiries questions",
+                    category: "Leads"
+                },
+                {
+                    label: "List Property",
+                    href: "/post-property",
+                    icon: Plus,
+                    keywords: "list property add new listing create",
+                    category: "Properties"
+                }
+            );
+        }
+
+        // Broker-specific actions
+        else if (role === 'broker') {
+            roleSpecificActions.push(
+                {
+                    label: "Agent Management",
+                    href: "/broker/agents",
+                    icon: Users,
+                    keywords: "agents management team assignments",
+                    category: "Management"
+                },
+                {
+                    label: "Properties",
+                    href: "/broker/properties",
+                    icon: Building,
+                    keywords: "properties listings all properties",
+                    category: "Properties"
+                },
+                {
+                    label: "My Profile",
+                    href: "/broker/profile",
+                    icon: User,
+                    keywords: "profile account settings",
+                    category: "Account"
+                },
+                {
+                    label: "Inquiries",
+                    href: "/broker/inquiries",
+                    icon: Mail,
+                    keywords: "inquiries leads all inquiries",
+                    category: "Leads"
+                },
+                {
+                    label: "Trippings",
+                    href: "/broker/trippings",
+                    icon: Calendar,
+                    keywords: "trippings visits schedules viewings",
+                    category: "Appointments"
+                },
+                {
+                    label: "Deals",
+                    href: "/broker/deals",
+                    icon: Handshake,
+                    keywords: "deals offers negotiations monitoring",
+                    category: "Deals"
+                },
+                {
+                    label: "Transactions",
+                    href: "/broker/transactions",
+                    icon: BarChart3,
+                    keywords: "transactions payments records",
+                    category: "Financial"
+                },
+                {
+                    label: "Partners",
+                    href: "/broker/partners",
+                    icon: FileText,
+                    keywords: "partners management collaborators",
+                    category: "Management"
+                },
+                {
+                    label: "Post Properties",
+                    href: "/post-properties",
+                    icon: Plus,
+                    keywords: "post properties add listings create",
+                    category: "Properties"
+                }
+            );
+        }
+
+        // Agent-specific actions
+        else if (role === 'agent') {
+            roleSpecificActions.push(
+                {
+                    label: "Properties",
+                    href: "/agents/properties",
+                    icon: Building,
+                    keywords: "properties listings assigned properties",
+                    category: "Properties"
+                },
+                {
+                    label: "Handle Properties",
+                    href: "/agents/my-listings",
+                    icon: Building,
+                    keywords: "handle properties my listings managed",
+                    category: "Properties"
+                },
+                {
+                    label: "My Profile",
+                    href: "/agents/profile",
+                    icon: User,
+                    keywords: "profile account settings",
+                    category: "Account"
+                },
+                {
+                    label: "Inquiries",
+                    href: "/agents/inquiries",
+                    icon: Mail,
+                    keywords: "inquiries leads client inquiries",
+                    category: "Leads"
+                },
+                {
+                    label: "Messages",
+                    href: "/agents/messages",
+                    icon: MessageSquare,
+                    keywords: "messages chats conversations",
+                    category: "Communication"
+                },
+                {
+                    label: "Trippings",
+                    href: "/agents/trippings",
+                    icon: Calendar,
+                    keywords: "trippings tours schedules appointments",
+                    category: "Appointments"
+                },
+                {
+                    label: "Deals",
+                    href: "/agents/deal",
+                    icon: Handshake,
+                    keywords: "deals negotiations tracking offers",
+                    category: "Deals"
+                },
+                {
+                    label: "Transactions",
+                    href: "/agents/transaction",
+                    icon: BarChart3,
+                    keywords: "transactions sales payments overview",
+                    category: "Financial"
+                },
+                {
+                    label: "Add Lead",
+                    href: "/agents/properties",
+                    icon: Plus,
+                    keywords: "add lead create new lead property",
+                    category: "Leads"
+                }
+            );
+        }
+
+        // Common actions for all authenticated users
+        const commonActions = [
+            {
+                label: "View Notifications",
+                onClick: () => setIsNotificationsOpen(true),
+                icon: Bell,
+                kbd: "⌘N",
+                keywords: "notifications alerts messages updates",
+                category: "Navigation"
+            },
+            {
+                label: "Dashboard",
+                href: `/${role ? role + '/' : ''}dashboard`,
+                icon: Home,
+                keywords: "dashboard overview summary home",
+                category: "Navigation"
+            }
+        ];
+
+        return [...baseActions, ...roleSpecificActions, ...commonActions];
+    }, [toggleTheme, theme, auth.user]);
 
     /* -------- Keyboard Shortcuts -------- */
     useEffect(() => {
@@ -573,21 +1124,29 @@ export default function AuthenticatedLayout({ children }) {
             if (cmd && e.key === 'k') {
                 e.preventDefault();
                 setIsCommandOpen(true);
+                setShowSuggestions(false);
             }
             if (cmd && e.key === 'n') {
                 e.preventDefault();
                 setIsNotificationsOpen(true);
+                setShowSuggestions(false);
             }
-            if (e.key === 'Escape') {
+
+            if (showSuggestions && e.key === 'Escape') {
+                e.preventDefault();
+                setShowSuggestions(false);
+                searchInputRef.current?.focus();
+            } else if (e.key === 'Escape') {
                 setIsCommandOpen(false);
                 setIsNotificationsOpen(false);
                 setIsMobileSidebarOpen(false);
+                setShowSuggestions(false);
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [showSuggestions]);
 
     /* -------- Layout Calculations -------- */
     const sidebarWidth = isSidebarOpen ? 288 : 80;
@@ -661,27 +1220,198 @@ export default function AuthenticatedLayout({ children }) {
                                 <AlignLeft className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                             </button>
 
-                            {/* Search Bar */}
-                            <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400 dark:text-amber-600" />
-                                    <input
-                                        type="search"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search properties, agents, or anything..."
-                                        className="form-input pl-10 pr-20 focus:ring-amber-500 focus:border-amber-500 dark:focus:ring-amber-400 dark:focus:border-amber-400"
-                                        aria-label="Search"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsCommandOpen(true)}
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-amber-500 dark:text-amber-400 border border-amber-300 dark:border-amber-700 rounded-md hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                            {/* Search Bar with Quick Actions */}
+                            <div className="flex-1 max-w-2xl relative" ref={searchInputRef}>
+                                <form onSubmit={handleSearch}>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400 dark:text-amber-600" />
+                                        <input
+                                            ref={searchInputRef}
+                                            type="search"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onFocus={() => setShowSuggestions(true)}
+                                            placeholder="Quick access: profile, settings, messages, notifications..."
+                                            className="w-full pl-10 pr-24 py-3 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:ring-amber-400 dark:focus:border-amber-400 transition-all duration-200"
+                                            aria-label="Quick actions search"
+                                            aria-expanded={showSuggestions}
+                                            aria-haspopup="listbox"
+                                        />
+
+                                        {/* Loading Indicator */}
+                                        {isSearching && (
+                                            <div className="absolute right-20 top-1/2 -translate-y-1/2">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500"></div>
+                                            </div>
+                                        )}
+
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsCommandOpen(true)}
+                                                className="px-2 py-1 text-xs text-amber-500 dark:text-amber-400 border border-amber-300 dark:border-amber-700 rounded-md hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors hidden sm:block"
+                                            >
+                                                ⌘K
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500 text-white rounded-md text-sm font-medium transition-colors"
+                                            >
+                                                Search
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                {/* Quick Actions Dropdown */}
+                                {showSuggestions && (
+                                    <motion.div
+                                        ref={suggestionsRef}
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 rounded-xl shadow-2xl z-50 max-h-96 overflow-y-auto"
                                     >
-                                        ⌘K
-                                    </button>
-                                </div>
-                            </form>
+                                        {/* Header */}
+                                        <div className="p-4 border-b border-amber-100 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-900/20">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-amber-100 dark:bg-amber-800 rounded-lg">
+                                                        <User className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                                                            Quick Actions
+                                                        </span>
+                                                        <p className="text-xs text-amber-500 dark:text-amber-400 mt-1">
+                                                            Quickly access your account features
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {searchSuggestions.length > 0 && (
+                                                    <span className="text-xs text-amber-500 dark:text-amber-400 bg-white dark:bg-gray-800 px-2 py-1 rounded-full">
+                                                        {searchSuggestions.length} results
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Actions List */}
+                                        <div className="p-2">
+                                            {searchSuggestions.length > 0 ? (
+                                                <ul role="listbox" className="space-y-1">
+                                                    {searchSuggestions.map((suggestion) => {
+                                                        const Icon = suggestion.icon;
+                                                        return (
+                                                            <li key={suggestion.id}>
+                                                                {suggestion.method === 'post' ? (
+                                                                    <form method="POST" action={suggestion.href}>
+                                                                        <button
+                                                                            type="submit"
+                                                                            className="w-full text-left p-3 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all duration-200 flex items-center gap-3 group"
+                                                                            role="option"
+                                                                        >
+                                                                            <div className={`p-2 rounded-lg transition-colors ${
+                                                                                suggestion.type === 'profile'
+                                                                                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white'
+                                                                                    : suggestion.type === 'settings'
+                                                                                        ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 group-hover:bg-green-500 group-hover:text-white'
+                                                                                        : suggestion.type === 'logout'
+                                                                                            ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 group-hover:bg-red-500 group-hover:text-white'
+                                                                                            : 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500 group-hover:text-white'
+                                                                            }`}>
+                                                                                <Icon className="w-4 h-4" />
+                                                                            </div>
+
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <p className="font-medium text-gray-900 dark:text-white">
+                                                                                    {suggestion.title}
+                                                                                </p>
+                                                                                <p className="text-sm text-amber-500 dark:text-amber-400 mt-1">
+                                                                                    {suggestion.description}
+                                                                                </p>
+                                                                            </div>
+
+                                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                                <div className="p-1 bg-amber-500 text-white rounded">
+                                                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                                    </svg>
+                                                                                </div>
+                                                                            </div>
+                                                                        </button>
+                                                                    </form>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => handleSuggestionClick(suggestion)}
+                                                                        className="w-full text-left p-3 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all duration-200 flex items-center gap-3 group"
+                                                                        role="option"
+                                                                    >
+                                                                        <div className={`p-2 rounded-lg transition-colors ${
+                                                                            suggestion.type === 'profile'
+                                                                                ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white'
+                                                                                : suggestion.type === 'settings'
+                                                                                    ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 group-hover:bg-green-500 group-hover:text-white'
+                                                                                    : suggestion.type === 'logout'
+                                                                                        ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 group-hover:bg-red-500 group-hover:text-white'
+                                                                                        : 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500 group-hover:text-white'
+                                                                        }`}>
+                                                                            <Icon className="w-4 h-4" />
+                                                                        </div>
+
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="font-medium text-gray-900 dark:text-white">
+                                                                                {suggestion.title}
+                                                                            </p>
+                                                                            <p className="text-sm text-amber-500 dark:text-amber-400 mt-1">
+                                                                                {suggestion.description}
+                                                                            </p>
+                                                                        </div>
+
+                                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                            <div className="p-1 bg-amber-500 text-white rounded">
+                                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                                </svg>
+                                                                            </div>
+                                                                        </div>
+                                                                    </button>
+                                                                )}
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            ) : searchQuery.length >= 1 && !isSearching ? (
+                                                // No results state
+                                                <div className="p-6 text-center">
+                                                    <Search className="w-8 h-8 text-amber-300 dark:text-amber-700 mx-auto mb-2" />
+                                                    <p className="text-amber-500 dark:text-amber-400 text-sm mb-2">
+                                                        No quick actions found for "{searchQuery}"
+                                                    </p>
+                                                    <p className="text-xs text-amber-400 dark:text-amber-500">
+                                                        Try "profile", "settings", "messages", etc.
+                                                    </p>
+                                                </div>
+                                            ) : null}
+                                        </div>
+
+                                        {/* Footer */}
+                                        {searchSuggestions.length > 0 && (
+                                            <div className="p-3 border-t border-amber-100 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-900/20">
+                                                <div className="flex items-center justify-between text-xs text-amber-500 dark:text-amber-400">
+                                                    <div className="flex items-center gap-2">
+                                                        <span>Quick account navigation</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <kbd className="px-1.5 py-1 bg-white dark:bg-gray-800 rounded text-xs">Esc</kbd>
+                                                        <span>to close</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Right Section */}

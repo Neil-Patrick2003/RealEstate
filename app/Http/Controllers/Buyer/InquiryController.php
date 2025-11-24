@@ -99,7 +99,7 @@ class InquiryController extends Controller
         $inquiry = Inquiry::create([
             'buyer_id'    => auth()->id(),
             'property_id' => $property->id,
-            'status'      => 'pending',
+            'status'      => 'Pending',
             'notes'       => $validated['message'],
             $key          => $recipient->id,
         ]);

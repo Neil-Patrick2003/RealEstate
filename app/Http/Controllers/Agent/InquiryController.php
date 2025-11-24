@@ -19,11 +19,19 @@ class InquiryController extends Controller
     {
 
 
-        $inquiries = Inquiry::with('seller', 'agent', 'property', 'buyer', 'property.property_listing')
-            ->whereHas('property.property_listing.agents', function ($query) {
-                $query->where('id', auth()->id());
-            })
-            ->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
+        $inquiries = Inquiry::with([
+            'seller', 'agent', 'property', 'buyer',
+            'property.property_listing'
+        ])->where(function ($q) {
+                $q->whereHas('property.property_listing.agents', function ($qq) {
+                    $qq->where('id', auth()->id());
+                })
+                    ->orWhere(function ($qq) {
+                        // Only apply fallback if NO property_listing
+                        $qq->whereDoesntHave('property.property_listing')
+                            ->where('agent_id', auth()->id());
+                    });
+            })->when($request->filled('status') && $request->status !== 'All', function ($q) use ($request) {
                 $q->where('status', $request->status);
             })
             ->when($request->filled('type') && $request->type === 'my', function ($q) {
@@ -34,12 +42,6 @@ class InquiryController extends Controller
             })
             ->orderByDesc('created_at')
             ->paginate($request->get('items_per_page', 10));
-
-
-
-
-
-
 
         $buyerInquiryCount = Inquiry::whereNotNull('buyer_id')->count();
         $sellerInquiryCount = Inquiry::whereNotNull('seller_id')->count();
@@ -145,30 +147,42 @@ class InquiryController extends Controller
     {
         $inquiry->update(['status' => 'Accepted']);
 
-        $inquiry->load(['property.property_listing.agents', 'buyer']);
+        $inquiry->load([
+            'property.property_listing.agents',
+            'buyer',
+            'agent'
+        ]);
 
-        // Example: pick the currently authenticated agent (if applicable)
-        $agent = $inquiry->property
-            ? $inquiry->property->property_listing
-                ? $inquiry->property->property_listing->agents
-                    ->firstWhere('id', auth()->id())
-                : null
-            : null;
+        // Determine responsible agent
+        $agent = null;
 
-        // Fallback: use the first agent on the listing
-        $agent = $agent ?? optional($inquiry->property->property_listing->agents)->first();
+        if (
+            $inquiry->property &&
+            $inquiry->property->property_listing &&
+            $inquiry->property->property_listing->agents->isNotEmpty()
+        ) {
+            $agent = $inquiry->property->property_listing->agents
+                ->firstWhere('id', auth()->id())
+                ?? $inquiry->property->property_listing->agents->first();
+        }
 
-        $agentName = optional($agent)->name ?? 'Unknown agent';
+        // Fallback if no listing
+        if (!$agent) {
+            $agent = $inquiry->agent;
+        }
+
+        $agentName = $agent->name ?? 'Unknown agent';
 
         $inquiry->buyer->notify(new InquiryResponse([
-            'status' => 'Accepted',
-            'seller_name' => $agentName,
-            'property_title' => optional($inquiry->property)->title ?? 'Unknown property',
-            'link' => '/inquiries'
+            'status'         => 'Accepted',
+            'seller_name'    => $agentName,
+            'property_title' => $inquiry->property->title ?? 'Unknown property',
+            'link'           => '/inquiries'
         ]));
 
         return back()->with('success', 'Inquiry accepted successfully.');
     }
+
 
 
     // Reject inquiry (Buyer side)

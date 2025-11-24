@@ -236,7 +236,7 @@ function DealDetailsModal({
                             onClick={onCheckout}
                             className="text-sm"
                         >
-                            Proceed to Payment
+                            Proceed to Payment haha
                         </PrimaryButton>
                     )}
                 </div>
