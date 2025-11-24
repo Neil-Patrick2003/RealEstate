@@ -306,7 +306,7 @@ export default function Index({
                 loading={loading}
             />
 
-            <div className="space-y-6">
+            <div className="space-y-6 pt-10">
                 {/* Header */}
                 <HeaderBar onAdd={() => router.visit("/post-property")} />
 
