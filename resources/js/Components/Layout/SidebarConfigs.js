@@ -65,7 +65,7 @@ export const buyerSidebarConfig = {
     quickActions: [
         { label: "Browse Properties", Icon: Plus, onClick: () => router.get('/all-properties') }
     ],
-    showSearch: true,
+    showSearch: false,
     categorizeNotification: categorizeNotifToPath
 };
 
@@ -83,7 +83,7 @@ export const sellerSidebarConfig = {
     quickActions: [
         { label: "List Property", Icon: Plus, onClick: () => router.get('/post-property') }
     ],
-    showSearch: true,
+    showSearch: false,
     categorizeNotification: categorizeNotifToPath
 };
 
@@ -107,7 +107,7 @@ export const brokerSidebarConfig = {
     quickActions: [
         { label: "Post Properties", Icon: Plus, onClick: () => router.get('/post-properties') }
     ],
-    showSearch: true,
+    showSearch: false,
     categorizeNotification: categorizeNotifToPath
 };
 
@@ -129,7 +129,7 @@ export const agentSidebarConfig = {
     quickActions: [
         { label: "Add Lead", Icon: Plus, onClick: () => router.get('/agents/properties') }
     ],
-    showSearch: true,
+    showSearch: false,
     categorizeNotification: categorizeNotifToPath
 };
 

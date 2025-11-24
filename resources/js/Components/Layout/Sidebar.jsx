@@ -199,14 +199,6 @@ const QuickActions = ({ isOpen, quickActions = [] }) => {
                     {action.label}
                 </motion.button>
             ))}
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                    type="text"
-                    placeholder="Search..."
-                    className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-primary bg-white shadow-sm"
-                />
-            </div>
         </motion.div>
     );
 };

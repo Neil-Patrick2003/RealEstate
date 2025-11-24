@@ -76,7 +76,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/post-property', [\App\Http\Controllers\Seller\PropertyController::class,'store'])->name('post-property');
 });
 
-Route::middleware(['auth', 'role:Seller'])->group(function () {
+Route::middleware(['auth', ])->group(function () {
     Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
     Route::get('/seller/properties', [PropertyController::class, 'index']);
     Route::get('/seller/properties/{property}', [ PropertyController::class, 'show']);
@@ -87,7 +87,6 @@ Route::middleware(['auth', 'role:Seller'])->group(function () {
     Route::post('/seller/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
     Route::get('/seller/chat', [ChatController::class, 'index'])->name('seller.chat.index');
     Route::get('/seller/chat/channels/{channel}', [ChannelController::class, 'show'])->name('seller.chat.channels.show');
-    Route::post('/chat/channels/{channel}/messages', [\App\Http\Controllers\Chat\MessageController::class, 'store'])->name('chat.channels.messages.store');
     Route::get('/seller/messages', [MessageController::class, 'index'])->name('seller.messages');
     Route::post('/seller/messages/{receiver}/sent_message', [MessageController::class, 'send']);
     Route::get('/seller/inquiries', [\App\Http\Controllers\Seller\InquiryController::class, 'index']);
@@ -96,6 +95,9 @@ Route::middleware(['auth', 'role:Seller'])->group(function () {
     Route::get('/seller/trippings', [TrippingController::class, 'index']);
     Route::get('/seller/transaction', [TransactionController::class, 'index']);
 });
+
+Route::post('/chat/channels/{channel}/messages', [\App\Http\Controllers\Chat\MessageController::class, 'store'])->name('chat.channels.messages.store');
+
 
 
 

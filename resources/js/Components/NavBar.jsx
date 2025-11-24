@@ -93,6 +93,7 @@ function Navbar() {
         { name: 'About', href: '/about' },
         { name: 'Blogs', href: '/blogs' },
         { name: 'Contact', href: '/contact' },
+        { name: 'Map', href: '/maps' },
     ];
 
     // Quick search suggestions

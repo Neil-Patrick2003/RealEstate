@@ -1,17 +1,32 @@
 import React from 'react';
 import { ArrowLeftIcon } from '@heroicons/react/20/solid';
 
-export default function BackButton({ className = '' }) {
+export default function BackButton({ className = '', color = 'teal' }) {
+    // Map color to Tailwind classes
+    const colorClasses = {
+        teal: 'text-teal-600 hover:text-teal-700',
+        gray: 'text-gray-600 hover:text-gray-700',
+        red: 'text-red-600 hover:text-red-700',
+        blue: 'text-blue-600 hover:text-blue-700',
+        green: 'text-green-600 hover:text-green-700',
+        indigo: 'text-indigo-600 hover:text-indigo-700',
+        purple: 'text-purple-600 hover:text-purple-700',
+        pink: 'text-pink-600 hover:text-pink-700',
+        black: 'text-gray-900 hover:text-black',
+        white: 'text-white hover:text-gray-200',
+    };
+
+    const selectedColor = colorClasses[color] || colorClasses.teal;
+
     return (
         <button
             onClick={() => window.history.back()}
             className={`
-                p-2 bg-white text-teal-600 border border-gray-300 rounded-full
-                shadow-md hover:shadow-lg hover:bg-teal-50
-                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
-                transition duration-150 ease-in-out ${className}
+                ${selectedColor}
+                transition-colors duration-150 ease-in-out
+                ${className}
             `}
-            aria-label="Go Back" // Important for accessibility since text is omitted
+            aria-label="Go Back"
         >
             <ArrowLeftIcon className="h-5 w-5" aria-hidden="true" />
         </button>
