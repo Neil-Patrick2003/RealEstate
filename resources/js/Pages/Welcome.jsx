@@ -10,6 +10,7 @@ import Footer from "@/Components/Footer.jsx";
 import ParallaxHero from "@/Components/ParallaxHero.jsx";
 import Testimonials from "@/Components/Testimonials.jsx";
 import Chatbot from "@/Components/Chatbot/Chatbot.jsx";
+import {Head} from "@inertiajs/react";
 
 
 
@@ -18,6 +19,7 @@ export default function Welcome({featured, members}) {
     return (
 
         <div className="min-h-screen">
+            <Head title='Home' />
             <Navbar />
             <ParallaxHero />
             <FeaturedProperties  properties={featured}/>

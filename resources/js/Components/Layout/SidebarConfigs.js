@@ -59,7 +59,7 @@ export const buyerSidebarConfig = {
         { name: "Inquiries", Icon: Mail, path: "/inquiries", description: "Your inquiries and leads" },
         { name: "Favourites", Icon: Star, path: "/favourites", description: "Saved & favourite properties" },
         { name: "Trippings", Icon: Calendar, path: "/trippings", description: "Scheduled property visits" },
-        { name: "Deals", Icon: Handshake, path: "/deals", description: "Offers, deals & negotiations" },
+        // { name: "Deals", Icon: Handshake, path: "/deals", description: "Offers, deals & negotiations" },
         { name: "Transactions", Icon: BarChart3, path: "/transactions", description: "Payment & transaction history" },
     ],
     quickActions: [

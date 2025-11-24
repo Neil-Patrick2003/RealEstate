@@ -95,7 +95,7 @@ export default function AboutPage() {
                         <span className="text-sm font-medium text-blue-100 tracking-wide">NASUGBU'S PREMIER AGENT NETWORK</span>
                     </div>
 
-                    <h1 className="text-4xl lg:text-6xl font-bold mb-8 leading-tight tracking-tight">
+                    <h1 className="text-4xl lg:text-6xl text-neutral-300 font-bold mb-8 leading-tight tracking-tight">
                         About
                         <span className="block bg-gradient-to-r from-primary-400 to-emerald-400 bg-clip-text text-transparent">
                             MJVI Realty

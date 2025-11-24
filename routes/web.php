@@ -10,6 +10,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PropertyTrendsController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Seller\ChannelController;
 use App\Http\Controllers\Seller\ChatController;
 use App\Http\Controllers\Seller\MessageController;
@@ -42,7 +43,6 @@ Route::get('/', function (Request $request) {
         ->oldest()
         ->get();
 
-
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -56,15 +56,12 @@ Route::get('/', function (Request $request) {
 
 
 Route::get('/explore/projects', [ProjectController::class, 'index']);
-
 Route::get('/explores/projects/{project}', [ProjectController::class, 'show']);
-
-
-//<-----------------------Header Pages---------------------->
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
 Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
+Route::get('/search', [SearchController::class, 'show']);
 
 
 
@@ -73,40 +70,29 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
     });
-
     Route::post('/feedback', [\App\Http\Controllers\Buyer\FeedbackController::class,'store']);
     Route::post('/post-property', [\App\Http\Controllers\Seller\PropertyController::class,'store'])->name('post-property');
 });
 
 Route::middleware(['auth', 'role:Seller'])->group(function () {
     Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
-
     Route::get('/seller/properties', [PropertyController::class, 'index']);
     Route::get('/seller/properties/{property}', [ PropertyController::class, 'show']);
     Route::get('/seller/properties/{property}/edit', [ PropertyController::class, 'edit']);
     Route::patch('/seller/properties/{property}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
     Route::delete('/seller/properties/{id}', [ PropertyController::class, 'destroy']);
-
     Route::delete('/seller/properties/{property}/edit/{id}', [ PropertyImageController::class, 'destroy'])->name('seller.properties.destroy');
     Route::post('/seller/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
-
-    //message
     Route::get('/seller/chat', [ChatController::class, 'index'])->name('seller.chat.index');
     Route::get('/seller/chat/channels/{channel}', [ChannelController::class, 'show'])->name('seller.chat.channels.show');
     Route::post('/chat/channels/{channel}/messages', [\App\Http\Controllers\Chat\MessageController::class, 'store'])->name('chat.channels.messages.store');
     Route::get('/seller/messages', [MessageController::class, 'index'])->name('seller.messages');
     Route::post('/seller/messages/{receiver}/sent_message', [MessageController::class, 'send']);
-
-    //Inquiries
     Route::get('/seller/inquiries', [\App\Http\Controllers\Seller\InquiryController::class, 'index']);
     Route::patch('/seller/inquiries/{inquiry}/{action}', [\App\Http\Controllers\Seller\InquiryController::class, 'updateStatus'])->where('action', 'accept|reject');
     Route::get('/seller/inquiries/agent/{agent}', [\App\Http\Controllers\Seller\InquiryController::class, 'show']);
-    //tripping
     Route::get('/seller/trippings', [TrippingController::class, 'index']);
-
-    //transaction
     Route::get('/seller/transaction', [TransactionController::class, 'index']);
-
 });
 
 
