@@ -8,7 +8,7 @@ export default function BackButton({ className = '', color = 'teal' }) {
         gray: 'text-gray-600 hover:text-gray-700',
         red: 'text-red-600 hover:text-red-700',
         blue: 'text-blue-600 hover:text-blue-700',
-        green: 'text-green-600 hover:text-green-700',
+        emerald: 'text-green-600 hover:text-emerald-700',
         indigo: 'text-indigo-600 hover:text-indigo-700',
         purple: 'text-purple-600 hover:text-purple-700',
         pink: 'text-pink-600 hover:text-pink-700',

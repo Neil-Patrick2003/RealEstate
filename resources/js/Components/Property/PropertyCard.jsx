@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { Link } from "@inertiajs/react";
 import {
     MapPin,
@@ -36,6 +36,7 @@ const truncateHTML = (html, maxLength = 100) => {
 
     return text.substring(0, maxLength) + "…";
 };
+
 const daysSince = (dateString) => {
     if (!dateString) return Infinity;
     const ms = Date.now() - new Date(dateString).getTime();
@@ -83,21 +84,39 @@ export default function PropertyCard({
                                      }) {
     const imagesCount = Array.isArray(property?.images) ? property.images.length : 0;
     const [localIsFavorite, setLocalIsFavorite] = useState(isFavorite);
+    const [isToggling, setIsToggling] = useState(false);
 
-    // Handle favorite click
-    const handleFavoriteClick = (e) => {
+    // Handle favorite click with proper async handling
+    const handleFavoriteClick = useCallback(async (e) => {
         e.stopPropagation();
         e.preventDefault();
-        setLocalIsFavorite(!localIsFavorite);
-        if (onToggleFavorite) {
-            onToggleFavorite(property.id);
+
+        // Prevent multiple rapid clicks
+        if (isToggling) return;
+
+        // Optimistic update
+        const newFavoriteState = !localIsFavorite;
+        setLocalIsFavorite(newFavoriteState);
+        setIsToggling(true);
+
+        try {
+            // Call the parent toggle function
+            if (onToggleFavorite) {
+                await onToggleFavorite(property.id);
+            }
+        } catch (error) {
+            // Revert optimistic update on error
+            console.error('Failed to toggle favorite:', error);
+            setLocalIsFavorite(!newFavoriteState);
+        } finally {
+            setIsToggling(false);
         }
-    };
+    }, [localIsFavorite, isToggling, onToggleFavorite, property.id]);
 
     const isNew = daysSince(property?.created_at) <= 7;
 
     return (
-        <article className="group bg-white   transition-all duration-300 overflow-hidden">
+        <article className="group bg-white transition-all duration-300 overflow-hidden">
             {/* Image Section - Reduced height */}
             <div className="relative aspect-[4/3] bg-gray-100">
                 <Link
@@ -106,7 +125,7 @@ export default function PropertyCard({
                 >
                     <img
                         src={property.image_url ? `/storage/${property.image_url}` : "/placeholder.png"}
-                        className="w-full h-full object-cover  transition-transform duration-300 "
+                        className="w-full h-full object-cover transition-transform duration-300"
                         alt={property.title}
                     />
 
@@ -115,7 +134,7 @@ export default function PropertyCard({
                 </Link>
 
                 {/* Top badges */}
-                <div className="absolute left-3 top-3 flex   gap-2">
+                <div className="absolute left-3 top-3 flex gap-2">
                     <TypeBadge type={property?.property_type} />
                     {isNew && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-50 text-green-700 text-xs font-medium border border-green-200">
@@ -138,17 +157,18 @@ export default function PropertyCard({
                 {/* Favorite button */}
                 <button
                     onClick={handleFavoriteClick}
+                    disabled={isToggling}
                     className={`absolute right-3 bottom-3 p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${
                         localIsFavorite
                             ? 'bg-red-500 text-white shadow-lg'
                             : 'bg-white/90 text-gray-600 hover:bg-white hover:text-red-500 shadow-md'
-                    }`}
+                    } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     aria-label={localIsFavorite ? "Remove from favorites" : "Add to favorites"}
                 >
                     <Heart
                         className={`w-4 h-4 transition-all ${
                             localIsFavorite ? 'fill-current' : ''
-                        }`}
+                        } ${isToggling ? 'animate-pulse' : ''}`}
                     />
                 </button>
             </div>

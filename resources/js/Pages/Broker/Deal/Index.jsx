@@ -126,7 +126,7 @@ export default function Deal({ property_listings }) {
 
     const handleUpdate = (status) => {
         if (!status || !selectedDeal) return;
-        router.put(route('agents.deals.update_status', { deal: selectedDeal.id, status: status.toLowerCase() }), {}, {
+        router.put(route('broker.deals.update', { deal: selectedDeal.id, status: status.toLowerCase() }), {}, {
             onSuccess: () => {
                 setSelectedDeal(null);
                 setNewStatus("");

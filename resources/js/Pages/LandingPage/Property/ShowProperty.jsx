@@ -18,7 +18,6 @@ export default function ShowProperty({property, deal, allAgents}) {
         <div>
             <NavBar/>
             <div className='bg-primary-600 h-full max-w-7xl pt-20   mx-4 lg:mx-auto'>
-                <BackButton color='white'/>
                 <SingleProperty property={property} agents={property?.property_listing?.agents} auth={auth} broker={property?.property_listing?.broker} deal={deal} allAgents={allAgents}/>
             </div>
         </div>

@@ -7,6 +7,7 @@ use App\Models\Favourite;
 use App\Models\Property;
 use App\Models\PropertyListing;
 use Illuminate\Auth\Events\Authenticated;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PropertyController extends Controller
@@ -54,5 +55,29 @@ class PropertyController extends Controller
         return redirect('/login')->with('error', 'Please login to add to favourites.');
 
 
+    }
+
+    // app/Http/Controllers/Property/PropertyController.php
+    public function toggleFavourite(Request $request)
+    {
+        $request->validate([
+            'property_id' => 'required|exists:properties,id'
+        ]);
+
+        $property = Property::findOrFail($request->property_id);
+        $favorite = Favourite::where('user_id', auth()->id())
+            ->where('property_id', $property->id)
+            ->first();
+
+        if ($favorite) {
+            $favorite->delete();
+            return redirect()->back()->with('success', 'Removed from favourites.');
+        } else {
+            Favourite::create([
+                'user_id' => auth()->id(),
+                'property_id' => $property->id
+            ]);
+            return redirect()->back()->with('success', 'Added to your favourites.');
+        }
     }
 }

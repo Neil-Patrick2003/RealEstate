@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/Components/NavBar.jsx";
 import {motion, useScroll, useTransform} from "framer-motion";
+import ToastHandler from "@/Components/ToastHandler.jsx";
 
 // Property Categories with Subcategories
 const PROPERTY_CATEGORIES = [
@@ -439,14 +440,21 @@ export default function Properties({ properties, filters, loading = false }) {
 
     const hasActiveFilters = activeFiltersCount > 0;
 
-    // Safe toggle favorite function
+    // Fixed toggle favorite function
     const toggleFavourite = useCallback((propertyId) => {
+        console.log("Toggling favorite for property:", propertyId);
         router.post(
-            '/favourites',
+            route('favourites.toggle'),
             { property_id: propertyId },
             {
                 preserveScroll: true,
                 preserveState: true,
+                onSuccess: () => {
+                    console.log("Favorite toggle successful");
+                },
+                onError: (errors) => {
+                    console.error("Favorite toggle failed:", errors);
+                }
             }
         );
     }, []);
@@ -489,6 +497,7 @@ export default function Properties({ properties, filters, loading = false }) {
 
     return (
         <div className="min-h-screen page-container overflow-hidden">
+            <ToastHandler/>
             <Navbar />
             {/* Header */}
             <div className={`relative z-10 transition-all duration-300 bg-emerald-600`}>

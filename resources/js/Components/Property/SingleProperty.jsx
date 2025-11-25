@@ -17,6 +17,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import AgentCompactCard from "@/Components/Property/AgentCards/AgentCompactCard.jsx";
 import {AgentDetailedCard} from "@/Components/Property/AgentCards/index.js";
+import BackButton from "@/Components/BackButton.jsx";
 dayjs.extend(relativeTime);
 
 /* utils */
@@ -283,10 +284,12 @@ export default function SingleProperty({ property, auth, agents, broker, seller,
             <ToastHandler />
 
             <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
-                {/* Breadcrumb + Actions */}
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {/* Quick facts chips */}
+
                     <div className="mt-4 flex flex-wrap gap-2">
+                        <BackButton color='emerald'/>
+
                         <InfoChip
                             icon={Tag}
                             label="Posted"

@@ -22,6 +22,10 @@ import {
     BarChart3,
     Sparkles,
     CheckCircle,
+    Building,
+    Handshake,
+    Plus,
+    Users,
     Mail
 } from "lucide-react";
 import { Link, router, usePage } from "@inertiajs/react";

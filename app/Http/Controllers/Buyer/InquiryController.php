@@ -164,9 +164,6 @@ class InquiryController extends Controller
             'broker'
         ]);
 
-
-
-
         // Load property + latest buyer-scoped relations (NO buyer inquiries)
         $property = Property::findOrFail($inquiry->property_id);
 
@@ -176,7 +173,6 @@ class InquiryController extends Controller
                 $q->where('user_id', $userId);
             })
             ->first();
-
 
         $property->load([
             'images',
@@ -314,12 +310,13 @@ class InquiryController extends Controller
                     )
                     : 'locked'),
 
-            // Payment
+            // Payment - MODIFIED: Show "ongoing" when unlocked, "complete" only when deal is closed
             'payment' => match (true) {
-                $dealTerminated        => 'locked',
-                $dPhase === 'closed'   => 'complete',
-                in_array($dPhase, ['accepted','processing'], true) => 'current',
-                default                => 'locked',
+                !$acceptedOrBeyond => 'locked',
+                $dealTerminated => 'locked',
+                $dPhase === 'closed' => 'complete', // Only mark as complete when deal is fully closed
+                $canUnlockOffer && in_array($dPhase, ['accepted', 'processing']) => 'ongoing', // Show ongoing status when payment is unlocked and deal is in progress
+                default => 'locked',
             },
 
             // Close
@@ -357,8 +354,9 @@ class InquiryController extends Controller
             },
             'payment' => match (true) {
                 $dealTerminated => 'Payment is not required because the deal was canceled/rejected.',
-                in_array($dPhase, ['accepted','processing'], true) => 'Payment is in progress (processing).',
-                $uiInquiryStatus === 'closed_with_deal' => 'Payment completed.',
+                $steps['payment'] === 'ongoing' => 'Payment process is ongoing. No action required from your side.',
+                $steps['payment'] === 'complete' => 'Payment completed successfully.',
+                $acceptedOrBeyond && $appt !== 'done' => 'Payment will unlock after your appointment is completed.',
                 default => null,
             },
             'close' => match (true) {
@@ -367,7 +365,6 @@ class InquiryController extends Controller
                 default => null,
             },
         ];
-
 
         /* -------------------- Render -------------------- */
 

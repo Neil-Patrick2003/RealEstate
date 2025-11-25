@@ -123,29 +123,8 @@ export default function AllProperties({ property_listing }) {
             <NavBar />
 
             {/* Emerald Header Section */}
-            <div className="bg-emerald-600 text-white py-6 px-4 shadow-lg">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center">
-                        <h1 className="text-3xl font-bold mb-2">Find Your Dream Property</h1>
-                        <p className="text-emerald-100 text-lg max-w-2xl mx-auto">
-                            Explore available properties on the map below. Click on markers to view details and connect with agents.
-                        </p>
-                    </div>
+            <div className="bg-emerald-600 text-white py-10 px-4  border-emerald-500">
 
-                    {/* Quick Stats */}
-                    <div className="flex justify-center gap-8 mt-6 flex-wrap">
-                        <div className="text-center">
-                            <div className="text-2xl font-bold">{property_listing?.length || 0}</div>
-                            <div className="text-emerald-100 text-sm">Properties Available</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-2xl font-bold">
-                                {new Set(property_listing?.map(p => p.agent?.id)).size || 0}
-                            </div>
-                            <div className="text-emerald-100 text-sm">Active Agents</div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div className="relative h-[calc(100vh-60px)]">
@@ -206,7 +185,7 @@ export default function AllProperties({ property_listing }) {
                                             {p?.address || "Address not specified"}
                                         </div>
                                     </div>
-                                    
+
                                     {/* Description (clamped) */}
                                     {p?.description && (
                                         <div

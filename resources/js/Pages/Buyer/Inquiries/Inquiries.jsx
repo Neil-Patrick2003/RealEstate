@@ -149,20 +149,25 @@ const RatingDisplay = ({ rating, reviewCount, size = "sm" }) => {
 
 /* ---------- Mobile-Optimized Progress Tracker ---------- */
 const ProgressTracker = ({ inquiry }) => {
+    // Check if inquiry status contains "Closed" (case insensitive)
+    const isClosed = inquiry?.status?.toLowerCase().includes('closed');
+
     const steps = [
-        { key: "submitted", label: "Submitted", status: "completed" },
-        { key: "reviewed", label: "Reviewed", status: inquiry?.status !== 'pending' ? "completed" : "upcoming" },
-        { key: "scheduled", label: "Scheduled", status: inquiry?.trippings?.length > 0 ? "completed" : "upcoming" },
-        { key: "completed", label: "Completed", status: inquiry?.status === 'closed' ? "completed" : "upcoming" }
+        { key: "submitted", label: "Submitted", status: isClosed ? "completed" : "completed" },
+        { key: "reviewed", label: "Reviewed", status: isClosed ? "completed" : (inquiry?.status !== 'accepted' ? "completed" : "upcoming") },
+        { key: "scheduled", label: "Scheduled", status: isClosed ? "completed" : (inquiry?.trippings?.length > 0 ? "completed" : "upcoming") },
+        { key: "completed", label: "Completed", status: isClosed ? "completed" : (inquiry?.status === 'closed' ? "completed" : "upcoming") }
     ];
 
-    const currentStep = steps.findIndex(step => step.status === 'upcoming');
+    const currentStep = isClosed ? -1 : steps.findIndex(step => step.status === 'upcoming');
 
     return (
         <div className="py-4">
             <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-semibold text-gray-900">Progress</span>
-                <span className="text-xs text-gray-500">Step {currentStep === -1 ? 4 : currentStep + 1} of 4</span>
+                <span className="text-xs text-gray-500">
+                    {isClosed ? 'Completed' : `Step ${currentStep === -1 ? 4 : currentStep + 1} of 4`}
+                </span>
             </div>
 
             <div className="flex items-center px-2">
@@ -198,6 +203,15 @@ const ProgressTracker = ({ inquiry }) => {
                     </React.Fragment>
                 ))}
             </div>
+
+            {/* Show completion message for closed inquiries */}
+            {isClosed && (
+                <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-lg text-center">
+                    <p className="text-xs text-green-700 font-medium">
+                        ✓ All steps completed successfully
+                    </p>
+                </div>
+            )}
         </div>
     );
 };
@@ -299,10 +313,16 @@ function ContactCard({ contact, inquiry, compact = false }) {
 function InquiryActions({ inquiry, onScheduleVisit, onCancel }) {
     const isAccepted = inquiry?.status === 'accepted';
     const hasVisit = inquiry?.trippings?.length > 0;
+    const isClosed = inquiry?.status?.toLowerCase().includes('closed');
 
     return (
         <div className="space-y-2 sm:space-y-3">
-            {isAccepted && !hasVisit && (
+            {isClosed ? (
+                <div className="alert alert-success text-center py-2 text-xs sm:text-sm">
+                    <FontAwesomeIcon icon={faHandshakeSimple} className="mr-1 sm:mr-2" />
+                    Deal Successfully Closed
+                </div>
+            ) : isAccepted && !hasVisit ? (
                 <button
                     onClick={() => onScheduleVisit(inquiry)}
                     className="btn-primary w-full text-xs sm:text-sm"
@@ -310,31 +330,41 @@ function InquiryActions({ inquiry, onScheduleVisit, onCancel }) {
                     <FontAwesomeIcon icon={faCalendarPlus} className="mr-1 sm:mr-2" />
                     Schedule Visit
                 </button>
-            )}
-
-            {isAccepted && hasVisit && (
+            ) : isAccepted && hasVisit ? (
                 <div className="alert alert-success text-center py-2 text-xs sm:text-sm">
                     <FontAwesomeIcon icon={faCalendarCheck} className="mr-1 sm:mr-2" />
                     Visit Scheduled
                 </div>
+            ) : null}
+
+            {!isClosed && (
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                        onClick={() => onCancel(inquiry)}
+                        className="btn-outline text-xs sm:text-sm text-rose-600 border-rose-200 hover:bg-rose-50"
+                    >
+                        <FontAwesomeIcon icon={faTrashAlt} className="mr-1" />
+                        Cancel
+                    </button>
+                    <Link
+                        href={`/inquiries/${inquiry.id}`}
+                        className="btn-secondary text-xs sm:text-sm text-center"
+                    >
+                        <FontAwesomeIcon icon={faEye} className="mr-1" />
+                        Details
+                    </Link>
+                </div>
             )}
 
-            <div className="grid grid-cols-2 gap-2">
-                <button
-                    onClick={() => onCancel(inquiry)}
-                    className="btn-outline text-xs sm:text-sm text-rose-600 border-rose-200 hover:bg-rose-50"
-                >
-                    <FontAwesomeIcon icon={faTrashAlt} className="mr-1" />
-                    Cancel
-                </button>
+            {isClosed && (
                 <Link
                     href={`/inquiries/${inquiry.id}`}
-                    className="btn-secondary text-xs sm:text-sm text-center"
+                    className="btn-primary w-full text-xs sm:text-sm text-center"
                 >
                     <FontAwesomeIcon icon={faEye} className="mr-1" />
-                    Details
+                    View Details
                 </Link>
-            </div>
+            )}
         </div>
     );
 }
@@ -343,6 +373,7 @@ function InquiryActions({ inquiry, onScheduleVisit, onCancel }) {
 function MobileInquiryCard({ inquiry, onScheduleVisit, onCancel }) {
     const property = inquiry.property;
     const contact = inquiry.agent || inquiry.broker;
+    const isClosed = inquiry?.status?.toLowerCase().includes('closed');
 
     return (
         <motion.div
@@ -488,7 +519,7 @@ export default function Inquiries({
                                 </p>
                             </div>
                             <Link
-                                href="/properties"
+                                href="/all-properties"
                                 className="btn-primary w-full sm:w-auto justify-center"
                             >
                                 <FontAwesomeIcon icon={faRocket} className="mr-2" />
@@ -643,7 +674,7 @@ export default function Inquiries({
                             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">No inquiries found</h3>
                             <p className="text-gray-600 text-sm sm:text-base mb-6">Start by exploring properties and sending inquiries to agents.</p>
                             <Link
-                                href="/properties"
+                                href="/all-properties"
                                 className="btn-primary text-sm sm:text-base"
                             >
                                 <FontAwesomeIcon icon={faRocket} className="mr-2" />

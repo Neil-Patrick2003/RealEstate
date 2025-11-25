@@ -215,7 +215,7 @@ Route::get('/broker/transactions', [\App\Http\Controllers\Broker\TransactionCont
 
 Route::get('/broker/deals', [\App\Http\Controllers\Broker\DealController::class, 'index']);
 Route::get('/broker/deal/{deal}/finalize-deal', [\App\Http\Controllers\Broker\DealController::class, 'show'])->name('broker.deals.finalize');
-Route::patch('/broker/deals/{deal}/{status}', [\App\Http\Controllers\Broker\DealController::class, 'update'])->name('broker.deals.update');
+Route::put('/broker/deals/{deal}/{status}', [\App\Http\Controllers\Broker\DealController::class, 'update'])->name('broker.deals.update');
 Route::patch('/broker/deals/{deal}', [\App\Http\Controllers\Broker\DealController::class, 'counter'])->name('broker.deals.counter-offer');;
 
 Route::middleware('auth')->group(function () {
@@ -247,8 +247,7 @@ Route::get('/maps', [\App\Http\Controllers\Property\PropertyController::class, '
 Route::get('/maps/property/{id}', [\App\Http\Controllers\Property\PropertyController::class, 'map_show']);
 Route::get('/agents/{agent}', [\App\Http\Controllers\Agent\AgentController::class, 'show']);
 Route::get('properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
-Route::post('/properties/{id}/favorites', [\App\Http\Controllers\Property\PropertyController::class, 'favourite'])->name('properties.favourite');
-
+Route::post('/favourites/toggle', [\App\Http\Controllers\Property\PropertyController::class, 'toggleFavourite'])->name('favourites.toggle');
 //
 //Route::middleware(['auth'])->group(function () {
 //    Route::get('/admin/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'index'])->name('admin.dashboard');
