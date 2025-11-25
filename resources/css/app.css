@@ -817,3 +817,40 @@
     .bg-gray-750 {
         background-color: #374151;
     }
+
+    .step.ongoing {
+        border-left: 4px solid #ffa500; /* Orange border for ongoing */
+        background-color: #fffaf0; /* Light orange background */
+    }
+
+    .status-badge.ongoing {
+        background-color: #ffa500;
+        color: white;
+    }
+
+    .ongoing-payment {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 8px;
+    }
+
+    .processing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #ffa500;
+        margin-bottom: 8px;
+    }
+
+    .ongoing-message {
+        color: #666;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    /* Disable pointer events for ongoing steps */
+    .step.ongoing .proceed-btn {
+        display: none; /* Hide proceed button for ongoing steps */
+    }

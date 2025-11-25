@@ -3,6 +3,7 @@ import SingleProperty from "@/Components/Property/SingleProperty.jsx";
 import NavBar from "@/Components/NavBar.jsx";
 import Breadcrumb from "@/Components/Breadcrumbs.jsx";
 import {usePage} from "@inertiajs/react";
+import BackButton from "@/Components/BackButton.jsx";
 
 export default function ShowProperty({property, deal, allAgents}) {
 
@@ -16,8 +17,7 @@ export default function ShowProperty({property, deal, allAgents}) {
     return (
         <div>
             <NavBar/>
-            <div className='max-w-7xl mx-4 lg:mx-auto'>
-                <Breadcrumb pages={pages} />
+            <div className='bg-primary-600 h-full max-w-7xl pt-20   mx-4 lg:mx-auto'>
                 <SingleProperty property={property} agents={property?.property_listing?.agents} auth={auth} broker={property?.property_listing?.broker} deal={deal} allAgents={allAgents}/>
             </div>
         </div>

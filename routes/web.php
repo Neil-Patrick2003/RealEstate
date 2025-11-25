@@ -10,6 +10,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PropertyTrendsController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Seller\ChannelController;
 use App\Http\Controllers\Seller\ChatController;
 use App\Http\Controllers\Seller\MessageController;
@@ -42,7 +43,6 @@ Route::get('/', function (Request $request) {
         ->oldest()
         ->get();
 
-
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -56,15 +56,14 @@ Route::get('/', function (Request $request) {
 
 
 Route::get('/explore/projects', [ProjectController::class, 'index']);
-
 Route::get('/explores/projects/{project}', [ProjectController::class, 'show']);
-
-
-//<-----------------------Header Pages---------------------->
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
 Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
+
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+//Route::get('/search', [SearchController::class, 'show']);
 
 
 
@@ -73,41 +72,32 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/post-property', function(){
         return Inertia::render('Seller/ListProperty');
     });
-
     Route::post('/feedback', [\App\Http\Controllers\Buyer\FeedbackController::class,'store']);
     Route::post('/post-property', [\App\Http\Controllers\Seller\PropertyController::class,'store'])->name('post-property');
 });
 
-Route::middleware(['auth', 'role:Seller'])->group(function () {
+Route::middleware(['auth', ])->group(function () {
     Route::get('/seller/dashboard', [\App\Http\Controllers\Seller\SellerController::class, 'index'])->name('seller.dashboard');
-
     Route::get('/seller/properties', [PropertyController::class, 'index']);
     Route::get('/seller/properties/{property}', [ PropertyController::class, 'show']);
     Route::get('/seller/properties/{property}/edit', [ PropertyController::class, 'edit']);
     Route::patch('/seller/properties/{property}/edit', [ PropertyController::class, 'update'])->name('seller.properties.update');
     Route::delete('/seller/properties/{id}', [ PropertyController::class, 'destroy']);
-
     Route::delete('/seller/properties/{property}/edit/{id}', [ PropertyImageController::class, 'destroy'])->name('seller.properties.destroy');
     Route::post('/seller/properties/{property}/upload-image', [ PropertyImageController::class,  'store']);
-
-    //message
     Route::get('/seller/chat', [ChatController::class, 'index'])->name('seller.chat.index');
     Route::get('/seller/chat/channels/{channel}', [ChannelController::class, 'show'])->name('seller.chat.channels.show');
-    Route::post('/chat/channels/{channel}/messages', [\App\Http\Controllers\Chat\MessageController::class, 'store'])->name('chat.channels.messages.store');
     Route::get('/seller/messages', [MessageController::class, 'index'])->name('seller.messages');
     Route::post('/seller/messages/{receiver}/sent_message', [MessageController::class, 'send']);
-
-    //Inquiries
     Route::get('/seller/inquiries', [\App\Http\Controllers\Seller\InquiryController::class, 'index']);
     Route::patch('/seller/inquiries/{inquiry}/{action}', [\App\Http\Controllers\Seller\InquiryController::class, 'updateStatus'])->where('action', 'accept|reject');
     Route::get('/seller/inquiries/agent/{agent}', [\App\Http\Controllers\Seller\InquiryController::class, 'show']);
-    //tripping
     Route::get('/seller/trippings', [TrippingController::class, 'index']);
-
-    //transaction
     Route::get('/seller/transaction', [TransactionController::class, 'index']);
-
 });
+
+Route::post('/chat/channels/{channel}/messages', [\App\Http\Controllers\Chat\MessageController::class, 'store'])->name('chat.channels.messages.store');
+
 
 
 
@@ -150,23 +140,15 @@ Route::patch('/agents/trippings/{id}/decline', [\App\Http\Controllers\Agent\Prop
 Route::patch('/agents/trippings/{tripping}/reschedule', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'reschedule']);
 Route::patch('/agents/trippings/{tripping}/complete', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'complete']);
 Route::get('/agents/calendar', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'calendar']);
-
 Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::class, 'feedback']);
-
-
 Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
 Route::get('/all-properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
 
-
-
 //------------------------------------------buyer---------------------------------------------------
-
 Route::middleware(['auth'])->group(function () {
     Route::post('/property-listings/{propertyListing}/deals', [DealController::class, 'store'])->name('property-listings.deals.store');
     Route::put('/property-listings/{propertyListing}/deals/{deal}', [DealController::class, 'update'])->name('property-listings.deals.update');
 });
-
-
 Route::middleware(['auth', 'role:Buyer' ])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Buyer\BuyerController::class, 'index'])->name('dashboard');
     Route::post('/properties/{id}', [\App\Http\Controllers\Buyer\InquiryController::class, 'store'])->name('inquiry.store');
@@ -233,7 +215,7 @@ Route::get('/broker/transactions', [\App\Http\Controllers\Broker\TransactionCont
 
 Route::get('/broker/deals', [\App\Http\Controllers\Broker\DealController::class, 'index']);
 Route::get('/broker/deal/{deal}/finalize-deal', [\App\Http\Controllers\Broker\DealController::class, 'show'])->name('broker.deals.finalize');
-Route::patch('/broker/deals/{deal}/{status}', [\App\Http\Controllers\Broker\DealController::class, 'update'])->name('broker.deals.update');
+Route::put('/broker/deals/{deal}/{status}', [\App\Http\Controllers\Broker\DealController::class, 'update'])->name('broker.deals.update');
 Route::patch('/broker/deals/{deal}', [\App\Http\Controllers\Broker\DealController::class, 'counter'])->name('broker.deals.counter-offer');;
 
 Route::middleware('auth')->group(function () {
@@ -265,8 +247,7 @@ Route::get('/maps', [\App\Http\Controllers\Property\PropertyController::class, '
 Route::get('/maps/property/{id}', [\App\Http\Controllers\Property\PropertyController::class, 'map_show']);
 Route::get('/agents/{agent}', [\App\Http\Controllers\Agent\AgentController::class, 'show']);
 Route::get('properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
-Route::post('/properties/{id}/favorites', [\App\Http\Controllers\Property\PropertyController::class, 'favourite'])->name('properties.favourite');
-
+Route::post('/favourites/toggle', [\App\Http\Controllers\Property\PropertyController::class, 'toggleFavourite'])->name('favourites.toggle');
 //
 //Route::middleware(['auth'])->group(function () {
 //    Route::get('/admin/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'index'])->name('admin.dashboard');

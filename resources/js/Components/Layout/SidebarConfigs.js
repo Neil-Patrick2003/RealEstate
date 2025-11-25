@@ -59,13 +59,13 @@ export const buyerSidebarConfig = {
         { name: "Inquiries", Icon: Mail, path: "/inquiries", description: "Your inquiries and leads" },
         { name: "Favourites", Icon: Star, path: "/favourites", description: "Saved & favourite properties" },
         { name: "Trippings", Icon: Calendar, path: "/trippings", description: "Scheduled property visits" },
-        { name: "Deals", Icon: Handshake, path: "/deals", description: "Offers, deals & negotiations" },
+        // { name: "Deals", Icon: Handshake, path: "/deals", description: "Offers, deals & negotiations" },
         { name: "Transactions", Icon: BarChart3, path: "/transactions", description: "Payment & transaction history" },
     ],
     quickActions: [
-        { label: "New Property", Icon: Plus, onClick: () => router.get('/properties/create') }
+        { label: "Browse Properties", Icon: Plus, onClick: () => router.get('/all-properties') }
     ],
-    showSearch: true,
+    showSearch: false,
     categorizeNotification: categorizeNotifToPath
 };
 
@@ -81,9 +81,9 @@ export const sellerSidebarConfig = {
         { name: "Inquiries", Icon: Mail, path: "/seller/inquiries", description: "Buyer inquiries for your listings" },
     ],
     quickActions: [
-        { label: "List Property", Icon: Plus, onClick: () => router.get('/seller/properties/create') }
+        { label: "List Property", Icon: Plus, onClick: () => router.get('/post-property') }
     ],
-    showSearch: true,
+    showSearch: false,
     categorizeNotification: categorizeNotifToPath
 };
 
@@ -105,9 +105,9 @@ export const brokerSidebarConfig = {
         { name: "Partners", Icon: FileText, path: "/broker/partners", description: "View & manage partners" },
     ],
     quickActions: [
-        { label: "Add Agent", Icon: Plus, onClick: () => router.get('/broker/agents') }
+        { label: "Post Properties", Icon: Plus, onClick: () => router.get('/post-properties') }
     ],
-    showSearch: true,
+    showSearch: false,
     categorizeNotification: categorizeNotifToPath
 };
 
@@ -127,9 +127,9 @@ export const agentSidebarConfig = {
         { name: "Transactions", Icon: BarChart3, path: "/agents/transaction", description: "Sales & payment overview" },
     ],
     quickActions: [
-        { label: "Add Lead", Icon: Plus, onClick: () => router.get('/agents/leads/create') }
+        { label: "Add Lead", Icon: Plus, onClick: () => router.get('/agents/properties') }
     ],
-    showSearch: true,
+    showSearch: false,
     categorizeNotification: categorizeNotifToPath
 };
 

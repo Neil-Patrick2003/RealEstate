@@ -33,7 +33,7 @@ const cn = (...c) => c.filter(Boolean).join(" ");
 const peso = new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: "PHP",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
 });
 const safeStr = (v) => (v === 0 || v ? String(v) : "");
 const truthy = (v) => v === true || v === 1 || v === "1";
@@ -231,14 +231,7 @@ function DealDetailsModal({
                         </>
                     )}
 
-                    {phase === "accepted" && (
-                        <PrimaryButton
-                            onClick={onCheckout}
-                            className="text-sm"
-                        >
-                            Proceed to Payment
-                        </PrimaryButton>
-                    )}
+
                 </div>
             </div>
         </Modal>
@@ -257,26 +250,6 @@ function FactCard({ icon: Icon, label, value }) {
 }
 
 /* ---------- Mobile-Optimized Favorite Button ---------- */
-function FavoriteButton({ isFavorite, onClick, propertyId }) {
-    const handleClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick(propertyId);
-    };
-
-    return (
-        <button
-            onClick={handleClick}
-            className={`btn-ghost p-2 rounded-full ${
-                isFavorite ? 'text-rose-500 hover:text-rose-600' : 'text-gray-600 hover:text-gray-700'
-            }`}
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-        >
-            <Heart className={`h-4 w-4 sm:h-5 sm:w-5 ${isFavorite ? 'fill-current' : ''}`} />
-        </button>
-    );
-}
-
 /* ---------- Mobile Property Facts Section ---------- */
 function MobilePropertyFacts({ property }) {
     const [expanded, setExpanded] = useState(false);
@@ -588,13 +561,7 @@ export default function ShowInquiry({
                                                 </div>
                                             </div>
                                         )}
-                                        <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
-                                            <FavoriteButton
-                                                isFavorite={isFavorite}
-                                                onClick={toggleFavorite}
-                                                propertyId={normalized.id}
-                                            />
-                                        </div>
+
                                         <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 badge-primary text-base sm:text-lg font-bold">
                                             {peso.format(normalized.price)}
                                         </div>
@@ -672,6 +639,8 @@ export default function ShowInquiry({
                                         appointmentStatus={apptStatus === "none" ? "none" : apptStatus}
                                         onAction={actions}
                                         lockedReasons={lockedReasons}
+                                        dealStatus={dealStatus} // Add this line
+
                                     />
 
                                     <StepperNotes

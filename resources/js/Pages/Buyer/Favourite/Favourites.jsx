@@ -76,15 +76,19 @@ export default function Favourites({ properties, favouriteIds = [] }) {
         setLoading(propertyId);
 
         router.post(
-            `/properties/${propertyId}/favorites`,
-            { id: propertyId },
+            route('favourites.toggle'),
+            { property_id: propertyId },
             {
                 preserveScroll: true,
+                preserveState: true,
                 onSuccess: () => {
                     setFavorites(prev => {
                         const updated = new Set(prev);
                         if (updated.has(propertyId)) {
                             updated.delete(propertyId);
+                            // Remove the property from the list if it's unfavorited
+                            const updatedProperties = properties.filter(p => p.id !== propertyId);
+                            // Note: You might want to use Inertia.reload() here instead
                         } else {
                             updated.add(propertyId);
                         }
@@ -128,7 +132,7 @@ export default function Favourites({ properties, favouriteIds = [] }) {
                                 </p>
                             </div>
                             <Link
-                                href="/properties"
+                                href="/all-properties"
                                 className="btn-primary w-full sm:w-auto justify-center"
                             >
                                 <FontAwesomeIcon icon={faRocket} className="mr-2" />
@@ -452,7 +456,7 @@ export default function Favourites({ properties, favouriteIds = [] }) {
                                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                     {properties.length === 0 && (
                                         <Link
-                                            href="/properties"
+                                            href="/all-properties"
                                             className="btn-primary text-sm sm:text-base"
                                         >
                                             <FontAwesomeIcon icon={faRocket} className="mr-2" />
@@ -485,9 +489,8 @@ export default function Favourites({ properties, favouriteIds = [] }) {
                                         <PropertyCard
                                             key={property.id}
                                             property={property}
-                                            favoriteIds={Array.from(favorites)}
-                                            toggleFavorite={toggleFavorite}
-                                            loading={loading === property.id}
+                                            onToggleFavorite={() => toggleFavorite(property.id)}
+                                            isFavorite={true} // All properties in favorites page are favorited
                                         />
                                     ))}
                                 </div>
@@ -507,7 +510,7 @@ export default function Favourites({ properties, favouriteIds = [] }) {
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                     <Link
-                                        href="/properties"
+                                        href="/all-properties"
                                         className="btn-secondary bg-white text-primary-600 hover:bg-gray-50 text-sm sm:text-base"
                                     >
                                         <FontAwesomeIcon icon={faRocket} className="mr-2" />

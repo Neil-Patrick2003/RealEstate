@@ -1,196 +1,167 @@
 // resources/js/Components/Stepper.jsx
 import React from "react";
 import {
-    CheckCircle2,
-    Lock,
-    Send,
-    CalendarClock,
+    MessageSquare,
+    CalendarDays,
     Handshake,
     CreditCard,
+    CheckCircle2,
+    Clock,
+    Lock
 } from "lucide-react";
 
-export const ICONS = {
-    inquiry: Send,
-    appointment: CalendarClock,
-    offer: Handshake,
-    payment: CreditCard,
-};
-
-export const TITLES = {
-    inquiry: "Send Inquiry",
-    appointment: "Schedule Visit",
-    offer: "Offer Deal",
-    payment: "Finalize Payment",
-};
-
-export const DESCRIPTIONS = {
-    inquiry: {
-        complete: "Inquiry accepted by seller/agent",
-        current: "Waiting for seller response",
-        upcoming: "Start by sending an inquiry",
-        locked: "Blocked by previous step",
-    },
-    appointment: {
-        complete: "Property visit completed",
-        current: "Visit is scheduled/pending confirmation",
-        upcoming: "Schedule your property visit",
-        locked: "Unlocked when inquiry is accepted",
-    },
-    offer: {
-        complete: "Offer finalized (accepted or rejected)",
-        current: "Submit or revise your offer",
-        upcoming: "Prepare your best offer",
-        locked: "Unlocked after property visit is completed",
-    },
-    payment: {
-        complete: "Deal closed and payment confirmed",
-        current: "Payment link is available",
-        upcoming: "Proceed to secured payment",
-        locked: "Unlocked after offer acceptance",
-    },
-};
-
-const STATE_STYLE = {
-    // Current state changed from blue to amber/golden look
-    complete:
-        "bg-emerald-50 border-emerald-200 text-emerald-800 ring-1 ring-emerald-100",
-    current:
-        "bg-amber-50 border-amber-200 text-amber-800 ring-1 ring-amber-100", // PRIMARY: AMBER
-    upcoming: "bg-white border-gray-200 text-gray-700 ring-1 ring-gray-100",
-    locked: "bg-gray-50 border-gray-200 text-gray-400 ring-1 ring-gray-100",
-};
-
-const DOT_STYLE = {
-    complete: "bg-emerald-600",
-    current: "bg-amber-100", // PRIMARY DOT: AMBER
-    upcoming: "bg-gray-400",
-    locked: "bg-gray-300",
-};
-
-/** Small status chip (e.g., Pending / Scheduled) for appointment */
+// Small Chip Component
 function SmallChip({ color = "gray", children }) {
-    const map = {
-        gray: "bg-gray-100 text-gray-700 ring-gray-200",
-        amber: "bg-amber-100 text-amber-800 ring-amber-200",
-        green: "bg-green-100 text-green-800 ring-green-200",
-        rose: "bg-rose-100 text-rose-800 ring-rose-200",
+    const colorClasses = {
+        gray: "bg-gray-100 text-gray-700",
+        blue: "bg-blue-100 text-blue-700",
+        green: "bg-green-100 text-green-700",
+        amber: "bg-amber-100 text-amber-700",
+        rose: "bg-rose-100 text-rose-700",
     };
+
     return (
-        <span
-            className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ${map[color]}`}
-        >
-      {children}
-    </span>
+        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colorClasses[color]}`}>
+            {children}
+        </span>
     );
 }
 
-/** One step card. */
+// Step Card Component - Simplified design
 function StepCard({
                       state,
                       title,
                       description,
                       Icon,
-                      onAction,
                       actionLabel,
-                      disabled,
-                      rightBadge = null, // <SmallChip> or any inline node
-                      isFirst,
-                      isLast,
+                      onAction,
+                      disabled = false,
+                      rightBadge,
+                      isProcessingPayment = false,
                   }) {
-    const isLocked = state === "locked";
-    const isComplete = state === "complete";
-    const isCurrent = state === "current";
+    const stateConfig = {
+        complete: {
+            icon: CheckCircle2,
+            iconClass: "text-green-600",
+            bgClass: "bg-green-50 border-green-200",
+            titleClass: "text-green-900",
+            descClass: "text-green-700",
+        },
+        current: {
+            icon: Clock,
+            iconClass: "text-blue-600",
+            bgClass: "bg-blue-50 border-blue-200",
+            titleClass: "text-blue-900",
+            descClass: "text-blue-700",
+        },
+        upcoming: {
+            icon: Icon,
+            iconClass: "text-gray-400",
+            bgClass: "bg-gray-50 border-gray-200",
+            titleClass: "text-gray-900",
+            descClass: "text-gray-500",
+        },
+        locked: {
+            icon: Lock,
+            iconClass: "text-gray-300",
+            bgClass: "bg-gray-50 border-gray-200",
+            titleClass: "text-gray-400",
+            descClass: "text-gray-400",
+        },
+    };
 
-    // Action button styling - using amber for primary/current
-    const actionClassName = isLocked
-        ? "cursor-not-allowed bg-gray-100 text-gray-400"
-        : isCurrent
-            ? "bg-amber-600 text-white hover:bg-amber-700 font-semibold shadow-sm" // PRIMARY ACTION: AMBER
-            : "bg-white text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50";
+    const config = stateConfig[state] || stateConfig.locked;
+    const StateIcon = config.icon;
 
     return (
-        <li className="relative flex-1 group">
-            {/* Connector Line (Desktop Only) */}
-            {!isLast && (
-                <div
-                    className={[
-                        "absolute left-1/2 top-4 hidden h-0.5 w-1/2 translate-y-1/2 transform border-0 lg:block",
-                        // Connector line starts at the middle of the current step and goes to the start of the next.
-                        "group-odd:right-0 group-odd:left-auto group-even:left-0 group-even:right-auto",
-                        "lg:group-[:nth-child(2n)]:left-1/2 lg:group-[:nth-child(2n)]:right-auto lg:group-[:nth-child(4n)]:right-0 lg:group-[:nth-child(4n)]:left-auto",
-                        // Vertical connector for 2-column layout (sm screen)
-                        "sm:absolute sm:left-1/2 sm:-bottom-3 sm:h-auto sm:w-0.5 sm:border-r sm:border-gray-200 sm:translate-x-0 sm:top-auto sm:z-0 lg:hidden",
-
-                        // Horizontal line for desktop (lg screen)
-                        "hidden lg:block absolute right-0 top-1/2 h-0.5 w-full -translate-y-1/2 border-t border-gray-200",
-                        // Make line green for completed connection
-                        (isComplete || isCurrent) && "border-emerald-300",
-                    ].join(" ")}
-                />
-            )}
-
-            <div
-                className={[
-                    "relative z-10 rounded-xl border p-4 transition h-full",
-                    STATE_STYLE[state] || STATE_STYLE.upcoming,
-                ].join(" ")}
-            >
-                <div className="flex flex-col h-full">
-                    <div className="flex items-start gap-3">
-                        <span
-                            className={[
-                                "mt-0.5 inline-flex h-2.5 w-2.5 shrink-0 rounded-full",
-                                DOT_STYLE[state] || DOT_STYLE.upcoming,
-                            ].join(" ")}
-                            aria-hidden="true"
-                        />
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                                {/* Icon color changed to amber for current step, gray otherwise */}
-                                <Icon className={`h-4 w-4 ${isLocked ? 'text-gray-400' : isCurrent ? 'text-amber-600' : 'text-gray-700'}`} />
-                                <h3 className="truncate text-sm font-semibold text-gray-900">{title}</h3>
-                                {rightBadge}
-                            </div>
-                            <p className="mt-1 text-xs text-gray-600">{description}</p>
-                        </div>
-                        <div className="flex-shrink-0 pt-1">
-                            {isComplete && (
-                                <CheckCircle2
-                                    className="h-5 w-5 text-emerald-600"
-                                    aria-label="Completed"
-                                />
-                            )}
-                            {isLocked && (
-                                <Lock className="h-5 w-5 text-gray-400" aria-label="Locked" />
-                            )}
-                        </div>
+        <div className={`p-4 rounded-lg border-2 ${config.bgClass} transition-all duration-200 h-full flex flex-col`}>
+            <div className="flex items-start gap-3 mb-2">
+                <StateIcon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${config.iconClass}`} />
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                        <h3 className={`text-sm font-semibold ${config.titleClass}`}>
+                            {title}
+                        </h3>
+                        {rightBadge}
                     </div>
-
-                    {/* Action Button - bottom aligned */}
-                    {actionLabel && (
-                        <div className="mt-4 pt-3 border-t border-dashed border-gray-200 flex-grow flex items-end">
-                            <button
-                                onClick={onAction}
-                                disabled={disabled || isLocked}
-                                className={[
-                                    "w-full inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition",
-                                    actionClassName,
-                                ].join(" ")}
-                            >
-                                {actionLabel}
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
-        </li>
+
+            <p className={`text-xs ${config.descClass} mb-3 flex-1`}>
+                {description}
+            </p>
+
+            {actionLabel && (
+                <div className="mt-auto">
+                    {isProcessingPayment ? (
+                        // Show as status text for processing payment
+                        <span className="text-xs font-medium text-blue-600">
+                            {actionLabel}
+                        </span>
+                    ) : (
+                        // Show as button for other actions
+                        <button
+                            onClick={onAction}
+                            disabled={disabled || !onAction}
+                            className={`text-xs font-medium ${
+                                state === "complete"
+                                    ? "text-green-600 hover:text-green-500"
+                                    : state === "current"
+                                        ? "text-blue-600 hover:text-blue-500"
+                                        : "text-gray-600 hover:text-gray-500"
+                            } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                            {actionLabel}
+                        </button>
+                    )}
+                </div>
+            )}
+        </div>
     );
 }
 
+// Constants
+const ICONS = {
+    inquiry: MessageSquare,
+    appointment: CalendarDays,
+    offer: Handshake,
+    payment: CreditCard,
+};
 
-/**
- * Stepper
- */
+const TITLES = {
+    inquiry: "Send Inquiry",
+    appointment: "Schedule Visit",
+    offer: "Make Offer",
+    payment: "Payment",
+};
+
+const DESCRIPTIONS = {
+    inquiry: {
+        complete: "Inquiry sent and accepted",
+        current: "Inquiry pending approval",
+        upcoming: "Send inquiry to agent",
+        locked: "Complete previous steps first",
+    },
+    appointment: {
+        complete: "Property visit completed",
+        current: "Schedule your property visit",
+        upcoming: "Schedule after inquiry acceptance",
+        locked: "Complete inquiry first",
+    },
+    offer: {
+        complete: "Offer submitted and accepted",
+        current: "Make an offer on the property",
+        upcoming: "Make offer after visit completion",
+        locked: "Complete visit first",
+    },
+    payment: {
+        complete: "Payment completed successfully",
+        current: "Processing payment in progress",
+        upcoming: "Proceed with payment",
+        locked: "Complete offer first",
+    },
+};
+
 export default function Stepper({
                                     steps,
                                     onAction = {},
@@ -200,12 +171,32 @@ export default function Stepper({
                                     disabled = false,
                                     className = "",
                                     appointmentStatus = "none",
+                                    dealStatus = "draft", // Add dealStatus prop
                                 }) {
+
     const ordered = ["inquiry", "appointment", "offer", "payment"];
 
-    console.log(appointmentStatus);
+    console.log(dealStatus);
+    // Check if deal is closed
+    const isDealClosed = dealStatus?.toLowerCase().includes('sold');
 
     const getDescription = (key, state) => {
+        // If deal is closed, show completion messages for all steps
+        if (isDealClosed) {
+            switch (key) {
+                case "inquiry":
+                    return "Inquiry completed successfully";
+                case "appointment":
+                    return "Property visit completed";
+                case "offer":
+                    return "Offer accepted and finalized";
+                case "payment":
+                    return "Payment completed successfully";
+                default:
+                    return "Step completed";
+            }
+        }
+
         // Special handling for appointment based on appointmentStatus
         if (key === "appointment") {
             if (appointmentStatus === "pending") return "Visit pending approval";
@@ -213,6 +204,13 @@ export default function Stepper({
                 return "Visit scheduled";
             if (appointmentStatus === "cancelled") return "Visit cancelled, schedule again.";
         }
+
+        // Special handling for payment step
+        if (key === "payment") {
+            if (state === "current") return "Processing payment in progress";
+            if (state === "complete") return "Payment completed successfully";
+        }
+
         const override = descriptions[key];
         if (!override) return DESCRIPTIONS[key][state];
         if (typeof override === "string") return override;
@@ -224,9 +222,12 @@ export default function Stepper({
 
     return (
         <div className={className}>
-            <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {ordered.map((key, index) => {
-                    const state = steps?.[key] ?? "locked";
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {ordered.map((key) => {
+                    // If deal is closed, override all states to "complete"
+                    const originalState = steps?.[key] ?? "locked";
+                    const state = isDealClosed ? "complete" : originalState;
+
                     const Icon = ICONS[key];
                     const title = TITLES[key];
                     const description = getDescription(key, state);
@@ -257,12 +258,13 @@ export default function Stepper({
                                     ? "View Receipt"
                                     : undefined
                                 : state === "current"
-                                    ? "Pay Now"
-                                    : "Proceed",
+                                    ? "Processing Payment" // Status text instead of button
+                                    : "Proceed", // This will be removed for current state
                     }[key];
 
                     let actionLabel = labels[key] ?? baseLabel;
                     let rightBadge = null;
+                    let isProcessingPayment = false;
 
                     /* --- Appointment logic for badges/labels --- */
                     const isApptStep = key === "appointment";
@@ -272,7 +274,6 @@ export default function Stepper({
 
                     if (isApptStep && state !== "locked") {
                         if (appointmentStatus === "pending") {
-                            // Keep 'View/Reschedule' if current, or just 'View' if complete
                             rightBadge = <SmallChip color="amber">Pending</SmallChip>;
                             if (state === "upcoming") actionLabel = "Schedule Visit";
                         } else if (
@@ -286,12 +287,29 @@ export default function Stepper({
                         }
                     }
 
+                    /* --- Payment step special handling --- */
+                    const isPaymentStep = key === "payment";
+                    if (isPaymentStep && state === "current") {
+                        // For payment step in current state, show only status text
+                        actionLabel = "Processing Payment";
+                        rightBadge = <SmallChip color="blue">Processing</SmallChip>;
+                        isProcessingPayment = true;
+                    } else if (isPaymentStep && state === "upcoming") {
+                        // For payment step in upcoming state, remove the "Proceed" button
+                        actionLabel = undefined;
+                    }
+
+                    // If deal is closed, remove all action labels (no buttons)
+                    if (isDealClosed) {
+                        actionLabel = undefined;
+                    }
+
                     // Show action for all non-locked steps that have an action label
                     const shouldShowAction =
                         actionLabel &&
                         (state !== "locked" ||
                             (state === "complete" && showViewOnComplete) ||
-                            isApptPendingish); // Ensure we can still interact with an accepted/pending appointment
+                            isApptPendingish);
 
                     return (
                         <StepCard
@@ -301,15 +319,26 @@ export default function Stepper({
                             description={description}
                             Icon={Icon}
                             actionLabel={shouldShowAction ? actionLabel : undefined}
-                            onAction={onAction[key]} // e.g., appointment: openScheduleModal
-                            disabled={disabled}
+                            onAction={isProcessingPayment || isDealClosed ? undefined : onAction[key]} // No action for processing payment or closed deals
+                            disabled={disabled || isProcessingPayment || isDealClosed}
                             rightBadge={rightBadge}
-                            isFirst={index === 0}
-                            isLast={index === ordered.length - 1}
+                            isProcessingPayment={isProcessingPayment}
                         />
                     );
                 })}
-            </ol>
+            </div>
+
+            {/* Show completion message for closed deals */}
+            {isDealClosed && (
+                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                    <div className="flex items-center justify-center gap-2 text-green-700">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <span className="text-sm font-medium">
+                            All steps completed successfully! The deal has been closed.
+                        </span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -5,13 +5,13 @@ import PageHeader from "@/Components/ui/PageHeader.jsx";
 
 const Chat = ({ channel = null, channels = [] }) => {
     return (
-        <BuyerLayout>
+        <AuthenticatedLayout>
             <PageHeader title="Chat"/>
             <div className='h-[75vh]'>
                 <ChatView channels={channels} channel={channel}/>
             </div>
 
-        </BuyerLayout>
+        </AuthenticatedLayout>
     );}
 
 export default Chat;

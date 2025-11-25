@@ -58,14 +58,15 @@ export default function AllProperties({ property_listing }) {
     });
 
     return (
-        <div>
+        <div className="min-h-screen bg-gray-50">
             <ToastHandler />
+
             {/* Inquiry Modal */}
             <Modal show={isOpenModal} onClose={() => setIsOpenModal(false)} maxWidth="2xl">
                 <div className="p-6 bg-white rounded-xl shadow-lg relative">
                     <button
                         onClick={() => setIsOpenModal(false)}
-                        className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 focus:outline-none"
+                        className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 focus:outline-none transition-colors"
                         aria-label="Close modal"
                     >
                         &times;
@@ -80,7 +81,7 @@ export default function AllProperties({ property_listing }) {
                                 onError={(e)=> (e.currentTarget.src="/images/placeholder.jpg")}
                             />
                         ) : (
-                            <div className="w-12 h-12 rounded-full bg-lightaccent flex items-center justify-center text-primary font-bold text-xl">
+                            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xl">
                                 {(a?.name || "A").charAt(0).toUpperCase()}
                             </div>
                         )}
@@ -99,11 +100,11 @@ export default function AllProperties({ property_listing }) {
                             placeholder="Hi, I'm interested in this property. Please contact me..."
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            className="mt-2 w-full rounded-md border border-gray-200 focus:ring-2 focus:ring-primary focus:outline-none p-3 text-sm text-gray-700 resize-none"
+                            className="mt-2 w-full rounded-md border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none p-3 text-sm text-gray-700 resize-none transition-colors"
                         />
                         <p className="text-sm text-gray-500 mt-1">{`${message.length}/250`}</p>
                         {successSent && (
-                            <p className="text-green-600 text-sm mt-2">Message sent successfully!</p>
+                            <p className="text-emerald-600 text-sm mt-2 font-medium">✓ Message sent successfully!</p>
                         )}
                     </div>
 
@@ -111,7 +112,7 @@ export default function AllProperties({ property_listing }) {
                         <button
                             onClick={handleSubmitInquiry}
                             disabled={!message.trim()}
-                            className="bg-primary text-white font-medium px-5 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-emerald-600 text-white font-medium px-5 py-2 rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             Send Message
                         </button>
@@ -121,9 +122,14 @@ export default function AllProperties({ property_listing }) {
 
             <NavBar />
 
-            <div className=" relative h-[calc(100vh-60px)]">
+            {/* Emerald Header Section */}
+            <div className="bg-emerald-600 text-white py-10 px-4  border-emerald-500">
+
+            </div>
+
+            <div className="relative h-[calc(100vh-60px)]">
                 {/* Map */}
-                <div className="relative w-screen z-0 h-full">
+                <div className="relative w-full z-0 h-full">
                     <MapView property_listing={property_listing} onMarkerClick={handleMarkerClick} />
                 </div>
 
@@ -142,11 +148,12 @@ export default function AllProperties({ property_listing }) {
                 fixed z-20
                 left-1/2 -translate-x-1/2 bottom-4
                 w-[calc(100%-1.5rem)] sm:w-[560px]
+                animate-in slide-in-from-bottom-4 duration-300
               "
                             onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
                         >
-                            <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-200 overflow-hidden">
-                                {/* Image */}
+                            <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden border border-gray-100">
+                                {/* Image with emerald accent */}
                                 <div className="relative">
                                     <img
                                         src={p?.image_url ? `/storage/${p.image_url}` : "/images/placeholder.jpg"}
@@ -156,101 +163,64 @@ export default function AllProperties({ property_listing }) {
                                     />
                                     <button
                                         onClick={handleCloseCard}
-                                        className="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full w-8 h-8 flex items-center justify-center text-gray-700 shadow"
+                                        className="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full w-8 h-8 flex items-center justify-center text-gray-700 shadow transition-colors"
                                         aria-label="Close"
                                     >
                                         ✕
                                     </button>
+                                    {/* Emerald price badge */}
+                                    <div className="absolute top-3 left-3 bg-emerald-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                                        {price}
+                                    </div>
                                 </div>
 
                                 {/* Content */}
-                                <div className="p-4 space-y-4">
+                                <div className="p-5 space-y-4">
                                     <div>
-                                        <p className="text-green-600 font-extrabold text-2xl leading-tight">{price}</p>
-                                        <h2 className="text-base font-semibold text-gray-900">{p?.title || "Property"}</h2>
-                                        <p className="text-gray-500 text-sm">{p?.address || "—"}</p>
-                                    </div>
-
-                                    {/* Agent */}
-                                    <div className="flex items-center gap-4">
-                                        {a?.photo_url ? (
-                                            <img
-                                                src={`/storage/${a.photo_url}`}
-                                                alt={a?.name || "Agent"}
-                                                className="w-12 h-12 rounded-full object-cover shadow"
-                                                onError={(e)=> (e.currentTarget.src="/images/placeholder.jpg")}
-                                            />
-                                        ) : (
-                                            <div className="w-12 h-12 rounded-full bg-lightaccent flex items-center justify-center text-primary font-bold text-xl">
-                                                {(a?.name || "A").charAt(0).toUpperCase()}
-                                            </div>
-                                        )}
-
-                                        <div className="flex justify-between items-center w-full">
-                                            <div className="min-w-0">
-                                                <p className="font-semibold text-gray-800 truncate">{a?.name || "Agent"}</p>
-                                                {a?.email && <p className="text-gray-500 text-sm truncate">{a.email}</p>}
-                                                {a?.contact_number && (
-                                                    <p className="text-gray-500 text-sm truncate">{a.contact_number}</p>
-                                                )}
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                                {a?.contact_number && (
-                                                    <a
-                                                        href={`tel:${a.contact_number}`}
-                                                        className="px-3 py-2 rounded-md border text-sm bg-white hover:bg-gray-50"
-                                                    >
-                                                        Call
-                                                    </a>
-                                                )}
-                                                {a?.email && (
-                                                    <a
-                                                        href={`mailto:${a.email}?subject=${encodeURIComponent(`Inquiry: ${p?.title || "Property"}`)}`}
-                                                        className="px-3 py-2 rounded-md border text-sm bg-white hover:bg-gray-50"
-                                                    >
-                                                        Email
-                                                    </a>
-                                                )}
-                                                <button
-                                                    onClick={() => setIsOpenModal(true)}
-                                                    className="bg-secondary px-3 py-2 rounded-md text-white text-sm hover:bg-secondary/90"
-                                                >
-                                                    Send Inquiry
-                                                </button>
-                                            </div>
+                                        <h2 className="text-xl font-bold text-gray-900 mb-1">{p?.title || "Property"}</h2>
+                                        <div className="flex items-center text-gray-600 text-sm">
+                                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                            </svg>
+                                            {p?.address || "Address not specified"}
                                         </div>
                                     </div>
 
                                     {/* Description (clamped) */}
                                     {p?.description && (
                                         <div
-                                            className="prose max-w-none text-text line-clamp-5"
+                                            className="prose max-w-none text-gray-700 line-clamp-4 text-sm leading-relaxed"
                                             dangerouslySetInnerHTML={{ __html: p.description }}
                                         />
                                     )}
 
-                                    {/* Thumbs (horizontal scroll if many) */}
+                                    {/* Thumbnail Images */}
                                     {images.length > 0 && (
-                                        <div className="flex gap-2 overflow-x-auto pb-1">
+                                        <div className="flex gap-2 overflow-x-auto pb-2">
                                             {images.map((img) => (
                                                 <img
                                                     key={img.id}
                                                     src={`/storage/${img.image_url}`}
                                                     alt={p?.title || "Property"}
-                                                    className="w-28 h-20 rounded-lg object-cover ring-1 ring-gray-200 flex-shrink-0"
+                                                    className="w-28 h-20 rounded-lg object-cover ring-1 ring-gray-200 flex-shrink-0 transition-transform hover:scale-105"
                                                     onError={(e)=> (e.currentTarget.src="/images/placeholder.jpg")}
                                                 />
                                             ))}
                                         </div>
                                     )}
 
-                                    <Link
-                                        href={`/maps/property/${p?.id}`}
-                                        className="text-white w-full block py-2 text-center rounded-md bg-primary font-medium hover:bg-accent transition"
-                                    >
-                                        View Full Details
-                                    </Link>
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-3 pt-2">
+                                        <Link
+                                            href={`/maps/property/${p?.id}`}
+                                            className="flex-1 bg-emerald-600 text-white py-3 text-center rounded-md font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            View Full Details
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
                         </div>

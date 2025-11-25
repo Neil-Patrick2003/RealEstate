@@ -91,7 +91,7 @@ export default function Index({ transactions, filters, totals }) {
                         subtitle="Track and manage your property transactions, payments, and documents"
                         action={
                             <Link
-                                href="/properties"
+                                href="/all-properties"
                                 className="btn-primary"
                             >
                                 <FontAwesomeIcon icon={faArrowRight} className="mr-2" />

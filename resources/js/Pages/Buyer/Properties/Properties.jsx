@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/Components/NavBar.jsx";
 import {motion, useScroll, useTransform} from "framer-motion";
+import ToastHandler from "@/Components/ToastHandler.jsx";
 
 // Property Categories with Subcategories
 const PROPERTY_CATEGORIES = [
@@ -439,14 +440,21 @@ export default function Properties({ properties, filters, loading = false }) {
 
     const hasActiveFilters = activeFiltersCount > 0;
 
-    // Safe toggle favorite function
+    // Fixed toggle favorite function
     const toggleFavourite = useCallback((propertyId) => {
+        console.log("Toggling favorite for property:", propertyId);
         router.post(
-            '/favourites',
+            route('favourites.toggle'),
             { property_id: propertyId },
             {
                 preserveScroll: true,
                 preserveState: true,
+                onSuccess: () => {
+                    console.log("Favorite toggle successful");
+                },
+                onError: (errors) => {
+                    console.error("Favorite toggle failed:", errors);
+                }
             }
         );
     }, []);
@@ -468,8 +476,28 @@ export default function Properties({ properties, filters, loading = false }) {
     const y2 = useTransform(scrollYProgress, [0, 1], [-100, 100]);
     const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
 
+    const formatPriceInput = (value) => {
+        if (!value) return '';
+
+        // Remove any non-digit characters and format with commas
+        const numericValue = value.toString().replace(/\D/g, '');
+        if (numericValue === '') return '';
+
+        return Number(numericValue).toLocaleString('en-PH');
+    };
+
+// Helper function to handle price input changes
+    const handlePriceInput = (field, value) => {
+        // Remove commas and non-digit characters to get raw number
+        const rawValue = value.replace(/\D/g, '');
+
+        // Update the filter with the raw number value
+        updateFilter(field, rawValue);
+    };
+
     return (
         <div className="min-h-screen page-container overflow-hidden">
+            <ToastHandler/>
             <Navbar />
             {/* Header */}
             <div className={`relative z-10 transition-all duration-300 bg-emerald-600`}>
@@ -671,10 +699,11 @@ export default function Properties({ properties, filters, loading = false }) {
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="relative">
                                                 <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={getInputValue(localFilters.price_min)}
-                                                    onChange={(e) => updateFilter("price_min", e.target.value)}
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9,]*"
+                                                    value={formatPriceInput(localFilters.price_min)}
+                                                    onChange={(e) => handlePriceInput("price_min", e.target.value)}
                                                     className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all duration-200"
                                                     placeholder="Min"
                                                 />
@@ -682,16 +711,20 @@ export default function Properties({ properties, filters, loading = false }) {
                                             </div>
                                             <div className="relative">
                                                 <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={getInputValue(localFilters.price_max)}
-                                                    onChange={(e) => updateFilter("price_max", e.target.value)}
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9,]*"
+                                                    value={formatPriceInput(localFilters.price_max)}
+                                                    onChange={(e) => handlePriceInput("price_max", e.target.value)}
                                                     className="w-full bg-white border border-emerald-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all duration-200"
                                                     placeholder="Max"
                                                 />
                                                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-xs text-emerald-600 font-medium">₱</span>
                                             </div>
                                         </div>
+                                        <p className="text-xs text-gray-500 text-center">
+                                            Example: 1,000,000 for one million pesos
+                                        </p>
                                     </div>
                                 </div>
 

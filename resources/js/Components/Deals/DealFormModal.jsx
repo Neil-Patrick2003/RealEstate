@@ -349,7 +349,7 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
                                         </button>
                                     );
                                 })}
-                            </div>
+                            </div>  
                         )}
                     </div>
 

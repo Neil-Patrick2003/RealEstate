@@ -9,7 +9,7 @@ function AboutUs() {
 
     const stats = [
         { icon: Award, value: "15+", label: "Years Experience" },
-        { icon: Users, value: "10K+", label: "Happy Clients" },
+        { icon: Users, value: "400+", label: "Happy Clients" },
         { icon: TrendingUp, value: "95%", label: "Success Rate" },
         { icon: Heart, value: "24/7", label: "Support" },
     ];
@@ -27,10 +27,10 @@ function AboutUs() {
                         <h2 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
                             About RealSync
                         </h2>
-                        <p className="text-lg text-neutral-600 mb-6 leading-relaxed">
+                        <p className="text-lg text-justify text-neutral-600 mb-6 leading-relaxed">
                             Powered by MJVI Realty, RealSync is dedicated to connecting people with their perfect homes and properties in Nasugbu and surrounding areas. Since our beginning, we’ve helped families, investors, and first-time buyers find properties that truly match their dreams and lifestyles.
                         </p>
-                        <p className="text-lg text-neutral-600 mb-8 leading-relaxed">
+                        <p className="text-lg text-justify text-neutral-600 mb-8 leading-relaxed">
                             Our mission is to make property searching simple, transparent, and enjoyable. With the trusted experience of MJVI Realty and our commitment to personalized service, RealSyn ensures that every client finds not just a property, but a place to call home.
                         </p>
 
