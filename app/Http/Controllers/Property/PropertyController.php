@@ -12,6 +12,7 @@ use Inertia\Inertia;
 
 class PropertyController extends Controller
 {
+
     public function map()
     {
         $properties = PropertyListing::with('property.coordinate', 'property.images', 'agent:id,name,email,photo_url,contact_number')
@@ -31,53 +32,61 @@ class PropertyController extends Controller
         ]);
     }
 
-    public function favourite(\Request $request, $id)
-    {
-        $property = Property::find($id);
-
-        if (auth()->check()) {
-            $favourite = Favourite::where('user_id', auth()->id())
-                ->where('property_id', $property->id)
-                ->first();
-
-            if ($favourite) {
-                $favourite->delete();
-                return redirect()->back()->with('success', 'Removed from favourites.');
-            } else {
-                Favourite::create([
-                    'user_id' => auth()->id(),
-                    'property_id' => $property->id,
-                ]);
-                return redirect()->back()->with('success', 'Added to favourites.');
-            }
-        }
-
-        return redirect('/login')->with('error', 'Please login to add to favourites.');
-
-
-    }
+//    public function favourite(\Request $request, $id)
+//    {
+//        $property = Property::find($id);
+//
+//        if (auth()->check()) {
+//            $favourite = Favourite::where('user_id', auth()->id())
+//                ->where('property_id', $property->id)
+//                ->first();
+//
+//            if ($favourite) {
+//                $favourite->delete();
+//                return redirect()->back()->with('success', 'Removed from favourites.');
+//            } else {
+//                Favourite::create([
+//                    'user_id' => auth()->id(),
+//                    'property_id' => $property->id,
+//                ]);
+//                return redirect()->back()->with('success', 'Added to favourites.');
+//            }
+//        }
+//
+//        return redirect('/login')->with('error', 'Please login to add to favourites.');
+//
+//
+//    }
 
     // app/Http/Controllers/Property/PropertyController.php
     public function toggleFavourite(Request $request)
     {
-        $request->validate([
-            'property_id' => 'required|exists:properties,id'
-        ]);
-
-        $property = Property::findOrFail($request->property_id);
-        $favorite = Favourite::where('user_id', auth()->id())
-            ->where('property_id', $property->id)
-            ->first();
-
-        if ($favorite) {
-            $favorite->delete();
-            return redirect()->back()->with('success', 'Removed from favourites.');
-        } else {
-            Favourite::create([
-                'user_id' => auth()->id(),
-                'property_id' => $property->id
+        if (auth()->check()) {
+            $request->validate([
+                'property_id' => 'required|exists:properties,id'
             ]);
-            return redirect()->back()->with('success', 'Added to your favourites.');
+
+            $property = Property::findOrFail($request->property_id);
+            $favorite = Favourite::where('user_id', auth()->id())
+                ->where('property_id', $property->id)
+                ->first();
+
+            if ($favorite) {
+                $favorite->delete();
+                return redirect()->back()->with('success', 'Removed from favourites.');
+            } else {
+                Favourite::create([
+                    'user_id' => auth()->id(),
+                    'property_id' => $property->id
+                ]);
+                return redirect()->back()->with('success', 'Added to your favourites.');
+            }
         }
+        else{
+            return redirect()->back()->with('error', 'You need to log in first.');
+        }
+
+
+
     }
 }

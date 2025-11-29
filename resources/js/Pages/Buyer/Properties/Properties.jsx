@@ -230,7 +230,7 @@ export default function Properties({ properties, filters, loading = false }) {
             debounce((nextFilters) => {
                 const cleanedFilters = cleanupFilters(nextFilters);
                 console.log('Sending filters:', cleanedFilters); // Debug log
-                router.get(route("all.properties"), cleanedFilters, {
+                router.get(route("properties"), cleanedFilters, {
                     preserveState: true,
                     preserveScroll: true,
                     replace: true,
@@ -248,7 +248,7 @@ export default function Properties({ properties, filters, loading = false }) {
         debouncedVisit.cancel();
         const cleanedFilters = cleanupFilters(nextFilters);
         console.log('Applying filters immediately:', cleanedFilters); // Debug log
-        router.get(route("all.properties"), cleanedFilters, {
+        router.get(route("properties"), cleanedFilters, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
@@ -598,7 +598,7 @@ export default function Properties({ properties, filters, loading = false }) {
                                 <div className="space-y-4">
                                     <div>
                                         <label className="text-sm font-semibold text-gray-900 mb-2 block">
-                                            Search Properties
+                                            Search
                                         </label>
                                         <div className="relative">
                                             <input
@@ -606,27 +606,12 @@ export default function Properties({ properties, filters, loading = false }) {
                                                 value={getInputValue(localFilters.search)}
                                                 onChange={(e) => updateFilter("search", e.target.value)}
                                                 className="w-full bg-white border border-emerald-200 rounded-xl px-4 pl-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                                                placeholder="Search properties..."
+                                                placeholder="Search..."
                                             />
                                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="text-sm font-semibold text-gray-900 mb-2 block">
-                                            Location
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                value={getInputValue(localFilters.location)}
-                                                onChange={(e) => updateFilter("location", e.target.value)}
-                                                className="w-full bg-white border border-emerald-200 rounded-xl px-4 pl-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                                                placeholder="Enter location..."
-                                            />
-                                            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-emerald-400" />
-                                        </div>
-                                    </div>
                                 </div>
 
                                 {/* Property Category with Subcategories */}

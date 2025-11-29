@@ -71,8 +71,6 @@ class PropertyController extends Controller
 
         $property = $propertiesService->store($validated, $files, auth()->user());
 
-
-        // Assign agents & notify
         if (!empty($validated['agent_ids'])) {
             $listing = PropertyListing::create([
                 'property_id' => $property->id,
@@ -120,14 +118,12 @@ class PropertyController extends Controller
 
     public function update(UpdatePropertyRequest $request, Property $property, PropertiesService $propertiesService)
     {
-
         $files = [
             'image_url' => $request->file('image_url'),
             'image_urls' => $request->file('image_urls'),
         ];
 
         $propertiesService->update($request, $property, $files);
-
 
         return redirect()->back()->with('success', 'Property updated successfully.');
     }
@@ -136,17 +132,14 @@ class PropertyController extends Controller
     {
         $property = Property::findOrFail($id);
 
-        // Check if assigned
         if ($property->property_listing) {
             return redirect()->back()->with('error', 'Property is assigned to a listing. Please unassign it first.');
         }
 
-        // Delete related data
         $property->images()->delete();
         $property->features()->delete();
         $property->coordinate()->delete();
 
-        // Delete property
         $property->delete();
 
         return redirect()->back()->with('success', 'Deleted property successfully!');
