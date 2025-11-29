@@ -107,5 +107,7 @@ Route::get('/nominatim-search', function (\Illuminate\Http\Request $request) {
     return $response->json();
 });
 
+Route::post('/chatbot/send', [\App\Http\Controllers\ChatbotController::class, 'store']);
+
 
 

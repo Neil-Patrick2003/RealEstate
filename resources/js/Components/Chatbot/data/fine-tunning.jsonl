@@ -1,0 +1,3 @@
+{"messages":[{"role":"system","content":""},{"role":"user","content":"How do I get started?"},{"role":"assistant","content":"{\"message\": \"...\", \"recommended_property_ids\": []}"}]}
+{"messages":[{"role":"system","content":"..."},{"role":"user","content":"How can I list my property?"},{"role":"assistant","content":"{\"message\": \"...\", \"recommended_property_ids\": []}"}]}
+{"messages":[{"role":"system","content":"..."},{"role":"user","content":"Paano mag search ng property?"},{"role":"assistant","content":"{\"message\": \"...\", \"recommended_property_ids\": []}"}]}
