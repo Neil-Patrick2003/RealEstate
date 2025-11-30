@@ -9,6 +9,7 @@ use App\Models\Deal;
 use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Property;
+use App\Models\PropertyListing;
 use App\Models\PropertyTripping;
 use App\Models\User;
 use App\Notifications\NewInquiry;
@@ -80,6 +81,8 @@ class InquiryController extends Controller
         $recipient = User::select('id', 'role')->findOrFail($request->person);
 
 
+//        dd($recipient->toArray());
+
         // Fetch property
         $property = Property::findOrFail($id);
 
@@ -103,6 +106,14 @@ class InquiryController extends Controller
             'notes'       => $validated['message'],
             $key          => $recipient->id,
         ]);
+
+        $listing = PropertyListing::firstOrCreate([
+            'property_id' => $property->id,
+//            'agent_id'    => $recipient->id,
+            'status'      => 'Published',
+        ]);
+
+        $listing->agents()->attach($recipient->id);
 
         $recipient->notify(new NewInquiry($inquiry));
 
