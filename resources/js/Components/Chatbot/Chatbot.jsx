@@ -75,8 +75,11 @@ export default function Chatbot() {
     };
 
     const handleClickProperty = (property) => {
-        // adjust URL pattern to your property route
-        window.location.href = `/properties/${property.slug}`;
+        window.open(`/properties/${property.id}`, '_blank', 'noopener,noreferrer');
+    };
+
+    const handleQuickPrompt = (text) => {
+        setInput(text);
     };
 
     return (
@@ -86,7 +89,7 @@ export default function Chatbot() {
                 <button
                     type="button"
                     onClick={() => setIsOpen(true)}
-                    className="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    className="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-600 text-white shadow-xl hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition transform hover:-translate-y-0.5"
                 >
                     {/* Simple chat icon (speech bubble) */}
                     <svg
@@ -108,19 +111,27 @@ export default function Chatbot() {
 
             {/* Open state: chat panel */}
             {isOpen && (
-                <div className="w-80 sm:w-96 bg-white shadow-2xl rounded-2xl border border-gray-200 flex flex-col overflow-hidden">
+                <div className="w-80 sm:w-96 bg-white/95 backdrop-blur-lg shadow-2xl rounded-2xl border border-emerald-50 flex flex-col overflow-hidden ring-1 ring-emerald-100">
                     {/* Header */}
-                    <div className="px-4 py-3 bg-indigo-600 text-white flex items-center justify-between">
-                        <div>
-                            <h3 className="font-semibold text-sm">MJVI Realty Assistant</h3>
-                            <p className="text-xs text-indigo-100">
-                                Ask me about properties or how the platform works.
-                            </p>
+                    <div className="px-4 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center border border-white/30">
+                                    <span className="text-sm font-semibold">MJ</span>
+                                </div>
+                                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-emerald-600 rounded-full"></span>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-sm">MJVI Realty Assistant</h3>
+                                <p className="text-[11px] text-emerald-100">
+                                    Online · Ask me about properties or how MJVI works
+                                </p>
+                            </div>
                         </div>
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}
-                            className="ml-2 rounded-full p-1 hover:bg-indigo-500 focus:outline-none"
+                            className="ml-2 rounded-full p-1 hover:bg-emerald-500/70 focus:outline-none transition"
                         >
                             {/* X icon */}
                             <svg
@@ -139,15 +150,47 @@ export default function Chatbot() {
                     </div>
 
                     {/* Messages */}
-                    <div className="px-3 py-3 h-80 overflow-y-auto space-y-3 text-sm bg-gray-50">
+                    <div className="px-3 pt-3 pb-2 h-80 overflow-y-auto space-y-3 text-sm bg-gradient-to-b from-emerald-50 to-gray-50">
+                        {/* Empty state */}
                         {messages.length === 0 && (
-                            <div className="text-gray-500 text-xs text-center mt-4">
-                                👋 Hi! I can help you search properties or explain how MJVI
-                                works. Try:
-                                <br />
-                                <span className="font-medium">
-                  &quot;May 3BR house ka ba sa Cavite under 5M?&quot;
-                </span>
+                            <div className="mt-3 space-y-3">
+                                <div className="text-gray-600 text-xs text-center">
+                                    👋 Hi! I can help you search properties or explain how MJVI
+                                    works.
+                                </div>
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            handleQuickPrompt('May 3BR house ka ba sa Cavite under 5M?')
+                                        }
+                                        className="text-[11px] px-3 py-1 rounded-full bg-white border border-emerald-100 text-emerald-700 hover:bg-emerald-50 transition"
+                                    >
+                                        3BR house in Cavite under 5M
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            handleQuickPrompt(
+                                                'Paano mag-send ng inquiry sa isang property?',
+                                            )
+                                        }
+                                        className="text-[11px] px-3 py-1 rounded-full bg-white border border-emerald-100 text-emerald-700 hover:bg-emerald-50 transition"
+                                    >
+                                        Paano mag-send ng inquiry?
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            handleQuickPrompt(
+                                                'Paano gumagana ang tripping schedule sa MJVI?',
+                                            )
+                                        }
+                                        className="text-[11px] px-3 py-1 rounded-full bg-white border border-emerald-100 text-emerald-700 hover:bg-emerald-50 transition"
+                                    >
+                                        Tripping schedule guide
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -159,10 +202,10 @@ export default function Chatbot() {
                                     }`}
                                 >
                                     <div
-                                        className={`rounded-2xl px-3 py-2 max-w-[80%] whitespace-pre-line ${
+                                        className={`rounded-2xl px-3 py-2 max-w-[80%] whitespace-pre-line text-[13px] leading-snug shadow-sm ${
                                             msg.role === 'user'
-                                                ? 'bg-indigo-600 text-white rounded-br-sm'
-                                                : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm'
+                                                ? 'bg-emerald-600 text-white rounded-br-sm'
+                                                : 'bg-white/90 text-gray-800 border border-emerald-50 rounded-bl-sm'
                                         }`}
                                     >
                                         {msg.message}
@@ -174,7 +217,7 @@ export default function Chatbot() {
                                     msg.recommendedProperties &&
                                     msg.recommendedProperties.length > 0 && (
                                         <div className="flex flex-col gap-2 ml-1">
-                                            <p className="text-xs text-gray-500">
+                                            <p className="text-[11px] text-gray-500">
                                                 Here are some properties you might like:
                                             </p>
                                             {msg.recommendedProperties.map((prop) => (
@@ -182,7 +225,7 @@ export default function Chatbot() {
                                                     key={prop.id}
                                                     type="button"
                                                     onClick={() => handleClickProperty(prop)}
-                                                    className="flex gap-2 rounded-xl border border-gray-200 bg-white p-2 text-left hover:border-indigo-400 hover:shadow-sm transition"
+                                                    className="flex gap-2 rounded-xl border border-emerald-100 bg-white p-2 text-left hover:border-emerald-400 hover:shadow-md transition"
                                                 >
                                                     {prop.main_image_url && (
                                                         <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
@@ -206,7 +249,7 @@ export default function Chatbot() {
                                                                 {prop.city}
                                                             </div>
                                                         </div>
-                                                        <div className="text-xs font-semibold text-indigo-600">
+                                                        <div className="text-xs font-semibold text-emerald-600">
                                                             ₱{Number(prop.price).toLocaleString()}
                                                         </div>
                                                         <div className="text-[11px] text-gray-500">
@@ -223,21 +266,24 @@ export default function Chatbot() {
 
                         {loading && (
                             <div className="flex justify-start mt-2">
-                                <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-3 py-2 text-xs text-gray-500 flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></span>
-                                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300"></span>
+                                <div className="bg-white/90 border border-emerald-100 rounded-2xl rounded-bl-sm px-3 py-2 text-xs text-gray-500 flex items-center gap-2 shadow-sm">
+                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"></span>
+                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce [animation-delay:120ms]"></span>
+                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce [animation-delay:240ms]"></span>
+                                    <span className="ml-1 text-[11px] text-gray-500">
+                                        Typing…
+                                    </span>
                                 </div>
                             </div>
                         )}
                     </div>
 
                     {/* Input */}
-                    <form onSubmit={sendMessage} className="border-t border-gray-200 bg-white">
+                    <form onSubmit={sendMessage} className="border-t border-emerald-100 bg-white/95">
                         <div className="flex items-center px-3 py-2 gap-2">
                             <input
                                 type="text"
-                                className="flex-1 text-xs px-3 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="flex-1 text-xs px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white placeholder:text-[11px]"
                                 placeholder="Ask about properties or how MJVI works..."
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
@@ -245,7 +291,7 @@ export default function Chatbot() {
                             <button
                                 type="submit"
                                 disabled={loading || !input.trim()}
-                                className="px-3 py-2 text-xs font-medium rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-3 py-2 text-xs font-medium rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                             >
                                 Send
                             </button>
