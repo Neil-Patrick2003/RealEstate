@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Buyer;
+namespace App\Http\Controllers\Broker;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChatChannel;
@@ -35,16 +35,12 @@ class ChatController extends Controller
         $currentChannel = $channels->first();
 
         if ($currentChannel) {
-            return redirect(route('buyer.chat.channels.show', $currentChannel->id));
+            return redirect(route('broker.chat.channels.show', $currentChannel->id));
         }
 
-        return Inertia::render('Buyer/Chat/Chat', [
+        return Inertia::render('Broker/Chat/Index', [
             'channels' => $channels,
             'channel'  => $currentChannel,
         ]);
     }
-
-
-
-
 }

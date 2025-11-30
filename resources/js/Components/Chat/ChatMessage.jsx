@@ -22,29 +22,29 @@ const ChatMessage = ({ message }) => {
 
     return (
         <div
-            className={`flex items-end mb-4 px-4 ${
+            className={`flex items-end mb-6 px-4 ${
                 isSentByMe ? 'justify-end' : 'justify-start'
             }`}
         >
             {/* Avatar for other users */}
             {!isSentByMe && (
-                <div className="w-8 h-8 rounded-full bg-secondary text-white font-semibold flex items-center justify-center mr-2 shadow-sm text-sm uppercase">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 text-white font-medium flex items-center justify-center mr-3 shadow-sm text-sm uppercase">
                     {message.sender?.name?.charAt(0) || '?'}
                 </div>
             )}
 
             <div className="relative max-w-[75%]">
                 <div
-                    className={`px-4 py-3 text-sm leading-relaxed break-words shadow-md
+                    className={`px-5 py-3 text-sm leading-relaxed break-words
                         ${
                         isSentByMe
-                            ? 'bg-accent text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl'
-                            : 'bg-gray-100 text-gray-900 rounded-tl-2xl rounded-tr-2xl rounded-br-2xl'
+                            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl rounded-br-md'
+                            : 'bg-gray-100/80 text-gray-800 rounded-2xl rounded-bl-md'
                     }`}
                 >
                     {/* Text content */}
                     {message.content && (
-                        <p className={hasAttachment ? 'mb-2' : ''}>
+                        <p className={`${hasAttachment ? 'mb-3' : ''} ${isSentByMe ? 'text-white' : 'text-gray-700'}`}>
                             {message.content}
                         </p>
                     )}
@@ -53,7 +53,7 @@ const ChatMessage = ({ message }) => {
                     {hasAttachment && (
                         <div
                             className={`${
-                                message.content ? 'pt-2 border-t border-white/10 dark:border-gray-200/20' : ''
+                                message.content ? 'pt-3' : ''
                             }`}
                         >
                             {message.attachment_mime?.startsWith('image/') ? (
@@ -67,10 +67,10 @@ const ChatMessage = ({ message }) => {
                                     <img
                                         src={attachmentUrl}
                                         alt={message.attachment_name || 'Attachment'}
-                                        className="max-h-64 rounded-lg object-contain"
+                                        className="max-h-64 rounded-xl object-cover shadow-sm hover:shadow-md transition-shadow duration-200"
                                     />
                                     {message.attachment_name && (
-                                        <div className="mt-1 text-[11px] opacity-80 truncate">
+                                        <div className={`mt-2 text-xs ${isSentByMe ? 'text-blue-100' : 'text-gray-500'}`}>
                                             📎 {message.attachment_name}
                                         </div>
                                     )}
@@ -81,11 +81,13 @@ const ChatMessage = ({ message }) => {
                                     href={attachmentUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className={`inline-flex items-center text-xs underline ${
-                                        isSentByMe ? 'text-white' : 'text-primary'
+                                    className={`inline-flex items-center px-3 py-2 rounded-lg text-xs transition-all duration-200 ${
+                                        isSentByMe
+                                            ? 'bg-blue-400/20 text-blue-100 hover:bg-blue-400/30'
+                                            : 'bg-gray-200/60 text-gray-600 hover:bg-gray-200/80'
                                     }`}
                                 >
-                                    <span className="mr-1">📎</span>
+                                    <span className="mr-2">📎</span>
                                     <span className="truncate max-w-[180px]">
                                         {message.attachment_name || 'Download file'}
                                     </span>
@@ -97,10 +99,10 @@ const ChatMessage = ({ message }) => {
                     {/* Timestamp */}
                     {createdAt && (
                         <div
-                            className={`text-[10px] mt-1 ${
+                            className={`text-xs mt-2 ${
                                 isSentByMe
-                                    ? 'text-white/70 text-right'
-                                    : 'text-gray-500 text-right'
+                                    ? 'text-blue-100/80 text-right'
+                                    : 'text-gray-400 text-right'
                             }`}
                         >
                             {format(createdAt, 'h:mm a')}
@@ -108,6 +110,13 @@ const ChatMessage = ({ message }) => {
                     )}
                 </div>
             </div>
+
+            {/* Avatar for current user */}
+            {isSentByMe && (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-blue-500 text-white font-medium flex items-center justify-center ml-3 shadow-sm text-sm uppercase">
+                    {user?.name?.charAt(0) || 'Y'}
+                </div>
+            )}
         </div>
     );
 };

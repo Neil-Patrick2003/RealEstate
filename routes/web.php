@@ -195,6 +195,9 @@ Route::patch('/broker/properties/{property}/edit', [\App\Http\Controllers\Broker
 
 Route::post('/broker/properties/{propertyListing}/assign-agents', [\App\Http\Controllers\PropertyListingAgentController::class, 'store']);
 
+Route::get('/broker/chat', [\App\Http\Controllers\Broker\ChatController::class, 'index'])->name('broker.chat.index');
+Route::get('/broker/chat/channels/{channel}', [ChannelController::class, 'show'])->name('broker.chat.channels.show');
+
 
 Route::get('/broker/partners', [\App\Http\Controllers\Broker\DeveloperController::class, 'index']);
 Route::post('/broker/partners/create', [\App\Http\Controllers\Broker\DeveloperController::class, 'store']);
