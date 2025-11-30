@@ -26,7 +26,7 @@ class FeedbackController extends Controller
     public function store(Request $request, Deal $deal)
 
     {
-        
+
 
         $validated = $request->validate([
 

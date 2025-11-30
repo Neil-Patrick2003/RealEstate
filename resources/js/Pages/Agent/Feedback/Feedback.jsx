@@ -12,6 +12,7 @@ import {
     faChartBar,
 } from "@fortawesome/free-solid-svg-icons";
 import { Search, SlidersHorizontal, ArrowDownWideNarrow, User, MessageSquare } from "lucide-react";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 // Using Lucide icons for a more modern, consistent look where possible
 
 /* ---------- small utils ---------- */
@@ -283,7 +284,7 @@ export default function Feedback({ feedbacks }) {
     )
 
     return (
-        <AgentLayout>
+        <AuthenticatedLayout>
             <div className="px-4 py-6 space-y-6">
 
                 {/* 1. Header & Quick Summary */}
@@ -368,6 +369,6 @@ export default function Feedback({ feedbacks }) {
                     </ul>
                 )}
             </div>
-        </AgentLayout>
+        </AuthenticatedLayout>
     );
 }

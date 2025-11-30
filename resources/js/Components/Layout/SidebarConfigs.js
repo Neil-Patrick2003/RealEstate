@@ -124,6 +124,8 @@ export const agentSidebarConfig = {
         { name: "Trippings", Icon: Calendar, path: "/agents/trippings", description: "Property tours & schedules" },
         { name: "Deals", Icon: Handshake, path: "/agents/deal", description: "Negotiations & deal tracking" },
         { name: "Transactions", Icon: BarChart3, path: "/agents/transaction", description: "Sales & payment overview" },
+        { name: "Feedback", Icon: BarChart3, path: "/agents/feedback", description: "Customer Review" },
+
     ],
     quickActions: [
         { label: "Add Lead", Icon: Plus, onClick: () => router.get('/agents/properties') }

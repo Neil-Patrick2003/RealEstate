@@ -100,7 +100,7 @@ class AppServiceProvider extends ServiceProvider
                         'name'      => $agent?->name,
                         'photo_url' => $agent?->photo_url,
                     ],
-                    'feedback_link' => route('deals.feedback.create', ['deal' => $d->id]),
+                    'feedback_link' => route('deals.index'),
                 ];
             })->values();
         });
