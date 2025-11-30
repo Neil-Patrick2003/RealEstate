@@ -25,43 +25,45 @@ const ChatView = ({ channels = [], channel = null }) => {
     }, [channels, search]);
 
     return (
-        <div className="flex h-[80vh] border border-gray-200 shadow-lg rounded-2xl bg-white">
+        <div className="flex mt-10 h-[80vh] rounded-2xl border bg-white">
             {/* Sidebar */}
-            <div className="mt-2 w-1/4 min-h-[85vh] overflow-y-auto border-r border-gray-200 px-4">
+            <div className="mt-2 w-1/4 min-h-[85vh] overflow-y-auto bg-gray-50/60 px-4">
                 {/* Search Input */}
-                <div className="mb-4 flex items-center border border-gray-300 rounded-md">
-                    <FontAwesomeIcon icon={faSearch} className="ml-2 text-gray-400" />
+                <div className="mb-6 flex items-center bg-white/80 backdrop-blur-sm rounded-xl px-3 py-2.5 shadow-sm">
+                    <FontAwesomeIcon icon={faSearch} className="ml-1 text-gray-400 text-sm" />
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search by name or property..."
-                        className="w-full px-3 py-2 border-0 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-1 border-0 bg-transparent text-sm focus:outline-none focus:ring-0 placeholder-gray-400"
                     />
                 </div>
 
                 {/* Filtered Channel List */}
                 {filteredChannels.length > 0 ? (
-                    filteredChannels.map(item => (
-                        <ChannelItem
-                            key={item.id}
-                            channel={item}
-                            isActive={channel?.id === item.id}
-                            className="hover:bg-gray-100 transition duration-200"
-                        />
-                    ))
+                    <div className=" relative overflow-auto h-[70vh] space-y-1">
+                        {filteredChannels.map(item => (
+                            <ChannelItem
+                                key={item.id}
+                                channel={item}
+                                isActive={channel?.id === item.id}
+                                className="hover:bg-white/70 transition-all duration-200 rounded-xl"
+                            />
+                        ))}
+                    </div>
                 ) : (
-                    <div className="text-sm text-gray-500 text-center">No matching channels.</div>
+                    <div className="text-sm text-gray-400 text-center py-8">No matching channels</div>
                 )}
             </div>
 
             {/* Main View */}
-            <div className="w-3/4 h-full bg-gray-50 p-4">
+            <div className="w-3/4 h-full bg-gradient-to-br from-gray-50/80 to-white/50 p-6">
                 {channel ? (
                     <ChannelView channel={channel} />
                 ) : (
-                    <div className="flex justify-center items-center h-full text-gray-500">
-                        No Messages to display.
+                    <div className="flex justify-center items-center h-full text-gray-400">
+                        Select a conversation to start messaging
                     </div>
                 )}
             </div>

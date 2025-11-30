@@ -25,28 +25,23 @@ class AdminController extends Controller
             ? Carbon::parse($request->date_to)->endOfDay()
             : now()->endOfDay();
 
-        // ===== User metrics (adjust role field/values if different) =====
         $total_users   = User::count();
         $brokers_count = User::where('role', 'Broker')->count();
         $agents_count  = User::where('role', 'Agent')->count();
         $buyers_count  = User::where('role', 'Buyer')->count();
 
-        // ===== Listings / Properties =====
         $properties_total     = Property::count();
         $listings_published   = PropertyListing::where('status', 'Published')->count();
         $listings_unpublished = PropertyListing::where('status', 'Unpublished')->count();
 
-        // ===== Inquiries =====
         $inquiries_total   = Inquiry::count();
         $inquiries_pending = Inquiry::where('status', 'Pending')->count();
 
-        // ===== Deals (adjust statuses to match your app) =====
         $deals_total    = Deal::count();
         $deals_pending  = Deal::where('status', 'Pending')->count();
         $deals_closed   = Deal::whereIn('status', ['Sold', 'Closed'])->count();
         $deals_cancelled= Deal::where('status', 'Cancelled')->count();
 
-        // ===== Daily time-series for charts =====
         $daily_listings = Property::whereBetween('created_at', [$from, $to])
             ->selectRaw('DATE(created_at) as d, COUNT(*) as c')
             ->groupBy('d')
@@ -63,7 +58,6 @@ class AdminController extends Controller
             ->map(fn ($r) => ['date' => $r->d, 'value' => (int)$r->c])
             ->values();
 
-        // ===== Top brokers (requires relationships on User model; see note below) =====
 
         $top_brokers = User::where('role','Broker')
             ->select('users.id','users.name')
@@ -85,13 +79,9 @@ class AdminController extends Controller
             ->get();
 
 
-        // ===== Recent activity =====
         $recent_properties = Property::latest()->limit(5)->get(['id','title','address','image_url','created_at']);
         $recent_users      = User::latest()->limit(5)->get(['id','name','email','role','created_at']);
 
-        // ===== Upcoming trippings (platform-wide) =====
-        // You said you have start_date + start_time (no schedule_at)
-        // We consider anything later than "now" upcoming:
         $now = now();
         $today = $now->toDateString();
         $time  = $now->format('H:i:s');
@@ -115,7 +105,6 @@ class AdminController extends Controller
                 'date_to'   => $to->toDateString(),
             ],
 
-            // Top stats
             'users' => [
                 'total' => $total_users,
                 'brokers' => $brokers_count,

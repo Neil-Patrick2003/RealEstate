@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('feedbacks', function (Blueprint $table) {
-            $table->string('feedback_type');
             $table->unsignedBigInteger('deal_id')->nullable()->change();
         });
     }
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('feedbacks', function (Blueprint $table) {
-            $table->dropColumn('feedback_type');
-            $table->unsignedBigInteger('deal_id')->nullable(false)->change();
+            $table->dropColumn('deal_id');
         });
     }
 };

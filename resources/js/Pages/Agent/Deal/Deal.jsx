@@ -1,4 +1,4 @@
-// resources/js/Pages/Agents/Deal.jsx
+// resources/js/Pages/Agents/Index.jsx
 import AgentLayout from "@/Layouts/AgentLayout.jsx";
 import InquiriesCollapsable from "@/Components/collapsable/InquiriesClosable.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -28,11 +28,11 @@ const ordinal = (n) => {
 
 const STATUS = {
     PENDING: "Pending",
-    ACCEPTED: "Accepted",
-    REJECTED: "Rejected",
-    RESERVED: "Reserved",
+    ACCEPTED: "Accept",
+    REJECTED: "Reject",
+    RESERVED: "Reserve",
     SOLD: "Sold",
-    CANCELLED: "Cancelled",
+    CANCELLED: "Cancel",
 };
 
 const statusStyles = {
@@ -388,6 +388,7 @@ export default function Deal({ property_listings }) {
                                                             <th className="p-4 min-w-[150px]">Current Offer</th>
                                                             <th className="p-4 min-w-[120px]">Status</th>
                                                             <th className="p-4 min-w-[150px]">Last Negotiation</th>
+                                                            <th className="p-4 min-w-[150px]">Notes</th>
                                                             <th className="p-4 min-w-[300px]">Action</th>
                                                         </tr>
                                                         </thead>
@@ -466,6 +467,10 @@ export default function Deal({ property_listings }) {
                                                                                 "—"
                                                                             )}
                                                                         </td>
+                                                                        <td className="p-4 text-gray-600">
+                                                                            {deal?.notes}
+                                                                        </td>
+
 
                                                                         <td className="p-4">
                                                                             {isActionable ? (

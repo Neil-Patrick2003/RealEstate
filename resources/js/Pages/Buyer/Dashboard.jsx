@@ -208,7 +208,7 @@ export default function Dashboard({ properties = [], inquiries = [], saveCount =
                 <section className="page-section">
                     <div className="section-header">
                         <div>
-                            <h2 className="section-title">Featured Properties</h2>
+                            <h2 className="section-title">Recommended Properties</h2>
                             <p className="section-description">
                                 Handpicked listings that match your preferences and search history
                             </p>

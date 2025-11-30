@@ -8,20 +8,43 @@ use Inertia\Inertia;
 
 class ChatController extends Controller
 {
-    public function index() {
-        $channel = ChatChannel::whereHas('members', function ($q) {
-            $q->where('users.id', auth()->id());
-        })
-            ->orderBy('last_activity_at', 'desc')
-            ->first();
+    public function index()
+    {
+        $userId = auth()->id();
 
-        if ($channel) {
-            return redirect(route('buyer.chat.channels.show', $channel->id));
+        $channels = ChatChannel::with(['members', 'subject'])
+            ->withCount([
+                // optional: total messages (gives messages_count)
+                'messages',
+
+                // unread messages for this user (gives unread_count)
+                'messages as unread_count' => function ($q) use ($userId) {
+                    $q->whereNull('read_at')
+                        ->where('sender_id', '!=', $userId);
+                },
+            ])
+            ->whereHas('members', function ($q) use ($userId) {
+                $q->where('users.id', $userId);
+            })
+            ->orderByDesc('last_activity_at')
+            ->get();
+
+
+
+        // pick first channel as selected (or null if none)
+        $currentChannel = $channels->first();
+
+        if ($currentChannel) {
+            return redirect(route('buyer.chat.channels.show', $currentChannel->id));
         }
 
         return Inertia::render('Buyer/Chat/Chat', [
-            'channels' => [],
-            'channel' => $channel
+            'channels' => $channels,
+            'channel'  => $currentChannel,
         ]);
     }
+
+
+
+
 }

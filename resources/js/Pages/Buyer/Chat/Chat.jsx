@@ -6,7 +6,6 @@ import PageHeader from "@/Components/ui/PageHeader.jsx";
 const Chat = ({ channel = null, channels = [] }) => {
     return (
         <AuthenticatedLayout>
-            <PageHeader title="Chat"/>
             <div className='h-[75vh]'>
                 <ChatView channels={channels} channel={channel}/>
             </div>

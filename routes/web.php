@@ -18,6 +18,7 @@ use App\Http\Controllers\Seller\PropertyController;
 use App\Http\Controllers\Seller\PropertyImageController;
 use App\Http\Controllers\Seller\TransactionController;
 use App\Http\Controllers\Seller\TrippingController;
+use App\Models\Blog;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
@@ -54,13 +55,15 @@ Route::get('/', function (Request $request) {
     ]);
 });
 
-
+Route::get('/properties', [\App\Http\Controllers\Buyer\PropertyController::class, 'index'])->name('properties');
+Route::get('/properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show'])->name('properties.show');
 Route::get('/explore/projects', [ProjectController::class, 'index']);
 Route::get('/explores/projects/{project}', [ProjectController::class, 'show']);
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
 Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
+
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 //Route::get('/search', [SearchController::class, 'show']);
@@ -141,8 +144,7 @@ Route::patch('/agents/trippings/{tripping}/reschedule', [\App\Http\Controllers\A
 Route::patch('/agents/trippings/{tripping}/complete', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'complete']);
 Route::get('/agents/calendar', [\App\Http\Controllers\Agent\PropertyTrippingController::class, 'calendar']);
 Route::get('/agents/feedback', [\App\Http\Controllers\Agent\AgentController::class, 'feedback']);
-Route::get('/all-properties', [\App\Http\Controllers\Buyer\BuyerController::class, 'allProperties'])->name('all.properties');
-Route::get('/all-properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
+
 
 //------------------------------------------buyer---------------------------------------------------
 Route::middleware(['auth'])->group(function () {
@@ -161,16 +163,16 @@ Route::middleware(['auth', 'role:Buyer' ])->group(function () {
     Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
     Route::put('/trippings/{tripping}', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'update']);
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
-    Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
-    Route::get('/deals', [DealController::class, 'index']);
+    Route::get('/deals', [DealController::class, 'index'])->name('deals.index');
     Route::get('/deals/{deal}', [DealController::class, 'store']);
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
+    Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate'])->name('deal.deals.update_status');
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index'])->name('buyer.transactions.index');
     Route::get('/deals/{deal}/feedback', [FeedbackController::class, 'create'])->name('deals.feedback.create');
     Route::post('/deals/{deal}/feedback', [FeedbackController::class, 'store'])->name('deals.feedback.store');
-});
+    Route::post('/favourites/toggle', [\App\Http\Controllers\Property\PropertyController::class, 'toggleFavourite'])->name('favourites.toggle');
 
-Route::post('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'store']);
+});
 
 
 
@@ -193,6 +195,9 @@ Route::get('/broker/properties/{propertyListing}/edit', [\App\Http\Controllers\B
 Route::patch('/broker/properties/{property}/edit', [\App\Http\Controllers\Broker\PropertyController::class, 'update'])->name('broker.properties.update');
 
 Route::post('/broker/properties/{propertyListing}/assign-agents', [\App\Http\Controllers\PropertyListingAgentController::class, 'store']);
+
+Route::get('/broker/chat', [\App\Http\Controllers\Broker\ChatController::class, 'index'])->name('broker.chat.index');
+Route::get('/broker/chat/channels/{channel}', [ChannelController::class, 'show'])->name('broker.chat.channels.show');
 
 
 Route::get('/broker/partners', [\App\Http\Controllers\Broker\DeveloperController::class, 'index']);
@@ -247,20 +252,6 @@ Route::get('/maps', [\App\Http\Controllers\Property\PropertyController::class, '
 Route::get('/maps/property/{id}', [\App\Http\Controllers\Property\PropertyController::class, 'map_show']);
 Route::get('/agents/{agent}', [\App\Http\Controllers\Agent\AgentController::class, 'show']);
 Route::get('properties/{property}', [\App\Http\Controllers\PropertyController::class, 'show']);
-Route::post('/favourites/toggle', [\App\Http\Controllers\Property\PropertyController::class, 'toggleFavourite'])->name('favourites.toggle');
-//
-//Route::middleware(['auth'])->group(function () {
-//    Route::get('/admin/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'index'])->name('admin.dashboard');
-//    Route::get('/admin/properties', [\App\Http\Controllers\Admin\PropertyController::class, 'index'])->name('admin.properties');
-//
-//    Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users');
-//    Route::get('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('admin.users.create');
-//    Route::post('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
-//    Route::get('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit');
-//    Route::patch('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
-//    Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
-//});
-
 
 Route::prefix('export')->group(function () {
     Route::get('/monthly-transactions', [ExportPdfController::class, 'monthlySalesTransactions'])

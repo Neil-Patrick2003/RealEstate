@@ -36,7 +36,7 @@ export default function FeedbackForm({ openFeedback, setOpenFeedBack, agentId, t
     ];
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        transaction_id: transactionId || null,
+        deal: transactionId || null,
         agent_id: agentId || null,
         ratings: {
             communication: 0,
@@ -69,7 +69,6 @@ export default function FeedbackForm({ openFeedback, setOpenFeedBack, agentId, t
     }, [transactionId, agentId]);
 
     const submitFeedback = (e) => {
-        console.log(agentId);
         e.preventDefault();
         post("/feedback", {
             preserveScroll: true,

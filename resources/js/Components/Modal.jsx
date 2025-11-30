@@ -35,7 +35,7 @@ export default function Modal({
     if (!closeable) {
       event.stopPropagation();
     } else {
-      handleClose(); // close modal on backdrop click only if closeable is true
+      handleClose();
     }
   };
 

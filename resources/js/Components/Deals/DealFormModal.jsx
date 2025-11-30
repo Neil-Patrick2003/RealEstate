@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import Modal from "@/Components/Modal.jsx";
 import { useForm } from "@inertiajs/react";
 import InputError from "@/Components/InputError.jsx";
-import { BadgeCheck, X, DollarSign, Handshake, AlertCircle } from "lucide-react";
+import { BadgeCheck, X, PhilippinePeso, Handshake, AlertCircle } from "lucide-react";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
@@ -12,7 +12,9 @@ const money = new Intl.NumberFormat("en-PH", {
     maximumFractionDigits: 0,
 });
 
-export default function DealFormModal({ property = {}, isOpen, setIsOpen, initialValue }) {
+export default function DealFormModal({ property = {}, propertyListingId, isOpen, setIsOpen, initialValue }) {
+
+    console.log("property", property);
     const listPrice = Number(property?.price || 0);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -72,7 +74,7 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
                 payloadAmount = amt;
             }
 
-            const listingId = property?.property_listing?.id;
+                const listingId = propertyListingId ?? property?.property_listing?.id  ;
             if (!listingId) return;
 
             const payload = {
@@ -267,7 +269,7 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
                             />
                             <div className="ml-3">
                                 <div className="font-bold text-gray-900 flex items-center gap-2">
-                                    <DollarSign className="h-5 w-5 text-primary-600" />
+                                    <PhilippinePeso className="h-5 w-5 text-primary-600" />
                                     Custom Amount Offer
                                 </div>
                                 <div className="text-lg font-bold text-gray-700 mt-2">
@@ -311,7 +313,7 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
                                 )}
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                <DollarSign className="h-5 w-5" />
+                                <PhilippinePeso className="h-5 w-5" />
                             </div>
                         </div>
 
@@ -349,7 +351,7 @@ export default function DealFormModal({ property = {}, isOpen, setIsOpen, initia
                                         </button>
                                     );
                                 })}
-                            </div>  
+                            </div>
                         )}
                     </div>
 

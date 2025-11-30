@@ -89,7 +89,7 @@ function Navbar() {
 
     const navLinks = [
         { name: 'Home', href: '/' },
-        { name: 'Properties', href: '/all-properties' },
+        { name: 'Properties', href: '/properties' },
         { name: 'About', href: '/about' },
         { name: 'Blogs', href: '/blogs' },
         { name: 'Contact', href: '/contact' },

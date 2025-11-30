@@ -1211,7 +1211,7 @@ export default function AuthenticatedLayout({ children }) {
                 <motion.header
                     initial={false}
                     animate={{ paddingLeft: mode === "mobile" ? 0 : sidebarWidth }}
-                    className="page-header glass dark:glass-dark fixed top-0 left-0 right-0 z-30"
+                    className=" glass dark:glass-dark fixed top-0 left-0 right-0 z-30"
                 >
                     <div className="flex items-center justify-between px-6 py-4">
                         {/* Left Section */}
@@ -1420,19 +1420,6 @@ export default function AuthenticatedLayout({ children }) {
 
                         {/* Right Section */}
                         <div className="flex items-center gap-3">
-                            {/* Theme Toggle */}
-                            <button
-                                onClick={toggleTheme}
-                                className="btn-ghost p-2.5 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                                aria-label="Toggle theme"
-                            >
-                                {theme === "dark" ? (
-                                    <Sun className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                                ) : (
-                                    <Moon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                                )}
-                            </button>
-
                             {/* Notifications */}
                             <button
                                 onClick={() => setIsNotificationsOpen(true)}
