@@ -162,10 +162,10 @@ Route::middleware(['auth', 'role:Buyer' ])->group(function () {
     Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
     Route::put('/trippings/{tripping}', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'update']);
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
-    Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate']);
     Route::get('/deals', [DealController::class, 'index']);
     Route::get('/deals/{deal}', [DealController::class, 'store']);
     Route::put('/deals/{deal}', [DealController::class, 'update'])->name('deal.deals.update');
+    Route::put('/deal/{id}/{status}', [DealController::class, 'handleUpdate'])->name('deal.deals.update_status');
     Route::get('/transactions', [\App\Http\Controllers\Buyer\TransactionController::class, 'index'])->name('buyer.transactions.index');
     Route::get('/deals/{deal}/feedback', [FeedbackController::class, 'create'])->name('deals.feedback.create');
     Route::post('/deals/{deal}/feedback', [FeedbackController::class, 'store'])->name('deals.feedback.store');

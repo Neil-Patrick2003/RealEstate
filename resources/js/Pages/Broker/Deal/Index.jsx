@@ -1,4 +1,4 @@
-// resources/js/Pages/Agents/Deal.jsx
+// resources/js/Pages/Agents/Index.jsx
 import InquiriesCollapsable from "@/Components/collapsable/InquiriesClosable.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {

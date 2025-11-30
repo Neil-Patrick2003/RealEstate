@@ -1211,7 +1211,7 @@ export default function AuthenticatedLayout({ children }) {
                 <motion.header
                     initial={false}
                     animate={{ paddingLeft: mode === "mobile" ? 0 : sidebarWidth }}
-                    className="page-header glass dark:glass-dark fixed top-0 left-0 right-0 z-30"
+                    className=" glass dark:glass-dark fixed top-0 left-0 right-0 z-30"
                 >
                     <div className="flex items-center justify-between px-6 py-4">
                         {/* Left Section */}

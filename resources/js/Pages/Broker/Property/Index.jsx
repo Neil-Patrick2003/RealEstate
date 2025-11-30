@@ -18,6 +18,7 @@ import {
 import Dropdown from "@/Components/Dropdown.jsx";
 import AssignAgentModal from "@/Components/modal/Broker/AssignAgentModal.jsx";
 import Breadcrumb from "@/Components/Breadcrumbs.jsx";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 
 // ---------- helpers ----------
 const S = (v) => (typeof v === "string" ? v : "");
@@ -154,7 +155,7 @@ export default function Index({
     const links = A(properties?.links);
 
     return (
-        <BrokerLayout>
+        <AuthenticatedLayout>
             <Breadcrumb pages={pages} />
 
             {/* Assign Agent Modal */}
@@ -556,6 +557,6 @@ export default function Index({
                     )}
                 </div>
             </div>
-        </BrokerLayout>
+        </AuthenticatedLayout>
     );
 }

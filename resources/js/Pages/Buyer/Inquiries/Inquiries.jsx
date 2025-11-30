@@ -153,11 +153,33 @@ const ProgressTracker = ({ inquiry }) => {
     const isClosed = inquiry?.status?.toLowerCase().includes('closed');
 
     const steps = [
-        { key: "submitted", label: "Submitted", status: isClosed ? "completed" : "completed" },
-        { key: "reviewed", label: "Reviewed", status: isClosed ? "completed" : (inquiry?.status !== 'accepted' ? "completed" : "upcoming") },
-        { key: "scheduled", label: "Scheduled", status: isClosed ? "completed" : (inquiry?.trippings?.length > 0 ? "completed" : "upcoming") },
-        { key: "completed", label: "Completed", status: isClosed ? "completed" : (inquiry?.status === 'closed' ? "completed" : "upcoming") }
+        { key: "submitted", label: "Submitted", status: "completed" },
+
+        {
+            key: "reviewed",
+            label: "Reviewed",
+            status: isClosed
+                ? "completed"
+                : (inquiry?.status?.trim() === "Accepted" ? "completed" : "upcoming")
+        },
+
+        {
+            key: "scheduled",
+            label: "Scheduled",
+            status: isClosed
+                ? "completed"
+                : (inquiry?.trippings?.length > 0 ? "completed" : "upcoming")
+        },
+
+        {
+            key: "completed",
+            label: "Completed",
+            status: isClosed
+                ? "completed"
+                : (inquiry?.status?.trim() === "closed" ? "completed" : "upcoming")
+        }
     ];
+
 
     const currentStep = isClosed ? -1 : steps.findIndex(step => step.status === 'upcoming');
 
