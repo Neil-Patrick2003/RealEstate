@@ -1420,19 +1420,6 @@ export default function AuthenticatedLayout({ children }) {
 
                         {/* Right Section */}
                         <div className="flex items-center gap-3">
-                            {/* Theme Toggle */}
-                            <button
-                                onClick={toggleTheme}
-                                className="btn-ghost p-2.5 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                                aria-label="Toggle theme"
-                            >
-                                {theme === "dark" ? (
-                                    <Sun className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                                ) : (
-                                    <Moon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                                )}
-                            </button>
-
                             {/* Notifications */}
                             <button
                                 onClick={() => setIsNotificationsOpen(true)}

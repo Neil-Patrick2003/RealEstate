@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Property;
+use App\Models\SearchHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class PropertyController extends Controller
@@ -169,6 +171,26 @@ class PropertyController extends Controller
         $propertiesWithMap = Property::whereIn('id', $properties->pluck('id'))
             ->with('coordinate')
             ->get();
+
+        if (Auth::check()) {
+            $hasSomething =
+                $filters['search'] ||
+                $filters['location'] ||
+                !empty($filters['category']) ||
+                !empty($filters['subcategory']) ||
+                $filters['is_presell'] !== null;
+
+            if ($hasSomething) {
+                SearchHistory::create([
+                    'user_id'       => Auth::id(),
+                    'search'        => $filters['search'],
+                    'location'      => $filters['location'],
+                    'categories'    => $filters['category'],    // array → JSON
+                    'subcategories' => $filters['subcategory'], // array → JSON
+                    'is_presell'    => $filters['is_presell'],
+                ]);
+            }
+        }
 
         return Inertia::render('Buyer/Properties/Properties', [
             'properties' => $properties,

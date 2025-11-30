@@ -232,4 +232,10 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             );
         }
     }
+
+
+    public function search_history(){
+        return $this->hasMany(SearchHistory::class);
+    }
+
 }
