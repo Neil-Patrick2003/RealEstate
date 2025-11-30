@@ -40,6 +40,12 @@ return [
         'redirect' => 'http://localhost/auth/google/callback',
     ],
 
+    'openai' => [
+        'key'        => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MJVI_MODEL', 'gpt-4.1-mini'), // replace default with your ft model if you want
+    ],
+
+
 
 
 ];
