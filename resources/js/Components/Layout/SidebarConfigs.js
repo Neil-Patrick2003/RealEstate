@@ -63,7 +63,7 @@ export const buyerSidebarConfig = {
         { name: "Transactions", Icon: BarChart3, path: "/transactions", description: "Payment & transaction history" },
     ],
     quickActions: [
-        { label: "Browse Properties", Icon: Plus, onClick: () => router.get('/all-properties') }
+        { label: "Browse Properties", Icon: Plus, onClick: () => router.get('/properties') }
     ],
     showSearch: false,
     categorizeNotification: categorizeNotifToPath

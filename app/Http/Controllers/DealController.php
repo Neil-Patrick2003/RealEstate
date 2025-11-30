@@ -13,16 +13,21 @@ class DealController extends Controller
 {
     public function index(){
 
+
+
         $deals = Deal::with([
             'property_listing.property.project',
             'property_listing.property:id,title,price,image_url,address,property_type,sub_type,lot_area,floor_area,seller_id',
             'property_listing.agents:id,name,photo_url,email,contact_number',
             'property_listing.property.seller:id,name',
+            'property_listing.agents:id,name,photo_url,email,contact_number',
+            'property_listing.broker',
             'feedback'
         ])
             ->where('buyer_id', auth()->id())
             ->latest()
             ->get();
+
 
         return inertia('Buyer/Deal/Index', [
             'deals' => $deals,

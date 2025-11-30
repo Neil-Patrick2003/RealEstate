@@ -12,6 +12,10 @@ class Feedback extends Model
     protected $table = 'feedbacks';
     protected $guarded = [];
 
+    protected $casts = [
+        'characteristics' => 'array',
+    ];
+
     public function characteristics(): HasMany
     {
         return $this->hasMany(FeedbackCharacteristic::class);

@@ -22,30 +22,63 @@ class FeedbackController extends Controller
         ]);
     }
 
+
     public function store(Request $request, Deal $deal)
+
     {
+        
 
+        $validated = $request->validate([
 
-        $this->authorize('update', $deal);
+            'agent_id'       => ['nullable', 'integer'],
+            'ratings.communication'   => ['required', 'integer', 'min:1', 'max:5'],
+            'ratings.negotiation'     => ['required', 'integer', 'min:1', 'max:5'],
+            'ratings.professionalism' => ['required', 'integer', 'min:1', 'max:5'],
+            'ratings.knowledge'       => ['required', 'integer', 'min:1', 'max:5'],
+            'characteristics'         => ['nullable', 'array'],
+            'characteristics.*'       => ['string', 'max:255'],
+            'comments'                => ['nullable', 'string', 'max:2000'],
 
-        $data = $request->validate([
-            'communication'   => 'nullable|integer|min:1|max:5',
-            'negotiation'     => 'nullable|integer|min:1|max:5',
-            'professionalism' => 'nullable|integer|min:1|max:5',
-            'knowledge'       => 'nullable|integer|min:1|max:5',
-            'comments'        => 'nullable|string|max:2000',
         ]);
 
-        Feedback::create([
-            'deal_id'  => $deal->id,
-            'agent_id' => $request->agent_id,
-            'sender_id'=> auth()->id(),// sender is buyer here
-            ...$data,
+
+
+        $ratings = $validated['ratings'] ?? [];
+
+
+        // 1️⃣ Create Feedback record
+        $feedback = Feedback::create([
+            'deal_id'      => $request->deal,
+            'agent_id'     => $validated['agent_id'] ?? null,
+            'sender_id'    => auth()->id(),
+            'communication'   => $ratings['communication']   ?? null,
+            'negotiation'     => $ratings['negotiation']     ?? null,
+            'professionalism' => $ratings['professionalism'] ?? null,
+            'knowledge'       => $ratings['knowledge']       ?? null,
+            'comments'        => $validated['comments'] ?? null,
+            'feedback_type'   => 'Agent Feedback',
         ]);
 
-        return redirect()->route('deals.feedback.create', $deal)
+
+        // 2️⃣ Save characteristics in separate table
+        if (!empty($validated['characteristics']) && is_array($validated['characteristics'])) {
+            foreach ($validated['characteristics'] as $characteristic) {
+                FeedbackCharacteristic::create([
+                    'feedback_id'   => $feedback->id,   // IMPORTANT: feedback id, hindi deal id
+                    'characteristic'=> $characteristic,
+                ]);
+            }
+        }
+
+
+
+
+        return redirect()
+            ->back()
             ->with('success', 'Thanks for your feedback!');
     }
+
+
 
 
 //    public function store(Request $request)

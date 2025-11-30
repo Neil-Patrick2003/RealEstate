@@ -12,8 +12,10 @@ import {
     ArrowLeftRight,
     Eye,
     Trash2,
+    MessageCircle,
 } from "lucide-react";
 import ConfirmDialog from "@/Components/modal/ConfirmDialog.jsx";
+import FeedbackForm from "@/Components/modal/Buyer/FeedbackForm.jsx";
 
 const StatusBadge = ({ status }) => {
     const statusConfig = {
@@ -27,7 +29,6 @@ const StatusBadge = ({ status }) => {
             icon: CheckCircle,
             label: "Accepted",
         },
-        // handle backend status "accept" as well
         accept: {
             color: "bg-green-100 text-green-800 border-green-200",
             icon: CheckCircle,
@@ -38,7 +39,6 @@ const StatusBadge = ({ status }) => {
             icon: XCircle,
             label: "Rejected",
         },
-        // handle backend status "decline"/"declined"
         decline: {
             color: "bg-red-100 text-red-800 border-red-200",
             icon: XCircle,
@@ -69,11 +69,15 @@ const StatusBadge = ({ status }) => {
             icon: XCircle,
             label: "Cancelled",
         },
-        // handle backend status "cancel"
         cancel: {
             color: "bg-gray-100 text-gray-700 border-gray-200",
             icon: XCircle,
             label: "Cancelled",
+        },
+        sold: {
+            color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+            icon: CheckCircle,
+            label: "Sold",
         },
     };
 
@@ -105,9 +109,13 @@ export default function BuyerDealsPage({ deals, auth }) {
     const [acceptModalOpen, setAcceptModalOpen] = useState(false);
     const [acceptingDeal, setAcceptingDeal] = useState(null);
 
+    // 🔹 Feedback modal state (for FeedbackForm)
+    const [feedbackOpen, setFeedbackOpen] = useState(false);
+    const [feedbackDeal, setFeedbackDeal] = useState(null);
+    const [feedbackAgentId, setFeedbackAgentId] = useState(null);
+
     const authUserId = auth?.user?.id;
 
-    // Ensure deals is always an array
     const dealsData = Array.isArray(deals) ? deals : [];
 
     const columns = [
@@ -168,9 +176,7 @@ export default function BuyerDealsPage({ deals, auth }) {
         {
             key: "note",
             header: "Notes",
-            render: (deal) => (
-                <div>{deal.notes ?? <i>no notes</i>}</div>
-            ),
+            render: (deal) => <div>{deal.notes ?? <i>no notes</i>}</div>,
         },
         {
             key: "updated",
@@ -203,13 +209,11 @@ export default function BuyerDealsPage({ deals, auth }) {
         },
     ];
 
-    // Open confirm dialog for accept
     const openAcceptModal = (deal) => {
         setAcceptingDeal(deal);
         setAcceptModalOpen(true);
     };
 
-    // Called by ConfirmDialog on confirm
     const handleAccept = () => {
         if (!acceptingDeal) return;
 
@@ -296,25 +300,95 @@ export default function BuyerDealsPage({ deals, auth }) {
             status
         );
 
+        const isClosedForFeedback = [
+            "sold",
+            "cancelled",
+            "cancel",
+            "declined",
+            "decline",
+        ].includes(status);
+
+        const hasFeedback =
+            Array.isArray(deal.feedback) && deal.feedback.length > 0;
+
         const items = [];
 
-        // Always show View Property
+        // always view property
         items.push({
             label: "View Property",
             variant: "ghost",
             icon: Eye,
             onClick: () => {
-                window.location.href = `/property-listings/${deal.property_listing_id}`;
+                window.open(
+                    `/property-listings/${deal.property_listing_id}`,
+                    "_blank"
+                );
             },
         });
 
+        // closed deals → feedback button
+        if (!isActionable && isClosedForFeedback) {
+            if (!hasFeedback) {
+                items.push({
+                    label: "Rate Agent / Send Feedback",
+                    variant: "primary",
+                    icon: MessageCircle,
+                    onClick: () => {
+                        // 🔹 NEW LOGIC: decide who receives feedback
+                        const rawAgents =
+                            deal.property_listing?.agents || [];
+                        const broker =
+                            deal.property_listing?.broker || null;
+
+                        let recipients = rawAgents;
+
+                        // If no agents but there is a broker → treat broker as the only "agent" for feedback
+                        if (
+                            (!Array.isArray(rawAgents) ||
+                                rawAgents.length === 0) &&
+                            broker
+                        ) {
+                            recipients = [
+                                {
+                                    id: broker.id,
+                                    name: broker.name,
+                                    role: "Broker",
+                                },
+                            ];
+                        }
+
+                        const autoAgentId =
+                            Array.isArray(recipients) &&
+                            recipients.length === 1
+                                ? recipients[0].id
+                                : null;
+
+                        // clone deal with overridden agents so FeedbackForm sees the right recipients
+                        const dealWithRecipients = {
+                            ...deal,
+                            property_listing: {
+                                ...deal.property_listing,
+                                agents: recipients,
+                            },
+                        };
+
+                        setFeedbackDeal(dealWithRecipients);
+                        setFeedbackAgentId(autoAgentId);
+                        setFeedbackOpen(true);
+                    },
+                    className:
+                        "!bg-indigo-600 !text-white !border !border-indigo-600 hover:!bg-indigo-700",
+                });
+            }
+
+            return items;
+        }
+
         if (!isActionable) {
-            // For completed / declined / cancelled etc — only view
             return items;
         }
 
         if (isUserRequester) {
-            // 🔹 Same user as last updater → Edit + Cancel
             items.push(
                 {
                     label: "Edit Offer",
@@ -337,7 +411,6 @@ export default function BuyerDealsPage({ deals, auth }) {
                 }
             );
         } else {
-            // 🔹 Other party → Counter Offer + Accept + Reject + Cancel
             items.push(
                 {
                     label: "Counter Offer",
@@ -345,7 +418,7 @@ export default function BuyerDealsPage({ deals, auth }) {
                     icon: ArrowLeftRight,
                     onClick: () => {
                         setSelectedDeal(deal);
-                        setIsModalOpen(true); // reuse same DealFormModal for counter offer
+                        setIsModalOpen(true);
                     },
                     className:
                         "!bg-blue-600 !text-white !border !border-blue-600 hover:!bg-blue-700",
@@ -414,7 +487,7 @@ export default function BuyerDealsPage({ deals, auth }) {
                 />
             </div>
 
-            {/* Edit / create offer modal */}
+            {/* Deal form modal */}
             {selectedDeal && (
                 <DealFormModal
                     isOpen={isModalOpen}
@@ -425,7 +498,7 @@ export default function BuyerDealsPage({ deals, auth }) {
                 />
             )}
 
-            {/* Reject modal with explanation */}
+            {/* Reject modal */}
             <Modal
                 show={rejectModalOpen}
                 onClose={() => setRejectModalOpen(false)}
@@ -455,9 +528,7 @@ export default function BuyerDealsPage({ deals, auth }) {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm resize-none"
                             rows={4}
                             value={rejectReason}
-                            onChange={(e) =>
-                                setRejectReason(e.target.value)
-                            }
+                            onChange={(e) => setRejectReason(e.target.value)}
                             placeholder="Please provide a brief explanation for rejecting this offer..."
                         />
                         <p className="text-xs text-gray-500 mt-1">
@@ -538,6 +609,26 @@ export default function BuyerDealsPage({ deals, auth }) {
                 description="This action cannot be undone."
                 onConfirm={handleAccept}
             />
+
+            {/* 🔹 Agent / Broker Feedback Form */}
+            {feedbackDeal && (
+                <FeedbackForm
+                    openFeedback={feedbackOpen}
+                    setOpenFeedBack={(open) => {
+                        setFeedbackOpen(open);
+                        if (!open) {
+                            setFeedbackDeal(null);
+                            setFeedbackAgentId(null);
+                        }
+                    }}
+                    agentId={feedbackAgentId}
+                    transactionId={feedbackDeal.id}
+                    // 🔹 By now, property_listing.agents already contains either:
+                    // - original agents
+                    // - OR one "broker" object treated as agent if no agents
+                    agents={feedbackDeal.property_listing?.agents || []}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }
