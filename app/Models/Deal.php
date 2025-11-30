@@ -47,5 +47,12 @@ class Deal extends Model
         return $this->propertyListing()->withDefault()?->agent();
     }
 
+    public function transactions()
+    {
+        return $this->hasOne(Transaction::class);
+    }
+
+
+
 
 }

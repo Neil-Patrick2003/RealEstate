@@ -196,14 +196,25 @@ class DealController extends Controller
                 break;
 
             case 'Declined':
-            case 'Cancelled':
-                // Only the current buyer’s inquiry → Closed No Deal
-                foreach ($inquiries as $inquiry) {
-                    if ($inquiry->buyer_id === $deal->buyer_id) {
-                        $inquiry->update(['status' => 'Closed No Deal']);
+                case 'Cancelled':
+                    // Only the current buyer’s inquiry → Closed No Deal
+                    foreach ($inquiries as $inquiry) {
+                        if ($inquiry->buyer_id === $deal->buyer_id) {
+                            $inquiry->update(['status' => 'Closed No Deal']);
+                        }
                     }
-                }
-                break;
+
+                    $deal->update([
+                        'status' => 'Cancelled',
+                    ]);
+
+                  $transaction = $deal->load('transactions');
+                     if ($transaction) {
+                         $transaction->update(['status' => 'Cancelled']);
+                     }
+
+
+                    break;
 
             case 'Sold':
                 // Close all inquiries properly

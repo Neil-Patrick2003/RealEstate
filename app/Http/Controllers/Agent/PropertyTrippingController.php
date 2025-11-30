@@ -20,6 +20,8 @@ class PropertyTrippingController extends Controller
                 ->latest()
                 ->get();
 
+
+
         return Inertia::render('Agent/Tripping/Trippings', [
             'trippings' => $trippings,
         ]);

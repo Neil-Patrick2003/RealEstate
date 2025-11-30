@@ -124,7 +124,7 @@ function useReminders(storageKey = "trip-reminders") {
 export default function TrippingsAgentFull({ trippings = [] }) {
     /* base lists */
     const pending   = useMemo(() => trippings.filter((t) => statusLc(t) === "pending"), [trippings]);
-    const upcoming  = useMemo(() => trippings.filter((t) => statusLc(t) === "accepted" && isAfterNow(t))
+    const upcoming  = useMemo(() => trippings.filter((t) => statusLc(t) === "accepted")
         .sort((a, b) => visitMoment(a) - visitMoment(b)), [trippings]);
     const completed = useMemo(() => trippings.filter((t) => statusLc(t) === "completed")
         .sort((a, b) => visitMoment(b) - visitMoment(a)), [trippings]);
