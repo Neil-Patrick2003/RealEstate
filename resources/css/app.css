@@ -854,3 +854,389 @@
     .step.ongoing .proceed-btn {
         display: none; /* Hide proceed button for ongoing steps */
     }
+
+    /* Certificate Styles */
+    .certificate-wrapper {
+        background: white;
+        border-radius: 12px;
+    }
+
+    .certificate-container {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        line-height: 1.5;
+        color: #1f2937;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    .certificate-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2rem 0;
+        border-bottom: 2px solid #f59e0b;
+        background: linear-gradient(135deg, #fefce8 0%, #fffbeb 100%);
+        border-radius: 12px 12px 0 0;
+    }
+
+    .logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .company-logo {
+        width: 80px;
+        height: 80px;
+        background: #f59e0b;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.5rem;
+        border: 4px solid #fbbf24;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .certificate-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.05em;
+    }
+
+    .company-name {
+        font-size: 1.125rem;
+        color: #374151;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .company-tagline {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+
+    .certificate-meta {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .status-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+
+    .status-badge {
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        font-weight: bold;
+        font-size: 0.875rem;
+        border: 1px solid;
+    }
+
+    .status-badge.sold {
+        background: #d1fae5;
+        color: #065f46;
+        border-color: #a7f3d0;
+    }
+
+    .status-badge.reserved {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fcd34d;
+    }
+
+    .status-badge.booked {
+        background: #dbeafe;
+        color: #1e40af;
+        border-color: #93c5fd;
+    }
+
+    .status-badge.draft,
+    .status-badge.cancelled,
+    .status-badge.expired,
+    .status-badge.refunded {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+
+    .certificate-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    @media (min-width: 1024px) {
+        .certificate-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .grid-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .section-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f59e0b;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-icon {
+        margin-right: 0.5rem;
+        color: #f59e0b;
+    }
+
+    .section-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.25rem 0;
+    }
+
+    .info-label {
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .info-value {
+        color: #1f2937;
+        font-weight: 600;
+        text-align: right;
+        max-width: 60%;
+    }
+
+    .amount-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.25rem 0;
+    }
+
+    .amount-label {
+        color: #6b7280;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .amount-label-bold {
+        font-weight: 700;
+    }
+
+    .amount-value {
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .amount-value-bold {
+        font-size: 1.125rem;
+    }
+
+    .amount-default {
+        color: #1f2937;
+    }
+
+    .amount-primary {
+        color: #f59e0b;
+    }
+
+    .amount-warning {
+        color: #dc2626;
+    }
+
+    .amount-discount {
+        color: #059669;
+    }
+
+    .amount-negative {
+        color: #dc2626;
+    }
+
+    .amount-divider {
+        border-top: 1px dashed #d1d5db;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .progress-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .progress-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .progress-bar {
+        width: 100%;
+        background: #e5e7eb;
+        border-radius: 9999px;
+        height: 0.75rem;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        background: #f59e0b;
+        height: 100%;
+        border-radius: 9999px;
+        transition: all 0.5s ease-out;
+    }
+
+    .progress-footer {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .remarks-content {
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .remarks-text {
+        color: #92400e;
+        white-space: pre-wrap;
+        line-height: 1.625;
+    }
+
+    .certificate-footer {
+        text-align: center;
+        margin-top: 2.5rem;
+        padding: 1.5rem 0;
+        border-top: 2px solid #f59e0b;
+        background: linear-gradient(135deg, #fffbeb 0%, #fefce8 100%);
+        border-radius: 0 0 12px 12px;
+    }
+
+    .footer-content {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .footer-content {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .footer-section {
+        text-align: center;
+    }
+
+    @media (min-width: 768px) {
+        .footer-section:first-child {
+            text-align: left;
+        }
+        .footer-section:last-child {
+            text-align: right;
+        }
+    }
+
+    .footer-label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .copyright {
+        font-size: 0.625rem;
+        color: #9ca3af;
+    }
+
+    /* Print Styles */
+    @media print {
+        .certificate-container {
+            box-shadow: none !important;
+            border: 2px solid #000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .certificate-header,
+        .certificate-footer {
+            background: #fff !important;
+            border-color: #000 !important;
+        }
+
+        .section-card {
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        .certificate-wrapper {
+            padding: 0 !important;
+        }
+
+        .certificate-grid,
+        .section-card {
+            break-inside: avoid;
+        }
+    }
+
+    /* Animation for certificate appearance */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .certificate-container {
+        animation: fadeInUp 0.5s ease-out;
+    }

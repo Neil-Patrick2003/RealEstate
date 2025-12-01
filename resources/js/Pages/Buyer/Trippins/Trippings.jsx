@@ -298,13 +298,15 @@ function TripActions({ trip, onReschedule, onCancel, onMessage, contact }) {
 
     const viewHref = `/properties/${trip?.property?.id}`;
 
-    // ✅ Completed: show status only, no actions
-    if (status === "completed") {
+    // ✅ Completed & Cancelled: show status only, no actions
+    if (status === "completed" || status === "cancelled") {
         return (
             <div className="space-y-2 text-center text-sm">
                 <StatusBadge status={status} size="small" />
                 <p className="text-xs text-gray-500 mt-1">
-                    This visit has been marked as completed. No further actions are available.
+                    {status === "completed"
+                        ? "This visit has been marked as completed. No further actions are available."
+                        : "This visit was cancelled. No further actions are available."}
                 </p>
             </div>
         );
@@ -379,7 +381,7 @@ export default function Trippings({ trippings }) {
                 });
             } else if (selectedVisit?.id) {
                 await router.visit(`/trippings/${selectedVisit.id}/cancel`, {
-                    method: "post",
+                    method: "put",
                     preserveScroll: true,
                     preserveState: true,
                 });
