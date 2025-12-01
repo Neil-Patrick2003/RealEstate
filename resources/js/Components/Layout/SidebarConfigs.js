@@ -104,7 +104,7 @@ export const brokerSidebarConfig = {
         { name: "Partners", Icon: FileText, path: "/broker/partners", description: "View & manage partners" },
     ],
     quickActions: [
-        { label: "Post Properties", Icon: Plus, onClick: () => router.get('/post-properties') }
+        { label: "Post Properties", Icon: Plus, onClick: () => router.get('/broker/properties/create') }
     ],
     showSearch: false,
     categorizeNotification: categorizeNotifToPath
