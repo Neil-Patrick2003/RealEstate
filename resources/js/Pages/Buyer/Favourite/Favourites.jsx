@@ -132,7 +132,7 @@ export default function Favourites({ properties, favouriteIds = [] }) {
                                 </p>
                             </div>
                             <Link
-                                href="/all-properties"
+                                href="/properties"
                                 className="btn-primary w-full sm:w-auto justify-center"
                             >
                                 <FontAwesomeIcon icon={faRocket} className="mr-2" />
