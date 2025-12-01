@@ -25,6 +25,14 @@ import logo from "../../../../assets/framer_logo.png";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import PageHeader from "@/Components/ui/PageHeader.jsx";
 import StatsCard from "@/Components/ui/StatsCard.jsx";
+import {
+    faHome,
+    faUser,
+    faCalculator,
+    faCreditCard,
+    faChartBar,
+    faStickyNote
+} from "@fortawesome/free-solid-svg-icons";
 
 // Helper for Philippine Peso formatting
 const php = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 });
@@ -530,32 +538,10 @@ function BuyerTxModal({ open, onClose, tx }) {
 
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto p-6">
-                    <div className="space-y-6">
-                        {/* Quick Summary */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <SummaryCard title="Total Contract Price" value={php.format(Number(tx.tcp || 0))} />
-                            <SummaryCard title="Amount Paid" value={php.format(Number((tx.reservation_amount || 0) + (tx.downpayment_amount || 0)))} variant="success" />
-                            <SummaryCard title="Balance Due" value={php.format(Number(tx.balance_amount || 0))} variant="error" />
-                        </div>
 
-                        {/* Transaction Details */}
-                        <div className="card p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaction Information</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <KV k="Property" v={tx.property?.title || `#${tx.property_id || "-"}`} />
-                                <KV k="Address" v={tx.property?.address || "-"} />
-                                <KV k="Reference No." v={tx.reference_no || "-"} />
-                                <KV k="Financing" v={tx.financing || "-"} />
-                                <KV k="Created Date" v={new Date(tx.created_at).toLocaleDateString()} />
-                                <KV k="Status" v={<StatusPill value={tx.status} />} />
-                            </div>
-                        </div>
-
-                        {/* Printable Certificate */}
                         <div id="certificate-root" className="border-2 border-gray-200 rounded-xl p-6 bg-white">
                             <Certificate tx={tx} />
                         </div>
-                    </div>
                 </div>
 
                 {/* Footer */}
@@ -595,82 +581,212 @@ function KV({ k, v, className = "" }) {
 
 function Certificate({ tx }) {
     const cur = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 });
-    const today = new Date().toLocaleDateString();
+    const today = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    // Calculate amounts
+    const reservationAmount = Number(tx.reservation_amount || 0);
+    const downpaymentAmount = Number(tx.downpayment_amount || 0);
+    const totalPaid = reservationAmount + downpaymentAmount;
+    const balanceAmount = Number(tx.balance_amount || 0);
+    const tcp = Number(tx.tcp || 0);
 
     return (
-        <div className="text-[13px] leading-relaxed text-neutral-900">
-            {/* Header */}
-            <div className="text-center mb-6 flex flex-col items-center">
-                <img
-                    src={logo}
-                    alt="MJVI Realty Logo"
-                    className="w-16 h-16 mb-2 object-contain"
-                    onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const fallback = document.createElement('div');
-                        fallback.className = 'w-16 h-16 mb-2 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-700 font-bold border-2 border-amber-500/30';
-                        fallback.innerText = 'MJVI';
-                        e.currentTarget.parentNode?.insertBefore(fallback, e.currentTarget.nextSibling);
-                    }}
-                />
-                <h2 className="text-xl font-semibold tracking-wide">Transaction Certificate</h2>
-                <p className="text-neutral-800 font-medium">MJVI Realty</p>
-                <p className="text-neutral-600 text-xs">Trusted Properties. Seamless Transactions.</p>
-                <p className="text-neutral-500 text-[11px] mt-1">
-                    Team Susan
-                </p>
-                <p className="text-neutral-500 text-[11px]">Generated on {today}</p>
-                <div className="w-16 h-[2px] bg-black mt-3" />
+        <div className="certificate-container bg-white text-gray-900 max-w-4xl mx-auto">
+            {/* Certificate Header */}
+            <div className="certificate-header text-center mb-8 py-6 border-b-2 border-amber-500">
+                <div className="flex justify-center items-center mb-4">
+                    <div className="w-20 h-20 bg-amber-500 rounded-full flex items-center justify-center text-white font-bold text-2xl border-4 border-amber-400 shadow-lg">
+                        MJVI
+                    </div>
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-wide">TRANSACTION CERTIFICATE</h1>
+                <p className="text-lg text-gray-700 font-medium">MJVI Realty Corporation</p>
+                <p className="text-gray-600 text-sm mt-1">Trusted Properties • Seamless Transactions</p>
+                <div className="flex justify-center gap-6 mt-3 text-xs text-gray-500">
+                    <span>Certificate ID: #{tx.id}</span>
+                    <span>•</span>
+                    <span>Generated: {today}</span>
+                </div>
             </div>
 
-            {/* Body */}
-            <div className="space-y-4">
-                <section className="border rounded-lg p-3">
-                    <h3 className="font-medium mb-2 text-base">Transaction Info</h3>
-                    <Row label="Transaction ID" value={`#${tx.id}`} />
-                    <Row label="Status" value={tx.status} />
-                    <Row label="Created At" value={tx.created_at ? new Date(tx.created_at).toLocaleString() : "-"} />
-                    <Row label="Reference No." value={tx.reference_no || "-"} />
-                </section>
+            {/* Status Badge */}
+            <div className="flex justify-center mb-8">
+                <div className={`px-6 py-3 rounded-full font-bold text-sm ${
+                    tx.status === 'SOLD' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                        tx.status === 'RESERVED' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+                            tx.status === 'BOOKED' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                                'bg-gray-100 text-gray-800 border border-gray-300'
+                }`}>
+                    STATUS: {tx.status}
+                </div>
+            </div>
 
-                <section className="border rounded-lg p-3">
-                    <h3 className="font-medium mb-2 text-base">Parties</h3>
-                    <Row label="Buyer" value={tx.buyer?.name || "-"} />
-                    <Row label="Buyer Email" value={tx.buyer?.email || "-"} />
-                    <Row label="Agent" value={tx.primary_agent?.name || tx.primaryAgent?.name || tx.agent?.name || "-"} />
-                </section>
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Property Information */}
+                <div className="space-y-4">
+                    <div className="section-card">
+                        <h3 className="section-title">
+                            <FontAwesomeIcon icon={faHome} className="mr-2 text-amber-600" />
+                            Property Information
+                        </h3>
+                        <div className="space-y-3">
+                            <InfoRow label="Property Title" value={tx.property?.title || `Property #${tx.property_id || "N/A"}`} />
+                            <InfoRow label="Address" value={tx.property?.address || "Not specified"} />
+                            <InfoRow label="Transaction Date" value={new Date(tx.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            })} />
+                        </div>
+                    </div>
 
-                <section className="border rounded-lg p-3">
-                    <h3 className="font-medium mb-2 text-base">Property</h3>
-                    <Row label="Title" value={tx.property?.title || `#${tx.property_id || "-"}`} />
-                    <Row label="Address" value={tx.property?.address || "-"} />
-                </section>
+                    <div className="section-card">
+                        <h3 className="section-title">
+                            <FontAwesomeIcon icon={faUser} className="mr-2 text-amber-600" />
+                            Transaction Details
+                        </h3>
+                        <div className="space-y-3">
+                            <InfoRow label="Financing Type" value={tx.financing || "Not specified"} />
+                            <InfoRow label="Payment Mode" value={tx.payment_mode || "Not specified"} />
+                            <InfoRow label="Reference No." value={`#${tx.id}`} />
+                        </div>
+                    </div>
+                </div>
 
-                <section className="border rounded-lg p-3">
-                    <h3 className="font-medium mb-2 text-base">Financial Summary</h3>
-                    <Row label="Base Price" value={cur.format(Number(tx.base_price || 0))} />
-                    <Row label="Discount" value={cur.format(Number(tx.discount_amount || 0))} />
-                    <Row label="Fees" value={cur.format(Number(tx.fees_amount || 0))} />
-                    <Row label="TCP (Total Contract Price)" value={cur.format(Number(tx.tcp || 0))} bold />
-                    <div className="py-1 border-t border-dashed my-1" />
-                    <Row label="Reservation" value={cur.format(Number(tx.reservation_amount || 0))} />
-                    <Row label="Downpayment" value={cur.format(Number(tx.downpayment_amount || 0))} />
-                    <Row label="Balance Due" value={cur.format(Number(tx.balance_amount || 0))} bold className="text-red-600" />
-                    <div className="py-1 border-t border-dashed my-1" />
-                    <Row label="Financing" value={tx.financing || "-"} />
-                    <Row label="Mode of Payment" value={tx.financing || "-"} />
-                </section>
+                {/* Financial Summary */}
+                <div className="space-y-4">
+                    <div className="section-card">
+                        <h3 className="section-title">
+                            <FontAwesomeIcon icon={faCalculator} className="mr-2 text-amber-600" />
+                            Price Breakdown
+                        </h3>
+                        <div className="space-y-2">
+                            <AmountRow label="Base Price" amount={tx.base_price} />
+                            <AmountRow label="Discount" amount={-tx.discount_amount} positive={false} />
+                            <AmountRow label="Additional Fees" amount={tx.fees_amount} />
+                            <div className="border-t border-gray-300 pt-2 mt-2">
+                                <AmountRow label="Total Contract Price (TCP)" amount={tcp} bold primary />
+                            </div>
+                        </div>
+                    </div>
 
-                {tx.remarks ? (
-                    <section className="border rounded-lg p-3">
-                        <h3 className="font-medium mb-2 text-base">Remarks</h3>
-                        <div className="whitespace-pre-wrap text-neutral-700">{tx.remarks}</div>
-                    </section>
-                ) : null}
+                    <div className="section-card">
+                        <h3 className="section-title">
+                            <FontAwesomeIcon icon={faCreditCard} className="mr-2 text-amber-600" />
+                            Payment Summary
+                        </h3>
+                        <div className="space-y-2">
+                            <AmountRow label="Reservation Fee" amount={reservationAmount} />
+                            <AmountRow label="Downpayment" amount={downpaymentAmount} />
+                            <div className="border-t border-gray-300 pt-2">
+                                <AmountRow label="Total Paid" amount={totalPaid} bold />
+                            </div>
+                            <div className="border-t border-gray-300 pt-2">
+                                <AmountRow label="Balance Due" amount={balanceAmount} bold warning={balanceAmount > 0} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Progress Bar */}
+            {tcp > 0 && (
+                <div className="section-card mb-8">
+                    <h3 className="section-title">
+                        <FontAwesomeIcon icon={faChartBar} className="mr-2 text-amber-600" />
+                        Payment Progress
+                    </h3>
+                    <div className="space-y-3">
+                        <div className="flex justify-between text-sm font-medium">
+                            <span>Payment Completion</span>
+                            <span>{Math.round((totalPaid / tcp) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                                className="bg-amber-500 h-3 rounded-full transition-all duration-500 ease-out"
+                                style={{ width: `${Math.min(100, (totalPaid / tcp) * 100)}%` }}
+                            ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-600">
+                            <span>{cur.format(totalPaid)} paid</span>
+                            <span>{cur.format(balanceAmount)} remaining</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Remarks */}
+            {tx.remarks && (
+                <div className="section-card">
+                    <h3 className="section-title">
+                        <FontAwesomeIcon icon={faStickyNote} className="mr-2 text-amber-600" />
+                        Additional Remarks
+                    </h3>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{tx.remarks}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Footer */}
+            <div className="certificate-footer text-center mt-10 pt-6 border-t-2 border-amber-500">
+                <div className="flex justify-between items-center text-xs text-gray-600">
+                    <div className="text-left">
+                        <p className="font-medium">Team Susan</p>
+                        <p>MJVI Realty Corporation</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="font-medium">Official Document</p>
+                        <p>This is a computer-generated certificate</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="font-medium">Need Assistance?</p>
+                        <p>contact@mjyirealty.com</p>
+                    </div>
+                </div>
+                <div className="mt-4 text-[10px] text-gray-500">
+                    © {new Date().getFullYear()} MJVI Realty Corporation. All rights reserved.
+                </div>
             </div>
         </div>
     );
 }
+
+// Helper Components
+function InfoRow({ label, value }) {
+    return (
+        <div className="flex justify-between items-center py-1">
+            <span className="text-gray-600 font-medium text-sm">{label}</span>
+            <span className="text-gray-900 font-semibold text-right max-w-[60%]">{value}</span>
+        </div>
+    );
+}
+
+function AmountRow({ label, amount, bold = false, primary = false, warning = false, positive = true }) {
+    const cur = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 });
+    const numAmount = Number(amount || 0);
+
+    let amountClass = "text-gray-900";
+    if (primary) amountClass = "text-amber-600";
+    if (warning) amountClass = "text-red-600";
+    if (!positive && numAmount > 0) amountClass = "text-green-600";
+    if (!positive && numAmount < 0) amountClass = "text-red-600";
+
+    return (
+        <div className="flex justify-between items-center py-1">
+            <span className={`text-gray-600 text-sm ${bold ? 'font-bold' : 'font-medium'}`}>{label}</span>
+            <span className={`font-semibold text-right ${amountClass} ${bold ? 'text-lg' : ''}`}>
+                {!positive && numAmount > 0 ? '-' : ''}{cur.format(Math.abs(numAmount))}
+            </span>
+        </div>
+    );
+}
+
 
 function Row({ label, value, bold = false, className = "" }) {
     return (

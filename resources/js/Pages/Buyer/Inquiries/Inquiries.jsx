@@ -71,12 +71,21 @@ const statusConfig = {
         icon: faBusinessTime,
         description: "Inquiry was cancelled"
     },
-    closed: {
-        label: "Deal Closed",
+
+    // NEW STATUSES
+    closedWithDeal: {
+        label: "Closed (Deal)",
         variant: "primary",
         icon: faHandshakeSimple,
-        description: "Transaction completed successfully"
+        description: "Transaction completed successfully with a deal"
     },
+    closedNoDeal: {
+        label: "Closed (No Deal)",
+        variant: "secondary",
+        icon: faBusinessTime, // or any icon you prefer
+        description: "Inquiry was closed without any deal"
+    },
+
     default: {
         label: "Pending",
         variant: "warning",
@@ -84,6 +93,7 @@ const statusConfig = {
         description: "Waiting for agent response"
     }
 };
+
 
 const StatusBadge = ({ status, size = "medium" }) => {
     const config = statusConfig[status?.toLowerCase()] || statusConfig.default;
@@ -323,7 +333,7 @@ function ContactCard({ contact, inquiry, compact = false }) {
 
             <button
                 onClick={() => router.visit(`/agents/${contact?.id}`)}
-                className="btn-ghost w-full mt-3 text-xs sm:text-sm"
+                className="bg-gray-200 py-2 rounded-md w-full mt-3 text-xs sm:text-sm"
             >
                 View Profile
             </button>
@@ -729,7 +739,10 @@ export default function Inquiries({
                                                         <div className="flex items-start justify-between mb-4">
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center gap-3 mb-2">
-                                                                    <StatusBadge status={inquiry.status} />
+                                                                    <span className='bg-gray-200 p-2 rounded-xl '>
+                                                                         {inquiry.status}
+                                                                    </span>
+
                                                                     <span className="text-sm text-gray-500">
                                                                         {formatDate(inquiry.created_at)}
                                                                     </span>

@@ -294,14 +294,26 @@ function TripActions({ trip, onReschedule, onCancel, onMessage, contact }) {
     const isFuture = tripDate.isAfter(now, "day");
     const isToday = tripDate.isSame(now, "day");
     const isPast = tripDate.isBefore(now, "day");
-    const status = trip?.status ?? "pending";
+    const status = (trip?.status ?? "pending").toLowerCase();
 
     const viewHref = `/properties/${trip?.property?.id}`;
+
+    // ✅ Completed: show status only, no actions
+    if (status === "completed") {
+        return (
+            <div className="space-y-2 text-center text-sm">
+                <StatusBadge status={status} size="small" />
+                <p className="text-xs text-gray-500 mt-1">
+                    This visit has been marked as completed. No further actions are available.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-3">
             {/* Primary action */}
-            {status.toLowerCase() === "accepted" && (isFuture || isToday) ? (
+            {status === "accepted" && (isFuture || isToday) ? (
                 <Link
                     href={viewHref}
                     className="btn-primary w-full text-sm"
@@ -309,7 +321,7 @@ function TripActions({ trip, onReschedule, onCancel, onMessage, contact }) {
                     <FontAwesomeIcon icon={faEye} className="mr-2" />
                     View Property
                 </Link>
-            ) : status.toLowerCase() === "accepted" && isPast ? (
+            ) : status === "accepted" && isPast ? (
                 <button
                     onClick={() => onReschedule(trip)}
                     className="btn-outline w-full text-sm"
@@ -397,7 +409,10 @@ export default function Trippings({ trippings }) {
             total: list.length,
             upcoming: list.filter(t => dayjs(t.visit_date).isAfter(now, 'day')).length,
             today: list.filter(t => dayjs(t.visit_date).isSame(now, 'day')).length,
-            past: list.filter(t => dayjs(t.visit_date).isBefore(now, 'day')).length
+            // ✅ Completed based on status
+            completed: list.filter(
+                t => (t.status ?? '').toLowerCase() === 'completed'
+            ).length,
         };
     }, [list]);
 
@@ -455,7 +470,7 @@ export default function Trippings({ trippings }) {
                         />
                         <StatsCard
                             title="Completed"
-                            value={stats.past}
+                            value={stats.completed}
                             icon={faCheck}
                             color="secondary"
                         />

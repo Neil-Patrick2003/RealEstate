@@ -70,7 +70,7 @@ function ParallaxHero() {
         }
 
         // Redirect to all-properties with filters
-        router.get(`/all-properties?${searchParams.toString()}`);
+        router.get(`/properties?${searchParams.toString()}`);
     };
 
     // Handle Enter key press
