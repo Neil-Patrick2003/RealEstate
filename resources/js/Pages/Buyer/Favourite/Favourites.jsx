@@ -456,7 +456,7 @@ export default function Favourites({ properties, favouriteIds = [] }) {
                                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                     {properties.length === 0 && (
                                         <Link
-                                            href="/all-properties"
+                                            href="/properties"
                                             className="btn-primary text-sm sm:text-base"
                                         >
                                             <FontAwesomeIcon icon={faRocket} className="mr-2" />
@@ -510,7 +510,7 @@ export default function Favourites({ properties, favouriteIds = [] }) {
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                     <Link
-                                        href="/all-properties"
+                                        href="/properties"
                                         className="btn-secondary bg-white text-primary-600 hover:bg-gray-50 text-sm sm:text-base"
                                     >
                                         <FontAwesomeIcon icon={faRocket} className="mr-2" />

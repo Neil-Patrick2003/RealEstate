@@ -205,7 +205,7 @@ class DeveloperResource extends Resource
                     ->wrap(),
 
                 BadgeColumn::make('status')
-                    ->formatStateUsing(fn ($state) => match($state) {
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'pending' => '🟡 Pending',
                         'verified' => '🟢 Verified',
                         'inactive' => '🔴 Inactive',
@@ -261,7 +261,6 @@ class DeveloperResource extends Resource
                         'inactive' => 'Inactive',
                     ])
                     ->label('Status'),
-
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -318,7 +317,6 @@ class DeveloperResource extends Resource
                                         ->maxLength(255)
                                         ->placeholder('Street, Barangay, City')
                                         ->columnSpan(3),
-
 
                                     Select::make('project.status')
                                         ->label('Project Status')
@@ -549,6 +547,7 @@ class DeveloperResource extends Resource
                                 $blocksInput->each(function ($b) use ($project) {
                                     $code = strtoupper(trim((string)($b['block_code'] ?? '')));
                                     if ($code === '') return;
+
                                     Block::firstOrCreate([
                                         'project_id' => $project->id,
                                         'block_code' => $code,
@@ -561,16 +560,17 @@ class DeveloperResource extends Resource
                                 $typesInput->each(function ($t) use (&$typesByCode) {
                                     $code = trim((string)($t['code'] ?? ''));
                                     if ($code === '') return;
+
                                     $typesByCode[$code] = $t['name'] ?? $code;
                                 });
 
                                 // 4) Create Properties from Units
                                 $unitsInput = collect($data['units'] ?? []);
-                                $unitsInput->each(function ($unit) use ($project, $typesByCode, &$createdCount) {
+                                $unitsInput->each(function ($unit) use ($project, $typesByCode, &$createdCount, $record) {
                                     $blockCode = strtoupper(trim((string)($unit['block_code'] ?? '')));
-                                    $count = (int)($unit['count'] ?? 0);
-                                    $typeCode = trim((string)($unit['house_type_code'] ?? ''));
-                                    $typeName = $typeCode ? ($typesByCode[$typeCode] ?? $typeCode) : null;
+                                    $count     = (int)($unit['count'] ?? 0);
+                                    $typeCode  = trim((string)($unit['house_type_code'] ?? ''));
+                                    $typeName  = $typeCode ? ($typesByCode[$typeCode] ?? $typeCode) : null;
 
                                     if ($count <= 0 || $blockCode === '') return;
 
@@ -578,48 +578,50 @@ class DeveloperResource extends Resource
                                     $existingLots = Property::query()
                                         ->where('project_id', $project->id)
                                         ->where('block_code', $blockCode)
-                                        ->when($typeCode !== '', fn($q) => $q->where('sub_type', $typeCode))
+                                        ->when($typeCode !== '', fn ($q) => $q->where('sub_type', $typeCode))
                                         ->pluck('lot_no')
                                         ->filter()
-                                        ->map(fn($v) => (string)$v)
+                                        ->map(fn ($v) => (string)$v)
                                         ->all();
 
-                                    $taken = array_flip($existingLots);
-                                    $made = 0;
+                                    $taken  = array_flip($existingLots);
+                                    $made   = 0;
                                     $cursor = 1;
 
                                     while ($made < $count && $cursor <= ($count * 3)) {
                                         $lotNo = (string)$cursor;
-                                        if (!isset($taken[$lotNo])) {
-                                            // Create Property
+
+                                        if (! isset($taken[$lotNo])) {
+                                            // Create Property (set both project_id and developer_id)
                                             $prop = Property::create([
-                                                'seller_id' => null,
-                                                'project_id' => $project->id,
-                                                'block_code' => $blockCode,
-                                                'lot_no' => $lotNo,
+                                                'seller_id'    => null,
+                                                'project_id'   => $project->id,
+                                                'developer_id' => $record->id,
+                                                'block_code'   => $blockCode,
+                                                'lot_no'       => $lotNo,
                                                 'property_type' => $project->type,
-                                                'title' => trim(
+                                                'title'        => trim(
                                                     $project->name .
                                                     ($typeName ? " • {$typeName}" : '') .
                                                     " • Block {$blockCode} Lot {$lotNo}"
                                                 ),
-                                                'description' => "Beautiful unit in {$project->name}. " .
+                                                'description'  => "Beautiful unit in {$project->name}. " .
                                                     ($typeName ? "This {$typeName} features " : "Features ") .
                                                     "spacious living areas and modern amenities.",
-                                                'sub_type' => $typeCode ?: null,
-                                                'price' => $unit['price'] ?? 0,
-                                                'reservation' => $unit['reservation'] ?? null,
-                                                'isFixPrice' => (bool)($unit['isFixPrice'] ?? true) ? 1 : 0,
-                                                'isPresell' => (bool)($unit['isPresell'] ?? true) ? 1 : 0,
-                                                'address' => $project->address,
-                                                'lot_area' => $unit['lot_area'] ?? null,
-                                                'floor_area' => $unit['floor_area'] ?? null,
-                                                'bedrooms' => $unit['bedrooms'] ?? null,
-                                                'bathrooms' => $unit['bathrooms'] ?? null,
-                                                'car_slots' => $unit['car_slots'] ?? null,
-                                                'image_url' => $unit['main_image'] ?? null,
-                                                'status' => 'Published',
-                                                'views' => 0,
+                                                'sub_type'     => $typeCode ?: null,
+                                                'price'        => $unit['price'] ?? 0,
+                                                'reservation'  => $unit['reservation'] ?? null,
+                                                'isFixPrice'   => (bool)($unit['isFixPrice'] ?? true) ? 1 : 0,
+                                                'isPresell'    => (bool)($unit['isPresell'] ?? true) ? 1 : 0,
+                                                'address'      => $project->address,
+                                                'lot_area'     => $unit['lot_area'] ?? null,
+                                                'floor_area'   => $unit['floor_area'] ?? null,
+                                                'bedrooms'     => $unit['bedrooms'] ?? null,
+                                                'bathrooms'    => $unit['bathrooms'] ?? null,
+                                                'car_slots'    => $unit['car_slots'] ?? null,
+                                                'image_url'    => $unit['main_image'] ?? null,
+                                                'status'       => 'Published',
+                                                'views'        => 0,
                                                 'allow_multi_agents' => 0,
                                             ]);
 
@@ -628,10 +630,11 @@ class DeveloperResource extends Resource
                                             if ($gallery->isNotEmpty()) {
                                                 $galleryRows = $gallery->map(fn ($path) => [
                                                     'property_id' => $prop->id,
-                                                    'image_url' => $path,
-                                                    'created_at' => now(),
-                                                    'updated_at' => now(),
+                                                    'image_url'   => $path,
+                                                    'created_at'  => now(),
+                                                    'updated_at'  => now(),
                                                 ])->all();
+
                                                 PropertyImage::insert($galleryRows);
                                             }
 
@@ -640,10 +643,11 @@ class DeveloperResource extends Resource
                                             if ($features->isNotEmpty()) {
                                                 $featureRows = $features->map(fn ($name) => [
                                                     'property_id' => $prop->id,
-                                                    'name' => $name,
-                                                    'created_at' => now(),
-                                                    'updated_at' => now(),
+                                                    'name'        => $name,
+                                                    'created_at'  => now(),
+                                                    'updated_at'  => now(),
                                                 ])->all();
+
                                                 PropertyFeature::insert($featureRows);
                                             }
 
@@ -651,6 +655,7 @@ class DeveloperResource extends Resource
                                             $createdCount++;
                                             $taken[$lotNo] = true;
                                         }
+
                                         $cursor++;
                                     }
                                 });
@@ -662,12 +667,6 @@ class DeveloperResource extends Resource
                                     ->send();
                             });
                         }),
-
-//                    Action::make('viewProjects')
-//                        ->label('View Projects')
-//                        ->icon('heroicon-o-building-storefront')
-//                        ->color('info')
-//                        ->url(fn ($record) => ProjectResource::getUrl('index', ['tableFilters[developer_id][value]' => $record->id])),
 
                     Tables\Actions\DeleteAction::make()
                         ->color('danger')
@@ -706,7 +705,6 @@ class DeveloperResource extends Resource
     public static function getRelations(): array
     {
         return [
-            // Relations can be added here if needed
             AmenitiesRelationManager::class,
             ProjectsRelationManager::class,
         ];
@@ -715,9 +713,9 @@ class DeveloperResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDevelopers::route('/'),
+            'index'  => Pages\ListDevelopers::route('/'),
             'create' => Pages\CreateDeveloper::route('/create'),
-            'edit' => Pages\EditDeveloper::route('/{record}/edit'),
+            'edit'   => Pages\EditDeveloper::route('/{record}/edit'),
         ];
     }
 

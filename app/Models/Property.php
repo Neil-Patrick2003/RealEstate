@@ -9,25 +9,8 @@ class Property extends Model
     protected $casts = [
         'isPresell' => 'boolean',
     ];
-    protected $fillable = [
-        'seller_id',
-        'title',
-        'description',
-        'property_type',
-        'sub_type',
-        'price',
-        'address',
-        'status',
-        'lot_area',
-        'floor_area',
-        'total_rooms',
-        'bedrooms',
-        'bathrooms',
-        'car_slots',
-        'isPresell',
-        'image_url',
-        'allow_multi_agents',
-    ];
+
+    protected $guarded = [];
 
 
 

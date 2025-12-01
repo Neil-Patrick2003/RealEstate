@@ -151,4 +151,13 @@ class PropertyTrippingController extends Controller
         );
     }
 
+    public function cancel(Request $request, PropertyTripping $tripping)
+    {
+        $tripping->status = 'cancelled';
+        $tripping->save();
+
+
+        return redirect()->back()->with('success', 'Cancelled tripping successfully.');
+    }
+
 }

@@ -162,6 +162,8 @@ Route::middleware(['auth', 'role:Buyer' ])->group(function () {
     Route::get('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'index']);
     Route::post('/trippings', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'store']);
     Route::put('/trippings/{tripping}', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'update']);
+    Route::put('/trippings/{tripping}/cancel', [\App\Http\Controllers\Buyer\PropertyTrippingController::class, 'cancel']);
+
     Route::get('/favourites', [\App\Http\Controllers\Buyer\FavouriteController::class, 'index']);
     Route::get('/deals', [DealController::class, 'index'])->name('deals.index');
     Route::get('/deals/{deal}', [DealController::class, 'store']);

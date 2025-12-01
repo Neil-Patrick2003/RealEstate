@@ -97,14 +97,14 @@ export const brokerSidebarConfig = {
         { name: "Agent Management", Icon: Users, path: "/broker/agents", description: "Manage agents & assignments" },
         { name: "Properties", Icon: Building, path: "/broker/properties", description: "All property listings" },
         { name: "Inquiries", Icon: Mail, path: "/broker/inquiries", description: "All buyer inquiries" },
-        { name: "Message", Icon: MessageSquare, path: "/broker/chat", description: "All messages for your Inquiries" },
+        // { name: "Message", Icon: MessageSquare, path: "/broker/chat", description: "All messages for your Inquiries" },
         { name: "Trippings", Icon: Calendar, path: "/broker/trippings", description: "Scheduled property viewings" },
         { name: "Deals", Icon: Handshake, path: "/broker/deals", description: "Offers & deal monitoring" },
         { name: "Transactions", Icon: BarChart3, path: "/broker/transactions", description: "Transaction & payment records" },
         { name: "Partners", Icon: FileText, path: "/broker/partners", description: "View & manage partners" },
     ],
     quickActions: [
-        { label: "Post Properties", Icon: Plus, onClick: () => router.get('/post-properties') }
+        { label: "Post Properties", Icon: Plus, onClick: () => router.get('/broker/properties/create') }
     ],
     showSearch: false,
     categorizeNotification: categorizeNotifToPath
