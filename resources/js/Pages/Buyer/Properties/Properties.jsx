@@ -41,34 +41,67 @@ import ToastHandler from "@/Components/ToastHandler.jsx";
 const PROPERTY_CATEGORIES = [
     {
         category: "Apartment",
-        subcategories: ["Penthouse", "Loft", "Bedspace", "Room", "Studio", "1-Bedroom", "2-Bedroom", "3-Bedroom"],
+        subcategories: [
+            "Bedspace",
+            "Loft",
+            "Penthouse",
+            "Room",
+        ],
         icon: Landmark,
-        color: "from-emerald-500 to-teal-500"
+        color: "from-emerald-500 to-teal-500",
     },
     {
         category: "Commercial",
-        subcategories: ["Retail", "Offices", "Building", "Warehouse", "Serviced Office", "Coworking Space", "Shop", "Showroom", "Restaurant", "Hotel", "Mall"],
+        subcategories: [
+            "Building",
+            "Coworking Space",
+            "Offices",
+            "Retail",
+            "Serviced Office",
+            "Warehouse",
+        ],
         icon: Building,
-        color: "from-emerald-600 to-green-500"
+        color: "from-emerald-600 to-green-500",
     },
     {
         category: "Condominium",
-        subcategories: ["Loft", "Studio", "Penthouse", "Other", "Condotel", "1-Bedroom", "2-Bedroom", "3-Bedroom", "Executive Suite"],
+        subcategories: [
+            "Condotel",
+            "Loft",
+            "Other",
+            "Penthouse",
+            "Studio",
+        ],
         icon: Building2,
-        color: "from-teal-500 to-emerald-500"
+        color: "from-teal-500 to-emerald-500",
     },
     {
         category: "House",
-        subcategories: ["Townhouse", "Beach House", "Single Family House", "Villas", "Bungalow", "Duplex", "Triplex", "Mansion", "Farm House"],
+        subcategories: [
+            "Beach House",
+            "Farm House",
+            "Single Family House",
+            "Townhouse",
+            "Villas",
+        ],
         icon: House,
-        color: "from-green-500 to-emerald-400"
+        color: "from-green-500 to-emerald-400",
     },
     {
         category: "Land",
-        subcategories: ["Beach Lot", "Memorial Lot", "Agricultural Lot", "Commercial Lot", "Residential Lot", "Parking Lot", "Industrial Lot", "Raw Land", "Subdivision Lot"],
+        subcategories: [
+            "Agricultural Lot",
+            "Beach Lot",
+            "Commercial Lot",
+            "Industrial Lot",
+            "Memorial Lot",
+            "Parking Lot",
+            "Residential Lot",
+            "Subdivision Lot",
+        ],
         icon: LucideMapPin,
-        color: "from-amber-500 to-emerald-500"
-    }
+        color: "from-amber-500 to-emerald-500",
+    },
 ];
 
 // Property Features
