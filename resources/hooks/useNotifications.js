@@ -6,6 +6,21 @@ function getCsrfToken() {
     return meta ? meta.getAttribute('content') : null;
 }
 
+// Defensive JSON parser (handles 204 / HTML error pages gracefully)
+async function safeJson(response) {
+    const contentType = response.headers.get('Content-Type') || '';
+    if (!contentType.includes('application/json')) {
+        return null;
+    }
+
+    try {
+        return await response.json();
+    } catch (e) {
+        console.warn('⚠️ Failed to parse JSON response', e);
+        return null;
+    }
+}
+
 export function useNotification() {
     const [notifications, setNotifications] = useState([]);
     const [unreadNotifications, setUnreadNotifications] = useState([]);
@@ -14,6 +29,7 @@ export function useNotification() {
     const fetchNotifications = useCallback(async () => {
         try {
             setLoading(true);
+
             const response = await fetch('/notifications', {
                 headers: {
                     Accept: 'application/json',
@@ -21,7 +37,6 @@ export function useNotification() {
                 },
                 credentials: 'same-origin',
             });
-
 
             if (response.status === 401) {
                 console.warn('⚠️ User not authenticated when fetching notifications');
@@ -31,10 +46,11 @@ export function useNotification() {
             }
 
             if (!response.ok) {
+                console.error('❌ Fetch notifications failed:', response.status);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
+            const data = await safeJson(response) || {};
 
             // Expecting: { success, all: [...], unread: [...], counts: {...} }
             let allNotifications = [];
@@ -87,24 +103,25 @@ export function useNotification() {
                 return;
             }
 
-            if (!response.ok) throw new Error('Failed to mark as read');
+            if (!response.ok) {
+                console.error('❌ markAsRead response not ok:', response.status);
+                throw new Error('Failed to mark as read');
+            }
 
-            const data = await response.json();
-
-
-            // Optimistic update (using server time if provided)
+            const data = await safeJson(response);
             const readAt =
                 data?.notification?.read_at || new Date().toISOString();
 
+            // Optimistic update
             setNotifications((prev) =>
                 prev.map((notif) =>
                     notif.id === notificationId
                         ? { ...notif, read_at: readAt }
-                        : notif
-                )
+                        : notif,
+                ),
             );
             setUnreadNotifications((prev) =>
-                prev.filter((notif) => notif.id !== notificationId)
+                prev.filter((notif) => notif.id !== notificationId),
             );
         } catch (error) {
             console.error('❌ Failed to mark notification as read:', error);
@@ -136,17 +153,19 @@ export function useNotification() {
                 return;
             }
 
-            if (!response.ok) throw new Error('Failed to mark all as read');
+            if (!response.ok) {
+                console.error('❌ markAllAsRead response not ok:', response.status);
+                throw new Error('Failed to mark all as read');
+            }
 
-            const data = await response.json();
-
+            // no need to parse body; we only care about success
             const nowIso = new Date().toISOString();
 
             setNotifications((prev) =>
                 prev.map((notif) => ({
                     ...notif,
                     read_at: notif.read_at || nowIso,
-                }))
+                })),
             );
             setUnreadNotifications([]);
         } catch (error) {
@@ -171,7 +190,9 @@ export function useNotification() {
                     'X-Requested-With': 'XMLHttpRequest',
                 },
                 credentials: 'same-origin',
-                body: JSON.stringify({}),
+                body: JSON.stringify({
+                    url: window.location.pathname, // or window.location.href, depende sa backend logic mo
+                }),
             });
 
             if (response.status === 401) {
@@ -181,10 +202,15 @@ export function useNotification() {
                 return;
             }
 
-            if (!response.ok) throw new Error('Failed to mark page as read');
+            if (!response.ok) {
+                console.error(
+                    '❌ markPageNotificationsAsRead response not ok:',
+                    response.status,
+                );
+                throw new Error('Failed to mark page as read');
+            }
 
-            const data = await response.json();
-
+            await safeJson(response);
             // Refresh from server so counts match backend logic (by URL mapping)
             fetchNotifications();
         } catch (error) {
@@ -196,19 +222,7 @@ export function useNotification() {
     }, [fetchNotifications]);
 
     useEffect(() => {
-        let isMounted = true;
-
-        const init = async () => {
-            await fetchNotifications();
-        };
-
-        if (isMounted) {
-            init();
-        }
-
-        return () => {
-            isMounted = false;
-        };
+        fetchNotifications();
     }, [fetchNotifications]);
 
     return {

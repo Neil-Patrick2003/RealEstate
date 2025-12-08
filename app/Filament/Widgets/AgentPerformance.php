@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\User;
+use App\Models\PropertyListing;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -27,16 +28,26 @@ class AgentPerformance extends BaseWidget
 
                     // Listings KPIs (30d)
                     ->withCount([
-                        'property_listings as published_count' => fn (Builder $q) =>
+                        'propertyListings as published_count' => fn (Builder $q) =>
                         $q->where('status', 'Published')
                             ->where('created_at', '>=', $since),
 
-                        'property_listings as sold_count' => fn (Builder $q) =>
+                        'propertyListings as sold_count' => fn (Builder $q) =>
                         $q->where('status', 'Sold')
                             ->where('created_at', '>=', $since),
 
-                        'property_listings as total_count' => fn (Builder $q) =>
+                        'propertyListings as total_count' => fn (Builder $q) =>
                         $q->where('created_at', '>=', $since),
+                    ])
+
+                    // 🔥 Total sales (sum of properties.price for sold listings in last 30 days)
+                    ->addSelect([
+                        'total_sales' => PropertyListing::query()
+                            ->selectRaw('COALESCE(SUM(properties.price), 0)')
+                            ->join('properties', 'property_listings.property_id', '=', 'properties.id')
+                            ->whereColumn('property_listings.agent_id', 'users.id')
+                            ->where('property_listings.status', 'Sold')
+                            ->where('property_listings.created_at', '>=', $since),
                     ])
 
                     // Feedback rollups (30d)
@@ -128,6 +139,16 @@ class AgentPerformance extends BaseWidget
                     ->color('gray')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->iconPosition('after')
+                    ->alignCenter()
+                    ->sortable(),
+
+                // 💰 Total Sales
+                Tables\Columns\TextColumn::make('total_sales')
+                    ->label('TOTAL SALES')
+                    ->state(fn (User $record) => $record->total_sales ?? 0)
+                    ->formatStateUsing(fn ($state) => '₱' . number_format((float) $state, 0))
+                    ->badge()
+                    ->color('success')
                     ->alignCenter()
                     ->sortable(),
 

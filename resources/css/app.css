@@ -1240,3 +1240,22 @@
     .certificate-container {
         animation: fadeInUp 0.5s ease-out;
     }
+
+    /* Custom chart tooltip styling */
+    .chart-tooltip {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+        border: 1px solid #047857 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .chart-tooltip .title {
+        color: white !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+    }
+
+    .chart-tooltip .body {
+        color: #d1fae5 !important;
+        font-size: 13px !important;
+    }

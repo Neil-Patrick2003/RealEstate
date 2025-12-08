@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Buyer\FavouriteController;
 use App\Http\Controllers\Buyer\FeedbackController;
+use App\Http\Controllers\Buyer\PropertyNearbyController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExportPdfController;
 use App\Http\Controllers\HomePage\ContactController;
@@ -176,6 +177,7 @@ Route::middleware(['auth', 'role:Buyer' ])->group(function () {
 
 });
 
+Route::get('/properties/{property}/nearby', [PropertyNearbyController::class, 'index']);
 
 
 //---------------------------------broker----------------------------
@@ -281,7 +283,7 @@ Route::middleware(['auth', 'web'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
-    Route::post('/notifications/mark-page-read', [NotificationController::class, 'markPageNotificationsAsRead']);
+    Route::post('/notifications/mark-page-read', [NotificationController::class, 'markPageRead']);
 });
 
 Route::get('/verify-email', function () {

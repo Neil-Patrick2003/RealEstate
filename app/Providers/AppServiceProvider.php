@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Deal;
+use App\Models\Property;
+use App\Observers\PropertyObserver;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\App;
@@ -27,10 +29,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        /**
-         * This should always run, even in console/queue workers,
-         * so your verify email notification keeps the custom template.
-         */
+        Property::observe(PropertyObserver::class);
+
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
             return (new MailMessage)
                 ->subject('Verify Email Address')
