@@ -113,7 +113,7 @@ class InquiryController extends Controller
             'status'      => 'Published',
         ]);
 
-        $listing->agents()->attach($recipient->id);
+        $listing->agents()->syncWithoutDetaching([$recipient->id]);
 
         $recipient->notify(new NewInquiry($inquiry));
 

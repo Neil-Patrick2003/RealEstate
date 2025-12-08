@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Buyer\FavouriteController;
 use App\Http\Controllers\Buyer\FeedbackController;
-use App\Http\Controllers\Buyer\PropertyNearbyController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExportPdfController;
 use App\Http\Controllers\HomePage\ContactController;
@@ -10,6 +9,7 @@ use App\Http\Controllers\HomePage\HomePageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\PropertyNearbyController;
 use App\Http\Controllers\PropertyTrendsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Seller\ChannelController;
@@ -64,6 +64,9 @@ Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
 Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
+
+Route::get('/properties/{property}/nearby-places', [PropertyNearbyController::class, 'index'])
+    ->name('properties.nearby-places');
 
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
