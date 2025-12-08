@@ -14,11 +14,12 @@ class NewMatchingPropertyNotification extends Notification implements ShouldQueu
 
     public function __construct(public Property $property)
     {
+
     }
 
     public function via(object $notifiable): array
     {
-        // pwede mong dagdagan ng 'mail' kung gusto mo email din
+
         return ['database'];
     }
 
