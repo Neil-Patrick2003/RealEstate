@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Favourite;
 use App\Models\Property;
 use App\Models\SearchHistory;
+use App\Notifications\NewMatchingPropertyNotification;
 use App\Services\RecommendationService;
 use Auth;
 use Illuminate\Http\Request;
@@ -15,9 +16,13 @@ class BuyerController extends Controller
 {
     public function index(RecommendationService  $recommendationService)
     {
+        $user = Auth::user();
 
         $recommended = $recommendationService->getRecommendedProperties(12);
         $reasons     = $recommendationService->getRecommendationReasons();
+        $property = Property::first();  // kahit anong property muna
+
+
 
 
         $inquiries = \App\Models\Inquiry::with('property', 'agent:id,name,email', 'broker:id,name,email')

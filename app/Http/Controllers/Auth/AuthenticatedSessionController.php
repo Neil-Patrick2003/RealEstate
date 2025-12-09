@@ -31,6 +31,23 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $user = Auth::user();
+
+        if ($user && $user->status !== 'active') {
+            Auth::logout();
+
+            // Clear session
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Return back with error (Inertia will show this in your form errors)
+            return back()->withErrors([
+                'email' => 'Your account is inactive. Please contact support.',
+            ]);
+        }
+
+
+
         $request->session()->regenerate();
 
         sleep(1);

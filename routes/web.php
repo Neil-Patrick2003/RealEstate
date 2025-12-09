@@ -9,6 +9,7 @@ use App\Http\Controllers\HomePage\HomePageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\PropertyNearbyController;
 use App\Http\Controllers\PropertyTrendsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Seller\ChannelController;
@@ -63,6 +64,9 @@ Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
 Route::get('/blogs', [HomePageController::class, 'blogs'])->name('services');
+
+Route::get('/properties/{property}/nearby-places', [PropertyNearbyController::class, 'index'])
+    ->name('properties.nearby-places');
 
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
@@ -176,6 +180,7 @@ Route::middleware(['auth', 'role:Buyer' ])->group(function () {
 
 });
 
+Route::get('/properties/{property}/nearby', [PropertyNearbyController::class, 'index']);
 
 
 //---------------------------------broker----------------------------
@@ -281,7 +286,7 @@ Route::middleware(['auth', 'web'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
-    Route::post('/notifications/mark-page-read', [NotificationController::class, 'markPageNotificationsAsRead']);
+    Route::post('/notifications/mark-page-read', [NotificationController::class, 'markPageRead']);
 });
 
 Route::get('/verify-email', function () {

@@ -41,6 +41,9 @@ class Analytics extends Page
             // ── 4) PROPERTY ANALYTICS ────────────────────────────────────────
             \App\Filament\Widgets\MostInquiredPropertiesChart::class,
             \App\Filament\Widgets\PropertyConversionTable::class,
+            \App\Filament\Widgets\TopTrippedProperties::class,
+            \App\Filament\Widgets\MostSoldLocations::class,
+
 //            \App\Filament\Widgets\PropertyPerformanceTimeline::class,
             \App\Filament\Widgets\PropertyPerformanceChart::class,
 

@@ -4,13 +4,20 @@ namespace App\Services;
 
 use App\Models\SearchHistory;
 use App\Models\Property;
+use App\Models\Transaction; // ⬅️ NEW
+use App\Notifications\NewMatchingPropertyNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class RecommendationService
 {
     /**
-     * Main: Get recommended properties based on recent search history.
+     * Main: Get recommended properties.
+     *
+     * Order of priority:
+     *  1. Properties similar to the last transaction (if any).
+     *  2. Search-history based recommendations.
+     *  3. Latest popular properties as fallback.
      */
     public function getRecommendedProperties(int $limit = 12): Collection
     {
@@ -27,10 +34,14 @@ class RecommendationService
             ->get();
 
         if ($searches->isEmpty()) {
-            return $this->getPopularProperties($limit);
+            // Walang search history → try purchase-based, then popular
+            $purchaseBasedOnly = $this->getPurchaseBasedFromLastTransaction($user->id, $limit);
+            return $purchaseBasedOnly->isNotEmpty()
+                ? $purchaseBasedOnly
+                : $this->getPopularProperties($limit);
         }
 
-        // Derive final prefs
+        // Derive final prefs from search history
         $prefs = $this->extractLastPreferences($searches);
 
         $keyword   = $prefs['keyword'];     // e.g. "Nasugbu"
@@ -38,16 +49,24 @@ class RecommendationService
         $subcat    = $prefs['subcategory']; // e.g. "Single Family"
         $isPresell = $prefs['is_presell'];  // true/false/null
 
-        // dd($prefs); // uncomment to debug
-
         $results = collect();
         $usedIds = [];
 
         /*
+         * 0️⃣ FIRST: recommendations based on last transaction (if any)
+         */
+        $purchaseBased = $this->getPurchaseBasedFromLastTransaction($user->id, $limit);
+        if ($purchaseBased->isNotEmpty()) {
+            $results = $results->merge($purchaseBased);
+            $usedIds = $results->pluck('id')->all();
+        }
+
+        /*
          * 1️⃣ keyword + category + subcategory
          */
-        if ($keyword && $category && $subcat) {
+        if ($results->count() < $limit && $keyword && $category && $subcat) {
             $group1 = Property::where('status', 'Published')
+                ->whereNotIn('id', $usedIds)
                 ->where('property_type', $category)
                 ->where('sub_type', $subcat)
                 ->where(function ($q) use ($keyword) {
@@ -191,6 +210,91 @@ class RecommendationService
     }
 
     /**
+     * Purchase-based only:
+     * Get properties similar to the buyer's most recent transaction.
+     *
+     *  - same property_type
+     *  - optionally same sub_type
+     *  - price within ±20%
+     *  - same isPresell flag if present
+     *  - prefer NEW listings after last transaction date
+     */
+    /**
+     * Purchase-based only:
+     * Get properties similar to the buyer's most recent transaction.
+     *
+     * SAME on:
+     *  - property_type (category)
+     *  - sub_type      (subcategory)
+     *  - isPresell     (pre-selling or not)
+     *  - price within ±20%
+     */
+    public function getPurchaseBasedFromLastTransaction(int $buyerId, int $limit = 12): Collection
+    {
+        $lastTransaction = Transaction::with('property')
+            ->where('buyer_id', $buyerId)
+             ->where('status', 'SOLD') // ⬅️ uncomment & adjust if you have status field
+            ->latest('created_at')
+            ->first();
+
+        if (! $lastTransaction || ! $lastTransaction->property) {
+            return collect();
+        }
+
+        $baseProperty = $lastTransaction->property;
+
+        $results = collect();
+        $usedIds = [$baseProperty->id];
+
+        /*
+         * 1️⃣ NEW similar properties after last purchase
+         *    (same type, sub_type, isPresell, price range)
+         */
+        $groupNew = Property::where('status', 'Published')
+            ->whereNotIn('id', $usedIds)
+            ->where('property_type', $baseProperty->property_type)
+            ->where('sub_type', $baseProperty->sub_type)         // SAME sub_type (even if null)
+            ->where('isPresell', $baseProperty->isPresell)       // SAME isPresell (even if null)
+            ->whereBetween('price', [
+                $baseProperty->price * 0.8,  // -20%
+                $baseProperty->price * 1.2,  // +20%
+            ])
+            ->where('created_at', '>', $lastTransaction->created_at)
+            ->with(['project', 'coordinate', 'images'])
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+
+        $results = $results->merge($groupNew);
+        $usedIds = $results->pluck('id')->all();
+
+        /*
+         * 2️⃣ If kulang pa, same exact category/subcategory/isPresell/price,
+         *    kahit older listings (before lastTransaction)
+         */
+        if ($results->count() < $limit) {
+            $groupSimilar = Property::where('status', 'Published')
+                ->whereNotIn('id', $usedIds)
+                ->where('property_type', $baseProperty->property_type)
+                ->where('sub_type', $baseProperty->sub_type)
+                ->where('isPresell', $baseProperty->isPresell)
+                ->whereBetween('price', [
+                    $baseProperty->price * 0.8,
+                    $baseProperty->price * 1.2,
+                ])
+                ->with(['project', 'coordinate', 'images'])
+                ->orderByDesc('created_at')
+                ->limit($limit - $results->count())
+                ->get();
+
+            $results = $results->merge($groupSimilar);
+        }
+
+        return $results->take($limit);
+    }
+
+
+    /**
      * Derive:
      *  - keyword     = last search text that is NOT exactly a category
      *  - category    = last category from categories[]
@@ -309,4 +413,48 @@ class RecommendationService
 
         return $reasons ?: ['Showing properties based on your recent activity'];
     }
+
+    /**
+     * Notify buyers when a new property is published
+     * that matches their LAST transaction property.
+     */
+    public function notifyBuyersForNewProperty(Property $property): void
+    {
+        $lastTxIdsSub = Transaction::selectRaw('MAX(id) as id')
+            ->groupBy('buyer_id');
+
+
+        $matchingLastTransactions = Transaction::with(['buyer', 'property'])
+            ->whereIn('id', $lastTxIdsSub)
+            ->whereHas('property', function ($q) use ($property) {
+                $q->where('property_type', $property->property_type)
+                    ->where('sub_type', $property->sub_type)
+                    ->where('isPresell', $property->isPresell)
+                    ->whereBetween('price', [
+                        $property->price * 0.8,
+                        $property->price * 1.2,
+                    ]);
+            })
+            ->get();
+
+        foreach ($matchingLastTransactions as $tx) {
+            $buyer = $tx->buyer;
+
+            if (! $buyer) {
+                continue;
+            }
+
+            $alreadyNotified = $buyer->notifications()
+                ->where('type', NewMatchingPropertyNotification::class)
+                ->where('data->property_id', $property->id)
+                ->exists();
+
+            if ($alreadyNotified) {
+                continue;
+            }
+
+            $buyer->notify(new NewMatchingPropertyNotification($property));
+        }
+    }
+
 }

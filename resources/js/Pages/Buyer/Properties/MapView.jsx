@@ -6,8 +6,7 @@ import {
     Tooltip,
     Polygon,
     ZoomControl,
-    useMap,
-    LayersControl
+    useMap
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -19,9 +18,12 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    iconRetinaUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+    iconUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+    shadowUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png"
 });
 
 /* ---------------- Icons ---------------- */
@@ -49,7 +51,10 @@ const DEFAULT_CENTER = [13.41, 122.56];
 const toLatLng = (coord) => {
     if (!coord) return null;
     // {lat, lng}
-    if (typeof coord?.lat !== "undefined" && typeof coord?.lng !== "undefined") {
+    if (
+        typeof coord?.lat !== "undefined" &&
+        typeof coord?.lng !== "undefined"
+    ) {
         const lat = parseFloat(coord.lat);
         const lng = parseFloat(coord.lng);
         return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
@@ -66,17 +71,23 @@ const toLatLng = (coord) => {
 const getIconByType = (type) => {
     const t = (type || "").toLowerCase();
     switch (t) {
-        case "land": return landIcon;
-        default: return houseIcon;
+        case "land":
+            return landIcon;
+        default:
+            return houseIcon;
     }
 };
 
 const colorByType = (type) => {
     switch ((type || "").toLowerCase()) {
-        case "land": return "#28a745";
-        case "condo": return "#c084fc";
-        case "commercial": return "#f59e0b";
-        default: return "#007bff";
+        case "land":
+            return "#28a745";
+        case "condo":
+            return "#c084fc";
+        case "commercial":
+            return "#f59e0b";
+        default:
+            return "#007bff";
     }
 };
 
@@ -88,18 +99,24 @@ const php = (n) =>
     });
 
 const formatPrice = (price) => {
-    if (!price) return 'Price N/A';
+    if (!price) return "Price N/A";
 
     const numPrice = Number(price);
-    if (numPrice >= 1000000) {
-        const millions = numPrice / 1000000;
-        return `₱${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)}M`;
+    if (numPrice >= 1_000_000) {
+        const millions = numPrice / 1_000_000;
+        return `₱${
+            millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)
+        }M`;
     } else if (numPrice >= 1000) {
         const thousands = numPrice / 1000;
         if (thousands >= 100) {
             return `₱${thousands.toFixed(0)}k`;
         } else {
-            return `₱${thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)}k`;
+            return `₱${
+                thousands % 1 === 0
+                    ? thousands.toFixed(0)
+                    : thousands.toFixed(1)
+            }k`;
         }
     } else {
         return `₱${numPrice.toLocaleString()}`;
@@ -117,7 +134,7 @@ function GeocoderControl() {
             placeholder: "Search location...",
             defaultMarkGeocode: true,
             geocoder,
-            position: 'topright'
+            position: "topright"
         }).addTo(map);
 
         control.on("markgeocode", (e) => {
@@ -131,40 +148,6 @@ function GeocoderControl() {
 }
 
 /* ---------------- Map View Controls ---------------- */
-function MapViewControls({ onViewChange, currentView }) {
-    const views = [
-        { id: 'street', name: 'Street', icon: '🗺️' },
-        { id: 'satellite', name: 'Satellite', icon: '🛰️' },
-        { id: 'dark', name: 'Dark', icon: '🌙' },
-        { id: 'terrain', name: 'Terrain', icon: '🏔️' }
-    ];
-
-    return (
-        <div className="leaflet-top leaflet-right m-3 mt-16">
-            <div className="bg-white/95 backdrop-blur rounded-lg border border-gray-200 shadow-lg overflow-hidden">
-                <div className="p-2">
-                    <div className="text-xs font-semibold text-gray-700 mb-2 text-center">Map View</div>
-                    <div className="space-y-1">
-                        {views.map(view => (
-                            <button
-                                key={view.id}
-                                onClick={() => onViewChange(view.id)}
-                                className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all ${
-                                    currentView === view.id
-                                        ? 'bg-primary text-white'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                }`}
-                            >
-                                <span className="text-base">{view.icon}</span>
-                                <span>{view.name}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 /* ---------------- Fit & Recenter ---------------- */
 function FitResultsButton({ bounds }) {
@@ -172,8 +155,10 @@ function FitResultsButton({ bounds }) {
     return (
         <button
             type="button"
-            onClick={() => bounds?.isValid() && map.fitBounds(bounds, { padding: [50, 50] })}
-            className="leaflet-top leaflet-left m-3 px-3 py-2 rounded-md bg-white/95 backdrop-blur border border-gray-200 shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+            onClick={() =>
+                bounds?.isValid() && map.fitBounds(bounds, { padding: [50, 50] })
+            }
+            className="leaflet-top leaflet-left m-3 px-3 py-2 rounded-md bg-white/95 backdrop-blur border border-gray-200 shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 z-[1000]"
             title="Fit to results"
         >
             <span>📍</span>
@@ -187,8 +172,10 @@ function RecenterButton() {
     return (
         <button
             type="button"
-            onClick={() => map.setView(DEFAULT_CENTER, Math.max(map.getZoom(), 6))}
-            className="leaflet-top leaflet-left m-3 mt-[70px] px-3 py-2 rounded-md bg-white/95 backdrop-blur border border-gray-200 shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+            onClick={() =>
+                map.setView(DEFAULT_CENTER, Math.max(map.getZoom(), 6))
+            }
+            className="leaflet-top leaflet-left m-3 mt-[70px] px-3 py-2 rounded-md bg-white/95 backdrop-blur border border-gray-200 shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 z-[1000]"
             title="Recenter to default"
         >
             <span>🎯</span>
@@ -198,56 +185,14 @@ function RecenterButton() {
 }
 
 /* ---------------- Locate Me ---------------- */
-function LocateMeButton() {
-    const map = useMap();
-    const [isLocating, setIsLocating] = useState(false);
 
-    const onClick = () => {
-        if (!navigator.geolocation) return;
-
-        setIsLocating(true);
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const { latitude, longitude } = pos.coords;
-                map.setView([latitude, longitude], 14);
-                setIsLocating(false);
-
-                // Add a temporary marker for user location
-                L.marker([latitude, longitude])
-                    .addTo(map)
-                    .bindTooltip("You are here!", { permanent: false, direction: 'top' })
-                    .openTooltip();
-            },
-            () => {
-                setIsLocating(false);
-            },
-            { enableHighAccuracy: true, timeout: 8000 }
-        );
-    };
-
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            disabled={isLocating}
-            className="leaflet-top leaflet-right m-3 mt-[70px] px-3 py-2 rounded-md bg-white/95 backdrop-blur border border-gray-200 shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50"
-            title="Locate me"
-        >
-            {isLocating ? (
-                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            ) : (
-                <span>📍</span>
-            )}
-            {isLocating ? 'Locating...' : 'Locate Me'}
-        </button>
-    );
-}
 
 /* ---------------- Tile Layers ---------------- */
 const tileLayers = {
     street: {
         url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+        attribution:
+            '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
     },
     satellite: {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -255,19 +200,24 @@ const tileLayers = {
     },
     dark: {
         url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     },
     terrain: {
         url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-        attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
+        attribution:
+            'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
     }
 };
 
 /* ---------------- Main Component ---------------- */
 export default function MapView({ property_listing = [], onMarkerClick }) {
     const [selected, setSelected] = useState(null);
+
+    // ✅ DEFAULT TO SATELLITE VIEW
+    const [currentView, setCurrentView] = useState("satellite");
+
     const [typeFilter, setTypeFilter] = useState(() => new Set());
-    const [currentView, setCurrentView] = useState('street');
     const [showFilters, setShowFilters] = useState(true);
 
     // Unique types (pretty labels)
@@ -282,7 +232,9 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
 
     const filteredListings = useMemo(() => {
         if (!typeFilter.size) return property_listing;
-        return (property_listing || []).filter((l) => typeFilter.has(l?.property?.property_type));
+        return (property_listing || []).filter((l) =>
+            typeFilter.has(l?.property?.property_type)
+        );
     }, [property_listing, typeFilter]);
 
     // Precompute shapes + bounds
@@ -294,12 +246,17 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
             coords.forEach((c) => {
                 if (c?.type === "marker") {
                     const latlng = toLatLng(c.coordinates);
-                    if (latlng) out.push({ kind: "marker", latlng, listing });
+                    if (latlng)
+                        out.push({ kind: "marker", latlng, listing });
                 } else if (c?.type === "polygon") {
-                    let ring = c?.coordinates?.geometry?.coordinates?.[0];
+                    let ring =
+                        c?.coordinates?.geometry?.coordinates?.[0];
                     if (!Array.isArray(ring)) ring = c?.coordinates;
-                    const latlngs = Array.isArray(ring) ? ring.map(toLatLng).filter(Boolean) : [];
-                    if (latlngs.length >= 3) out.push({ kind: "polygon", latlngs, listing });
+                    const latlngs = Array.isArray(ring)
+                        ? ring.map(toLatLng).filter(Boolean)
+                        : [];
+                    if (latlngs.length >= 3)
+                        out.push({ kind: "polygon", latlngs, listing });
                 }
             });
         });
@@ -310,7 +267,8 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
         const b = L.latLngBounds([]);
         items.forEach((it) => {
             if (it.kind === "marker") b.extend(it.latlng);
-            if (it.kind === "polygon") it.latlngs.forEach((pt) => b.extend(pt));
+            if (it.kind === "polygon")
+                it.latlngs.forEach((pt) => b.extend(pt));
         });
         return b;
     }, [items]);
@@ -354,20 +312,23 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                 style={{ height: "93vh", width: "100%" }}
                 zoomControl={false}
             >
-                {/* Base Tile Layer */}
-                <TileLayer
-                    {...tileLayers[currentView]}
-                />
+                {/* Base Tile Layer (now satellite by default) */}
+                <TileLayer {...tileLayers[currentView]} />
 
                 <ZoomControl position="topright" />
                 <GeocoderControl />
+                <FitResultsButton bounds={bounds} />
+                <RecenterButton />
+
 
                 {/* Markers & polygons */}
                 {items.map((it, idx) => {
                     const prop = it.listing?.property;
 
                     if (it.kind === "marker") {
-                        const icon = getIconByType(prop?.property_type);
+                        const icon = getIconByType(
+                            prop?.property_type
+                        );
                         const price = formatPrice(prop?.price);
 
                         return (
@@ -375,21 +336,46 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                                 key={`m-${prop?.id}-${idx}`}
                                 position={it.latlng}
                                 icon={icon}
-                                eventHandlers={{ click: () => handleMarkerClick(it.listing) }}
+                                eventHandlers={{
+                                    click: () =>
+                                        handleMarkerClick(it.listing)
+                                }}
                             >
-                                <Tooltip direction="top" offset={[0, -50]} opacity={1} className="custom-tooltip">
+                                <Tooltip
+                                    direction="top"
+                                    offset={[0, -50]}
+                                    opacity={1}
+                                    className="custom-tooltip"
+                                >
                                     <div className="text-xs min-w-[200px]">
-                                        <div className="font-semibold text-gray-800 mb-1">{prop?.title || "Property"}</div>
-                                        <div className="text-primary font-bold mb-1">{price}</div>
-                                        <div className="text-gray-600 text-xs">{prop?.address || "Location not specified"}</div>
+                                        <div className="font-semibold text-gray-800 mb-1">
+                                            {prop?.title ||
+                                                "Property"}
+                                        </div>
+                                        <div className="text-primary font-bold mb-1">
+                                            {price}
+                                        </div>
+                                        <div className="text-gray-600 text-xs">
+                                            {prop?.address ||
+                                                "Location not specified"}
+                                        </div>
                                         <div className="mt-1">
-                                            <span className={`inline-block px-2 py-1 rounded-full text-[10px] font-medium ${
-                                                prop?.property_type === 'land' ? 'bg-green-100 text-green-800' :
-                                                    prop?.property_type === 'condo' ? 'bg-purple-100 text-purple-800' :
-                                                        prop?.property_type === 'commercial' ? 'bg-amber-100 text-amber-800' :
-                                                            'bg-blue-100 text-blue-800'
-                                            }`}>
-                                                {prop?.property_type || 'Property'}
+                                            <span
+                                                className={`inline-block px-2 py-1 rounded-full text-[10px] font-medium ${
+                                                    prop?.property_type ===
+                                                    "land"
+                                                        ? "bg-green-100 text-green-800"
+                                                        : prop?.property_type ===
+                                                        "condo"
+                                                            ? "bg-purple-100 text-purple-800"
+                                                            : prop?.property_type ===
+                                                            "commercial"
+                                                                ? "bg-amber-100 text-amber-800"
+                                                                : "bg-blue-100 text-blue-800"
+                                                }`}
+                                            >
+                                                {prop?.property_type ||
+                                                    "Property"}
                                             </span>
                                         </div>
                                     </div>
@@ -399,7 +385,9 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                     }
 
                     if (it.kind === "polygon") {
-                        const col = colorByType(it.listing?.property?.property_type);
+                        const col = colorByType(
+                            it.listing?.property?.property_type
+                        );
                         const p = it.listing?.property;
 
                         return (
@@ -413,11 +401,25 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                                     weight: 2
                                 }}
                             >
-                                <Tooltip sticky direction="top" opacity={1} className="custom-tooltip">
+                                <Tooltip
+                                    sticky
+                                    direction="top"
+                                    opacity={1}
+                                    className="custom-tooltip"
+                                >
                                     <div className="text-xs min-w-[200px]">
-                                        <div className="font-semibold text-gray-800 mb-1">{p?.title || "Property Area"}</div>
-                                        <div className="text-primary font-bold mb-1">{formatPrice(p?.price)}</div>
-                                        {p?.address && <div className="text-gray-600 text-xs">{p.address}</div>}
+                                        <div className="font-semibold text-gray-800 mb-1">
+                                            {p?.title ||
+                                                "Property Area"}
+                                        </div>
+                                        <div className="text-primary font-bold mb-1">
+                                            {formatPrice(p?.price)}
+                                        </div>
+                                        {p?.address && (
+                                            <div className="text-gray-600 text-xs">
+                                                {p.address}
+                                            </div>
+                                        )}
                                     </div>
                                 </Tooltip>
                             </Polygon>
@@ -434,7 +436,9 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                     {/* Results Counter */}
                     <div className="bg-white/95 backdrop-blur rounded-lg border border-gray-200 shadow-lg px-4 py-3">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-sm font-semibold text-gray-800">Properties Found</h3>
+                            <h3 className="text-sm font-semibold text-gray-800">
+                                Properties Found
+                            </h3>
                             <button
                                 onClick={() => setShowFilters(false)}
                                 className="text-gray-400 hover:text-gray-600 text-lg"
@@ -442,15 +446,21 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                                 ×
                             </button>
                         </div>
-                        <div className="text-2xl font-bold text-primary">{filteredListings.length}</div>
-                        <div className="text-xs text-gray-500">of {property_listing.length} total</div>
+                        <div className="text-2xl font-bold text-primary">
+                            {filteredListings.length}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                            of {property_listing.length} total
+                        </div>
                     </div>
 
                     {/* Type Filters */}
                     {types.length > 0 && (
                         <div className="bg-white/95 backdrop-blur rounded-lg border border-gray-200 shadow-lg px-4 py-3">
                             <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-sm font-semibold text-gray-800">Filter by Type</h3>
+                                <h3 className="text-sm font-semibold text-gray-800">
+                                    Filter by Type
+                                </h3>
                                 {typeFilter.size > 0 && (
                                     <button
                                         onClick={clearAllFilters}
@@ -463,11 +473,14 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                             <div className="space-y-2">
                                 {types.map((t) => {
                                     const active = typeFilter.has(t);
-                                    const count = counts[t.toLowerCase()] || 0;
+                                    const count =
+                                        counts[t.toLowerCase()] || 0;
                                     return (
                                         <button
                                             key={t}
-                                            onClick={() => toggleType(t)}
+                                            onClick={() =>
+                                                toggleType(t)
+                                            }
                                             className={`w-full flex items-center justify-between p-2 rounded-lg text-sm transition-all ${
                                                 active
                                                     ? "bg-primary text-white"
@@ -477,15 +490,23 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                                             <span className="flex items-center gap-2">
                                                 <div
                                                     className="w-3 h-3 rounded-full"
-                                                    style={{ backgroundColor: active ? 'white' : colorByType(t) }}
+                                                    style={{
+                                                        backgroundColor: active
+                                                            ? "white"
+                                                            : colorByType(
+                                                                t
+                                                            )
+                                                    }}
                                                 />
                                                 {t}
                                             </span>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${
-                                                active
-                                                    ? 'bg-white/20 text-white'
-                                                    : 'bg-gray-200 text-gray-600'
-                                            }`}>
+                                            <span
+                                                className={`text-xs px-2 py-1 rounded-full ${
+                                                    active
+                                                        ? "bg-white/20 text-white"
+                                                        : "bg-gray-200 text-gray-600"
+                                                }`}
+                                            >
                                                 {count}
                                             </span>
                                         </button>
@@ -497,7 +518,9 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
 
                     {/* Quick Legend */}
                     <div className="bg-white/95 backdrop-blur rounded-lg border border-gray-200 shadow-lg px-4 py-3">
-                        <h3 className="text-sm font-semibold text-gray-800 mb-2">Legend</h3>
+                        <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                            Legend
+                        </h3>
                         <div className="space-y-2 text-xs">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-blue-500" />
@@ -544,19 +567,28 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                                         ? `/storage/${selected.property.image_url}`
                                         : "/images/placeholder.jpg"
                                 }
-                                onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")}
-                                alt={selected?.property?.title || "Property"}
+                                onError={(e) =>
+                                    (e.currentTarget.src =
+                                        "/images/placeholder.jpg")
+                                }
+                                alt={
+                                    selected?.property?.title ||
+                                    "Property"
+                                }
                                 className="w-20 h-20 rounded-lg object-cover ring-1 ring-gray-200"
                             />
                             <div className="flex-1 min-w-0">
                                 <div className="font-bold text-gray-900 text-sm mb-1 line-clamp-2">
-                                    {selected?.property?.title || "Property"}
+                                    {selected?.property?.title ||
+                                        "Property"}
                                 </div>
                                 <div className="text-xs text-gray-600 mb-2 line-clamp-1">
                                     {selected?.property?.address || "—"}
                                 </div>
                                 <div className="text-primary font-bold text-lg mb-3">
-                                    {formatPrice(selected?.property?.price)}
+                                    {formatPrice(
+                                        selected?.property?.price
+                                    )}
                                 </div>
                                 <div className="flex gap-2">
                                     <Link
@@ -566,9 +598,19 @@ export default function MapView({ property_listing = [], onMarkerClick }) {
                                         View Details
                                     </Link>
                                     {(() => {
-                                        const m = (selected?.property?.coordinate || []).find((c) => c?.type === "marker");
-                                        const ll = toLatLng(m?.coordinates);
-                                        const href = ll ? `https://www.google.com/maps/dir/?api=1&destination=${ll[0]},${ll[1]}` : null;
+                                        const m = (
+                                            selected?.property
+                                                ?.coordinate || []
+                                        ).find(
+                                            (c) =>
+                                                c?.type === "marker"
+                                        );
+                                        const ll = toLatLng(
+                                            m?.coordinates
+                                        );
+                                        const href = ll
+                                            ? `https://www.google.com/maps/dir/?api=1&destination=${ll[0]},${ll[1]}`
+                                            : null;
                                         return href ? (
                                             <a
                                                 href={href}

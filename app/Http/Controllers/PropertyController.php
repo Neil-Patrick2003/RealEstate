@@ -14,7 +14,7 @@ class PropertyController extends Controller
 {
     public function show(Property $property)
     {
-        $deal = null;
+
 
         $allAgents = User::where('role', 'agent')
             ->withCount('property_listings')
@@ -31,18 +31,13 @@ class PropertyController extends Controller
             'property_listing.broker'
         );
 
-        // Only check deals if a user is logged in
-        if (auth()->check() && $property->property_listing) {
-            $deal = Deal::where('property_listing_id', $property->property_listing->id)
-                ->where('buyer_id', auth()->id())
-                ->first();
-        }
+
+
 
         $property->increment('views');
 
         return Inertia::render('LandingPage/Property/ShowProperty', [
             'property' => $property,
-            'deal' => $deal,
             'allAgents' => $allAgents,
         ]);
     }
