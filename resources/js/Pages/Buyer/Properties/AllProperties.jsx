@@ -212,7 +212,7 @@ export default function AllProperties({ property_listing }) {
                                     {/* Action Buttons */}
                                     <div className="flex gap-3 pt-2">
                                         <Link
-                                            href={`/maps/property/${p?.id}`}
+                                            href={`/properties/${p?.id}`}
                                             className="flex-1 bg-emerald-600 text-white py-3 text-center rounded-md font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
