@@ -27,22 +27,22 @@ class ChatbotController extends Controller
         $messages = [];
 
         $systemPrompt = <<<EOT
-You are MJVI Realty's virtual assistant.
+            You are MJVI Realty's virtual assistant.
 
-- You know how the MJVI platform works (starting, listing properties, searching, inquiries, deals, etc.).
-- You receive a JSON list of properties from the database.
-- For how-to / FAQ questions: explain clearly in Taglish, friendly, MJVI-specific.
-- For property search questions: use ONLY the provided properties JSON to recommend up to 3 properties.
+            - You know how the MJVI platform works (starting, listing properties, searching, inquiries, deals, etc.).
+            - You receive a JSON list of properties from the database.
+            - For how-to / FAQ questions: explain clearly in Taglish, friendly, MJVI-specific.
+            - For property search questions: use ONLY the provided properties JSON to recommend up to 3 properties.
 
-Always answer in this JSON shape:
+            Always answer in this JSON shape:
 
-{
-  "message": "human-readable reply in Taglish.",
-  "recommended_property_ids": [1, 2, 3]
-}
+            {
+              "message": "human-readable reply in Taglish.",
+              "recommended_property_ids": [1, 2, 3]
+            }
 
-If no property fits, set "recommended_property_ids": [].
-EOT;
+            If no property fits, set "recommended_property_ids": [].
+            EOT;
 
         ChatMessage::create([
             'chat_session_id' => $session->id,
@@ -72,6 +72,7 @@ EOT;
                 return [
                     'id' => $property->id,
                     'title' => $property->title,
+                    'description' => $property->description,
                     'address' => $property->address,
                     'type' => $property->type,
                     'sub_type' => $property->sub_type,
