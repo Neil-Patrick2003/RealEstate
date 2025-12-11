@@ -672,69 +672,6 @@ export default function PropertyShow() {
 
                     {/* Right Column - Seller & Nearby Places */}
                     <div className="lg:w-1/3 space-y-8">
-                        {/* Seller Information */}
-                        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-                            <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100">
-                                Contact Agent
-                            </h2>
-                            <div className="flex flex-col items-center text-center mb-6">
-                                <div className="w-24 h-24 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-full flex items-center justify-center mb-4 border-4 border-white shadow-lg">
-                                    {property?.seller?.photo_url ? (
-                                        <img
-                                            src={`/storage/${property.seller.photo_url}`}
-                                            alt={property.seller.name}
-                                            className="w-full h-full rounded-full object-cover"
-                                        />
-                                    ) : (
-                                        <span className="text-3xl font-bold text-emerald-600">
-                                            {property?.seller?.name?.charAt(0) || 'A'}
-                                        </span>
-                                    )}
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg text-gray-900 mb-1">{property?.seller?.name}</h3>
-                                    <p className="text-emerald-600 text-sm font-medium">Verified Seller</p>
-                                    <div className="flex items-center justify-center mt-2">
-                                        <FaCheckCircle className="text-emerald-500 mr-1" />
-                                        <span className="text-xs text-gray-500">Email Verified</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                {property?.seller?.contact_number && (
-                                    <a
-                                        href={`tel:${property.seller.contact_number}`}
-                                        className="flex items-center justify-center space-x-3 w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
-                                    >
-                                        <FaPhone />
-                                        <span>Call Now</span>
-                                    </a>
-                                )}
-
-                                <div className="space-y-3">
-                                    {property?.seller?.contact_number && (
-                                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                            <FaPhone className="text-gray-500" />
-                                            <div>
-                                                <div className="text-sm text-gray-500">Phone Number</div>
-                                                <div className="font-medium text-gray-900">{property.seller.contact_number}</div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {property?.seller?.email && (
-                                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                            <FaEnvelope className="text-gray-500" />
-                                            <div>
-                                                <div className="text-sm text-gray-500">Email Address</div>
-                                                <div className="font-medium text-gray-900">{property.seller.email}</div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
                         <aside className="lg:col-span-1">
                             <div className="sticky">
                                 {Array.isArray(agents) && agents.length > 0 ? (
