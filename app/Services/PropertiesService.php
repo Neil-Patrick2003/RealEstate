@@ -34,7 +34,6 @@ class PropertiesService
 
         $property = Property::create([
             'seller_id' => $sellerId,
-            'broker_id' => $brId,
             'title' => $validated['title'],
             'description' => $validated['description'],
             'property_type' => $validated['property_type'],
