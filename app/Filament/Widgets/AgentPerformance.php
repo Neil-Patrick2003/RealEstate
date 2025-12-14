@@ -3,12 +3,13 @@
 namespace App\Filament\Widgets;
 
 use App\Models\User;
-use App\Models\PropertyListing;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AgentPerformance extends BaseWidget
 {
@@ -21,6 +22,24 @@ class AgentPerformance extends BaseWidget
     {
         $since = now()->subDays(30);
 
+        // Use sold_at if present; otherwise use updated_at (status change to Sold updates row)
+        $soldDateColumn = Schema::hasColumn('property_listings', 'sold_at')
+            ? 'sold_at'
+            : 'updated_at';
+
+        // ✅ Pivot table that stores agent ids
+        // Change this if your actual table name is different (e.g. "proeprty_listng_agents")
+        $pivotTable = 'property_listing_agents';
+
+        // Pivot columns (auto-detect common names)
+        $pivotAgentCol = Schema::hasColumn($pivotTable, 'agent_id')
+            ? 'agent_id'
+            : (Schema::hasColumn($pivotTable, 'user_id') ? 'user_id' : 'agent_id');
+
+        $pivotListingCol = Schema::hasColumn($pivotTable, 'property_listing_id')
+            ? 'property_listing_id'
+            : (Schema::hasColumn($pivotTable, 'listing_id') ? 'listing_id' : 'property_listing_id');
+
         return $table
             ->query(
                 User::query()
@@ -32,22 +51,32 @@ class AgentPerformance extends BaseWidget
                         $q->where('status', 'Published')
                             ->where('created_at', '>=', $since),
 
+                        // ✅ Fix: sold should be based on sold_at/updated_at, not created_at
                         'propertyListings as sold_count' => fn (Builder $q) =>
                         $q->where('status', 'Sold')
-                            ->where('created_at', '>=', $since),
+                            ->where($soldDateColumn, '>=', $since),
 
                         'propertyListings as total_count' => fn (Builder $q) =>
                         $q->where('created_at', '>=', $since),
                     ])
 
-                    // 🔥 Total sales (sum of properties.price for sold listings in last 30 days)
+                    // ✅ FIX: Total sales must join pivot table, not property_listings.agent_id
                     ->addSelect([
-                        'total_sales' => PropertyListing::query()
-                            ->selectRaw('COALESCE(SUM(properties.price), 0)')
-                            ->join('properties', 'property_listings.property_id', '=', 'properties.id')
-                            ->whereColumn('property_listings.agent_id', 'users.id')
-                            ->where('property_listings.status', 'Sold')
-                            ->where('property_listings.created_at', '>=', $since),
+                        'total_sales' => DB::table('property_listings as pl')
+                            ->selectRaw("
+                                COALESCE(
+                                    SUM(
+                                        CAST(
+                                            REPLACE(REPLACE(COALESCE(p.price, 0), ',', ''), '₱', '')
+                                        AS DECIMAL(15,2))
+                                    ),
+                                0)
+                            ")
+                            ->join("{$pivotTable} as pla", "pla.{$pivotListingCol}", '=', 'pl.id')
+                            ->join('properties as p', 'pl.property_id', '=', 'p.id')
+                            ->whereColumn("pla.{$pivotAgentCol}", 'users.id')
+                            ->where('pl.status', 'Sold')
+                            ->where("pl.{$soldDateColumn}", '>=', $since),
                     ])
 
                     // Feedback rollups (30d)
@@ -81,7 +110,6 @@ class AgentPerformance extends BaseWidget
                     ->limit(10)
             )
             ->columns([
-                // Rank
                 Tables\Columns\TextColumn::make('rank')
                     ->label('RANK')
                     ->formatStateUsing(fn ($state, $record, $rowLoop) => '#' . $rowLoop->iteration)
@@ -91,7 +119,6 @@ class AgentPerformance extends BaseWidget
                     ->alignCenter()
                     ->width('60px'),
 
-                // Avatar
                 Tables\Columns\ImageColumn::make('photo_url')
                     ->label('')
                     ->disk('public')
@@ -104,7 +131,6 @@ class AgentPerformance extends BaseWidget
                     ])
                     ->defaultImageUrl('https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small_2x/default-avatar-icon-of-social-media-user-vector.jpg'),
 
-                // Agent name + email
                 Tables\Columns\TextColumn::make('name')
                     ->label('AGENT')
                     ->weight('semibold')
@@ -114,7 +140,6 @@ class AgentPerformance extends BaseWidget
                     ->wrap()
                     ->searchable(),
 
-                // Listing metrics
                 Tables\Columns\TextColumn::make('published_count')
                     ->label('PUBLISHED')
                     ->badge()
@@ -142,7 +167,6 @@ class AgentPerformance extends BaseWidget
                     ->alignCenter()
                     ->sortable(),
 
-                // 💰 Total Sales
                 Tables\Columns\TextColumn::make('total_sales')
                     ->label('TOTAL SALES')
                     ->state(fn (User $record) => $record->total_sales ?? 0)
@@ -177,7 +201,6 @@ class AgentPerformance extends BaseWidget
                     ->alignCenter()
                     ->sortable(),
 
-                // Feedback column – returns HTML directly, no array state
                 Tables\Columns\TextColumn::make('average_feedback')
                     ->label('FEEDBACK')
                     ->state(function (User $record) {
@@ -195,7 +218,6 @@ class AgentPerformance extends BaseWidget
                         $avg = array_sum($vals) / count($vals);
                         $count = (int) ($record->feedback_count ?? 0);
 
-                        // Convert 1–5 scale to stars
                         $filled = (int) floor($avg);
                         $half = ($avg - $filled) >= 0.5 ? 1 : 0;
                         $empty = 5 - ($filled + $half);
@@ -216,7 +238,6 @@ class AgentPerformance extends BaseWidget
                     ->html()
                     ->alignCenter()
                     ->sortable(query: function (Builder $query, string $direction) {
-                        // Sort by average of all feedback categories
                         $query->orderByRaw('
                             (COALESCE(communication_avg, 0) +
                              COALESCE(negotiation_avg, 0) +
