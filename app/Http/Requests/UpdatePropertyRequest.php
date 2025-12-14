@@ -27,6 +27,7 @@ class UpdatePropertyRequest extends FormRequest
             'total_bathrooms' => 'nullable|integer|min:0|max:10',
             'car_slots' => 'nullable|integer|min:0|max:2',
 
+
             // Main image (optional on update)
             'image_url' => 'nullable|file|image|max:5120', // 5MB limit
 
@@ -45,6 +46,7 @@ class UpdatePropertyRequest extends FormRequest
             // Other flags
             'isPresell' => 'boolean',
             'allowMultipleAgent' => 'nullable|boolean',
+            'is_rush' => 'boolean',
 
             // Agents
             'agent_ids' => 'nullable|array',

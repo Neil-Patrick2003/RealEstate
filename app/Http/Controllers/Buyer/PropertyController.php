@@ -15,11 +15,20 @@ class PropertyController extends Controller
     {
         $filters = [
             'search' => $request->input('search'),
-            'category' => (array)$request->input('category', []), // array of main categories
-            'subcategory' => (array)$request->input('subcategory', []), // array of subcategories
-            'is_presell' => $request->has('is_presell') ?
-                ($request->input('is_presell') === 'true' ? true :
-                    ($request->input('is_presell') === 'false' ? false : null)) : null,
+            'category' => (array) $request->input('category', []),
+            'subcategory' => (array) $request->input('subcategory', []),
+
+            'is_presell' => $request->has('is_presell')
+                ? ($request->input('is_presell') === 'true' ? true
+                    : ($request->input('is_presell') === 'false' ? false : null))
+                : null,
+
+            // ✅ NEW: Rush filter (tri-state: true/false/null)
+            'is_rush' => $request->has('is_rush')
+                ? ($request->input('is_rush') === 'true' ? true
+                    : ($request->input('is_rush') === 'false' ? false : null))
+                : null,
+
             'with_photos' => $request->boolean('with_photos', false),
 
             'price_min' => $request->input('price_min'),
@@ -52,6 +61,11 @@ class PropertyController extends Controller
             $query->where('isPresell', $filters['is_presell']);
         }
 
+        // ✅ NEW: Rush filter
+        if ($filters['is_rush'] !== null) {
+            $query->where('is_rush', $filters['is_rush']);
+        }
+
         // Search
         if ($filters['search']) {
             $query->where(function ($q) use ($filters) {
@@ -60,7 +74,6 @@ class PropertyController extends Controller
                     ->orWhere('description', 'like', "%{$filters['search']}%");
             });
         }
-
 
         // Property categories (array)
         if (!empty($filters['category'])) {
@@ -83,61 +96,64 @@ class PropertyController extends Controller
 
         // Price range
         if ($filters['price_min']) {
-            $query->where('price', '>=', (int)$filters['price_min']);
+            $query->where('price', '>=', (int) $filters['price_min']);
         }
         if ($filters['price_max']) {
-            $query->where('price', '<=', (int)$filters['price_max']);
+            $query->where('price', '<=', (int) $filters['price_max']);
         }
 
         // Floor area
         if ($filters['floor_min']) {
-            $query->where('floor_area', '>=', (float)$filters['floor_min']);
+            $query->where('floor_area', '>=', (float) $filters['floor_min']);
         }
         if ($filters['floor_max']) {
-            $query->where('floor_area', '<=', (float)$filters['floor_max']);
+            $query->where('floor_area', '<=', (float) $filters['floor_max']);
         }
 
         // Lot area
         if ($filters['lot_min']) {
-            $query->where('lot_area', '>=', (float)$filters['lot_min']);
+            $query->where('lot_area', '>=', (float) $filters['lot_min']);
         }
         if ($filters['lot_max']) {
-            $query->where('lot_area', '<=', (float)$filters['lot_max']);
+            $query->where('lot_area', '<=', (float) $filters['lot_max']);
         }
 
         // Bedrooms
         if ($filters['bedrooms_min']) {
-            $query->where('bedrooms', '>=', (int)$filters['bedrooms_min']);
+            $query->where('bedrooms', '>=', (int) $filters['bedrooms_min']);
         }
         if ($filters['bedrooms_max']) {
-            $query->where('bedrooms', '<=', (int)$filters['bedrooms_max']);
+            $query->where('bedrooms', '<=', (int) $filters['bedrooms_max']);
         }
 
         // Bathrooms
         if ($filters['bathrooms_min']) {
-            $query->where('bathrooms', '>=', (int)$filters['bathrooms_min']);
+            $query->where('bathrooms', '>=', (int) $filters['bathrooms_min']);
         }
         if ($filters['bathrooms_max']) {
-            $query->where('bathrooms', '<=', (int)$filters['bathrooms_max']);
+            $query->where('bathrooms', '<=', (int) $filters['bathrooms_max']);
         }
 
         // Car slots
         if ($filters['car_slots_min']) {
-            $query->where('car_slots', '>=', (int)$filters['car_slots_min']);
+            $query->where('car_slots', '>=', (int) $filters['car_slots_min']);
         }
         if ($filters['car_slots_max']) {
-            $query->where('car_slots', '<=', (int)$filters['car_slots_max']);
+            $query->where('car_slots', '<=', (int) $filters['car_slots_max']);
         }
 
         // Year built
         if ($filters['year_built_min']) {
-            $query->where('year_built', '>=', (int)$filters['year_built_min']);
+            $query->where('year_built', '>=', (int) $filters['year_built_min']);
         }
         if ($filters['year_built_max']) {
-            $query->where('year_built', '<=', (int)$filters['year_built_max']);
+            $query->where('year_built', '<=', (int) $filters['year_built_max']);
         }
 
-        // Sorting
+        // ✅ Rush-first ordering ALWAYS
+        $query->orderByDesc('is_rush');
+
+        // Sorting (within rush / non-rush groups)
         switch ($filters['sort']) {
             case 'low-to-high':
                 $query->orderBy('price', 'asc');
@@ -178,15 +194,16 @@ class PropertyController extends Controller
                 $filters['location'] ||
                 !empty($filters['category']) ||
                 !empty($filters['subcategory']) ||
-                $filters['is_presell'] !== null;
+                $filters['is_presell'] !== null ||
+                $filters['is_rush'] !== null; // ✅ include rush in search history condition
 
             if ($hasSomething) {
                 SearchHistory::create([
                     'user_id'       => Auth::id(),
                     'search'        => $filters['search'],
                     'location'      => $filters['location'],
-                    'categories'    => $filters['category'],    // array → JSON
-                    'subcategories' => $filters['subcategory'], // array → JSON
+                    'categories'    => $filters['category'],
+                    'subcategories' => $filters['subcategory'],
                     'is_presell'    => $filters['is_presell'],
                 ]);
             }
@@ -198,4 +215,5 @@ class PropertyController extends Controller
             'filters' => $filters,
         ]);
     }
+
 }

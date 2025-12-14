@@ -13,6 +13,7 @@ import {
     Bath,
     Bed,
     Car,
+    Zap, // ✅ ADD
 } from "lucide-react";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
@@ -76,6 +77,16 @@ function StatusBadge({ isPresell }) {
     );
 }
 
+// ✅ ADD: Rush Badge (small, minimal, matches your badge style)
+function RushBadge() {
+    return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+            <Zap className="w-3 h-3" />
+            Rush
+        </span>
+    );
+}
+
 // Main Component
 export default function PropertyCard({
                                          property,
@@ -115,6 +126,9 @@ export default function PropertyCard({
 
     const isNew = daysSince(property?.created_at) <= 7;
 
+    // ✅ ADD: Rush flag (supports boolean or 0/1)
+    const isRush = !!property?.is_rush;
+
     return (
         <article className="group bg-white transition-all duration-300 overflow-hidden">
             {/* Image Section - Reduced height */}
@@ -134,8 +148,12 @@ export default function PropertyCard({
                 </Link>
 
                 {/* Top badges */}
-                <div className="absolute left-3 top-3 flex gap-2">
+                <div className="absolute left-3 top-3 flex gap-2 flex-wrap">
                     <TypeBadge type={property?.property_type} />
+
+                    {/* ✅ ADD: Rush badge */}
+                    {isRush && <RushBadge />}
+
                     {isNew && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-50 text-green-700 text-xs font-medium border border-green-200">
                             <Sparkles className="w-3 h-3" />
@@ -194,7 +212,15 @@ export default function PropertyCard({
                         <div className="text-xl font-bold text-gray-900 mb-1">
                             {formatPriceShort(property.price)}
                         </div>
-                        <StatusBadge isPresell={!!property?.is_presell} />
+
+                        <div className="flex items-center justify-end gap-2">
+                            <StatusBadge isPresell={!!property?.is_presell} />
+
+                            {/*
+                              OPTIONAL: show Rush also here (comment out if you want only top badge)
+                              {isRush && <RushBadge />}
+                            */}
+                        </div>
                     </div>
                 </div>
 

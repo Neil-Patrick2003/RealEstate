@@ -8,6 +8,8 @@ class Property extends Model
 {
     protected $casts = [
         'isPresell' => 'boolean',
+        'isFixPrice' => 'boolean',
+        'is_rush' => 'boolean'
     ];
 
     protected $guarded = [];

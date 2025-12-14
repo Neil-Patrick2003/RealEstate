@@ -94,6 +94,13 @@ function PresellBadge() {
         </span>
     );
 }
+function RushBadge() {
+    return (
+        <span className="badge badge-warning text-xs font-semibold">
+            Rush
+        </span>
+    );
+}
 
 // Filter Tabs Component
 
@@ -163,8 +170,10 @@ function InquiryModal({
                         <div className="flex items-center gap-2 mt-1">
                             <TypeBadge type={selectedProperty?.property_type} />
                             {!!(selectedProperty?.isPresell ?? selectedProperty?.is_presell) && <PresellBadge />}
+                            {!!(selectedProperty?.is_rush ?? selectedProperty?.is_rush) && <RushBadge />}
                         </div>
                     </div>
+
                 </div>
 
                 {/* Template Selection */}
@@ -300,6 +309,7 @@ function PropertyGridCard({ property, onView, onInquiry, onShare }) {
                 : "/placeholder.png";
 
     const isPresell = !!(property?.isPresell ?? property?.is_presell);
+    const isRush = !!(property?.is_rush)
     const type = (property?.property_type || "").toLowerCase();
     const seller = property?.seller;
 
@@ -324,9 +334,11 @@ function PropertyGridCard({ property, onView, onInquiry, onShare }) {
                 </div>
 
                 {/* Top Badges */}
-                <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+                <div className="absolute top-2 left-2 flex flex-row items-start gap-1">
                     {isPresell && <PresellBadge />}
+                    {isRush && <RushBadge />}
                 </div>
+
 
                 <div className="absolute top-2 right-2">
                     <TypeBadge type={type} />
