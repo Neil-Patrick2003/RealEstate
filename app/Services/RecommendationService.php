@@ -4,10 +4,11 @@ namespace App\Services;
 
 use App\Models\SearchHistory;
 use App\Models\Property;
-use App\Models\Transaction; // ⬅️ NEW
+use App\Models\Transaction;
 use App\Notifications\NewMatchingPropertyNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class RecommendationService
 {
@@ -15,9 +16,10 @@ class RecommendationService
      * Main: Get recommended properties.
      *
      * Order of priority:
-     *  1. Properties similar to the last transaction (if any).
-     *  2. Search-history based recommendations.
-     *  3. Latest popular properties as fallback.
+     *  0. Properties similar to the last transaction (if any).
+     *  0B. Properties similar to buyer's recent buying HABITS (last N sold tx).
+     *  1. Search-history based recommendations.
+     *  2. Latest popular properties as fallback.
      */
     public function getRecommendedProperties(int $limit = 12): Collection
     {
@@ -33,11 +35,16 @@ class RecommendationService
             ->take(20)
             ->get();
 
+        // No search history → try last-transaction, then habit-based, then popular
         if ($searches->isEmpty()) {
-            // Walang search history → try purchase-based, then popular
             $purchaseBasedOnly = $this->getPurchaseBasedFromLastTransaction($user->id, $limit);
-            return $purchaseBasedOnly->isNotEmpty()
-                ? $purchaseBasedOnly
+            if ($purchaseBasedOnly->isNotEmpty()) {
+                return $purchaseBasedOnly;
+            }
+
+            $habitBasedOnly = $this->getPurchaseHabitBasedFromTransactions($user->id, $limit);
+            return $habitBasedOnly->isNotEmpty()
+                ? $habitBasedOnly
                 : $this->getPopularProperties($limit);
         }
 
@@ -62,6 +69,22 @@ class RecommendationService
         }
 
         /*
+         * 0️⃣B: recommendations based on buying HABITS (last N transactions)
+         */
+        if ($results->count() < $limit) {
+            $habitBased = $this->getPurchaseHabitBasedFromTransactions(
+                $user->id,
+                $limit - $results->count(),
+                $usedIds
+            );
+
+            if ($habitBased->isNotEmpty()) {
+                $results = $results->merge($habitBased);
+                $usedIds = $results->pluck('id')->all();
+            }
+        }
+
+        /*
          * 1️⃣ keyword + category + subcategory
          */
         if ($results->count() < $limit && $keyword && $category && $subcat) {
@@ -82,6 +105,7 @@ class RecommendationService
             $group1 = $group1
                 ->with(['project', 'coordinate', 'images'])
                 ->orderBy('created_at', 'desc')
+                ->limit($limit - $results->count())
                 ->get();
 
             $results = $results->merge($group1);
@@ -108,6 +132,7 @@ class RecommendationService
             $group2 = $group2
                 ->with(['project', 'coordinate', 'images'])
                 ->orderBy('created_at', 'desc')
+                ->limit($limit - $results->count())
                 ->get();
 
             $results = $results->merge($group2);
@@ -133,6 +158,7 @@ class RecommendationService
             $group3 = $group3
                 ->with(['project', 'coordinate', 'images'])
                 ->orderBy('created_at', 'desc')
+                ->limit($limit - $results->count())
                 ->get();
 
             $results = $results->merge($group3);
@@ -157,6 +183,7 @@ class RecommendationService
                 $groupCatSub = $groupCatSub
                     ->with(['project', 'coordinate', 'images'])
                     ->orderBy('created_at', 'desc')
+                    ->limit($limit - $results->count())
                     ->get();
 
                 $results = $results->merge($groupCatSub);
@@ -176,6 +203,7 @@ class RecommendationService
                 $groupCat = $groupCat
                     ->with(['project', 'coordinate', 'images'])
                     ->orderBy('created_at', 'desc')
+                    ->limit($limit - $results->count())
                     ->get();
 
                 $results = $results->merge($groupCat);
@@ -210,78 +238,87 @@ class RecommendationService
     }
 
     /**
-     * Purchase-based only:
-     * Get properties similar to the buyer's most recent transaction.
-     *
-     *  - same property_type
-     *  - optionally same sub_type
-     *  - price within ±20%
-     *  - same isPresell flag if present
-     *  - prefer NEW listings after last transaction date
+     * IMPORTANT: set this to your real "completed purchase" value in DB.
+     * Example values: SOLD / Sold / sold
      */
+    private function soldStatus(): string
+    {
+        return 'SOLD';
+    }
+
+    /**
+     * Use created_at if transactions table has it; otherwise fallback to id.
+     */
+    private function txOrderColumn(): string
+    {
+        return Schema::hasColumn('transactions', 'created_at') ? 'created_at' : 'id';
+    }
+
     /**
      * Purchase-based only:
-     * Get properties similar to the buyer's most recent transaction.
+     * Get properties similar to the buyer's most recent SOLD transaction.
      *
-     * SAME on:
-     *  - property_type (category)
-     *  - sub_type      (subcategory)
-     *  - isPresell     (pre-selling or not)
-     *  - price within ±20%
+     * Match on:
+     *  - property_type
+     *  - sub_type (only if base has value)
+     *  - isPresell (only if base is not null)
+     *  - price within ±20% (only if base price is valid)
+     * Prefer newer property listings than the last transaction (if timestamps exist).
      */
     public function getPurchaseBasedFromLastTransaction(int $buyerId, int $limit = 12): Collection
     {
         $lastTransaction = Transaction::with('property')
             ->where('buyer_id', $buyerId)
-             ->where('status', 'SOLD') // ⬅️ uncomment & adjust if you have status field
-            ->latest('created_at')
+            ->where('status', $this->soldStatus())
+            ->latest($this->txOrderColumn())
             ->first();
 
-        if (! $lastTransaction || ! $lastTransaction->property) {
+        if (! $lastTransaction?->property) {
             return collect();
         }
 
-        $baseProperty = $lastTransaction->property;
+        $base = $lastTransaction->property;
 
+        $usedIds = [$base->id];
         $results = collect();
-        $usedIds = [$baseProperty->id];
 
-        /*
-         * 1️⃣ NEW similar properties after last purchase
-         *    (same type, sub_type, isPresell, price range)
-         */
-        $groupNew = Property::where('status', 'Published')
+        // 1) Prefer NEW listings after last purchase (if both have created_at)
+        $qNew = Property::where('status', 'Published')
             ->whereNotIn('id', $usedIds)
-            ->where('property_type', $baseProperty->property_type)
-            ->where('sub_type', $baseProperty->sub_type)         // SAME sub_type (even if null)
-            ->where('isPresell', $baseProperty->isPresell)       // SAME isPresell (even if null)
-            ->whereBetween('price', [
-                $baseProperty->price * 0.8,  // -20%
-                $baseProperty->price * 1.2,  // +20%
-            ])
-            ->where('created_at', '>', $lastTransaction->created_at)
+            ->where('property_type', $base->property_type)
+            ->when(!is_null($base->sub_type) && $base->sub_type !== '', fn ($q) => $q->where('sub_type', $base->sub_type))
+            ->when(!is_null($base->isPresell), fn ($q) => $q->where('isPresell', $base->isPresell))
+            ->when(is_numeric($base->price) && (float) $base->price > 0, fn ($q) => $q->whereBetween('price', [
+                (float) $base->price * 0.8,
+                (float) $base->price * 1.2,
+            ]))
             ->with(['project', 'coordinate', 'images'])
-            ->orderByDesc('created_at')
-            ->limit($limit)
-            ->get();
+            ->orderByDesc('created_at');
 
-        $results = $results->merge($groupNew);
-        $usedIds = $results->pluck('id')->all();
+        if (
+            Schema::hasColumn('transactions', 'created_at') &&
+            Schema::hasColumn('properties', 'created_at') &&
+            $lastTransaction->created_at
+        ) {
+            $qNew->where('created_at', '>', $lastTransaction->created_at);
+        }
 
-        /*
-         * 2️⃣ If kulang pa, same exact category/subcategory/isPresell/price,
-         *    kahit older listings (before lastTransaction)
-         */
+        $groupNew = $qNew->limit($limit)->get();
+        $results  = $results->merge($groupNew);
+
+        // 2) If kulang, allow older listings with same filters
         if ($results->count() < $limit) {
+            $usedIds = array_values(array_unique(array_merge($usedIds, $results->pluck('id')->all())));
+
             $groupSimilar = Property::where('status', 'Published')
                 ->whereNotIn('id', $usedIds)
-                ->where('property_type', $baseProperty->property_type)
-                ->where('sub_type', $baseProperty->sub_type)
-                ->where('isPresell', $baseProperty->isPresell)
-                ->whereBetween('price', [
-                    $baseProperty->price * 0.8,
-                    $baseProperty->price * 1.2,
-                ])
+                ->where('property_type', $base->property_type)
+                ->when(!is_null($base->sub_type) && $base->sub_type !== '', fn ($q) => $q->where('sub_type', $base->sub_type))
+                ->when(!is_null($base->isPresell), fn ($q) => $q->where('isPresell', $base->isPresell))
+                ->when(is_numeric($base->price) && (float) $base->price > 0, fn ($q) => $q->whereBetween('price', [
+                    (float) $base->price * 0.8,
+                    (float) $base->price * 1.2,
+                ]))
                 ->with(['project', 'coordinate', 'images'])
                 ->orderByDesc('created_at')
                 ->limit($limit - $results->count())
@@ -293,6 +330,122 @@ class RecommendationService
         return $results->take($limit);
     }
 
+    /**
+     * Habit-based recommendations:
+     * Uses buyer's last N SOLD transactions to learn purchase patterns
+     * and recommends similar Published properties.
+     *
+     * Pattern signals:
+     *  - most frequent property_type (+ sub_type when present)
+     *  - isPresell preference when present
+     *  - typical price band (avg ±20%)
+     */
+    public function getPurchaseHabitBasedFromTransactions(
+        int $buyerId,
+        int $limit = 12,
+        array $excludeIds = []
+    ): Collection {
+        if ($limit <= 0) {
+            return collect();
+        }
+
+        $txs = Transaction::with(['property:id,property_type,sub_type,isPresell,price'])
+            ->where('buyer_id', $buyerId)
+            ->where('status', $this->soldStatus())
+            ->latest($this->txOrderColumn())
+            ->take(10) // habit window
+            ->get()
+            ->filter(fn ($tx) => $tx->property);
+
+        // Need at least 2 purchases to infer "habit"
+        if ($txs->count() < 2) {
+            return collect();
+        }
+
+        // Exclude all purchased properties by this buyer
+        $purchasedPropertyIds = Transaction::where('buyer_id', $buyerId)
+            ->whereNotNull('property_id')
+            ->pluck('property_id')
+            ->unique()
+            ->values()
+            ->all();
+
+        $usedIds = array_values(array_unique(array_merge($excludeIds, $purchasedPropertyIds)));
+
+        // Rank combos by frequency: type|sub|presell
+        $combos = $txs->map(function ($tx) {
+            $p = $tx->property;
+            return [
+                'property_type' => $p->property_type,
+                'sub_type'      => $p->sub_type,
+                'isPresell'     => $p->isPresell,
+                'price'         => is_numeric($p->price) ? (float) $p->price : null,
+            ];
+        })
+            ->groupBy(function ($row) {
+                return implode('|', [
+                    (string) ($row['property_type'] ?? ''),
+                    (string) ($row['sub_type'] ?? ''),
+                    is_null($row['isPresell']) ? 'NULL' : (string) $row['isPresell'],
+                ]);
+            })
+            ->map(function ($items) {
+                $first = $items->first();
+                $prices = $items->pluck('price')->filter(fn ($v) => ! is_null($v) && $v > 0);
+                $avg = $prices->count() ? (float) $prices->avg() : null;
+
+                return [
+                    'property_type' => $first['property_type'] ?? null,
+                    'sub_type'      => $first['sub_type'] ?? null,
+                    'isPresell'     => $first['isPresell'] ?? null,
+                    'count'         => $items->count(),
+                    'avg_price'     => $avg,
+                ];
+            })
+            ->filter(fn ($c) => ! empty($c['property_type']))
+            ->sortByDesc('count')
+            ->take(3)
+            ->values();
+
+        if ($combos->isEmpty()) {
+            return collect();
+        }
+
+        $results = collect();
+
+        // Distribute results across top habit clusters
+        $alloc = [0.5, 0.3, 0.2];
+
+        foreach ($combos as $i => $combo) {
+            if ($results->count() >= $limit) {
+                break;
+            }
+
+            $take = (int) round($limit * ($alloc[$i] ?? 0.2));
+            $take = max(1, min($take, $limit - $results->count()));
+
+            $q = Property::where('status', 'Published')
+                ->whereNotIn('id', $usedIds)
+                ->where('property_type', $combo['property_type'])
+                ->when(! is_null($combo['sub_type']) && $combo['sub_type'] !== '', fn ($qq) => $qq->where('sub_type', $combo['sub_type']))
+                ->when(! is_null($combo['isPresell']), fn ($qq) => $qq->where('isPresell', $combo['isPresell']))
+                ->when(! is_null($combo['avg_price']) && $combo['avg_price'] > 0, fn ($qq) => $qq->whereBetween('price', [
+                    $combo['avg_price'] * 0.8,
+                    $combo['avg_price'] * 1.2,
+                ]))
+                ->with(['project', 'coordinate', 'images'])
+                ->orderByDesc('created_at');
+
+            $chunk = $q->limit($take)->get();
+
+            if ($chunk->isNotEmpty()) {
+                $results = $results->merge($chunk);
+                $usedIds = array_values(array_unique(array_merge($usedIds, $chunk->pluck('id')->all())));
+            }
+        }
+
+        return $results->take($limit);
+    }
 
     /**
      * Derive:
@@ -322,13 +475,12 @@ class RecommendationService
                     continue;
                 }
 
-                // kung search = "House" and "House" is a category, skip as keyword
                 if (in_array($term, $allCategories, true)) {
                     continue;
                 }
 
                 $keyword = $term;
-                break; // latest valid keyword only
+                break;
             }
         }
 
@@ -337,7 +489,7 @@ class RecommendationService
         foreach ($searches as $search) {
             $cats = $search->categories ?? [];
             if (is_array($cats) && count($cats) > 0) {
-                $tmp  = $cats;          // copy para iwas "indirect modification" error
+                $tmp  = $cats;
                 $last = end($tmp);
                 if ($last !== false && $last !== null && $last !== '') {
                     $category = $last;
@@ -387,17 +539,27 @@ class RecommendationService
             return ['Showing popular properties'];
         }
 
+        $reasons = [];
+
+        // If buyer has multiple sold purchases, mention habits
+        $soldCount = Transaction::where('buyer_id', $user->id)
+            ->where('status', $this->soldStatus())
+            ->count();
+
+        if ($soldCount >= 2) {
+            $reasons[] = 'Based on your previous purchases and buying habits';
+        }
+
         $searches = SearchHistory::where('user_id', $user->id)
             ->latest()
             ->take(20)
             ->get();
 
         if ($searches->isEmpty()) {
-            return ['Showing popular properties'];
+            return $reasons ?: ['Showing popular properties'];
         }
 
-        $prefs   = $this->extractLastPreferences($searches);
-        $reasons = [];
+        $prefs = $this->extractLastPreferences($searches);
 
         if (! empty($prefs['keyword'])) {
             $reasons[] = 'Based on your recent search for "' . $prefs['keyword'] . '"';
@@ -416,13 +578,14 @@ class RecommendationService
 
     /**
      * Notify buyers when a new property is published
-     * that matches their LAST transaction property.
+     * that matches their LAST SOLD transaction property.
      */
     public function notifyBuyersForNewProperty(Property $property): void
     {
+        // Last SOLD transaction per buyer (by MAX(id))
         $lastTxIdsSub = Transaction::selectRaw('MAX(id) as id')
+            ->where('status', $this->soldStatus())
             ->groupBy('buyer_id');
-
 
         $matchingLastTransactions = Transaction::with(['buyer', 'property'])
             ->whereIn('id', $lastTxIdsSub)
@@ -456,5 +619,4 @@ class RecommendationService
             $buyer->notify(new NewMatchingPropertyNotification($property));
         }
     }
-
 }
