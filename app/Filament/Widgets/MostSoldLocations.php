@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class MostSoldLocations extends ChartWidget
 {
-    protected static ?string $heading = 'Most Sold Property Locations';
+    protected static ?string $heading = 'Most Sold Property Location';
     protected static ?string $description = 'Top 10 locations by number of sold properties';
 
     protected int|string|array $columnSpan = 'full';
