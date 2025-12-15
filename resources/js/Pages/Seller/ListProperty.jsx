@@ -7,8 +7,7 @@ import Modal from "@/Components/Modal.jsx";
 import {
     Trash2,
     X,
-    RotateCcw,
-    Check as CheckLine,
+    Clock8,
     MapPin as LucideMapPin,
     House,
     Building2,
@@ -136,7 +135,9 @@ export default function Create({ agents = [] }) {
         boundary: null,
         pin: null,
         agent_ids: [],
-        allowMultipleAgent: false
+        allowMultipleAgent: false,
+        is_rush: false
+
     });
 
     /* ---------------- state ---------------- */
@@ -401,7 +402,32 @@ export default function Create({ agents = [] }) {
                                         <p className="text-emerald-700 text-xs sm:text-sm">Mark if this is a pre-construction sale</p>
                                     </div>
                                 </div>
-                                <Toggle data={data} setData={setData} name="isPresell" />
+                                <Toggle
+                                    checked={data.isPresell}
+                                    onChange={(v) => setData('isPresell', v)}
+                                    srLabel="Pre-sell"
+                                />
+                            </div>
+                        </div>
+
+
+
+                        <div className="bg-gradient-to-r from-emerald-50 to-emerald-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-emerald-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                    <div className="p-2 sm:p-3 bg-emerald-600 rounded-lg sm:rounded-xl">
+                                        <Clock8 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-900 text-base sm:text-lg">Rush Property</p>
+                                        <p className="text-emerald-700 text-xs sm:text-sm">Mark if this is a rush sale property</p>
+                                    </div>
+                                </div>
+                                <Toggle
+                                    checked={data.is_rush}
+                                    onChange={(v) => setData('is_rush', v)}
+                                    srLabel="Rush"
+                                />
                             </div>
                         </div>
 

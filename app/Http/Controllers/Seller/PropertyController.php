@@ -118,6 +118,7 @@ class PropertyController extends Controller
 
     public function update(UpdatePropertyRequest $request, Property $property, PropertiesService $propertiesService)
     {
+
         $files = [
             'image_url' => $request->file('image_url'),
             'image_urls' => $request->file('image_urls'),

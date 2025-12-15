@@ -1,35 +1,55 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Switch } from '@headlessui/react';
 
-export default function Toggle({ data, setData }) {
-  const [enabled, setEnabled] = useState(false);
+function cn(...parts) {
+    return parts.filter(Boolean).join(' ');
+}
 
-  // Sync toggle state with initial form value
-  useEffect(() => {
-    setEnabled(Boolean(data.isPresell));
-  }, [data.isPresell]);
+const SIZES = {
+    sm: { track: 'h-5 w-9',  thumb: 'h-3 w-3', on: 'translate-x-5', off: 'translate-x-1' },
+    md: { track: 'h-6 w-11', thumb: 'h-4 w-4', on: 'translate-x-6', off: 'translate-x-1' },
+    lg: { track: 'h-7 w-14', thumb: 'h-5 w-5', on: 'translate-x-8', off: 'translate-x-1' },
+};
 
-  const handleToggle = (value) => {
-    setEnabled(value);
-    setData('isPresell', value);
-    console.log('isPresell:', value);
-  };
+export default function Toggle({
+                                   checked,
+                                   onChange,
+                                   disabled = false,
+                                   size = 'md',
+                                   onClass = 'bg-accent',
+                                   offClass = 'bg-gray-300',
+                                   className,
+                                   thumbClassName,
+                                   srLabel = 'Toggle',
+                               }) {
+    const isOn = Boolean(checked);
+    const s = SIZES[size] ?? SIZES.md;
 
-  return (
-    <Switch
-      checked={enabled}
-      onChange={handleToggle}
-      className={`${
-        enabled ? 'bg-accent' : 'bg-gray-300'
-      } relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none`}
-    >
-      <span
-        className={`${
-          enabled ? 'translate-x-6' : 'translate-x-1'
-        } inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200`}
-      />
-    </Switch>
-  );
+    return (
+        <Switch
+            checked={isOn}
+            onChange={onChange}
+            disabled={disabled}
+            className={cn(
+                'relative inline-flex items-center rounded-full transition-colors duration-200 focus:outline-none',
+                'focus-visible:ring-2 focus-visible:ring-offset-2',
+                s.track,
+                isOn ? onClass : offClass,
+                disabled && 'cursor-not-allowed opacity-60',
+                className
+            )}
+        >
+            <span className="sr-only">{srLabel}</span>
+
+            <span
+                className={cn(
+                    'inline-block transform rounded-full bg-white transition-transform duration-200',
+                    s.thumb,
+                    isOn ? s.on : s.off,
+                    thumbClassName
+                )}
+            />
+        </Switch>
+    );
 }

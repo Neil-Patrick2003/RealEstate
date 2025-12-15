@@ -41,6 +41,7 @@ class StorePropertyRequest extends FormRequest
             'boundary' => 'required|array',
             'pin' => 'nullable|array',
             'isPresell' => 'boolean',
+            'is_rush' => 'boolean',
             'allowMultipleAgent' => 'nullable|boolean',
             'agent_ids' => 'nullable|array',
         ];
