@@ -3,60 +3,73 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Property;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 
 class MostSoldLocations extends ChartWidget
 {
     protected static ?string $heading = 'Most Sold Property Locations';
-
     protected static ?string $description = 'Top 10 locations by number of sold properties';
 
     protected int|string|array $columnSpan = 'full';
-
-    protected static ?string $maxHeight = '400px';
+    protected static ?string $maxHeight = '420px';
 
     protected function getData(): array
     {
-        $rows = Property::query()
-            ->select(
-                'address',
-                DB::raw('COUNT(properties.id) as sold_count')
-            )
+        $query = Property::query()
+            ->select('address', DB::raw('COUNT(*) as sold_count'))
             ->where('status', 'sold')
+            ->whereNotNull('address')
+            ->where('address', '!=', '');
+
+        // Optional: if you still want to keep your filters UI
+        if (! empty($this->filter)) {
+            $from = match ($this->filter) {
+                'month'   => now()->subMonth(),
+                'quarter' => now()->subMonths(3),
+                'year'    => now()->subYear(),
+                default   => null,
+            };
+
+            if ($from) {
+                // Use the column that best represents “sold date” in your app:
+                // sold_at, updated_at, or created_at. Here we use updated_at.
+                $query->where('updated_at', '>=', $from);
+            }
+        }
+
+        $rows = $query
             ->groupBy('address')
             ->orderByDesc('sold_count')
             ->limit(10)
             ->get();
 
-        $labels = $rows->pluck('address')->toArray();
-        $values = $rows->pluck('sold_count')->toArray();
+        $labels = $rows->pluck('address')->all();
+        $values = $rows->pluck('sold_count')->all();
 
-        // Generate different shades of green for the bars
-        $backgroundColors = [];
-        $borderColors = [];
+        // Teal gradient (darker at top, lighter down the list)
+        $background = [];
+        $border = [];
 
-        foreach ($values as $index => $value) {
-            // Create gradient of green from dark to light
-            $greenValue = 120 + ($index * 15); // Base green hue
-            $alpha = 0.8;
-
-            $backgroundColors[] = "rgba(56, 178, 172, {$alpha})"; // Teal-500 with alpha
-            $borderColors[] = "rgb(56, 178, 172)"; // Teal-500 solid
+        foreach ($values as $i => $v) {
+            $alpha = max(0.35, 0.90 - ($i * 0.06));
+            $background[] = "rgba(20, 184, 166, {$alpha})"; // teal
+            $border[]     = "rgba(13, 148, 136, 1)";        // darker teal
         }
 
         return [
             'datasets' => [
                 [
-                    'label' => 'Sold Properties',
+                    'label' => 'Sold',
                     'data' => $values,
-                    'backgroundColor' => $backgroundColors,
-                    'borderColor' => $borderColors,
-                    'borderWidth' => 2,
-                    'borderRadius' => 6,
-                    'hoverBackgroundColor' => 'rgba(72, 187, 120, 0.9)', // Green-400 on hover
-                    'hoverBorderColor' => 'rgb(56, 178, 172)',
-                    'hoverBorderWidth' => 3,
+                    'backgroundColor' => $background,
+                    'borderColor' => $border,
+                    'borderWidth' => 1,
+                    'borderRadius' => 10,
+                    'barThickness' => 18,
+                    'maxBarThickness' => 22,
+                    'hoverBorderWidth' => 2,
                 ],
             ],
             'labels' => $labels,
@@ -71,76 +84,66 @@ class MostSoldLocations extends ChartWidget
     protected function getOptions(): array
     {
         return [
+            'indexAxis' => 'y', // horizontal bars
             'responsive' => true,
-            'maintainAspectRatio' => true,
+            'maintainAspectRatio' => false,
             'plugins' => [
-                'legend' => [
-                    'display' => false,
-                ],
+                'legend' => ['display' => false],
                 'tooltip' => [
-                    'backgroundColor' => 'rgba(0, 0, 0, 0.8)',
-                    'titleColor' => '#cbd5e0',
-                    'bodyColor' => '#e2e8f0',
-                    'titleFont' => [
-                        'size' => 14,
-                        'weight' => 'bold',
-                    ],
-                    'bodyFont' => [
-                        'size' => 13,
-                    ],
-                    'padding' => 12,
-                    'cornerRadius' => 6,
+                    'enabled' => true,
                     'displayColors' => false,
+                    'padding' => 12,
+                    'cornerRadius' => 10,
+                    'backgroundColor' => 'rgba(15, 23, 42, 0.92)', // slate-900-ish
+                    'titleColor' => '#E2E8F0',
+                    'bodyColor' => '#F1F5F9',
                     'callbacks' => [
-                        'label' => function($context) {
-                            return "Sold Properties: " . $context->raw;
-                        }
-                    ]
+                        // Show “Sold: 1,234”
+                        'label' => RawJs::make(<<<'JS'
+function (ctx) {
+  const n = ctx.parsed.x ?? 0;
+  return 'Sold: ' + new Intl.NumberFormat().format(n);
+}
+JS),
+                    ],
                 ],
             ],
             'scales' => [
-                'x' => [
-                    'grid' => [
-                        'display' => false,
-                    ],
+                'y' => [
+                    'grid' => ['display' => false],
                     'ticks' => [
-                        'color' => '#718096',
-                        'maxRotation' => 45,
-                        'minRotation' => 45,
-                        'font' => [
-                            'size' => 12,
-                        ],
+                        'color' => '#64748B',
+                        'font' => ['size' => 12],
+                        // Truncate long addresses ONLY on the axis
+                        'callback' => RawJs::make(<<<'JS'
+function(value) {
+  const label = this.getLabelForValue(value) || '';
+  return label.length > 34 ? label.slice(0, 34) + '…' : label;
+}
+JS),
                     ],
                 ],
-                'y' => [
+                'x' => [
                     'beginAtZero' => true,
-                    'grid' => [
-                        'color' => 'rgba(226, 232, 240, 0.2)',
-                    ],
+                    'grid' => ['color' => 'rgba(148, 163, 184, 0.15)'],
                     'ticks' => [
-                        'color' => '#718096',
+                        'color' => '#64748B',
                         'precision' => 0,
-                        'font' => [
-                            'size' => 12,
-                        ],
-                    ],
-                    'title' => [
-                        'display' => true,
-                        'text' => 'Number of Properties',
-                        'color' => '#718096',
-                        'font' => [
-                            'size' => 13,
-                            'weight' => 'bold',
-                        ],
+                        'font' => ['size' => 12],
+                        'callback' => RawJs::make(<<<'JS'
+function(value) {
+  return new Intl.NumberFormat().format(value);
+}
+JS),
                     ],
                 ],
             ],
             'animation' => [
-                'duration' => 1000,
+                'duration' => 900,
                 'easing' => 'easeOutQuart',
             ],
-            'hover' => [
-                'mode' => 'index',
+            'interaction' => [
+                'mode' => 'nearest',
                 'intersect' => false,
             ],
         ];
@@ -154,10 +157,5 @@ class MostSoldLocations extends ChartWidget
             'quarter' => 'Last Quarter',
             'year' => 'Last Year',
         ];
-    }
-
-    public function getDescription(): ?string
-    {
-        return 'Displays the top 10 locations with the highest number of sold properties';
     }
 }
