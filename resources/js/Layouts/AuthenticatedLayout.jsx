@@ -373,14 +373,14 @@ function NotificationItem({ notification, onMarkRead, isUnread }) {
 
                 <div className="flex-1 min-w-0">
                     <div className="flex justify-between">
-                        <h4
+                        <h6
                             className={`font-medium ${isUnread
                                 ? "text-amber-900 dark:text-amber-100"
                                 : "text-gray-900 dark:text-white"
                             }`}
                         >
                             {title}
-                        </h4>
+                        </h6>
                         <span className="text-xs text-amber-500 dark:text-amber-400">
                             {formatTime(created_at)}
                         </span>
